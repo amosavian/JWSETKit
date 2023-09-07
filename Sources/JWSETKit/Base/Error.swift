@@ -9,4 +9,5 @@ import Foundation
 
 public enum JsonWebKeyError: Error {
     case unknownAlgorithm
+    case decryptionFailed
 }

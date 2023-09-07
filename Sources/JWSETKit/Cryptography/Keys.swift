@@ -26,7 +26,11 @@ func deserializeJsonWebKey(jsonWebKey: Data) throws -> any JsonWebKey {
     case .hmacSHA256:
         return try JsonWebKeyHMAC<SHA256>(jsonWebKey: storage)
     case .hmacSHA384:
-        return try JsonWebKeyHMAC<SHA256>(jsonWebKey: storage)
+        return try JsonWebKeyHMAC<SHA384>(jsonWebKey: storage)
+    case .hmacSHA512:
+        return try JsonWebKeyHMAC<SHA512>(jsonWebKey: storage)
+    case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
+        return try JsonWebKeyAESGCM(jsonWebKey: storage)
     default:
         if let data = storage["k", true] {
             return SymmetricKey(data: data)
@@ -61,12 +65,12 @@ extension JsonWebKey {
 
 public protocol JsonWebEncryptingKey: JsonWebKey {
     /// Encrypts plain-text data using current key.
-    func encrypt<D: DataProtocol>(_ data: D) -> Data
+    func encrypt<D: DataProtocol>(_ data: D) throws -> SealedData
 }
 
 public protocol JsonWebDecryptingKey: JsonWebEncryptingKey {
     /// Encrypts ciphered data using current key.
-    func decrypt<D: DataProtocol>(_ data: D) -> Data
+    func decrypt<D: DataProtocol>(_ data: D) throws -> Data
 }
 
 public protocol JsonWebValidatingKey: JsonWebKey {
@@ -111,5 +115,4 @@ extension JsonWebKeyType {
     
     /// Octet sequence
     public static let symmetric: Self = "oct"
-    
 }
