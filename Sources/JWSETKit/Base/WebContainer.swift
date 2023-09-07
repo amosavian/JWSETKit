@@ -7,9 +7,13 @@
 
 import Foundation
 
+/// JSON container for payloads and sections of JWS and JWE structures.
 @dynamicMemberLookup
 public protocol JsonWebContainer: Codable, Hashable {
+    /// Storage of container values.
     var storage: JsonWebValueStorage { get set }
+    
+    /// Creates a container with empty storage.
     init()
 }
 
@@ -25,6 +29,7 @@ extension JsonWebContainer {
         try container.encode(storage)
     }
     
+    /// Returns value of given key.
     public subscript<T>(_ member: String) -> T? {
         get {
             storage[member]
@@ -34,6 +39,7 @@ extension JsonWebContainer {
         }
     }
     
+    /// Returns value of given key.
     public subscript<T>(dynamicMember member: String) -> T? {
         get {
             storage[member.jsonWebKey]

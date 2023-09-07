@@ -13,6 +13,7 @@ import AnyCodable
 public struct JsonWebValueStorage: Codable, Hashable {
     private var claims: [String: AnyCodable]
     
+    /// Returns value of given key.
     public subscript<T>(dynamicMember member: String) -> T? {
         get {
             get(key: member, as: T.self)
@@ -22,6 +23,7 @@ public struct JsonWebValueStorage: Codable, Hashable {
         }
     }
     
+    /// Returns value of given key.
     public subscript<T>(_ member: String) -> T? {
         get {
             get(key: member, as: T.self)
@@ -31,6 +33,7 @@ public struct JsonWebValueStorage: Codable, Hashable {
         }
     }
     
+    /// Returns value of given key.
     public subscript(_ member: String) -> String? {
         get {
             get(key: member, as: String.self)
@@ -40,9 +43,10 @@ public struct JsonWebValueStorage: Codable, Hashable {
         }
     }
     
-    public subscript(_ member: String) -> [String] {
+    /// Returns values of given key.
+    public subscript<T>(_ member: String) -> [T] {
         get {
-            get(key: member, as: [String].self) ?? []
+            get(key: member, as: [T].self) ?? []
         }
         set {
             if newValue.isEmpty {
@@ -53,6 +57,7 @@ public struct JsonWebValueStorage: Codable, Hashable {
         }
     }
     
+    /// Returns value of given key.
     public subscript(_ member: String) -> Bool {
         get {
             get(key: member, as: Bool.self) ?? false
@@ -62,6 +67,7 @@ public struct JsonWebValueStorage: Codable, Hashable {
         }
     }
     
+    /// Returns value of given key decoded using base64.
     public subscript(_ member: String, urlEncoded: Bool = false) -> Data? {
         get {
             guard let value = self[member] as String? else { return nil }
@@ -80,6 +86,24 @@ public struct JsonWebValueStorage: Codable, Hashable {
         }
     }
     
+    /// Returns values of given key decoded using base64.
+    public subscript(_ member: String, urlEncoded: Bool = false) -> [Data] {
+        get {
+            guard let values = self[member] as [String]? else { return [] }
+            if urlEncoded {
+                return values.compactMap { Data(urlBase64Encoded: Data($0.utf8)) }
+            } else {
+                return values.compactMap { Data(base64Encoded: $0) }
+            }
+        }
+        set {
+            self[member] = newValue.compactMap {
+                urlEncoded ? $0.urlBase64EncodedData() : $0.base64EncodedData()
+            }
+        }
+    }
+    
+    /// Initializes empty storage.
     public init() {
         claims = [:]
     }
@@ -94,6 +118,12 @@ public struct JsonWebValueStorage: Codable, Hashable {
         try container.encode(claims)
     }
     
+    /// Removes value of given key from storage.
+    public func contains(key: String) -> Bool {
+        claims.keys.contains(key)
+    }
+    
+    /// Removes value of given key from storage.
     public mutating func remove(key: String) {
         claims.removeValue(forKey: key)
     }
@@ -117,6 +147,10 @@ public struct JsonWebValueStorage: Codable, Hashable {
         case is URL.Type, is NSURL.Type:
             return (claims[key]?.value as? String)
                 .map { URL(string: $0) } as? T
+        case is any JsonWebKey.Type:
+            guard let value = claims[key] else { return nil }
+            guard let data = try? JSONEncoder().encode(value) else { return nil }
+            return try? deserializeJsonWebKey(jsonWebKey: data) as? T
         case let type as any Decodable.Type:
             guard let value = claims[key]?.value else { return nil }
             if let value = value as? T {
