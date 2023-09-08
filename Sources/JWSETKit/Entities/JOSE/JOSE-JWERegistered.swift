@@ -6,7 +6,11 @@
 //
 
 import Foundation
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 
 public struct JoseHeaderJWERegisteredParameters {
     /// The "`enc`" (encryption algorithm) Header Parameter identifies
@@ -23,13 +27,13 @@ public struct JoseHeaderJWERegisteredParameters {
     /// The "enc" value is a case-sensitive ASCII string containing a `StringOrURI` value.
     ///
     /// This Header Parameter MUST be present and MUST be understood and processed by implementations.
-    public var encryptionAlgorithm: JsonWebAlgorithm? { fatalError() }
+    public var encryptionAlgorithm: JSONWebAlgorithm? { fatalError() }
     
     /// The "zip" (compression algorithm) applied to the plaintext before encryption, if any.
     ///
     /// The "zip" value defined by this specification is:
     /// -  "DEF" - Compression with the DEFLATE [RFC1951] algorithm
-    public var compressionAlgorithm: JsonWebCompressionAlgorithm? { fatalError() }
+    public var compressionAlgorithm: JSONWebCompressionAlgorithm? { fatalError() }
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.encryptionAlgorithm: "enc", \.compressionAlgorithm: "zip"
@@ -53,7 +57,7 @@ extension JOSEHeader {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, JsonWebAlgorithm>) -> JsonWebAlgorithm {
+    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, JSONWebAlgorithm>) -> JSONWebAlgorithm {
         get {
             storage[stringKey(keyPath)] ?? .none
         }

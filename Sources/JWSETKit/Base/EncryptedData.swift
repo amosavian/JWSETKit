@@ -6,7 +6,11 @@
 //
 
 import Foundation
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 
 public struct SealedData: DataProtocol, BidirectionalCollection {
     public let iv: Data?

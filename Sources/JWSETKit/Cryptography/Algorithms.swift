@@ -6,10 +6,14 @@
 //
 
 import Foundation
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 
 /// JSON Web Signature and Encryption Algorithms
-public struct JsonWebAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
+public struct JSONWebAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
     
     public let rawValue: String
     
@@ -32,7 +36,7 @@ public struct JsonWebAlgorithm: RawRepresentable, Hashable, Codable, Expressible
     }
 }
 
-extension JsonWebAlgorithm {
+extension JSONWebAlgorithm {
     /// No digital signature or MAC performed.
     public static let none: Self = "none"
     
@@ -107,7 +111,7 @@ extension JsonWebAlgorithm {
 }
 
 /// JSON Web Compression Algorithms.
-public struct JsonWebCompressionAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
+public struct JSONWebCompressionAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
     public let rawValue: String
     
     public init(rawValue: String) {
@@ -129,7 +133,7 @@ public struct JsonWebCompressionAlgorithm: RawRepresentable, Hashable, Codable, 
     }
 }
 
-extension JsonWebCompressionAlgorithm {
+extension JSONWebCompressionAlgorithm {
     /// Compression with the DEFLATE [RFC1951](https://www.rfc-editor.org/rfc/rfc1951) algorithm
     public static let deflate: Self = "DEF"
 }

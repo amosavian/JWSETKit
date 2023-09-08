@@ -8,10 +8,12 @@
 import Foundation
 
 @dynamicMemberLookup
-public struct JsonWebTokenClaims: JsonWebContainer {
-    public var storage: JsonWebValueStorage
+public struct JSONWebTokenClaims: JSONWebContainer {
+    public var storage: JSONWebValueStorage
     
     public init() {
         self.storage = .init()
     }
 }
+
+public typealias JSONWebToken = JSONWebSignature<JSONWebTokenClaims>

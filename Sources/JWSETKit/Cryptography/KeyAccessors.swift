@@ -6,10 +6,13 @@
 //
 
 import Foundation
-import CommonCrypto
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 
-public struct JsonWebKeyRegisteredParameters {
+public struct JSONWebKeyRegisteredParameters {
     /// The "`kty`" (key type) parameter identifies the cryptographic algorithm family
     /// used with the key, such as "RSA" or "EC".
     ///
@@ -18,7 +21,7 @@ public struct JsonWebKeyRegisteredParameters {
     /// The "kty" value is a case-sensitive string.
     ///
     /// This member MUST be present in a JWK.
-    public var keyType: JsonWebKeyType? { fatalError() }
+    public var keyType: JSONWebKeyType? { fatalError() }
     
     /// The "`use`" (public key use) parameter identifies the intended use of the public key.
     /// The "`use`" parameter is employed to indicate whether a public key is used
@@ -40,13 +43,13 @@ public struct JsonWebKeyRegisteredParameters {
     ///
     /// Its value is an array of key operation values.  Values defined by this specification are:
     /// - "`sign`" (compute digital signature or MAC)
-    /// - "verify" (verify digital signature or MAC)
-    /// - "encrypt" (encrypt content)
-    /// - "decrypt" (decrypt content and validate decryption, if applicable)
-    /// - "wrapKey" (encrypt key)
-    /// - "unwrapKey" (decrypt key and validate decryption, if applicable)
-    /// - "deriveKey" (derive key)
-    /// - "deriveBits" (derive bits not to be used as a key)
+    /// - "`verify`" (verify digital signature or MAC)
+    /// - "`encrypt`" (encrypt content)
+    /// - "`decrypt`" (decrypt content and validate decryption, if applicable)
+    /// - "`wrapKey`" (encrypt key)
+    /// - "`unwrapKey`" (decrypt key and validate decryption, if applicable)
+    /// - "`deriveKey`" (derive key)
+    /// - "`deriveBits`" (derive bits not to be used as a key)
     public var keyOperations: [String] { fatalError() }
     
     /// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key.
@@ -57,7 +60,7 @@ public struct JsonWebKeyRegisteredParameters {
     /// The "alg" value is a case-sensitive ASCII string.
     ///
     /// Use of this member is OPTIONAL.
-    public var algorithm: JsonWebAlgorithm { fatalError() }
+    public var algorithm: JSONWebAlgorithm { fatalError() }
     
     /// The "`kid`" (key ID) parameter is used to match a specific key.
     ///
@@ -110,7 +113,7 @@ public struct JsonWebKeyRegisteredParameters {
     public var certificateThumprint: Data? { fatalError() }
     
     /// ECC curve or the subtype of key pair.
-    public var curve: String? { fatalError() }
+    public var curve: JSONWebKeyCurve? { fatalError() }
     
     /// ECC public key X coordinate component or the public key of key pair.
     public var xCoordinate: Data? { fatalError() }
@@ -165,15 +168,15 @@ public struct JsonWebKeyRegisteredParameters {
     ]
 }
 
-extension JsonWebKey {
-    private func stringKey<T>(_ keyPath: KeyPath<JsonWebKeyRegisteredParameters, T>) -> String {
-        if let key = JsonWebKeyRegisteredParameters.keys[keyPath] {
+extension JSONWebKey {
+    private func stringKey<T>(_ keyPath: KeyPath<JSONWebKeyRegisteredParameters, T>) -> String {
+        if let key = JSONWebKeyRegisteredParameters.keys[keyPath] {
             return key
         }
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebKeyRegisteredParameters, [String]>) -> [String] {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [String]>) -> [String] {
         get {
             return storage[stringKey(keyPath)]
         }
@@ -182,7 +185,7 @@ extension JsonWebKey {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebKeyRegisteredParameters, JsonWebAlgorithm>) -> JsonWebAlgorithm {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, JSONWebAlgorithm>) -> JSONWebAlgorithm {
         get {
             storage[stringKey(keyPath)] ?? .none
         }
@@ -191,7 +194,7 @@ extension JsonWebKey {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebKeyRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
         get {
             storage[stringKey(keyPath), false]
                 .compactMap {
@@ -205,7 +208,7 @@ extension JsonWebKey {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebKeyRegisteredParameters, Data?>) -> Data? {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, Data?>) -> Data? {
         get {
             switch keyPath {
             case \.certificateThumprint where storage.contains(key: "x5t#S256"):
@@ -224,7 +227,7 @@ extension JsonWebKey {
         }
     }
     
-    public subscript<T>(dynamicMember keyPath: KeyPath<JsonWebKeyRegisteredParameters, T?>) -> T? {
+    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

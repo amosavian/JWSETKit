@@ -8,7 +8,7 @@
 import Foundation
 
 // Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
-public struct JsonWebTokenClaimsPublicOIDCAuthParameters {
+public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     /// Time when the End-User authentication occurred.
     ///
     /// Its value is a JSON number representing the number of seconds from
@@ -116,15 +116,15 @@ public struct JsonWebTokenClaimsPublicOIDCAuthParameters {
     ]
 }
 
-extension JsonWebTokenClaims {
-    private func stringKey<T>(_ keyPath: KeyPath<JsonWebTokenClaimsPublicOIDCAuthParameters, T>) -> String {
-        if let key = JsonWebTokenClaimsPublicOIDCAuthParameters.keys[keyPath] {
+extension JSONWebTokenClaims {
+    private func stringKey<T>(_ keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, T>) -> String {
+        if let key = JSONWebTokenClaimsPublicOIDCAuthParameters.keys[keyPath] {
             return key
         }
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsPublicOIDCAuthParameters, Data?>) -> Data? {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, Data?>) -> Data? {
         get {
             storage[stringKey(keyPath), true]
         }
@@ -133,7 +133,7 @@ extension JsonWebTokenClaims {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsPublicOIDCAuthParameters, [String]>) -> [String] {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, [String]>) -> [String] {
         get {
             return storage[stringKey(keyPath)]
         }
@@ -143,7 +143,7 @@ extension JsonWebTokenClaims {
         }
     }
     
-    public subscript<T>(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsPublicOIDCAuthParameters, T?>) -> T? {
+    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

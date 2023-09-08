@@ -7,7 +7,8 @@
 
 import Foundation
 
-public enum JsonWebKeyError: Error {
+public enum JSONWebKeyError: Error {
     case unknownAlgorithm
+    case unknownKeyType
     case decryptionFailed
 }

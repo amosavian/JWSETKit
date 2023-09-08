@@ -6,12 +6,16 @@
 //
 
 import Foundation
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 
-extension SymmetricKey: JsonWebKey {
-    public var storage: JsonWebValueStorage {
+extension SymmetricKey: JSONWebKey {
+    public var storage: JSONWebValueStorage {
         get {
-            var result = JsonWebValueStorage()
+            var result = JSONWebValueStorage()
             result["kty"] = "oct"
             withUnsafeBytes {
                 result["k", true] = Data($0)
@@ -24,7 +28,7 @@ extension SymmetricKey: JsonWebKey {
         }
     }
     
-    public static func create(jsonWebKey: JsonWebValueStorage) throws -> SymmetricKey {
+    public static func create(jsonWebKey: JSONWebValueStorage) throws -> SymmetricKey {
         guard let key = (jsonWebKey["k", true] as Data?) else {
             throw CryptoKitError.incorrectKeySize
         }
@@ -42,8 +46,8 @@ extension SymmetricKey: JsonWebKey {
     }
 }
 
-public struct JsonWebKeyHMAC<H: HashFunction>: JsonWebSigningKey {
-    public var storage: JsonWebValueStorage
+public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
+    public var storage: JSONWebValueStorage
 
     public var symmetricKey: SymmetricKey {
         get throws {
@@ -58,8 +62,8 @@ public struct JsonWebKeyHMAC<H: HashFunction>: JsonWebSigningKey {
         H.self
     }
     
-    public static func create(jsonWebKey: JsonWebValueStorage) throws -> JsonWebKeyHMAC {
-        var result = JsonWebKeyHMAC()
+    public static func create(jsonWebKey: JSONWebValueStorage) throws -> JSONWebKeyHMAC {
+        var result = JSONWebKeyHMAC()
         result.storage = jsonWebKey
         return result
     }

@@ -6,7 +6,11 @@
 //
 
 import Foundation
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 
 public struct JoseHeaderJWSRegisteredParameters {
     /// The "`alg`" (algorithm) Header Parameter identifies the cryptographic algorithm used to secure the JWS.
@@ -22,7 +26,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// The "`alg`" value is a case-sensitive ASCII string containing a `StringOrURI` value.
     ///
     /// This Header Parameter MUST be present and MUST be understood and processed by implementations.
-    public var algorithm: JsonWebAlgorithm { fatalError() }
+    public var algorithm: JSONWebAlgorithm { fatalError() }
     
     /// The "`jku`" (JWK Set URL) Header Parameter is a URI  that
     /// refers to a resource for a set of JSON-encoded public keys,
@@ -37,7 +41,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// This key is represented as a JSON Web Key [`JWK`].
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var key: (any JsonWebKey)? { fatalError() }
+    public var key: (any JSONWebKey)? { fatalError() }
     
     /// The "kid" (key ID) Header Parameter is a hint indicating which key was used to secure the JWS.
     ///
@@ -173,7 +177,7 @@ extension JOSEHeader {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, JsonWebAlgorithm>) -> JsonWebAlgorithm {
+    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, JSONWebAlgorithm>) -> JSONWebAlgorithm {
         get {
             storage[stringKey(keyPath)] ?? .none
         }

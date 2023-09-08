@@ -8,7 +8,7 @@
 import Foundation
 
 // Claims registered in [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693.html)
-public struct JsonWebTokenClaimsOAuthParameters {
+public struct JSONWebTokenClaimsOAuthParameters {
     /// The authorization and token endpoints allow the client to specify the scope
     /// of the access request using the "scope" request parameter.
     ///
@@ -31,15 +31,15 @@ public struct JsonWebTokenClaimsOAuthParameters {
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [:]
 }
 
-extension JsonWebTokenClaims {
-    private func stringKey<T>(_ keyPath: KeyPath<JsonWebTokenClaimsOAuthParameters, T>) -> String {
-        if let key = JsonWebTokenClaimsOAuthParameters.keys[keyPath] {
+extension JSONWebTokenClaims {
+    private func stringKey<T>(_ keyPath: KeyPath<JSONWebTokenClaimsOAuthParameters, T>) -> String {
+        if let key = JSONWebTokenClaimsOAuthParameters.keys[keyPath] {
             return key
         }
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
-    public subscript<T>(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsOAuthParameters, T?>) -> T? {
+    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsOAuthParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

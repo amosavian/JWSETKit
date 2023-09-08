@@ -8,7 +8,7 @@
 import Foundation
 
 /// JWT Registered Claims Regarding [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519.html)
-public struct JsonWebTokenClaimsRegisteredParameters {
+public struct JSONWebTokenClaimsRegisteredParameters {
     /// The "`aud`" (audience) claim identifies the recipients that the JWT is intended for.
     ///
     /// Each principal intended to process the JWT MUST identify itself with a value in the audience claim.
@@ -148,15 +148,15 @@ public struct JsonWebTokenClaimsRegisteredParameters {
     ]
 }
 
-extension JsonWebTokenClaims {
-    private func stringKey<T>(_ keyPath: KeyPath<JsonWebTokenClaimsRegisteredParameters, T>) -> String {
-        if let key = JsonWebTokenClaimsRegisteredParameters.keys[keyPath] {
+extension JSONWebTokenClaims {
+    private func stringKey<T>(_ keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, T>) -> String {
+        if let key = JSONWebTokenClaimsRegisteredParameters.keys[keyPath] {
             return key
         }
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsRegisteredParameters, [String]>) -> [String] {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, [String]>) -> [String] {
         get {
             let key = stringKey(keyPath)
             if let string = storage[key] as String? {
@@ -175,7 +175,7 @@ extension JsonWebTokenClaims {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsRegisteredParameters, [URL]>) -> [URL] {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, [URL]>) -> [URL] {
         get {
             let key = stringKey(keyPath)
             if let url = storage[key].flatMap(URL.init(string:)) {
@@ -197,7 +197,7 @@ extension JsonWebTokenClaims {
         }
     }
     
-    public subscript<T>(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsRegisteredParameters, T?>) -> T? {
+    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

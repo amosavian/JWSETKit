@@ -29,7 +29,7 @@ final class JWTTest: XCTestCase {
   }
 """
     
-    func testExample() throws {
+    func testDecodeClaims() throws {
         // XCTest Documenation
         // https://developer.apple.com/documentation/xctest
 
@@ -37,7 +37,7 @@ final class JWTTest: XCTestCase {
         // https://developer.apple.com/documentation/xctest/defining_test_cases_and_test_methods
         
         let decoder = JSONDecoder()
-        let claims = try decoder.decode(JsonWebTokenClaims.self, from: .init(testClaims.utf8))
+        let claims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
         
         XCTAssertEqual(claims.issuer, "https://self-issued.me")
         XCTAssertEqual(claims.issuerURL, URL(string: "https://self-issued.me"))

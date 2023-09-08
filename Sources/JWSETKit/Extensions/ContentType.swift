@@ -6,6 +6,7 @@
 //
 
 import Foundation
+#if canImport(UniformTypeIdentifiers)
 import UniformTypeIdentifiers
 
 extension URLRequest {
@@ -29,3 +30,4 @@ extension HTTPURLResponse {
             .flatMap { .init(mimeType: $0) }
     }
 }
+#endif

@@ -10,7 +10,7 @@ import AnyCodable
 
 /// Storage for values in JOSE headers or JWT claims
 @dynamicMemberLookup
-public struct JsonWebValueStorage: Codable, Hashable {
+public struct JSONWebValueStorage: Codable, Hashable {
     private var claims: [String: AnyCodable]
     
     /// Returns value of given key.
@@ -110,7 +110,14 @@ public struct JsonWebValueStorage: Codable, Hashable {
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self.claims = try container.decode([String : AnyCodable].self)
+        if let claims = try? container.decode([String : AnyCodable].self) {
+            self.claims = claims
+        } else if let base64url = try? container.decode(String.self),
+                  let data = Data(urlBase64Encoded: Data(base64url.utf8)) {
+            self.claims = try JSONDecoder().decode([String : AnyCodable].self, from: data)
+        } else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: ""))
+        }
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -147,10 +154,10 @@ public struct JsonWebValueStorage: Codable, Hashable {
         case is URL.Type, is NSURL.Type:
             return (claims[key]?.value as? String)
                 .map { URL(string: $0) } as? T
-        case is any JsonWebKey.Type:
+        case is (any JSONWebKey).Protocol:
             guard let value = claims[key] else { return nil }
             guard let data = try? JSONEncoder().encode(value) else { return nil }
-            return try? deserializeJsonWebKey(jsonWebKey: data) as? T
+            return try? JSONWebKeyCoder.deserialize(jsonWebKey: data) as? T
         case let type as any Decodable.Type:
             guard let value = claims[key]?.value else { return nil }
             if let value = value as? T {

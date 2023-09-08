@@ -17,7 +17,7 @@ import Foundation
 /// or they MAY return just the individual component fields using the other sub-fields,
 /// or they MAY return both. If both variants are returned, they SHOULD be describing the same address,
 /// with the formatted address indicating how the component fields are combined.
-public struct JsonWebAddress: Hashable, Codable {
+public struct JSONWebAddress: Hashable, Codable {
     enum CodingKeys: String, CodingKey {
         case formatted
         case streetAddress = "street_address"
@@ -66,7 +66,7 @@ public struct JsonWebAddress: Hashable, Codable {
 }
 
 // Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
-public struct JsonWebTokenClaimsPublicOIDCStandardParameters {
+public struct JSONWebTokenClaimsPublicOIDCStandardParameters {
     /// End-User's full name in displayable form including all name parts, possibly including titles and suffixes,
     /// ordered according to the End-User's locale and preferences.
     public var name: String? { fatalError() }
@@ -202,7 +202,7 @@ public struct JsonWebTokenClaimsPublicOIDCStandardParameters {
     /// The value of the address member is
     /// a JSON [RFC4627](https://openid.net/specs/openid-connect-core-1_0.html#RFC4627)
     /// structure containing some or all of the members defined in Section 5.1.1.
-    public var address: JsonWebAddress? { fatalError() }
+    public var address: JSONWebAddress? { fatalError() }
     
     /// Time the End-User's information was last updated.
     ///
@@ -215,15 +215,15 @@ public struct JsonWebTokenClaimsPublicOIDCStandardParameters {
     ]
 }
 
-extension JsonWebTokenClaims {
-    private func stringKey<T>(_ keyPath: KeyPath<JsonWebTokenClaimsPublicOIDCStandardParameters, T>) -> String {
-        if let key = JsonWebTokenClaimsPublicOIDCStandardParameters.keys[keyPath] {
+extension JSONWebTokenClaims {
+    private func stringKey<T>(_ keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T>) -> String {
+        if let key = JSONWebTokenClaimsPublicOIDCStandardParameters.keys[keyPath] {
             return key
         }
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsPublicOIDCStandardParameters, Bool>) -> Bool {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Bool>) -> Bool {
         get {
             storage[stringKey(keyPath)]
         }
@@ -232,7 +232,7 @@ extension JsonWebTokenClaims {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsPublicOIDCStandardParameters, Locale?>) -> Locale? {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Locale?>) -> Locale? {
         get {
             storage[stringKey(keyPath)]
                 .flatMap(Locale.init(identifier:))
@@ -242,7 +242,7 @@ extension JsonWebTokenClaims {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsPublicOIDCStandardParameters, TimeZone?>) -> TimeZone? {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, TimeZone?>) -> TimeZone? {
         get {
             storage[stringKey(keyPath)]
                 .flatMap(TimeZone.init(identifier:))
@@ -252,7 +252,7 @@ extension JsonWebTokenClaims {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsPublicOIDCStandardParameters, Date?>) -> Date? {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Date?>) -> Date? {
         get {
             let key = stringKey(keyPath)
             switch keyPath {
@@ -277,7 +277,7 @@ extension JsonWebTokenClaims {
         }
     }
     
-    public subscript<T>(dynamicMember keyPath: KeyPath<JsonWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
+    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
