@@ -129,6 +129,43 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
             try encodeAsFlattenedJSON(encoder)
         }
     }
+    
+    public mutating func updateSignature(using keys: [any JSONWebSigningKey]) throws {
+        guard let firstKey = keys.first else {
+            throw JSONWebKeyError.noKeyProvided
+        }
+        headers = try headers.map({ header in
+            var header = header
+            let key = keys.first {
+                header.unprotectedHeader.keyId == $0.keyId || header.header.value.keyId == $0.keyId
+            } ?? firstKey
+            let message = header.header.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
+            let signature = try key.sign(message)
+            return try.init(
+                header: header.header.protected,
+                unprotectedHeader: header.unprotectedHeader,
+                signature: signature)
+        })
+    }
+    
+    public mutating func updateSignature(using key: any JSONWebSigningKey) throws {
+        try updateSignature(using: [key])
+    }
+    
+    public func verify(using keys: [any JSONWebValidatingKey]) throws {
+        try keys.forEach { key in
+            let header = headers.first {
+                $0.unprotectedHeader.keyId == key.keyId || $0.header.value.keyId == key.keyId
+            } ?? headers.first
+            guard let protectedHeadeer = header?.header, let signature = header?.signature else { return }
+            let message = protectedHeadeer.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
+            try key.validate(signature, for: message)
+        }
+    }
+    
+    public func verify(using key: any JSONWebValidatingKey) throws {
+        try verify(using: [key])
+    }
 }
 
 public enum JSONWebSignatureRepresentation {
