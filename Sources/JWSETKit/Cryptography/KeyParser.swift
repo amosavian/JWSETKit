@@ -11,6 +11,7 @@ import CryptoKit
 #else
 import Crypto
 #endif
+import SwiftASN1
 
 public enum JSONWebKeyCoder {
     public static func deserialize(jsonWebKey: Data) throws -> any JSONWebKey {
@@ -21,29 +22,19 @@ public enum JSONWebKeyCoder {
         
         switch (keyType, webKey.algorithm) {
         case (.elipticCurve, _):
-            fatalError()
+            if webKey.privateKey != nil {
+                return try JSONWebECPrivateKey(jsonWebKey: webKey.storage)
+            } else {
+                return try JSONWebECPublicKey(jsonWebKey: webKey.storage)
+            }
         case (.rsa, _):
             fatalError()
+        case (.symmetric, .aesEncryptionGCM128),
+            (.symmetric, .aesEncryptionGCM192),
+            (.symmetric, .aesEncryptionGCM256):
+            return try JSONWebKeyAESGCM(jsonWebKey: webKey.storage)
         case (.symmetric, _):
             return try SymmetricKey(jsonWebKey: webKey.storage)
-        default:
-            throw JSONWebKeyError.unknownKeyType
-        }
-    }
-    
-    static func deserializeEC(jsonWebKey: JSONWebKeyData) throws -> any JSONWebKey {
-        let curve = jsonWebKey.curve ?? .init(rawValue: "")
-        switch curve {
-        case .p256:
-            fatalError()
-        case .p384:
-            fatalError()
-        case .p521:
-            fatalError()
-        case .ed25519:
-            fatalError()
-        case .x25519:
-            fatalError()
         default:
             throw JSONWebKeyError.unknownKeyType
         }

@@ -38,14 +38,12 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
             return SymmetricKey(data: keyValue)
         }
     }
-    public static func create(jsonWebKey: JSONWebValueStorage) throws -> JSONWebKeyAESGCM {
-        var result = JSONWebKeyAESGCM()
-        result.storage = jsonWebKey
-        return result
+    public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyAESGCM {
+        .init(storage: storage)
     }
     
-    public init() {
-        self.init(.bits128)
+    public init(storage: JSONWebValueStorage) {
+        self.storage = storage
     }
     
     public init(_ keySize: SymmetricKeySize) {

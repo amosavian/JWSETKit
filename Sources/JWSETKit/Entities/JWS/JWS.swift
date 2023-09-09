@@ -72,7 +72,7 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
             self.headers = try [
                 .init(
                 header: sections[0],
-                unprotectedHeader: .init(),
+                unprotectedHeader: .init(storage: .init()),
                 signature: sections[2])
             ]
         } else if let signatures = try container.decodeIfPresent([JSONWebSignatureHeader].self, forKey: .signatures) {
@@ -135,7 +135,7 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
             throw JSONWebKeyError.noKeyProvided
         }
         headers = try headers.map({ header in
-            var header = header
+            let header = header
             let key = keys.first {
                 header.unprotectedHeader.keyId == $0.keyId || header.header.value.keyId == $0.keyId
             } ?? firstKey

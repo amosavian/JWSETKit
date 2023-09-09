@@ -16,25 +16,23 @@ import Crypto
 /// data structure that represents a cryptographic key.
 @dynamicMemberLookup
 public protocol JSONWebKey: JSONWebContainer {
-    /// Returns a new concrete key using json data.
-    static func create(jsonWebKey: JSONWebValueStorage) throws -> Self
 }
 
 extension JSONWebKey {
     /// Creates a new JWK using json data.
     public init(jsonWebKeyData data: Data) throws {
-        self = try Self.create(jsonWebKey: JSONDecoder().decode(JSONWebValueStorage.self, from: data))
+        self = try Self.create(storage: JSONDecoder().decode(JSONWebValueStorage.self, from: data))
     }
     
     /// Creates a new JWK using json data.
     public init(jsonWebKey value: JSONWebValueStorage) throws {
-        self = try Self.create(jsonWebKey: value)
+        self = try Self.create(storage: value)
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(JSONWebValueStorage.self)
-        self = try Self.create(jsonWebKey: value)
+        self = try Self.create(storage: value)
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -66,11 +64,11 @@ public protocol JSONWebSigningKey: JSONWebValidatingKey {
 struct JSONWebKeyData: JSONWebKey {
     var storage: JSONWebValueStorage
     
-    static func create(jsonWebKey: JSONWebValueStorage) throws -> JSONWebKeyData {
-        JSONWebKeyData(storage: jsonWebKey)
+    static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyData {
+        JSONWebKeyData(storage: storage)
     }
     
-    internal init(storage: JSONWebValueStorage) {
+    init(storage: JSONWebValueStorage) {
         self.storage = storage
     }
     

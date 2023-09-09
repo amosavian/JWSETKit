@@ -11,8 +11,12 @@ import Foundation
 public struct JSONWebTokenClaims: JSONWebContainer {
     public var storage: JSONWebValueStorage
     
-    public init() {
-        self.storage = .init()
+    public init(storage: JSONWebValueStorage) {
+        self.storage = storage
+    }
+    
+    public static func create(storage: JSONWebValueStorage) throws -> JSONWebTokenClaims {
+        .init(storage: storage)
     }
 }
 

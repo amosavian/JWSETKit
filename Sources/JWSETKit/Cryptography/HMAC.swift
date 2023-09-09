@@ -28,15 +28,16 @@ extension SymmetricKey: JSONWebKey {
         }
     }
     
-    public static func create(jsonWebKey: JSONWebValueStorage) throws -> SymmetricKey {
-        guard let key = (jsonWebKey["k", true] as Data?) else {
+    public static func create(storage: JSONWebValueStorage) throws -> SymmetricKey {
+        guard let key = (storage["k", true] as Data?) else {
             throw CryptoKitError.incorrectKeySize
         }
         return SymmetricKey(data: key)
     }
     
-    public init() {
-        self = .init(size: .bits128)
+    public init(storage: JSONWebValueStorage) {
+        self.init(size: .bits128)
+        self.storage = storage
     }
     
     public func hash(into hasher: inout Hasher) {
@@ -62,16 +63,12 @@ public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
         H.self
     }
     
-    public static func create(jsonWebKey: JSONWebValueStorage) throws -> JSONWebKeyHMAC {
-        var result = JSONWebKeyHMAC()
-        result.storage = jsonWebKey
-        return result
+    public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyHMAC {
+        .init(storage: storage)
     }
     
-    public init() {
-        self.storage = .init()
-        self.algorithm = "HS\(H.Digest.byteCount * 8)"
-        self.keyValue = Self.random()
+    public init(storage: JSONWebValueStorage) {
+        self.storage = storage
     }
     
     public init(_ key: SymmetricKey) throws {

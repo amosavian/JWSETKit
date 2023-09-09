@@ -13,13 +13,13 @@ public protocol JSONWebContainer: Codable, Hashable {
     /// Storage of container values.
     var storage: JSONWebValueStorage { get set }
     
-    /// Creates a container with empty storage.
-    init()
+    /// Returns a new concrete key using json data.
+    static func create(storage: JSONWebValueStorage) throws -> Self
 }
 
 extension JSONWebContainer {
     public init(from decoder: Decoder) throws {
-        self = .init()
+        self = try Self.create(storage: .init())
         let container = try decoder.singleValueContainer()
         self.storage = try container.decode(JSONWebValueStorage.self)
     }

@@ -16,9 +16,12 @@ import Crypto
 public struct JOSEHeader: JSONWebContainer {
     public var storage: JSONWebValueStorage
     
-    public init() {
-        self.storage = .init()
-        self.algorithm = .none
+    public init(storage: JSONWebValueStorage) {
+        self.storage = storage
+    }
+    
+    public static func create(storage: JSONWebValueStorage) throws -> JOSEHeader {
+        .init(storage: storage)
     }
     
     public init(encodedString: String) throws {
