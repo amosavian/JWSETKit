@@ -28,7 +28,11 @@ extension AnyJSONWebKey {
                 return try JSONWebECPublicKey(jsonWebKey: webKey.storage)
             }
         case (.rsa, _):
-            fatalError()
+            if webKey.privateExponent != nil {
+                return try JSONWebRSAPrivateKey(jsonWebKey: webKey.storage)
+            } else {
+                return try JSONWebRSAPublicKey(jsonWebKey: webKey.storage)
+            }
         case (.symmetric, .aesEncryptionGCM128),
             (.symmetric, .aesEncryptionGCM192),
             (.symmetric, .aesEncryptionGCM256):

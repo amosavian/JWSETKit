@@ -1,7 +1,7 @@
 import XCTest
 @testable import JWSETKit
 
-final class JWTTest: XCTestCase {
+final class JWTClaimsTest: XCTestCase {
     let testClaims = """
 {
    "iss": "https://self-issued.me",
