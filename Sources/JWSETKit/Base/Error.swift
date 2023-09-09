@@ -11,5 +11,6 @@ public enum JSONWebKeyError: Error {
     case unknownAlgorithm
     case unknownKeyType
     case decryptionFailed
-    case noKeyProvided
+    case keyNotFound
+    case operationNotAllowed
 }

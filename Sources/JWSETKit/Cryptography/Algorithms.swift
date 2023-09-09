@@ -76,8 +76,8 @@ extension JSONWebAlgorithm {
     /// ECDSA using P-521 and SHA-512.
     public static let ecdsaSignatureP512SHA512: Self = "ES512"
     
-    /// RSAES-PKCS1-v1_5
-    public static let rsaEncryptionPKCS1: Self = "RSA-OAEP"
+    /// RSAES-PKCS1-v1.5
+    public static let rsaEncryptionPKCS1: Self = "RSA1_5"
     
     /// RSAES OAEP using default parameters.
     public static let rsaEncryptionOAEP: Self = "RSA-OAEP"

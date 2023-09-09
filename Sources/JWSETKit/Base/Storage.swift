@@ -72,7 +72,7 @@ public struct JSONWebValueStorage: Codable, Hashable {
         get {
             guard let value = self[member] as String? else { return nil }
             if urlEncoded {
-                return Data(urlBase64Encoded: Data(value.utf8))
+                return Data(urlBase64Encoded: value)
             } else {
                 return Data(base64Encoded: value)
             }
@@ -91,7 +91,7 @@ public struct JSONWebValueStorage: Codable, Hashable {
         get {
             guard let values = self[member] as [String]? else { return [] }
             if urlEncoded {
-                return values.compactMap { Data(urlBase64Encoded: Data($0.utf8)) }
+                return values.compactMap { Data(urlBase64Encoded: $0) }
             } else {
                 return values.compactMap { Data(base64Encoded: $0) }
             }
@@ -113,7 +113,7 @@ public struct JSONWebValueStorage: Codable, Hashable {
         if let claims = try? container.decode([String : AnyCodable].self) {
             self.claims = claims
         } else if let base64url = try? container.decode(String.self),
-                  let data = Data(urlBase64Encoded: Data(base64url.utf8)) {
+                  let data = Data(urlBase64Encoded:base64url) {
             self.claims = try JSONDecoder().decode([String : AnyCodable].self, from: data)
         } else {
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: ""))
@@ -157,7 +157,7 @@ public struct JSONWebValueStorage: Codable, Hashable {
         case is (any JSONWebKey).Protocol:
             guard let value = claims[key] else { return nil }
             guard let data = try? JSONEncoder().encode(value) else { return nil }
-            return try? JSONWebKeyCoder.deserialize(jsonWebKey: data) as? T
+            return try? AnyJSONWebKey.deserialize(jsonWebKey: data) as? T
         case let type as any Decodable.Type:
             guard let value = claims[key]?.value else { return nil }
             if let value = value as? T {

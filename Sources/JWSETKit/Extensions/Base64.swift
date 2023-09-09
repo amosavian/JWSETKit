@@ -45,4 +45,9 @@ extension Data {
         self.init()
         self = value
     }
+    
+    public init?(urlBase64Encoded: String, options: NSData.Base64DecodingOptions = []) {
+        guard let value = Data(urlBase64Encoded: Data(urlBase64Encoded.utf8)) else { return nil }
+        self = value
+    }
 }

@@ -53,23 +53,27 @@ public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
 
 public protocol JSONWebValidatingKey: JSONWebKey {
     /// Validates a signature for given data using current key.
-    func validate<D: DataProtocol>(_ signature: D, for data: D) throws
+    func validate<D: DataProtocol>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws
 }
 
 public protocol JSONWebSigningKey: JSONWebValidatingKey {
     /// Creates a new signature for given data.
-    func sign<D: DataProtocol>(_ data: D) throws -> Data
+    func sign<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
 }
 
-struct JSONWebKeyData: JSONWebKey {
+struct AnyJSONWebKey: JSONWebKey {
     var storage: JSONWebValueStorage
     
-    static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyData {
-        JSONWebKeyData(storage: storage)
+    static func create(storage: JSONWebValueStorage) throws -> AnyJSONWebKey {
+        AnyJSONWebKey(storage: storage)
     }
     
     init(storage: JSONWebValueStorage) {
         self.storage = storage
+    }
+    
+    init(_ key: any JSONWebKey) {
+        self.storage = key.storage
     }
     
     init() {

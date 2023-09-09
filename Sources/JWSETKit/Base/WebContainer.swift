@@ -93,7 +93,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: Codable, H
         let container = try decoder.singleValueContainer()
         
         let encoded = try container.decode(String.self)
-        guard let protected = Data(urlBase64Encoded: Data(encoded.utf8)) else {
+        guard let protected = Data(urlBase64Encoded: encoded) else {
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Protected is not a valid bas64url."))
         }
         self.protected = protected

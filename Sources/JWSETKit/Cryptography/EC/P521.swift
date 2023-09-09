@@ -6,7 +6,11 @@
 //
 
 import Foundation
+#if canImport(CryptoKit)
 import CryptoKit
+#else
+import Crypto
+#endif
 
 extension P521.Signing.PublicKey: JSONWebValidatingKey {
     public init(storage: JSONWebValueStorage) {
@@ -16,7 +20,7 @@ extension P521.Signing.PublicKey: JSONWebValidatingKey {
     
     public var storage: JSONWebValueStorage {
         get {
-            var result = JSONWebKeyData()
+            var result = AnyJSONWebKey()
             let rawRepresentation = rawRepresentation
             result.keyType = .elipticCurve
             result.curve = .p521
@@ -34,7 +38,7 @@ extension P521.Signing.PublicKey: JSONWebValidatingKey {
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> P521.Signing.PublicKey {
-        let keyData = JSONWebKeyData(storage: storage)
+        let keyData = AnyJSONWebKey(storage: storage)
         guard let x = keyData.xCoordinate, x.count == 66,
               let y = keyData.yCoordinate, y.count == 66 else {
             throw CryptoKitError.incorrectKeySize
@@ -43,7 +47,7 @@ extension P521.Signing.PublicKey: JSONWebValidatingKey {
         return try .init(rawRepresentation: rawKey)
     }
     
-    public func validate<D>(_ signature: D, for data: D) throws where D : DataProtocol {
+    public func validate<D>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws where D : DataProtocol {
         let signature = try P521.Signing.ECDSASignature(rawRepresentation: signature)
         var digest = SHA512()
         digest.update(data: data)
@@ -69,7 +73,7 @@ extension P521.Signing.PrivateKey: JSONWebSigningKey {
     
     public var storage: JSONWebValueStorage {
         get {
-            var result = JSONWebKeyData()
+            var result = AnyJSONWebKey()
             let rawRepresentation = rawRepresentation
             result.keyType = .elipticCurve
             result.curve = .p521
@@ -88,21 +92,21 @@ extension P521.Signing.PrivateKey: JSONWebSigningKey {
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> P521.Signing.PrivateKey {
-        let keyData = JSONWebKeyData(storage: storage)
+        let keyData = AnyJSONWebKey(storage: storage)
         guard let privateKey = keyData.privateKey, privateKey.count == 66 else {
             throw CryptoKitError.incorrectKeySize
         }
         return try .init(rawRepresentation: privateKey)
     }
     
-    public func sign<D>(_ data: D) throws -> Data where D : DataProtocol {
+    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
         var digest = SHA512()
         digest.update(data: data)
         return try self.signature(for: digest.finalize()).rawRepresentation
     }
     
-    public func validate<D>(_ signature: D, for data: D) throws where D : DataProtocol {
-        try self.publicKey.validate(signature, for: data)
+    public func validate<D>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws where D : DataProtocol {
+        try self.publicKey.validate(signature, for: data, using: algorithm)
     }
     
     public func hash(into hasher: inout Hasher) {

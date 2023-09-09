@@ -25,7 +25,7 @@ public struct JOSEHeader: JSONWebContainer {
     }
     
     public init(encodedString: String) throws {
-        let data = Data(urlBase64Encoded: Data(encodedString.utf8))!
+        let data = Data(urlBase64Encoded: encodedString)!
         self.storage = try JSONDecoder().decode(JSONWebValueStorage.self, from: data)
     }
     

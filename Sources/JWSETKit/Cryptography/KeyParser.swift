@@ -13,9 +13,9 @@ import Crypto
 #endif
 import SwiftASN1
 
-public enum JSONWebKeyCoder {
+extension AnyJSONWebKey {
     public static func deserialize(jsonWebKey: Data) throws -> any JSONWebKey {
-        let webKey = try JSONDecoder().decode(JSONWebKeyData.self, from: jsonWebKey)
+        let webKey = try JSONDecoder().decode(AnyJSONWebKey.self, from: jsonWebKey)
         guard let keyType = webKey.keyType else {
             throw JSONWebKeyError.unknownAlgorithm
         }
