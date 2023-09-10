@@ -307,7 +307,7 @@ extension SecKey: JSONWebValidatingKey {
         .rsaSignaturePSSSHA384: .rsaSignatureMessagePSSSHA384,
     ]
     
-    public func validate<D>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws where D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
@@ -339,6 +339,46 @@ extension SecKey: JSONWebSigningKey {
             throw CryptoKitError.underlyingCoreCryptoError(error: 0)
         }
         return unWrapped as Data
+    }
+}
+
+extension SecKey: JSONWebDecryptingKey {
+    fileprivate static let encAlgorithms: [JSONWebAlgorithm: SecKeyAlgorithm] = [
+        .rsaEncryptionPKCS1: .rsaEncryptionPKCS1,
+        .rsaEncryptionOAEP: .rsaEncryptionOAEPSHA1,
+        .rsaEncryptionOAEPSHA256: .rsaEncryptionOAEPSHA256,
+        .rsaEncryptionOAEPSHA384: .rsaEncryptionOAEPSHA384,
+        .rsaEncryptionOAEPSHA512: .rsaEncryptionOAEPSHA512,
+        ]
+    
+    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+        guard let secAlgorithm = Self.encAlgorithms[algorithm] else {
+            throw JSONWebKeyError.operationNotAllowed
+        }
+        var error: Unmanaged<CFError>?
+        let decrypted = SecKeyCreateDecryptedData(self, secAlgorithm, Data(data) as CFData, &error)
+        if let error = error?.takeRetainedValue() {
+            throw error
+        }
+        guard let unWrapped = decrypted else {
+            throw CryptoKitError.underlyingCoreCryptoError(error: 0)
+        }
+        return unWrapped as Data
+    }
+    
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+        guard let secAlgorithm = Self.encAlgorithms[algorithm] else {
+            throw JSONWebKeyError.operationNotAllowed
+        }
+        var error: Unmanaged<CFError>?
+        let encrypted = SecKeyCreateEncryptedData(self, secAlgorithm, Data(data) as CFData, &error)
+        if let error = error?.takeRetainedValue() {
+            throw error
+        }
+        guard let unWrapped = encrypted else {
+            throw CryptoKitError.underlyingCoreCryptoError(error: 0)
+        }
+        return .init(ciphertext: unWrapped as Data)
     }
 }
 #endif

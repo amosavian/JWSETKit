@@ -13,19 +13,25 @@ import CommonCrypto
 extension SecCertificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         get {
-            try! publicKey.storage
+            var key = try! AnyJSONWebKey(storage: publicKey.storage)
+            key.certificateChain = [self]
+            return key.storage
         }
         set {
             preconditionFailure("Operation not allowed.")
         }
     }
     
-    public func validate<D>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws where D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
         try publicKey.validate(signature, for: data, using: algorithm)
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
-        fatalError("Not implemented.")
+        let key = AnyJSONWebKey(storage: storage)
+        guard let certificate = key.certificateChain.first else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        return certificate as! Self
     }
     
     private var publicKey: SecKey {

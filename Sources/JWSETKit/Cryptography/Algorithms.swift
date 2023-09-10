@@ -99,15 +99,80 @@ extension JSONWebAlgorithm {
     
     /// AES GCM using 256-bit key.
     public static let aesEncryptionGCM256: Self = "A256GCM"
+}
+
+/// JSON Key Type, e.g. `RSA`, `EC`, etc.
+public struct JSONWebKeyType: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
+    public let rawValue: String
     
-    /// `AES_128_CBC_HMAC_SHA_256` authenticated encryption algorithm.
-    public static let aesEncryptionCBC128SHA256: Self = "A128CBC-HS256"
+    public init(rawValue: String) {
+        self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
+    }
     
-    /// `AES_192_CBC_HMAC_SHA_384` authenticated encryption algorithm
-    public static let aesEncryptionCBC192SHA384: Self = "A192CBC-HS384"
+    public init(stringLiteral value: StringLiteralType) {
+        self.rawValue = value.trimmingCharacters(in: .whitespaces)
+    }
     
-    /// `AES_256_CBC_HMAC_SHA_512` authenticated encryption algorithm.
-    public static let aesEncryptionCBC256SHA512: Self = "A256CBC-HS512"
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.rawValue = try container.decode(String.self)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+extension JSONWebKeyType {
+    /// Elliptic Curve
+    public static let elipticCurve: Self = "EC"
+    
+    /// RSA
+    public static let rsa: Self = "RSA"
+    
+    /// Octet sequence
+    public static let symmetric: Self = "oct"
+}
+
+/// JSON EC Curves.
+public struct JSONWebKeyCurve: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
+    public let rawValue: String
+    
+    public init(rawValue: String) {
+        self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
+    }
+    
+    public init(stringLiteral value: StringLiteralType) {
+        self.rawValue = value.trimmingCharacters(in: .whitespaces)
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.rawValue = try container.decode(String.self)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+extension JSONWebKeyCurve {
+    /// NIST P-256 (secp256r1) curve.
+    public static let p256: Self = "P-256"
+    
+    /// NIST P-384 (secp384r1) curve.
+    public static let p384: Self = "P-384"
+    
+    /// NIST P-521 (secp521r1) curve.
+    public static let p521: Self = "P-521"
+    
+    /// EC-25519 for signing curve.
+    public static let ed25519: Self = "Ed25519"
+    
+    /// EC-25519 for Diffie-Hellman curve.
+    public static let x25519: Self = "X25519"
 }
 
 /// JSON Web Compression Algorithms.

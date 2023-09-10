@@ -25,6 +25,8 @@ extension JSONWebKey {
     }
     
     /// Creates a new JWK using json data.
+    ///
+    /// - Parameter value: JSON key-value storage.
     public init(jsonWebKey value: JSONWebValueStorage) throws {
         self = try Self.create(storage: value)
     }
@@ -43,28 +45,48 @@ extension JSONWebKey {
 
 public protocol JSONWebEncryptingKey: JSONWebKey {
     /// Encrypts plain-text data using current key.
-    func encrypt<D: DataProtocol>(_ data: D) throws -> SealedData
+    ///
+    /// - Parameters:
+    ///   - data: Plain-text to be ecnrypted.
+    ///   - algorithm: Algorithm of encryption.
+    /// - Returns: Cipher-text data.
+    func encrypt<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData
 }
 
 public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
     /// Encrypts ciphered data using current key.
-    func decrypt<D: DataProtocol>(_ data: D) throws -> Data
+    ///
+    /// - Parameters:
+    ///   - data: Cipher-text that ought to be decrypted.
+    ///   - algorithm: Algorithm of encryption.
+    /// - Returns: Plain-text data
+    func decrypt<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
 }
 
 public protocol JSONWebValidatingKey: JSONWebKey {
-    /// Validates a signature for given data using current key.
-    func validate<D: DataProtocol>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws
+    /// Verifies the cryptographic signature of a block of data using a public key and specified algorithm.
+    ///
+    /// - Parameters:
+    ///   - signature: The signature that must be validated.
+    ///   - data: The data that was signed.
+    ///   - algorithm: The algorithm that was used to create the signature.
+    func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol
 }
 
 public protocol JSONWebSigningKey: JSONWebValidatingKey {
-    /// Creates a new signature for given data.
+    /// Creates the cryptographic signature for a block of data using a private key and specified algorithm.
+    /// 
+    /// - Parameters:
+    ///   - data: The data whose signature you want.
+    ///   - algorithm: The signing algorithm to use.
+    /// - Returns: The digital signature or throws error on failure.
     func sign<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
 }
 
-struct AnyJSONWebKey: JSONWebKey {
-    var storage: JSONWebValueStorage
+public struct AnyJSONWebKey: JSONWebKey {
+    public var storage: JSONWebValueStorage
     
-    static func create(storage: JSONWebValueStorage) throws -> AnyJSONWebKey {
+    public static func create(storage: JSONWebValueStorage) throws -> AnyJSONWebKey {
         AnyJSONWebKey(storage: storage)
     }
     
@@ -81,77 +103,42 @@ struct AnyJSONWebKey: JSONWebKey {
     }
 }
 
-/// JSON Web Compression Algorithms.
-public struct JSONWebKeyType: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
-    public let rawValue: String
-    
-    public init(rawValue: String) {
-        self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
+/// A JWK Set is a JSON object that represents a set of JWKs.
+///
+/// The JSON object MUST have a "keys" member, with its value being an array of JWKs.
+/// This JSON object MAY contain whitespace and/or line breaks.
+public struct JSONWebKeySet: Codable, Hashable {
+    enum CodingKeys: CodingKey {
+        case keys
     }
     
-    public init(stringLiteral value: StringLiteralType) {
-        self.rawValue = value.trimmingCharacters(in: .whitespaces)
-    }
+    /// The value of the "keys" parameter is an array of JWK values.
+    ///
+    /// By default, the order of the JWK values within the array does not imply
+    /// an order of preference among them, although applications of JWK Sets
+    /// can choose to assign a meaning to the order for their purposes, if desired.
+    public var keys: [any JSONWebKey]
     
-    public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self.rawValue = try container.decode(String.self)
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
-    }
-}
-
-extension JSONWebKeyType {
-    /// Elliptic Curve
-    public static let elipticCurve: Self = "EC"
-    
-    /// RSA
-    public static let rsa: Self = "RSA"
-    
-    /// Octet sequence
-    public static let symmetric: Self = "oct"
-}
-
-
-/// JSON EC Curves.
-public struct JSONWebKeyCurve: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
-    public let rawValue: String
-    
-    public init(rawValue: String) {
-        self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
-    }
-    
-    public init(stringLiteral value: StringLiteralType) {
-        self.rawValue = value.trimmingCharacters(in: .whitespaces)
+    init(keys: [any JSONWebKey]) {
+        self.keys = keys
     }
     
     public init(from decoder: Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self.rawValue = try container.decode(String.self)
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let keys = try container.decode([AnyJSONWebKey].self, forKey: .keys)
+        self.keys = try keys.map { try $0.specialized() }
     }
     
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(keys.map(\.storage), forKey: .keys)
     }
-}
-
-extension JSONWebKeyCurve {
-    /// NIST P-256 (secp256r1) curve.
-    public static let p256: Self = "P-256"
     
-    /// NIST P-384 (secp384r1) curve.
-    public static let p384: Self = "P-384"
+    public static func == (lhs: JSONWebKeySet, rhs: JSONWebKeySet) -> Bool {
+        lhs.keys.map(\.storage) == rhs.keys.map(\.storage)
+    }
     
-    /// NIST P-521 (secp521r1) curve.
-    public static let p521: Self = "P-521"
-    
-    /// EC-25519 for signing curve.
-    public static let ed25519: Self = "Ed25519"
-    
-    /// EC-25519 for Diffie-Hellman curve.
-    public static let x25519: Self = "X25519"
+    public func hash(into hasher: inout Hasher) {
+        keys.forEach { hasher.combine($0) }
+    }
 }

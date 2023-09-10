@@ -13,8 +13,13 @@ import Crypto
 #endif
 
 public struct SealedData: DataProtocol, BidirectionalCollection {
+    /// The nonce used to encrypt the data.
     public let iv: Data?
+    
+    /// The encrypted data.
     public let ciphertext: Data
+    
+    /// An authentication tag.
     public let tag: Data?
     
     public var regions: [Data] {
@@ -47,12 +52,23 @@ public struct SealedData: DataProtocol, BidirectionalCollection {
         combined[bounds]
     }
     
+    /// Creates a sealed box from the given tag, nonce, and ciphertext.
+    ///
+    /// - Parameters:
+    ///   - iv: The nonce.
+    ///   - ciphertext: The encrypted data.
+    ///   - tag: The authentication tag.
+
     public init(iv: Data? = nil, ciphertext: Data, tag: Data? = nil) {
         self.iv = iv
         self.ciphertext = ciphertext
         self.tag = tag
     }
     
+    /// Creates a sealed box from the given AES sealed box.
+    ///
+    /// - Parameters:
+    ///   - sealedBox: Container for your data.
     public init(_ sealedBox: AES.GCM.SealedBox) {
         self.iv = Data(sealedBox.nonce)
         self.ciphertext = sealedBox.ciphertext
@@ -61,6 +77,10 @@ public struct SealedData: DataProtocol, BidirectionalCollection {
 }
 
 extension AES.GCM.SealedBox {
+    /// Creates a AES sealed box from the given sealed box.
+    ///
+    /// - Parameters:
+    ///   - sealedBox: Container for your data.
     public init(_ sealedData: SealedData) throws {
         self = try .init(
             nonce: .init(data: sealedData.iv ?? .init()),

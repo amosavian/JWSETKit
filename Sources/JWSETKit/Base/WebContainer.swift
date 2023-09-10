@@ -14,6 +14,10 @@ public protocol JSONWebContainer: Codable, Hashable {
     var storage: JSONWebValueStorage { get set }
     
     /// Returns a new concrete key using json data.
+    ///
+    /// - Parameter storage: Storage of key-values.
+    /// 
+    /// - Returns: A new instance of current class.
     static func create(storage: JSONWebValueStorage) throws -> Self
 }
 

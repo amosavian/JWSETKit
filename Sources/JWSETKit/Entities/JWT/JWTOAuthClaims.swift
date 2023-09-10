@@ -16,6 +16,13 @@ public struct JSONWebTokenClaimsOAuthParameters {
     /// to inform the client of the scope of the access token issued.
     public var scope: String? { fatalError() }
     
+    /// The authorization and token endpoints allow the client to specify the scope
+    /// of the access request using the "scope" request parameter.
+    ///
+    /// In turn, the authorization server uses the "scope" response parameter
+    /// to inform the client of the scope of the access token issued.
+    public var scopes: [String] { fatalError() }
+    
     /// The authorization server issues the registered client a client identifier
     /// -- a unique string representing the registration information provided by the client.
     ///
@@ -37,6 +44,15 @@ extension JSONWebTokenClaims {
             return key
         }
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
+    }
+    
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsOAuthParameters, [String]>) -> [String] {
+        get {
+            (storage[stringKey(keyPath)] as String?)?.components(separatedBy: " ") ?? []
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue.joined(separator: " ")
+        }
     }
     
     public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsOAuthParameters, T?>) -> T? {

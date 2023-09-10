@@ -47,7 +47,7 @@ extension P256.Signing.PublicKey: JSONWebValidatingKey {
         return try .init(rawRepresentation: rawKey)
     }
     
-    public func validate<D>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws where D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
         let signature = try P256.Signing.ECDSASignature(rawRepresentation: signature)
         var digest = SHA256()
         digest.update(data: data)
@@ -105,7 +105,7 @@ extension P256.Signing.PrivateKey: JSONWebSigningKey {
         return try self.signature(for: digest.finalize()).rawRepresentation
     }
     
-    public func validate<D>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws where D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
         try self.publicKey.validate(signature, for: data, using: algorithm)
     }
     

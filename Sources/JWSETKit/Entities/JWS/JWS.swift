@@ -7,6 +7,7 @@
 
 import Foundation
 
+/// Represents a signature or MAC over the JWS Payload and the JWS Protected Header.
 public struct JSONWebSignatureHeader: Hashable, Codable {
     enum CodingKeys: CodingKey {
         case protected
@@ -14,16 +15,36 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
         case signature
     }
     
+    /// For a JWS, the members of the JSON object(s) representing the JOSE Header
+    /// describe the digital signature or MAC applied to the JWS Protected Header
+    /// and the JWS Payload and optionally additional properties of the JWS.
     public var header: ProtectedJSONWebContainer<JOSEHeader>
+    
+    /// The value JWS Unprotected Header.
     public var unprotectedHeader: JOSEHeader
+    
+    /// Signature of protected header concatenated with payload.
     public var signature: Data
     
+    /// Creates a new JWS header using components.
+    ///
+    /// - Parameters:
+    ///   - header: JWS Protected Header.
+    ///   - unprotectedHeader: JWS unsigned header.
+    ///   - signature: Signature of protected header concatenated with payload.
     public init(header: JOSEHeader, unprotectedHeader: JOSEHeader, signature: Data) throws {
         self.header = try .init(value: header)
         self.unprotectedHeader = unprotectedHeader
         self.signature = signature
     }
     
+    
+    /// /// Creates a new JWS header using components.
+    ///
+    /// - Parameters:
+    ///   - header: JWS Protected Header in byte array representation.
+    ///   - unprotectedHeader: JWS unsigned header.
+    ///   - signature: Signature of protected header concatenated with payload.
     public init(header: Data, unprotectedHeader: JOSEHeader, signature: Data) throws {
         self.header = try ProtectedJSONWebContainer<JOSEHeader>(protected: header)
         self.unprotectedHeader = unprotectedHeader
@@ -48,8 +69,15 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
     }
 }
 
+/// JWS represents digitally signed or MACed content using JSON data structures and `base64url` encoding.
 public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
-    public var headers: [JSONWebSignatureHeader]
+    /// The "signatures" member value MUST be an array of JSON objects.
+    ///
+    /// Each object represents a signature or MAC over the JWS Payload and the JWS Protected Header.
+
+    public var signatures: [JSONWebSignatureHeader]
+    
+    /// The "`payload`" member MUST be present and contain the value of JWS Payload.
     public var payload: ProtectedJSONWebContainer<Payload>
     
     enum CodingKeys: String, CodingKey {
@@ -69,7 +97,7 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "JWS String is not a three part data."))
             }
             self.payload = try ProtectedJSONWebContainer<Payload>.init(protected: sections[1])
-            self.headers = try [
+            self.signatures = try [
                 .init(
                 header: sections[0],
                 unprotectedHeader: .init(storage: .init()),
@@ -77,20 +105,20 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
             ]
         } else if let signatures = try container.decodeIfPresent([JSONWebSignatureHeader].self, forKey: .signatures) {
             self.payload = try container.decode(ProtectedJSONWebContainer<Payload>.self, forKey: .payload)
-            self.headers = signatures
+            self.signatures = signatures
         } else {
             self.payload = try container.decode(ProtectedJSONWebContainer<Payload>.self, forKey: .payload)
             let header = try JSONWebSignatureHeader(from: decoder)
-            self.headers = [header]
+            self.signatures = [header]
         }
     }
     
     fileprivate func encodeAsString(_ encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         let value = [
-            headers.first?.header.protected.urlBase64EncodedData() ?? .init(),
+            signatures.first?.header.protected.urlBase64EncodedData() ?? .init(),
             payload.protected.urlBase64EncodedData(),
-            headers.first?.signature.urlBase64EncodedData() ?? .init()]
+            signatures.first?.signature.urlBase64EncodedData() ?? .init()]
             .map { String(decoding: $0, as: UTF8.self) }
             .joined(separator: ".")
         try container.encode(value)
@@ -99,16 +127,16 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
     fileprivate func encodeAsCompleteJSON(_ encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(payload.protected.urlBase64EncodedData(), forKey: .payload)
-        try container.encode(headers, forKey: .signatures)
+        try container.encode(signatures, forKey: .signatures)
     }
     
     fileprivate func encodeAsFlattenedJSON(_ encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(payload.protected.urlBase64EncodedData(), forKey: .payload)
         var headerContainer = encoder.container(keyedBy: JSONWebSignatureHeader.CodingKeys.self)
-        try headerContainer.encodeIfPresent(headers.first?.header, forKey: .protected)
-        try headerContainer.encodeIfPresent(headers.first?.unprotectedHeader, forKey: .header)
-        try headerContainer.encodeIfPresent(headers.first?.signature, forKey: .signature)
+        try headerContainer.encodeIfPresent(signatures.first?.header, forKey: .protected)
+        try headerContainer.encodeIfPresent(signatures.first?.unprotectedHeader, forKey: .header)
+        try headerContainer.encodeIfPresent(signatures.first?.signature, forKey: .signature)
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -117,7 +145,7 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
         case .string:
             try encodeAsString(encoder)
         case .automaticJSON:
-            switch headers.count {
+            switch signatures.count {
             case 0, 1:
                 try encodeAsFlattenedJSON(encoder)
             default:
@@ -130,11 +158,17 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
         }
     }
     
+    /// Renews all signatures for protected header(s) using given keys.
+    ///
+    /// This methos finds appropriate key for the header using `kid` value in protected or unprotected header.
+    ///
+    /// - Parameters:
+    ///   - keys: An array of `JSONWebSigningKey` that would be used for signing.
     public mutating func updateSignature(using keys: [any JSONWebSigningKey]) throws {
         guard let firstKey = keys.first else {
             throw JSONWebKeyError.keyNotFound
         }
-        headers = try headers.map({ header in
+        signatures = try signatures.map({ header in
             let header = header
             let key = keys.first {
                 header.unprotectedHeader.keyId == $0.keyId || header.header.value.keyId == $0.keyId
@@ -149,23 +183,37 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
         })
     }
     
+    /// Renews all signatures for protected header(s) using given key.
+    ///
+    /// - Parameters:
+    ///   - key: A `JSONWebSigningKey` object that would be used for signing.
     public mutating func updateSignature(using key: any JSONWebSigningKey) throws {
         try updateSignature(using: [key])
     }
     
-    public func verify(using keys: [any JSONWebValidatingKey]) throws {
+    /// Verifies all signatures for protected header(s) using given keys.
+    ///
+    /// This methos finds appropriate key for the header using `kid` value in protected or unprotected header.
+    ///
+    /// - Parameters:
+    ///   - keys: An array of `JSONWebValidatingKey` that would be used for validation.
+    public func verifySignature(using keys: [any JSONWebValidatingKey]) throws {
         try keys.forEach { key in
-            let header = headers.first {
+            let header = signatures.first {
                 $0.unprotectedHeader.keyId == key.keyId || $0.header.value.keyId == key.keyId
-            } ?? headers.first
+            } ?? signatures.first
             guard let protectedHeadeer = header?.header, let signature = header?.signature else { return }
             let message = protectedHeadeer.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
             try key.validate(signature, for: message, using: protectedHeadeer.value.algorithm)
         }
     }
     
-    public func verify(using key: any JSONWebValidatingKey) throws {
-        try verify(using: [key])
+    /// Verifies all signatures in protected header(s) using given key.
+    ///
+    /// - Parameters:
+    ///   - key: A `JSONWebValidatingKey` object that would be used for validation.
+    public func verifySignature(using key: any JSONWebValidatingKey) throws {
+        try verifySignature(using: [key])
     }
 }
 

@@ -23,7 +23,7 @@ public struct JSONWebECPublicKey: JSONWebValidatingKey {
         .init(storage: storage)
     }
     
-    public func validate<D>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws where D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
         switch (self.keyType ?? .init(rawValue: ""), self.curve ?? .init(rawValue: "")) {
         case (JSONWebKeyType.elipticCurve, .p256):
             try P256.Signing.PublicKey(jsonWebKey: storage)
@@ -73,7 +73,7 @@ public struct JSONWebECPrivateKey: JSONWebSigningKey {
         }
     }
     
-    public func validate<D>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws where D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
         switch (self.keyType ?? .init(rawValue: ""), self.curve ?? .init(rawValue: "")) {
         case (JSONWebKeyType.elipticCurve, .p256):
             try P256.Signing.PublicKey(jsonWebKey: storage)

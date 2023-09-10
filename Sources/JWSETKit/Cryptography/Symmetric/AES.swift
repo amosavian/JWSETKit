@@ -12,21 +12,6 @@ import CryptoKit
 import Crypto
 #endif
 
-extension SymmetricKey: JSONWebDecryptingKey {
-    public func decrypt<D>(_ data: D) throws -> Data where D : DataProtocol {
-        switch data {
-        case let data as SealedData:
-            return try AES.GCM.open(.init(data), using: self)
-        default:
-            return try AES.GCM.open(.init(combined: data), using: self)
-        }
-    }
-    
-    public func encrypt<D>(_ data: D) throws -> SealedData where D : DataProtocol {
-        try .init(AES.GCM.seal(data, using: self))
-    }
-}
-
 public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
     public var storage: JSONWebValueStorage
 
@@ -62,7 +47,7 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
         SymmetricKey(size: .bits128)
     }
     
-    public func decrypt<D>(_ data: D) throws -> Data where D : DataProtocol {
+    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
         switch data {
         case let data as SealedData:
             return try AES.GCM.open(.init(data), using: symmetricKey)
@@ -71,7 +56,7 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
         }
     }
     
-    public func encrypt<D>(_ data: D) throws -> SealedData where D : DataProtocol {
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
         try .init(AES.GCM.seal(data, using: symmetricKey))
     }
 }

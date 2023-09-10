@@ -12,41 +12,6 @@ import CryptoKit
 import Crypto
 #endif
 
-extension SymmetricKey: JSONWebKey {
-    public var storage: JSONWebValueStorage {
-        get {
-            var result = JSONWebValueStorage()
-            result["kty"] = "oct"
-            withUnsafeBytes {
-                result["k", true] = Data($0)
-            }
-            return result
-        }
-        mutating set {
-            guard let data = newValue["k", true] else { return }
-            self = SymmetricKey(data: data)
-        }
-    }
-    
-    public static func create(storage: JSONWebValueStorage) throws -> SymmetricKey {
-        guard let key = (storage["k", true] as Data?) else {
-            throw CryptoKitError.incorrectKeySize
-        }
-        return SymmetricKey(data: key)
-    }
-    
-    public init(storage: JSONWebValueStorage) {
-        self.init(size: .bits128)
-        self.storage = storage
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        withUnsafeBytes {
-            hasher.combine(bytes: $0)
-        }
-    }
-}
-
 public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
     public var storage: JSONWebValueStorage
 
@@ -88,7 +53,7 @@ public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
         return Data(mac)
     }
     
-    public func validate<D: DataProtocol>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
         var hmac = try HMAC<H>(key: symmetricKey)
         hmac.update(data: data)
         let mac = hmac.finalize()

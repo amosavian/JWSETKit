@@ -14,33 +14,58 @@ import Crypto
 import SwiftASN1
 
 extension AnyJSONWebKey {
-    public static func deserialize(jsonWebKey: Data) throws -> any JSONWebKey {
-        let webKey = try JSONDecoder().decode(AnyJSONWebKey.self, from: jsonWebKey)
-        guard let keyType = webKey.keyType else {
+    /// Returns related specific type with available capabilities like signing,
+    /// verify encrypting and decrypting regarding key type (`kty`) and curve.
+    ///
+    /// Returning type:
+    ///   - `JSONWebRSAPublicKey` if key type is `RSA` and private key is **not** present.
+    ///   - `JSONWebRSAPrivateKey` if key type is `RSA` and private key is present.
+    ///   - `JSONWebECPublicKey`  if key type is `EC` and private key is **not** present.
+    ///   - `JSONWebECPrivateKey` if key type is `EC` and private key is present.
+    ///   - `JSONWebKeyHMAC` if key type is `oct` and algorithm is `HS256/384/512`.
+    ///   - `JSONWebKeyAESGCM` if key type is `oct` and algorithm is `AEDGCM256/384/512`.
+    ///   - `CryptKit.Symmetric` if key type is `oct` and no algorithm is present.
+    public func specialized() throws -> any JSONWebKey {
+        guard let keyType = self.keyType else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         
-        switch (keyType, webKey.algorithm) {
+        switch (keyType, self.algorithm) {
         case (.elipticCurve, _):
-            if webKey.privateKey != nil {
-                return try JSONWebECPrivateKey(jsonWebKey: webKey.storage)
+            if self.privateKey != nil {
+                return try JSONWebECPrivateKey(jsonWebKey: storage)
             } else {
-                return try JSONWebECPublicKey(jsonWebKey: webKey.storage)
+                return try JSONWebECPublicKey(jsonWebKey: storage)
             }
         case (.rsa, _):
-            if webKey.privateExponent != nil {
-                return try JSONWebRSAPrivateKey(jsonWebKey: webKey.storage)
+            if self.privateExponent != nil {
+                return try JSONWebRSAPrivateKey(jsonWebKey: storage)
             } else {
-                return try JSONWebRSAPublicKey(jsonWebKey: webKey.storage)
+                return try JSONWebRSAPublicKey(jsonWebKey: storage)
             }
         case (.symmetric, .aesEncryptionGCM128),
             (.symmetric, .aesEncryptionGCM192),
             (.symmetric, .aesEncryptionGCM256):
-            return try JSONWebKeyAESGCM(jsonWebKey: webKey.storage)
+            return try JSONWebKeyAESGCM(jsonWebKey: storage)
+        case (.symmetric, .hmacSHA256):
+            return try JSONWebKeyHMAC<SHA256>(jsonWebKey: storage)
+        case (.symmetric, .hmacSHA384):
+            return try JSONWebKeyHMAC<SHA384>(jsonWebKey: storage)
+        case (.symmetric, .hmacSHA512):
+            return try JSONWebKeyHMAC<SHA512>(jsonWebKey: storage)
         case (.symmetric, _):
-            return try SymmetricKey(jsonWebKey: webKey.storage)
+            return try SymmetricKey(jsonWebKey: storage)
         default:
             throw JSONWebKeyError.unknownKeyType
         }
+    }
+    
+    /// Deserializes JSON and converts to the most appropriate key.
+    ///
+    /// - Parameter jsonWebKey: JWK in JSON string.
+    /// - Returns: Related specific key object.
+    public static func deserialize(_ jsonWebKey: Data) throws -> any JSONWebKey {
+        let webKey = try JSONDecoder().decode(AnyJSONWebKey.self, from: jsonWebKey)
+        return try webKey.specialized()
     }
 }

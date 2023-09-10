@@ -26,7 +26,7 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey {
         .init(storage: storage)
     }
     
-    public func validate<D>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws where D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
         #if canImport(CommonCrypto)
         try SecKey(jsonWebKey: storage).validate(signature, for: data, using: algorithm)
         #else
@@ -54,7 +54,7 @@ public struct JSONWebRSAPrivateKey: JSONWebSigningKey {
         #endif
     }
     
-    public func validate<D>(_ signature: D, for data: D, using algorithm: JSONWebAlgorithm) throws where D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
         #if canImport(CommonCrypto)
         try SecKey(jsonWebKey: storage).validate(signature, for: data, using: algorithm)
         #else

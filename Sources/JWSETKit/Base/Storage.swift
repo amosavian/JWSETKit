@@ -157,7 +157,7 @@ public struct JSONWebValueStorage: Codable, Hashable {
         case is (any JSONWebKey).Protocol:
             guard let value = claims[key] else { return nil }
             guard let data = try? JSONEncoder().encode(value) else { return nil }
-            return try? AnyJSONWebKey.deserialize(jsonWebKey: data) as? T
+            return try? AnyJSONWebKey.deserialize(data) as? T
         case let type as any Decodable.Type:
             guard let value = claims[key]?.value else { return nil }
             if let value = value as? T {
