@@ -39,7 +39,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// The interpretation of audience values is generally application specific.
     ///
     /// Use of this claim is OPTIONAL.
-    public var audienceURL: [URL] { fatalError() }
+    public var audienceURL: [URL]
     
     /// The "`exp`" (expiration time) claim identifies the expiration time on or
     /// after which the JWT MUST NOT be accepted for processing.
@@ -53,7 +53,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// Its value MUST be a number containing a `NumericDate` value.
     ///
     /// Use of this claim is OPTIONAL.
-    public var expiry: Date? { fatalError() }
+    public var expiry: Date?
     
     /// The "`iat`" (issued at) claim identifies the time at which the JWT was issued.
     ///
@@ -61,7 +61,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// Its value MUST be a number containing a `NumericDate` value.
     ///
     /// Use of this claim is OPTIONAL.
-    public var issuedAt: Date? { fatalError() }
+    public var issuedAt: Date?
     
     /// The "`iss`" (issuer) claim identifies the principal that issued the JWT.
     ///
@@ -69,7 +69,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// The "iss" value is a case-sensitive string containing a `StringOrURI` value.
     ///
     /// Use of this claim is OPTIONAL.
-    public var issuer: String? { fatalError() }
+    public var issuer: String?
     
     /// The "`iss`" (issuer) claim identifies the principal that issued the JWT.
     ///
@@ -77,7 +77,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// The "iss" value is a case-sensitive string containing a `StringOrURI` value.
     ///
     /// Use of this claim is OPTIONAL.
-    public var issuerURL: URL? { fatalError() }
+    public var issuerURL: URL?
     
     /// The "`jti`" (JWT ID) claim provides a unique identifier for the JWT.
     ///
@@ -90,7 +90,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// The "`jti`" value is a case-sensitive string.
     ///
     /// Use of this claim is OPTIONAL.
-    public var jwtId: String? { fatalError() }
+    public var jwtId: String?
     
     /// The "`jti`" (JWT ID) claim provides a unique identifier for the JWT.
     ///
@@ -103,7 +103,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// The "`jti`" value is a case-sensitive string.
     ///
     /// Use of this claim is OPTIONAL.
-    public var jwtUUID: UUID? { fatalError() }
+    public var jwtUUID: UUID?
     
     /// The "`nbf`" (not before) claim identifies the time before which the JWT MUST NOT be accepted for processing.
     ///
@@ -116,7 +116,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// Its value MUST be a number containing a `NumericDate` value.
     ///
     /// Use of this claim is OPTIONAL.
-    public var notBefore: Date? { fatalError() }
+    public var notBefore: Date?
     
     /// The "`sub`" (subject) claim identifies the principal that is the subject of the JWT.
     ///
@@ -127,7 +127,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// The "`sub`" value is a case-sensitive string containing a `StringOrURI` value.
     ///
     /// Use of this claim is OPTIONAL.
-    public var subject: String? { fatalError() }
+    public var subject: String?
     
     /// The "`sub`" (subject) claim identifies the principal that is the subject of the JWT.
     ///
@@ -138,7 +138,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// The "`sub`" value is a case-sensitive string containing a `StringOrURI` value.
     ///
     /// Use of this claim is OPTIONAL.
-    public var subjectURL: URL? { fatalError() }
+    public var subjectURL: URL?
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.audience: "aud", \.audienceURL: "aud", \.expiry: "exp",

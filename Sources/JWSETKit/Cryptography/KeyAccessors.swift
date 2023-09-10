@@ -21,7 +21,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// The "kty" value is a case-sensitive string.
     ///
     /// This member MUST be present in a JWK.
-    public var keyType: JSONWebKeyType? { fatalError() }
+    public var keyType: JSONWebKeyType?
     
     /// The "`use`" (public key use) parameter identifies the intended use of the public key.
     /// The "`use`" parameter is employed to indicate whether a public key is used
@@ -34,7 +34,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// Other values MAY be used.  The "`use`" value is a case-sensitive string.
     ///
     /// Use of the "`use`" member is OPTIONAL, unless the application requires its presence.
-    public var keyUsage: String? { fatalError() }
+    public var keyUsage: String?
     
     /// The "`key_ops`" (key operations) parameter identifies the operation(s)
     /// for which the key is intended to be used.
@@ -50,7 +50,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// - "`unwrapKey`" (decrypt key and validate decryption, if applicable)
     /// - "`deriveKey`" (derive key)
     /// - "`deriveBits`" (derive bits not to be used as a key)
-    public var keyOperations: [String] { fatalError() }
+    public var keyOperations: [String]
     
     /// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key.
     /// The values used should either be registered in
@@ -60,7 +60,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// The "alg" value is a case-sensitive ASCII string.
     ///
     /// Use of this member is OPTIONAL.
-    public var algorithm: JSONWebAlgorithm { fatalError() }
+    public var algorithm: JSONWebAlgorithm
     
     /// The "`kid`" (key ID) parameter is used to match a specific key.
     ///
@@ -76,7 +76,7 @@ public struct JSONWebKeyRegisteredParameters {
     ///
     /// When used with JWS or JWE, the "kid" value is used to match a JWS or
     /// JWE "`kid`" Header Parameter value.
-    public var keyId: String? { fatalError() }
+    public var keyId: String?
     
     /// The "`x5u`" (X.509 URL) Header Parameter is a URI that refers to a resource
     /// for the X.509 public key certificate or certificate chain corresponding
@@ -91,7 +91,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// certificates, with each subsequent certificate being the one used to certify the previous one.
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var certificateURL: URL? { fatalError() }
+    public var certificateURL: URL?
     
     /// The "x5c" (X.509 certificate chain) Header Parameter contains
     /// the X.509 public key certificate or certificate chain [RFC5280] corresponding
@@ -100,7 +100,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// The certificate or certificate chain is represented as a JSON array of certificate value strings.
     /// Each string in the array is a `base64-encoded` (Section 4 of [RFC4648]
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
-    public var certificateChain: [SecCertificate] { fatalError() }
+    public var certificateChain: [SecCertificate]
     
     /// The "`x5t`"/"`x5t#S256`" (X.509 certificate SHA-1/256 thumbprint)
     /// Header Parameter is a `base64url-encoded` SHA-1/256 thumbprint
@@ -110,49 +110,49 @@ public struct JSONWebKeyRegisteredParameters {
     /// Note that certificate thumbprints are also sometimes known as certificate fingerprints.
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var certificateThumprint: Data? { fatalError() }
+    public var certificateThumprint: Data?
     
     /// ECC curve or the subtype of key pair.
-    public var curve: JSONWebKeyCurve? { fatalError() }
+    public var curve: JSONWebKeyCurve?
     
     /// ECC public key X coordinate component or the public key of key pair.
-    public var xCoordinate: Data? { fatalError() }
+    public var xCoordinate: Data?
     
     /// ECC public keyY Coordinate.
-    public var yCoordinate: Data? { fatalError() }
+    public var yCoordinate: Data?
     
     /// ECC Private Key.
-    public var privateKey: Data? { fatalError() }
+    public var privateKey: Data?
     
     /// RSA Public key modulus.
-    public var modulus: Data? { fatalError() }
+    public var modulus: Data?
     
     /// RSA public key exponent.
-    public var exponent: Data? { fatalError() }
+    public var exponent: Data?
     
     /// RSA private key private exponent.
-    public var privateExponent: Data? { fatalError() }
+    public var privateExponent: Data?
     
     /// RSA private key first prime factor.
-    public var firstPrimeFactor: Data? { fatalError() }
+    public var firstPrimeFactor: Data?
     
     /// RSA private key second prime factor.
-    public var secondPrimeFactor: Data? { fatalError() }
+    public var secondPrimeFactor: Data?
     
     /// RSA private key first factor CRT exponent.
-    public var firstFactorCRTExponent: Data? { fatalError() }
+    public var firstFactorCRTExponent: Data?
     
     /// RSA private key second factor CRT exponent.
-    public var secondFactorCRTExponent: Data? { fatalError() }
+    public var secondFactorCRTExponent: Data?
     
     /// RSA private key first CRT coefficient.
-    public var firstCRTCoefficient: Data? { fatalError() }
+    public var firstCRTCoefficient: Data?
     
 //    /// RSA private key other primes info.
-//    public var otherPrimesInfo: Data? { fatalError() }
+//    public var otherPrimesInfo: Data?
     
     /// Symmetric Key Value.
-    public var keyValue: Data? { fatalError() }
+    public var keyValue: Data?
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.keyType: "kty", \.keyUsage: "use", \.keyOperations: "key_ops",

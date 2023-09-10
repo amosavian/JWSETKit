@@ -43,21 +43,15 @@ extension SecKey: JSONWebKey {
             throw JSONWebKeyError.unknownKeyType
         }
         
-        let attributes: [String: Any] =
+        let attributes: [CFString: Any] =
         [
-            kSecAttrKeyType as String: keyType,
-            kSecAttrKeySizeInBits as String: length
+            kSecAttrKeyType: keyType,
+            kSecAttrKeySizeInBits: length
         ]
         
-        var error: Unmanaged<CFError>?
-        let key = SecKeyCreateRandomKey(attributes as CFDictionary, &error)
-        if let error = error?.takeRetainedValue() {
-            throw error
+        return try handle { error in
+            SecKeyCreateRandomKey(attributes as CFDictionary, &error)
         }
-        guard let unWrapped = key else {
-            throw CryptoKitError.underlyingCoreCryptoError(error: 0)
-        }
-        return unWrapped
     }
     
     private static func createKeyFromComponents(_ key: AnyJSONWebKey) throws -> SecKey {
@@ -112,20 +106,14 @@ extension SecKey: JSONWebKey {
             throw JSONWebKeyError.unknownKeyType
         }
         
-        var error: Unmanaged<CFError>?
-        let attributes: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeRSA,
-            kSecAttrKeyClass as String: keyClass,
-            kSecAttrKeySizeInBits as String: length,
+        let attributes: [CFString: Any] = [
+            kSecAttrKeyType: kSecAttrKeyTypeRSA,
+            kSecAttrKeyClass: keyClass,
+            kSecAttrKeySizeInBits: length,
         ]
-        let key = SecKeyCreateWithData(Data(result.serializedBytes) as CFData, attributes as CFDictionary, &error)
-        if let error = error?.takeRetainedValue() {
-            throw error
+        return try handle { error in
+            SecKeyCreateWithData(Data(result.serializedBytes) as CFData, attributes as CFDictionary, &error)
         }
-        guard let unWrapped = key else {
-            throw CryptoKitError.underlyingCoreCryptoError(error: 0)
-        }
-        return unWrapped
     }
     
     private static func createECFromComponents(_ components: [Data]) throws -> SecKey {
@@ -142,20 +130,14 @@ extension SecKey: JSONWebKey {
             throw JSONWebKeyError.unknownKeyType
         }
         
-        var error: Unmanaged<CFError>?
-        let attributes: [String: Any] = [
-            kSecAttrKeyType as String: kSecAttrKeyTypeEC,
-            kSecAttrKeyClass as String: keyClass,
-            kSecAttrKeySizeInBits as String: length,
+        let attributes: [CFString: Any] = [
+            kSecAttrKeyType: kSecAttrKeyTypeEC,
+            kSecAttrKeyClass: keyClass,
+            kSecAttrKeySizeInBits: length,
         ]
-        let key = SecKeyCreateWithData((Data([0x04]) + components.joined()) as CFData, attributes as CFDictionary, &error)
-        if let error = error?.takeRetainedValue() {
-            throw error
+        return try handle { error in
+            SecKeyCreateWithData((Data([0x04]) + components.joined()) as CFData, attributes as CFDictionary, &error)
         }
-        guard let unWrapped = key else {
-            throw CryptoKitError.underlyingCoreCryptoError(error: 0)
-        }
-        return unWrapped
     }
     
     private var keyType: JSONWebKeyType {
@@ -275,14 +257,9 @@ extension SecKey: JSONWebKey {
     }
     
     private func jsonWebKey() throws -> any JSONWebKey {
-        var error: Unmanaged<CFError>?
-        let optionalKey = SecKeyCopyExternalRepresentation(self, &error)
-        if let error = error?.takeRetainedValue() {
-            throw error
-        }
-        guard let keyData = optionalKey as Data? else {
-            throw JSONWebKeyError.keyNotFound
-        }
+        let keyData = try handle { error in
+            SecKeyCopyExternalRepresentation(self, &error)
+        } as Data
         switch try keyType {
         case .elipticCurve:
             return try Self.ecWebKey(data: keyData, isPrivateKey: isPrivateKey)
@@ -311,13 +288,11 @@ extension SecKey: JSONWebValidatingKey {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
-        var error: Unmanaged<CFError>?
-        let result = SecKeyVerifySignature(
-            self, secAlgorithm,
-            Data(data) as CFData, Data(signature) as CFData,
-            &error)
-        if let error = error?.takeRetainedValue() {
-            throw error
+        let result = try handle { error in
+            SecKeyVerifySignature(
+                self, secAlgorithm,
+                Data(data) as CFData, Data(signature) as CFData,
+                &error)
         }
         if !result {
             throw CryptoKitError.authenticationFailure
@@ -330,15 +305,9 @@ extension SecKey: JSONWebSigningKey {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
-        var error: Unmanaged<CFError>?
-        let sign = SecKeyCreateSignature(self, secAlgorithm, Data(data) as CFData, &error)
-        if let error = error?.takeRetainedValue() {
-            throw error
-        }
-        guard let unWrapped = sign else {
-            throw CryptoKitError.underlyingCoreCryptoError(error: 0)
-        }
-        return unWrapped as Data
+        return try handle { error in
+            SecKeyCreateSignature(self, secAlgorithm, Data(data) as CFData, &error)
+        } as Data
     }
 }
 
@@ -355,30 +324,32 @@ extension SecKey: JSONWebDecryptingKey {
         guard let secAlgorithm = Self.encAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
-        var error: Unmanaged<CFError>?
-        let decrypted = SecKeyCreateDecryptedData(self, secAlgorithm, Data(data) as CFData, &error)
-        if let error = error?.takeRetainedValue() {
-            throw error
-        }
-        guard let unWrapped = decrypted else {
-            throw CryptoKitError.underlyingCoreCryptoError(error: 0)
-        }
-        return unWrapped as Data
+        return try handle { error in
+            SecKeyCreateDecryptedData(self, secAlgorithm, Data(data) as CFData, &error)
+        }  as Data
     }
     
     public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
         guard let secAlgorithm = Self.encAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
-        var error: Unmanaged<CFError>?
-        let encrypted = SecKeyCreateEncryptedData(self, secAlgorithm, Data(data) as CFData, &error)
-        if let error = error?.takeRetainedValue() {
-            throw error
+        
+        let result = try handle { error in
+            SecKeyCreateEncryptedData(self, secAlgorithm, Data(data) as CFData, &error)
         }
-        guard let unWrapped = encrypted else {
-            throw CryptoKitError.underlyingCoreCryptoError(error: 0)
-        }
-        return .init(ciphertext: unWrapped as Data)
+        return .init(ciphertext: result as Data)
     }
+}
+
+fileprivate func handle<T>(_ closure: (_ error: inout Unmanaged<CFError>?) -> T?) throws -> T {
+    var error: Unmanaged<CFError>?
+    let result = closure(&error)
+    if let error = error?.takeRetainedValue() {
+        throw error
+    }
+    guard let unWrapped = result else {
+        throw CryptoKitError.underlyingCoreCryptoError(error: 0)
+    }
+    return unWrapped
 }
 #endif

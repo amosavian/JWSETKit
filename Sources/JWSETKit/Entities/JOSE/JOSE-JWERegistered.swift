@@ -27,13 +27,13 @@ public struct JoseHeaderJWERegisteredParameters {
     /// The "enc" value is a case-sensitive ASCII string containing a `StringOrURI` value.
     ///
     /// This Header Parameter MUST be present and MUST be understood and processed by implementations.
-    public var encryptionAlgorithm: JSONWebAlgorithm? { fatalError() }
+    public var encryptionAlgorithm: JSONWebAlgorithm?
     
     /// The "zip" (compression algorithm) applied to the plaintext before encryption, if any.
     ///
     /// The "zip" value defined by this specification is:
     /// -  "DEF" - Compression with the DEFLATE [RFC1951] algorithm
-    public var compressionAlgorithm: JSONWebCompressionAlgorithm? { fatalError() }
+    public var compressionAlgorithm: JSONWebCompressionAlgorithm?
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.encryptionAlgorithm: "enc", \.compressionAlgorithm: "zip"

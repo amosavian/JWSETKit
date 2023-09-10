@@ -18,7 +18,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     /// otherwise, its inclusion is OPTIONAL.
     /// (The `auth_time` Claim semantically corresponds to the
     /// OpenID 2.0 PAPE [OpenID.PAPE] auth_time response parameter.)
-    public var authTime: Date? { fatalError() }
+    public var authTime: Date?
     
     /// Authentication Context Class Reference.
     ///
@@ -35,7 +35,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     /// registered names MUST NOT be used with a different meaning than that which is registered.
     /// Parties using this claim will need to agree upon the meanings of the values used,
     /// which may be context-specific. The acr value is a case sensitive string.
-    public var authenticationContextClassReference: String? { fatalError() }
+    public var authenticationContextClassReference: String?
     
     /// Authentication Methods References.
     ///
@@ -45,7 +45,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     /// Parties using this claim will need to agree upon the meanings of the values used,
     /// which may be context-specific.
     /// The `amr` value is an array of case sensitive strings.
-    public var authenticationMethodsReferences: [String] { fatalError() }
+    public var authenticationMethodsReferences: [String]
     
     /// Authorized party - the party to which the ID Token was issued.
     ///
@@ -54,7 +54,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     /// and that audience is different than the authorized party.
     /// It MAY be included even when the authorized party is the same as the sole audience.
     /// The azp value is a case sensitive string containing a `StringOrURI` value.
-    public var authorizedParty: String? { fatalError() }
+    public var authorizedParty: String?
     
     /// Authorized party - the party to which the ID Token was issued.
     ///
@@ -63,7 +63,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     /// and that audience is different than the authorized party.
     /// It MAY be included even when the authorized party is the same as the sole audience.
     /// The azp value is a case sensitive string containing a `StringOrURI` value.
-    public var authorizedPartyURL: URL? { fatalError() }
+    public var authorizedPartyURL: URL?
     
     /// String value used to associate a Client session with an ID Token, and to mitigate replay attacks.
     ///
@@ -76,7 +76,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     ///
     /// Authorization Servers SHOULD perform no other processing on nonce values used.
     /// The nonce value is a case sensitive string.
-    public var nonce: String? { fatalError() }
+    public var nonce: String?
     
     /// Access Token hash value.
     ///
@@ -91,7 +91,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     /// If the ID Token is issued from the Authorization Endpoint with an `access_token` value,
     /// which is the case for the `response_type` value code `id_token` token,
     /// this is REQUIRED; otherwise, its inclusion is OPTIONAL.
-    public var accessTokenHash: Data? { fatalError() }
+    public var accessTokenHash: Data?
     
     /// Code hash value.
     ///
@@ -106,7 +106,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     /// If the ID Token is issued from the Authorization Endpoint with a code,
     /// which is the case for the `response_type` values code `id_token` and code `id_token` token,
     /// this is REQUIRED; otherwise, its inclusion is OPTIONAL.
-    public var codeHash: Data? { fatalError() }
+    public var codeHash: Data?
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.authenticationContextClassReference: "acr",

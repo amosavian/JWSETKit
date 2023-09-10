@@ -175,6 +175,21 @@ extension JSONWebKeyCurve {
     public static let x25519: Self = "X25519"
 }
 
+extension JSONWebKeyCurve {
+    var keyLengthInBytes: Int {
+        switch self {
+        case .p256, .ed25519, .x25519:
+            return 32
+        case .p384:
+            return 48
+        case .p521:
+            return 66
+        default:
+            preconditionFailure()
+        }
+    }
+}
+
 /// JSON Web Compression Algorithms.
 public struct JSONWebCompressionAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
     public let rawValue: String

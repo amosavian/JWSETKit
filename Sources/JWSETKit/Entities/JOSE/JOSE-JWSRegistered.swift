@@ -26,14 +26,14 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// The "`alg`" value is a case-sensitive ASCII string containing a `StringOrURI` value.
     ///
     /// This Header Parameter MUST be present and MUST be understood and processed by implementations.
-    public var algorithm: JSONWebAlgorithm { fatalError() }
+    public var algorithm: JSONWebAlgorithm
     
     /// The "`jku`" (JWK Set URL) Header Parameter is a URI  that
     /// refers to a resource for a set of JSON-encoded public keys,
     /// one of which corresponds to the key used to digitally sign the `JWS`.
     ///
     /// The keys MUST be encoded as a `JWK` Set.
-    public var jsonWebKeySetUrl: URL? { fatalError() }
+    public var jsonWebKeySetUrl: URL?
     
     /// The "`jwk`" (JSON Web Key) Header Parameter is the public key that corresponds
     /// to the key used to digitally sign the `JWS`.
@@ -41,7 +41,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// This key is represented as a JSON Web Key [`JWK`].
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var key: (any JSONWebKey)? { fatalError() }
+    public var key: (any JSONWebKey)?
     
     /// The "kid" (key ID) Header Parameter is a hint indicating which key was used to secure the JWS.
     ///
@@ -52,7 +52,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// Use of this Header Parameter is OPTIONAL.
     ///
     /// When used with a `JWK`, the "`kid`" value is used to match a `JWK` "`kid`" parameter value.
-    public var keyId: String? { fatalError() }
+    public var keyId: String?
     
     
     /// The "`x5u`" (X.509 URL) Header Parameter is a URI that refers to a resource
@@ -68,7 +68,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// certificates, with each subsequent certificate being the one used to certify the previous one.
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var certificateURL: URL? { fatalError() }
+    public var certificateURL: URL?
     
     /// The "x5c" (X.509 certificate chain) Header Parameter contains
     /// the X.509 public key certificate or certificate chain [RFC5280] corresponding
@@ -77,7 +77,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// The certificate or certificate chain is represented as a JSON array of certificate value strings.
     /// Each string in the array is a `base64-encoded` (Section 4 of [RFC4648]
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
-    public var certificateChain: [SecCertificate] { fatalError() }
+    public var certificateChain: [SecCertificate]
     
     /// The "`x5t`"/"`x5t#S256`" (X.509 certificate SHA-1/256 thumbprint)
     /// Header Parameter is a `base64url-encoded` SHA-1/256 thumbprint
@@ -87,7 +87,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// Note that certificate thumbprints are also sometimes known as certificate fingerprints.
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var certificateThumprint: Data? { fatalError() }
+    public var certificateThumprint: Data?
     
     /// The "`typ`" (type) Header Parameter is used by JWS applications
     /// to declare the media type [IANA.MediaTypes] of this complete JWS.
@@ -101,7 +101,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// any processing of this parameter is performed by the JWS application.
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var type: String? { fatalError() }
+    public var type: String?
     
     /// The "`cty`" (content type) Header Parameter is used by JWS applications
     /// to declare the media type [IANA.MediaTypes] of the secured content (the payload).
@@ -115,7 +115,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// this parameter is performed by the JWS application.
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var contentType: String? { fatalError() }
+    public var contentType: String?
     
     /// The "crit" (critical) Header Parameter indicates that extensions to this specification and/or [JWA]
     /// are being used that MUST be understood and processed.
@@ -138,19 +138,19 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// Use of this Header Parameter is OPTIONAL.
     ///
     /// This Header Parameter MUST be understood and processed by implementations.
-    public var critical: [String] { fatalError() }
+    public var critical: [String]
     
     /// The "`nonce`" header parameter provides a unique value that enables
     /// the verifier of a JWS to recognize when replay has occurred.
     ///
     /// The "`nonce`" header parameter MUST be carried in the protected header of the JWS.
-    public var nonce: String? { fatalError() }
+    public var nonce: String?
     
     /// The "`url`" header parameter specifies the URL to which this JWS object is directed.
     ///
     /// The "url" header parameter MUST be carried in the protected header of the JWS.
     /// The value of the "`url`" header parameter MUST be a string representing the target URL.
-    public var url: URL? { fatalError() }
+    public var url: URL?
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.algorithm: "alg", \.jsonWebKeySetUrl: "jku",

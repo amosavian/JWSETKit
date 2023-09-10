@@ -14,14 +14,14 @@ public struct JSONWebTokenClaimsOAuthParameters {
     ///
     /// In turn, the authorization server uses the "scope" response parameter
     /// to inform the client of the scope of the access token issued.
-    public var scope: String? { fatalError() }
+    public var scope: String?
     
     /// The authorization and token endpoints allow the client to specify the scope
     /// of the access request using the "scope" request parameter.
     ///
     /// In turn, the authorization server uses the "scope" response parameter
     /// to inform the client of the scope of the access token issued.
-    public var scopes: [String] { fatalError() }
+    public var scopes: [String]
     
     /// The authorization server issues the registered client a client identifier
     /// -- a unique string representing the registration information provided by the client.
@@ -33,7 +33,7 @@ public struct JSONWebTokenClaimsOAuthParameters {
     /// The client identifier string size is left undefined by this specification.
     /// The client should avoid making assumptions about the identifier size.
     /// The authorization server SHOULD document the size of any identifier it issues.
-    public var clientID: String? { fatalError() }
+    public var clientID: String?
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [:]
 }
