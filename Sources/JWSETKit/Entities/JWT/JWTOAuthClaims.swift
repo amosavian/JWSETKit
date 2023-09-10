@@ -46,21 +46,21 @@ extension JSONWebTokenClaims {
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsOAuthParameters, [String]>) -> [String] {
-        get {
-            (storage[stringKey(keyPath)] as String?)?.components(separatedBy: " ") ?? []
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue.joined(separator: " ")
-        }
-    }
-    
     public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsOAuthParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
         set {
             storage[stringKey(keyPath)] = newValue
+        }
+    }
+    
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsOAuthParameters, [String]>) -> [String] {
+        get {
+            (storage[stringKey(keyPath)] as String?)?.components(separatedBy: " ") ?? []
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue.joined(separator: " ")
         }
     }
 }

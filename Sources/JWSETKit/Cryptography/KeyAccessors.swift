@@ -176,6 +176,15 @@ extension JSONWebKey {
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
+    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
+        get {
+            storage[stringKey(keyPath)]
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue
+        }
+    }
+    
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [String]>) -> [String] {
         get {
             return storage[stringKey(keyPath)]
@@ -224,15 +233,6 @@ extension JSONWebKey {
             default:
                 storage[stringKey(keyPath), true] = newValue
             }
-        }
-    }
-    
-    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
-        get {
-            storage[stringKey(keyPath)]
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
         }
     }
 }

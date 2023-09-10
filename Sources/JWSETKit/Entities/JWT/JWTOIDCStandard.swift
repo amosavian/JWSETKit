@@ -223,6 +223,15 @@ extension JSONWebTokenClaims {
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
+    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
+        get {
+            storage[stringKey(keyPath)]
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue
+        }
+    }
+    
     public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Bool>) -> Bool {
         get {
             storage[stringKey(keyPath)]
@@ -274,15 +283,6 @@ extension JSONWebTokenClaims {
             default:
                 storage[key] = newValue
             }
-        }
-    }
-    
-    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
-        get {
-            storage[stringKey(keyPath)]
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
         }
     }
 }

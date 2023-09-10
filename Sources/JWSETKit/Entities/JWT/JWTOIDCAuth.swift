@@ -124,6 +124,15 @@ extension JSONWebTokenClaims {
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
+    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, T?>) -> T? {
+        get {
+            storage[stringKey(keyPath)]
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue
+        }
+    }
+    
     public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, Data?>) -> Data? {
         get {
             storage[stringKey(keyPath), true]
@@ -140,15 +149,6 @@ extension JSONWebTokenClaims {
         set {
             let key = stringKey(keyPath)
             storage[key] = newValue
-        }
-    }
-    
-    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, T?>) -> T? {
-        get {
-            storage[stringKey(keyPath)]
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
         }
     }
 }

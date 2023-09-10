@@ -48,6 +48,15 @@ extension JOSEHeader {
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
+    public subscript<T>(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, T?>) -> T? {
+        get {
+            storage[stringKey(keyPath)]
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue
+        }
+    }
+    
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, [String]>) -> [String] {
         get {
             return storage[stringKey(keyPath)]
@@ -60,15 +69,6 @@ extension JOSEHeader {
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, JSONWebAlgorithm>) -> JSONWebAlgorithm {
         get {
             storage[stringKey(keyPath)] ?? .none
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
-        }
-    }
-    
-    public subscript<T>(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, T?>) -> T? {
-        get {
-            storage[stringKey(keyPath)]
         }
         set {
             storage[stringKey(keyPath)] = newValue
