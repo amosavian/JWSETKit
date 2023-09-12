@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  JWK-EC.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/9/23.
 //
@@ -23,7 +23,8 @@ public struct JSONWebECPublicKey: JSONWebValidatingKey {
         .init(storage: storage)
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        // swiftformat:disable:next redundantSelf
         switch (self.keyType ?? .init(rawValue: ""), self.curve ?? .init(rawValue: "")) {
         case (JSONWebKeyType.elipticCurve, .p256):
             try P256.Signing.PublicKey(jsonWebKey: storage)
@@ -54,7 +55,8 @@ public struct JSONWebECPrivateKey: JSONWebSigningKey {
         .init(storage: storage)
     }
     
-    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+        // swiftformat:disable:next redundantSelf
         switch (self.keyType ?? .init(rawValue: ""), self.curve ?? .init(rawValue: "")) {
         case (JSONWebKeyType.elipticCurve, .p256):
             return try P256.Signing.PrivateKey(jsonWebKey: storage)
@@ -73,7 +75,8 @@ public struct JSONWebECPrivateKey: JSONWebSigningKey {
         }
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        // swiftformat:disable:next redundantSelf
         switch (self.keyType ?? .init(rawValue: ""), self.curve ?? .init(rawValue: "")) {
         case (JSONWebKeyType.elipticCurve, .p256):
             try P256.Signing.PublicKey(jsonWebKey: storage)

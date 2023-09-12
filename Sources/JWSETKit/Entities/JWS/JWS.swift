@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  JWS.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/8/23.
 //
@@ -37,7 +37,6 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
         self.unprotectedHeader = unprotectedHeader
         self.signature = signature
     }
-    
     
     /// /// Creates a new JWS header using components.
     ///
@@ -99,9 +98,10 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
             self.payload = try ProtectedJSONWebContainer<Payload>.init(protected: sections[1])
             self.signatures = try [
                 .init(
-                header: sections[0],
-                unprotectedHeader: .init(storage: .init()),
-                signature: sections[2])
+                    header: sections[0],
+                    unprotectedHeader: .init(storage: .init()),
+                    signature: sections[2]
+                ),
             ]
         } else if let signatures = try container.decodeIfPresent([JSONWebSignatureHeader].self, forKey: .signatures) {
             self.payload = try container.decode(ProtectedJSONWebContainer<Payload>.self, forKey: .payload)
@@ -118,9 +118,10 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
         let value = [
             signatures.first?.header.protected.urlBase64EncodedData() ?? .init(),
             payload.protected.urlBase64EncodedData(),
-            signatures.first?.signature.urlBase64EncodedData() ?? .init()]
-            .map { String(decoding: $0, as: UTF8.self) }
-            .joined(separator: ".")
+            signatures.first?.signature.urlBase64EncodedData() ?? .init(),
+        ]
+        .map { String(decoding: $0, as: UTF8.self) }
+        .joined(separator: ".")
         try container.encode(value)
     }
     
@@ -168,7 +169,7 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
         guard let firstKey = keys.first else {
             throw JSONWebKeyError.keyNotFound
         }
-        signatures = try signatures.map({ header in
+        signatures = try signatures.map { header in
             let header = header
             let key = keys.first {
                 header.unprotectedHeader.keyId == $0.keyId || header.header.value.keyId == $0.keyId
@@ -176,11 +177,12 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
             
             let message = header.header.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
             let signature = try key.sign(message, using: header.header.value.algorithm)
-            return try.init(
+            return try .init(
                 header: header.header.protected,
                 unprotectedHeader: header.unprotectedHeader,
-                signature: signature)
-        })
+                signature: signature
+            )
+        }
     }
     
     /// Renews all signatures for protected header(s) using given key.

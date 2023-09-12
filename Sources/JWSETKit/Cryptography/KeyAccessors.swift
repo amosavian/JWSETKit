@@ -1,11 +1,12 @@
 //
-//  File.swift
-//  
+//  KeyAccessors.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
 import Foundation
+import X509
 #if canImport(CryptoKit)
 import CryptoKit
 #else
@@ -100,7 +101,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// The certificate or certificate chain is represented as a JSON array of certificate value strings.
     /// Each string in the array is a `base64-encoded` (Section 4 of [RFC4648]
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
-    public var certificateChain: [SecCertificate]
+    public var certificateChain: [Certificate]
     
     /// The "`x5t`"/"`x5t#S256`" (X.509 certificate SHA-1/256 thumbprint)
     /// Header Parameter is a `base64url-encoded` SHA-1/256 thumbprint
@@ -156,15 +157,15 @@ public struct JSONWebKeyRegisteredParameters {
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.keyType: "kty", \.keyUsage: "use", \.keyOperations: "key_ops",
-         \.algorithm: "alg", \.keyId: "kid",
-         \.certificateURL: "x5u", \.certificateChain: "x5c",
-         \.certificateThumprint: "x5t",
-         \.curve: "crv", \.xCoordinate: "x", \.yCoordinate: "y",
-         \.privateKey: "d", \.modulus: "n", \.exponent: "e",
-         \.privateExponent: "d", \.firstPrimeFactor: "p", \.secondPrimeFactor: "q",
-         \.firstFactorCRTExponent: "dp", \.secondFactorCRTExponent: "dq",
-         \.firstCRTCoefficient: "qi", // \.otherPrimesInfo: "oth",
-         \.keyValue: "k",
+        \.algorithm: "alg", \.keyId: "kid",
+        \.certificateURL: "x5u", \.certificateChain: "x5c",
+        \.certificateThumprint: "x5t",
+        \.curve: "crv", \.xCoordinate: "x", \.yCoordinate: "y",
+        \.privateKey: "d", \.modulus: "n", \.exponent: "e",
+        \.privateExponent: "d", \.firstPrimeFactor: "p", \.secondPrimeFactor: "q",
+        \.firstFactorCRTExponent: "dp", \.secondFactorCRTExponent: "dq",
+        \.firstCRTCoefficient: "qi", // \.otherPrimesInfo: "oth",
+        \.keyValue: "k",
     ]
 }
 
@@ -187,7 +188,7 @@ extension JSONWebKey {
     
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [String]>) -> [String] {
         get {
-            return storage[stringKey(keyPath)]
+            storage[stringKey(keyPath)]
         }
         set {
             storage[stringKey(keyPath)] = newValue
@@ -203,16 +204,16 @@ extension JSONWebKey {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [Certificate]>) -> [Certificate] {
         get {
             storage[stringKey(keyPath), false]
                 .compactMap {
-                    SecCertificateCreateWithData(kCFAllocatorDefault, $0 as CFData)
+                    try? .init(derEncoded: $0)
                 }
         }
         set {
-            storage[stringKey(keyPath), false] = newValue.map {
-                SecCertificateCopyData($0) as Data
+            storage[stringKey(keyPath), false] = newValue.compactMap {
+                try? $0.derRepresentation
             }
         }
     }

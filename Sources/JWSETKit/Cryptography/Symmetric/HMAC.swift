@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  HMAC.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
@@ -17,6 +17,7 @@ public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
 
     public var symmetricKey: SymmetricKey {
         get throws {
+            // swiftformat:disable:next redundantSelf
             guard let keyValue = self.keyValue, keyValue.count == H.Digest.byteCount else {
                 throw CryptoKitError.incorrectKeySize
             }
@@ -46,14 +47,14 @@ public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
         SymmetricKey(size: .init(bitCount: H.Digest.byteCount * 8))
     }
     
-    public func sign<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data {
+    public func sign<D: DataProtocol>(_ data: D, using _: JSONWebAlgorithm) throws -> Data {
         var hmac = try HMAC<H>(key: symmetricKey)
         hmac.update(data: data)
         let mac = hmac.finalize()
         return Data(mac)
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using _: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         var hmac = try HMAC<H>(key: symmetricKey)
         hmac.update(data: data)
         let mac = hmac.finalize()

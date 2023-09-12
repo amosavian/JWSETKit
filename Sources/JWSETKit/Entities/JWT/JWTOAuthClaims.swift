@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  JWTOAuthClaims.swift
 //
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.

@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  ContentType.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/5/23.
 //
@@ -14,8 +14,8 @@ extension URLRequest {
         get {
             (value(forHTTPHeaderField: "Content-Type")?
                 .prefix(while: { $0 != Character(";") }))
-            .map(String.init)
-            .flatMap { .init(mimeType: $0) }
+                .map(String.init)
+                .flatMap { .init(mimeType: $0) }
         }
         set {
             setValue(newValue?.preferredMIMEType, forHTTPHeaderField: "Content-Type")

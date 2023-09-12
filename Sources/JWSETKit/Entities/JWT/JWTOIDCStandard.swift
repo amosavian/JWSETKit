@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  JWTOIDCStandard.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/6/23.
 //
@@ -211,7 +211,7 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters {
     public var updatedAt: Date?
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
-        \.zoneInfo: "zoneinfo"
+        \.zoneInfo: "zoneinfo",
     ]
 }
 

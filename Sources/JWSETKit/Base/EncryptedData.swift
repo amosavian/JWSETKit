@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  EncryptedData.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
@@ -23,7 +23,7 @@ public struct SealedData: DataProtocol, BidirectionalCollection {
     public let tag: Data?
     
     public var regions: [Data] {
-        [iv, ciphertext, tag].compactMap({ $0 })
+        [iv, ciphertext, tag].compactMap { $0 }
     }
     
     public var combined: Data {
@@ -85,6 +85,7 @@ extension AES.GCM.SealedBox {
         self = try .init(
             nonce: .init(data: sealedData.iv ?? .init()),
             ciphertext: sealedData.ciphertext,
-            tag: sealedData.tag ?? .init())
+            tag: sealedData.tag ?? .init()
+        )
     }
 }

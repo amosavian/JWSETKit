@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  SymmetricKey.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/10/23.
 //
@@ -48,7 +48,7 @@ extension SymmetricKey: JSONWebKey {
 }
 
 extension SymmetricKey: JSONWebSigningKey {
-    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         var algorithm = algorithm
         if algorithm == .none {
             algorithm = self.algorithm
@@ -65,7 +65,7 @@ extension SymmetricKey: JSONWebSigningKey {
         }
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         var algorithm = algorithm
         if algorithm == .none {
             algorithm = self.algorithm
@@ -84,7 +84,7 @@ extension SymmetricKey: JSONWebSigningKey {
 }
 
 extension SymmetricKey: JSONWebDecryptingKey {
-    fileprivate func aesGCMDecrypt<D>(_ data: D) throws -> Data where D : DataProtocol  {
+    fileprivate func aesGCMDecrypt<D>(_ data: D) throws -> Data where D: DataProtocol {
         switch data {
         case let data as SealedData:
             return try AES.GCM.open(.init(data), using: self)
@@ -93,17 +93,16 @@ extension SymmetricKey: JSONWebDecryptingKey {
         }
     }
     
-    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try aesGCMDecrypt(data)
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }
-        
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try .init(AES.GCM.seal(data, using: self))

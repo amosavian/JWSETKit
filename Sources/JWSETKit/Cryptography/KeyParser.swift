@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  KeyParser.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/8/23.
 //
@@ -26,26 +26,30 @@ extension AnyJSONWebKey {
     ///   - `JSONWebKeyAESGCM` if key type is `oct` and algorithm is `AEDGCM256/384/512`.
     ///   - `CryptKit.Symmetric` if key type is `oct` and no algorithm is present.
     public func specialized() throws -> any JSONWebKey {
+        // swiftformat:disable:next redundantSelf
         guard let keyType = self.keyType else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         
+        // swiftformat:disable:next redundantSelf
         switch (keyType, self.algorithm) {
         case (.elipticCurve, _):
+            // swiftformat:disable:next redundantSelf
             if self.privateKey != nil {
                 return try JSONWebECPrivateKey(jsonWebKey: storage)
             } else {
                 return try JSONWebECPublicKey(jsonWebKey: storage)
             }
         case (.rsa, _):
+            // swiftformat:disable:next redundantSelf
             if self.privateExponent != nil {
                 return try JSONWebRSAPrivateKey(jsonWebKey: storage)
             } else {
                 return try JSONWebRSAPublicKey(jsonWebKey: storage)
             }
         case (.symmetric, .aesEncryptionGCM128),
-            (.symmetric, .aesEncryptionGCM192),
-            (.symmetric, .aesEncryptionGCM256):
+             (.symmetric, .aesEncryptionGCM192),
+             (.symmetric, .aesEncryptionGCM256):
             return try JSONWebKeyAESGCM(jsonWebKey: storage)
         case (.symmetric, .hmacSHA256):
             return try JSONWebKeyHMAC<SHA256>(jsonWebKey: storage)

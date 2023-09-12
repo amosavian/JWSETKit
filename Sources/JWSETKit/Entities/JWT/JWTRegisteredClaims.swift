@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  JWTRegisteredClaims.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/6/23.
 //
@@ -142,9 +142,9 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.audience: "aud", \.audienceURL: "aud", \.expiry: "exp",
-         \.issuedAt: "iat", \.issuer: "iss", \.issuerURL: "iss",
-         \.jwtId: "jti", \.jwtUUID: "jti", \.notBefore: "nbf",
-         \.subject: "sub", \.subjectURL: "sub",
+        \.issuedAt: "iat", \.issuer: "iss", \.issuerURL: "iss",
+        \.jwtId: "jti", \.jwtUUID: "jti", \.notBefore: "nbf",
+        \.subject: "sub", \.subjectURL: "sub",
     ]
 }
 

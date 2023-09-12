@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  JWK-RSA.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
@@ -26,12 +26,12 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey {
         .init(storage: storage)
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
-        #if canImport(CommonCrypto)
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+#if canImport(CommonCrypto)
         try SecKey(jsonWebKey: storage).validate(signature, for: data, using: algorithm)
-        #else
+#else
         fatalError()
-        #endif
+#endif
     }
 }
 
@@ -46,19 +46,19 @@ public struct JSONWebRSAPrivateKey: JSONWebSigningKey {
         .init(storage: storage)
     }
     
-    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
-        #if canImport(CommonCrypto)
+    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+#if canImport(CommonCrypto)
         return try SecKey(jsonWebKey: storage).sign(data, using: algorithm)
-        #else
+#else
         fatalError()
-        #endif
+#endif
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
-        #if canImport(CommonCrypto)
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+#if canImport(CommonCrypto)
         try SecKey(jsonWebKey: storage).validate(signature, for: data, using: algorithm)
-        #else
+#else
         fatalError()
-        #endif
+#endif
     }
 }

@@ -1,11 +1,12 @@
 //
-//  File.swift
-//  
+//  JOSE-JWSRegistered.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
 import Foundation
+import X509
 #if canImport(CryptoKit)
 import CryptoKit
 #else
@@ -54,7 +55,6 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// When used with a `JWK`, the "`kid`" value is used to match a `JWK` "`kid`" parameter value.
     public var keyId: String?
     
-    
     /// The "`x5u`" (X.509 URL) Header Parameter is a URI that refers to a resource
     /// for the X.509 public key certificate or certificate chain corresponding
     /// to the key used to digitally sign the `JWS`.
@@ -77,7 +77,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// The certificate or certificate chain is represented as a JSON array of certificate value strings.
     /// Each string in the array is a `base64-encoded` (Section 4 of [RFC4648]
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
-    public var certificateChain: [SecCertificate]
+    public var certificateChain: [Certificate]
     
     /// The "`x5t`"/"`x5t#S256`" (X.509 certificate SHA-1/256 thumbprint)
     /// Header Parameter is a `base64url-encoded` SHA-1/256 thumbprint
@@ -154,9 +154,9 @@ public struct JoseHeaderJWSRegisteredParameters {
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.algorithm: "alg", \.jsonWebKeySetUrl: "jku",
-         \.key: "jwk", \.keyId: "kid",
-         \.certificateURL: "x5u", \.certificateThumprint: "x5t",
-         \.type: "typ", \.contentType: "cty", \.critical: "crit",
+        \.key: "jwk", \.keyId: "kid",
+        \.certificateURL: "x5u", \.certificateThumprint: "x5t",
+        \.type: "typ", \.contentType: "cty", \.critical: "crit",
     ]
 }
 
@@ -179,7 +179,7 @@ extension JOSEHeader {
     
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, [String]>) -> [String] {
         get {
-            return storage[stringKey(keyPath)]
+            storage[stringKey(keyPath)]
         }
         set {
             storage[stringKey(keyPath)] = newValue
@@ -195,16 +195,16 @@ extension JOSEHeader {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
+    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, [Certificate]>) -> [Certificate] {
         get {
             storage[stringKey(keyPath), false]
                 .compactMap {
-                    SecCertificateCreateWithData(kCFAllocatorDefault, $0 as CFData)
+                    try? .init(derEncoded: $0)
                 }
         }
         set {
-            storage[stringKey(keyPath), false] = newValue.map {
-                SecCertificateCopyData($0) as Data
+            storage[stringKey(keyPath), false] = newValue.compactMap {
+                try? $0.derRepresentation
             }
         }
     }

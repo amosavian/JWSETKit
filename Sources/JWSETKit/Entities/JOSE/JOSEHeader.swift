@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  JOSEHeader.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/5/23.
 //

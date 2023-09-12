@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  Error.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //

@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  P256.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/9/23.
 //
@@ -22,11 +22,11 @@ extension P256.Signing.PublicKey: JSONWebValidatingKey {
         self.storage = storage
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using _: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let signature = try P256.Signing.ECDSASignature(rawRepresentation: signature)
         var digest = SHA256()
         digest.update(data: data)
-        if !self.isValidSignature(signature, for: digest.finalize()) {
+        if !isValidSignature(signature, for: digest.finalize()) {
             throw CryptoKitError.authenticationFailure
         }
     }
@@ -42,13 +42,13 @@ extension P256.Signing.PrivateKey: JSONWebSigningKey {
         self.storage = storage
     }
     
-    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+    public func sign<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         var digest = SHA256()
         digest.update(data: data)
-        return try self.signature(for: digest.finalize()).rawRepresentation
+        return try signature(for: digest.finalize()).rawRepresentation
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
-        try self.publicKey.validate(signature, for: data, using: algorithm)
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try publicKey.validate(signature, for: data, using: algorithm)
     }
 }

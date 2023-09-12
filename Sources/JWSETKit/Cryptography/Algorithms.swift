@@ -1,6 +1,6 @@
 //
 //  Algorithms.swift
-//  
+//
 //
 //  Created by Amir Abbas Mousavian on 9/5/23.
 //
@@ -14,7 +14,6 @@ import Crypto
 
 /// JSON Web Signature and Encryption Algorithms
 public struct JSONWebAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
-    
     public let rawValue: String
     
     public init(rawValue: String) {

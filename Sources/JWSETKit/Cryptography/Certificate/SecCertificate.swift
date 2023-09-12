@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  SecCertificate.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/9/23.
 //
@@ -22,7 +22,7 @@ extension SecCertificate: JSONWebValidatingKey {
         }
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         try publicKey.validate(signature, for: data, using: algorithm)
     }
     
@@ -31,7 +31,7 @@ extension SecCertificate: JSONWebValidatingKey {
         guard let certificate = key.certificateChain.first else {
             throw JSONWebKeyError.keyNotFound
         }
-        return certificate as! Self
+        return try certificate.secCertificate() as! Self
     }
     
     private var publicKey: SecKey {

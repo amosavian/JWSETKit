@@ -1,12 +1,12 @@
 //
 //  File 2.swift
-//  
+//
 //
 //  Created by Amir Abbas Mousavian on 9/6/23.
 //
 
-import Foundation
 import AnyCodable
+import Foundation
 
 /// Storage for values in JOSE headers or JWT claims
 @dynamicMemberLookup
@@ -105,16 +105,17 @@ public struct JSONWebValueStorage: Codable, Hashable {
     
     /// Initializes empty storage.
     public init() {
-        claims = [:]
+        self.claims = [:]
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        if let claims = try? container.decode([String : AnyCodable].self) {
+        if let claims = try? container.decode([String: AnyCodable].self) {
             self.claims = claims
         } else if let base64url = try? container.decode(String.self),
-                  let data = Data(urlBase64Encoded:base64url) {
-            self.claims = try JSONDecoder().decode([String : AnyCodable].self, from: data)
+                  let data = Data(urlBase64Encoded: base64url)
+        {
+            self.claims = try JSONDecoder().decode([String: AnyCodable].self, from: data)
         } else {
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: ""))
         }

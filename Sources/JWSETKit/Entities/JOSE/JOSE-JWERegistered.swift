@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  JOSE-JWERegistered.swift
 //
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.
@@ -36,7 +36,7 @@ public struct JoseHeaderJWERegisteredParameters {
     public var compressionAlgorithm: JSONWebCompressionAlgorithm?
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
-        \.encryptionAlgorithm: "enc", \.compressionAlgorithm: "zip"
+        \.encryptionAlgorithm: "enc", \.compressionAlgorithm: "zip",
     ]
 }
 
@@ -59,7 +59,7 @@ extension JOSEHeader {
     
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, [String]>) -> [String] {
         get {
-            return storage[stringKey(keyPath)]
+            storage[stringKey(keyPath)]
         }
         set {
             storage[stringKey(keyPath)] = newValue

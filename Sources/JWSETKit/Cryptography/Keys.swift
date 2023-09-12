@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  Keys.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/5/23.
 //
@@ -15,8 +15,7 @@ import Crypto
 /// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159]
 /// data structure that represents a cryptographic key.
 @dynamicMemberLookup
-public protocol JSONWebKey: JSONWebContainer {
-}
+public protocol JSONWebKey: JSONWebContainer {}
 
 extension JSONWebKey {
     /// Creates a new JWK using json data.
@@ -70,12 +69,12 @@ public protocol JSONWebValidatingKey: JSONWebKey {
     ///   - signature: The signature that must be validated.
     ///   - data: The data that was signed.
     ///   - algorithm: The algorithm that was used to create the signature.
-    func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol
+    func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol
 }
 
 public protocol JSONWebSigningKey: JSONWebValidatingKey {
     /// Creates the cryptographic signature for a block of data using a private key and specified algorithm.
-    /// 
+    ///
     /// - Parameters:
     ///   - data: The data whose signature you want.
     ///   - algorithm: The signing algorithm to use.

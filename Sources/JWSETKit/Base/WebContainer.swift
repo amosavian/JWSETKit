@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  WebContainer.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
@@ -16,7 +16,7 @@ public protocol JSONWebContainer: Codable, Hashable {
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
-    /// 
+    ///
     /// - Returns: A new instance of current class.
     static func create(storage: JSONWebValueStorage) throws -> Self
 }
@@ -110,7 +110,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: Codable, H
         try container.encode(encoded)
     }
     
-    public static func ==(lhs: Self, rhs: Self) -> Bool {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.protected == rhs.protected
     }
     

@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  CryptoKitAbstract.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/10/23.
 //
@@ -41,7 +41,8 @@ extension CryptoECPublicKey {
     public static func create(storage: JSONWebValueStorage) throws -> Self {
         let keyData = AnyJSONWebKey(storage: storage)
         guard let x = keyData.xCoordinate, x.count == curve.keyLengthInBytes,
-              let y = keyData.yCoordinate, y.count == curve.keyLengthInBytes else {
+              let y = keyData.yCoordinate, y.count == curve.keyLengthInBytes
+        else {
             throw CryptoKitError.incorrectKeySize
         }
         let rawKey = x + y

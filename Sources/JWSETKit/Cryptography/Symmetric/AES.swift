@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  AES.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
@@ -17,12 +17,14 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
 
     public var symmetricKey: SymmetricKey {
         get throws {
+            // swiftformat:disable:next redundantSelf
             guard let keyValue = self.keyValue else {
                 throw CryptoKitError.incorrectKeySize
             }
             return SymmetricKey(data: keyValue)
         }
     }
+
     public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyAESGCM {
         .init(storage: storage)
     }
@@ -47,7 +49,7 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
         SymmetricKey(size: .bits128)
     }
     
-    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+    public func decrypt<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         switch data {
         case let data as SealedData:
             return try AES.GCM.open(.init(data), using: symmetricKey)
@@ -56,7 +58,7 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
         }
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+    public func encrypt<D>(_ data: D, using _: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
         try .init(AES.GCM.seal(data, using: symmetricKey))
     }
 }

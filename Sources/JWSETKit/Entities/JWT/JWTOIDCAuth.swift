@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  JWTOIDCAuth.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
@@ -110,9 +110,9 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.authenticationContextClassReference: "acr",
-         \.authenticationMethodsReferences: "amr",
-         \.authorizedParty: "azp", \.authorizedPartyURL: "azp",
-         \.accessTokenHash: "at_hash", \.codeHash: "c_hash"
+        \.authenticationMethodsReferences: "amr",
+        \.authorizedParty: "azp", \.authorizedPartyURL: "azp",
+        \.accessTokenHash: "at_hash", \.codeHash: "c_hash",
     ]
 }
 
@@ -144,7 +144,7 @@ extension JSONWebTokenClaims {
     
     public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, [String]>) -> [String] {
         get {
-            return storage[stringKey(keyPath)]
+            storage[stringKey(keyPath)]
         }
         set {
             let key = stringKey(keyPath)

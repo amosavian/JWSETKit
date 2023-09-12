@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  SecKey.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/9/23.
 //
@@ -44,10 +44,10 @@ extension SecKey: JSONWebKey {
         }
         
         let attributes: [CFString: Any] =
-        [
-            kSecAttrKeyType: keyType,
-            kSecAttrKeySizeInBits: length
-        ]
+            [
+                kSecAttrKeyType: keyType,
+                kSecAttrKeySizeInBits: length,
+            ]
         
         return try handle { error in
             SecKeyCreateRandomKey(attributes as CFDictionary, &error)
@@ -64,7 +64,7 @@ extension SecKey: JSONWebKey {
                 throw CryptoKitError.incorrectKeySize
             }
             return try createECFromComponents(
-                [xCoordinate, yCoordinate, key.privateKey].compactMap({ $0 }))
+                [xCoordinate, yCoordinate, key.privateKey].compactMap { $0 })
         case .rsa:
             guard let modulus = key.modulus, let publicExponent = key.exponent else {
                 throw CryptoKitError.incorrectKeySize
@@ -74,12 +74,13 @@ extension SecKey: JSONWebKey {
                let prime2 = key.secondPrimeFactor,
                let exponent1 = key.firstFactorCRTExponent,
                let exponent2 = key.secondFactorCRTExponent,
-               let coefficient = key.firstCRTCoefficient {
+               let coefficient = key.firstCRTCoefficient
+            {
                 return try createRSAFromComponents([
                     Data([0x00]),
                     modulus, publicExponent,
                     privateExponent, prime1, prime2,
-                    exponent1, exponent2, coefficient
+                    exponent1, exponent2, coefficient,
                 ])
             } else {
                 return try createRSAFromComponents([modulus, publicExponent])
@@ -224,14 +225,14 @@ extension SecKey: JSONWebKey {
         let length = data.count
         if isPrivateKey {
             return [
-                data[0..<(length / 3)],
-                data[(length / 3)..<((2 * length / 3))],
-                data[((2 * length / 3))...]
+                data[0 ..< (length / 3)],
+                data[(length / 3) ..< (2 * length / 3)],
+                data[(2 * length / 3)...],
             ]
         } else {
             return [
-                data[0..<(length / 2)],
-                data[((length / 2))...]
+                data[0 ..< (length / 2)],
+                data[(length / 2)...],
             ]
         }
     }
@@ -284,7 +285,7 @@ extension SecKey: JSONWebValidatingKey {
         .rsaSignaturePSSSHA384: .rsaSignatureMessagePSSSHA384,
     ]
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D : DataProtocol {
+    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
@@ -292,7 +293,8 @@ extension SecKey: JSONWebValidatingKey {
             SecKeyVerifySignature(
                 self, secAlgorithm,
                 Data(data) as CFData, Data(signature) as CFData,
-                &error)
+                &error
+            )
         }
         if !result {
             throw CryptoKitError.authenticationFailure
@@ -301,7 +303,7 @@ extension SecKey: JSONWebValidatingKey {
 }
 
 extension SecKey: JSONWebSigningKey {
-    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
@@ -318,18 +320,18 @@ extension SecKey: JSONWebDecryptingKey {
         .rsaEncryptionOAEPSHA256: .rsaEncryptionOAEPSHA256,
         .rsaEncryptionOAEPSHA384: .rsaEncryptionOAEPSHA384,
         .rsaEncryptionOAEPSHA512: .rsaEncryptionOAEPSHA512,
-        ]
+    ]
     
-    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         guard let secAlgorithm = Self.encAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
         return try handle { error in
             SecKeyCreateDecryptedData(self, secAlgorithm, Data(data) as CFData, &error)
-        }  as Data
+        } as Data
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
         guard let secAlgorithm = Self.encAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
