@@ -66,54 +66,20 @@ extension SecKey: JSONWebKey {
             return try createECFromComponents(
                 [xCoordinate, yCoordinate, key.privateKey].compactMap { $0 })
         case .rsa:
-            guard let modulus = key.modulus, let publicExponent = key.exponent else {
-                throw CryptoKitError.incorrectKeySize
-            }
-            if let privateExponent = key.privateExponent,
-               let prime1 = key.firstPrimeFactor,
-               let prime2 = key.secondPrimeFactor,
-               let exponent1 = key.firstFactorCRTExponent,
-               let exponent2 = key.secondFactorCRTExponent,
-               let coefficient = key.firstCRTCoefficient
-            {
-                return try createRSAFromComponents([
-                    Data([0x00]),
-                    modulus, publicExponent,
-                    privateExponent, prime1, prime2,
-                    exponent1, exponent2, coefficient,
-                ])
-            } else {
-                return try createRSAFromComponents([modulus, publicExponent])
+            let pkcs1 = try JSONWebRSAPublicKey.pkcs1Representation(key)
+            
+            let keyClass = key.privateExponent != nil ? kSecAttrKeyClassPrivate : kSecAttrKeyClassPublic
+            let length = key.modulus!.count * 8
+            let attributes: [CFString: Any] = [
+                kSecAttrKeyType: kSecAttrKeyTypeRSA,
+                kSecAttrKeyClass: keyClass,
+                kSecAttrKeySizeInBits: length,
+            ]
+            return try handle { error in
+                SecKeyCreateWithData(pkcs1 as CFData, attributes as CFDictionary, &error)
             }
         default:
             throw JSONWebKeyError.unknownKeyType
-        }
-    }
-    
-    private static func createRSAFromComponents(_ components: [Data]) throws -> SecKey {
-        var result = DER.Serializer()
-        let keyClass: CFString
-        let length: Int
-        switch components.count {
-        case 2:
-            result.append(components, as: .integer)
-            keyClass = kSecAttrKeyClassPublic
-            length = components[0].count * 8
-        case 9:
-            result.append(components, as: .integer)
-            keyClass = kSecAttrKeyClassPrivate
-            length = components[1].count * 8
-        default:
-            throw JSONWebKeyError.unknownKeyType
-        }
-        
-        let attributes: [CFString: Any] = [
-            kSecAttrKeyType: kSecAttrKeyTypeRSA,
-            kSecAttrKeyClass: keyClass,
-            kSecAttrKeySizeInBits: length,
-        ]
-        return try handle { error in
-            SecKeyCreateWithData(Data(result.serializedBytes) as CFData, attributes as CFDictionary, &error)
         }
     }
     
@@ -179,24 +145,8 @@ extension SecKey: JSONWebKey {
         }
     }
     
-    private static func rsaComponents(_ data: Data) throws -> [Data] {
-        let der = try DER.parse([UInt8](data))
-        guard let nodes = der.content.sequence else {
-            throw CryptoKitASN1Error.unexpectedFieldType
-        }
-        guard nodes.count >= 2 else {
-            throw CryptoKitASN1Error.invalidASN1Object
-        }
-        return try nodes.compactMap {
-            guard let data = $0.content.primitive else {
-                throw CryptoKitASN1Error.unexpectedFieldType
-            }
-            return data
-        }
-    }
-    
     private static func rsaWebKey(data: Data) throws -> any JSONWebKey {
-        let components = try rsaComponents(data)
+        let components = try JSONWebRSAPublicKey.rsaComponents(data)
         var key = AnyJSONWebKey()
         switch components.count {
         case 2:
@@ -285,7 +235,7 @@ extension SecKey: JSONWebValidatingKey {
         .rsaSignaturePSSSHA384: .rsaSignatureMessagePSSSHA384,
     ]
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
@@ -303,7 +253,7 @@ extension SecKey: JSONWebValidatingKey {
 }
 
 extension SecKey: JSONWebSigningKey {
-    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }

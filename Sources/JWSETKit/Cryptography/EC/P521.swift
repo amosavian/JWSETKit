@@ -22,7 +22,7 @@ extension P521.Signing.PublicKey: JSONWebValidatingKey {
         self.storage = storage
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using _: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let signature = try P521.Signing.ECDSASignature(rawRepresentation: signature)
         var digest = SHA512()
         digest.update(data: data)
@@ -42,13 +42,13 @@ extension P521.Signing.PrivateKey: JSONWebSigningKey {
         self.storage = storage
     }
     
-    public func sign<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         var digest = SHA512()
         digest.update(data: data)
         return try signature(for: digest.finalize()).rawRepresentation
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try publicKey.validate(signature, for: data, using: algorithm)
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
 }

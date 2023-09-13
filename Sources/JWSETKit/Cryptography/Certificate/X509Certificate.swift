@@ -13,9 +13,7 @@ import CryptoKit
 #else
 import Crypto
 #endif
-#if canImport(_Concurrency)
 import _CryptoExtras
-#endif
 #if canImport(CommonCrypto)
 import CommonCrypto
 #endif
@@ -31,7 +29,7 @@ extension Certificate.PublicKey {
         } else if let key = P521.Signing.PublicKey(self) {
             return key
         } else if let key = _RSA.Signing.PublicKey(self) {
-            fatalError()
+            return key
         } else {
             throw JSONWebKeyError.unknownKeyType
         }
@@ -86,7 +84,18 @@ extension Certificate: JSONWebValidatingKey {
         return certificate
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try publicKey.jsonWebKey().validate(signature, for: data, using: algorithm)
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try publicKey.jsonWebKey().verifySignature(signature, for: data, using: algorithm)
+    }
+}
+
+extension Certificate: Expirable {
+    public func verifyDate(_ currentDate: Date) throws {
+        if currentDate > notValidAfter {
+            throw JSONWebValidationError.tokenExpired(expiry: notValidAfter)
+        }
+        if currentDate < notValidBefore {
+            throw JSONWebValidationError.tokenInvalidBefore(notBefore: notValidBefore)
+        }
     }
 }

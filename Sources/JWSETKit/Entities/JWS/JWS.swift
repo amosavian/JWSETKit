@@ -176,7 +176,7 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
             } ?? firstKey
             
             let message = header.header.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
-            let signature = try key.sign(message, using: header.header.value.algorithm)
+            let signature = try key.signature(message, using: header.header.value.algorithm)
             return try .init(
                 header: header.header.protected,
                 unprotectedHeader: header.unprotectedHeader,
@@ -206,7 +206,7 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
             } ?? signatures.first
             guard let protectedHeadeer = header?.header, let signature = header?.signature else { return }
             let message = protectedHeadeer.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
-            try key.validate(signature, for: message, using: protectedHeadeer.value.algorithm)
+            try key.verifySignature(signature, for: message, using: protectedHeadeer.value.algorithm)
         }
     }
     

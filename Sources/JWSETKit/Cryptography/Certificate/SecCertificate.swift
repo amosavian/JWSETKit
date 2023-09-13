@@ -5,8 +5,9 @@
 //  Created by Amir Abbas Mousavian on 9/9/23.
 //
 
+import CryptoKit
 import Foundation
-
+import X509
 #if canImport(CommonCrypto)
 import CommonCrypto
 
@@ -22,8 +23,8 @@ extension SecCertificate: JSONWebValidatingKey {
         }
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try publicKey.validate(signature, for: data, using: algorithm)
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
@@ -41,6 +42,12 @@ extension SecCertificate: JSONWebValidatingKey {
             }
             return key
         }
+    }
+}
+
+extension SecCertificate: Expirable {
+    public func verifyDate(_ currentDate: Date) throws {
+        try Certificate(self).verifyDate(currentDate)
     }
 }
 #endif

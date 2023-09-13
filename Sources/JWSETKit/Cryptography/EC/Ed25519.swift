@@ -22,7 +22,7 @@ extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
         self.storage = storage
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using _: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         if !isValidSignature(signature, for: data) {
             throw CryptoKitError.authenticationFailure
         }
@@ -38,11 +38,11 @@ extension Curve25519.Signing.PrivateKey: JSONWebSigningKey {
         self = try! Self.create(storage: storage)
     }
     
-    public func sign<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         try signature(for: data)
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try publicKey.validate(signature, for: data, using: algorithm)
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
 }

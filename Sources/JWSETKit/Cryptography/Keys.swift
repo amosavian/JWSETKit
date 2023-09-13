@@ -69,7 +69,7 @@ public protocol JSONWebValidatingKey: JSONWebKey {
     ///   - signature: The signature that must be validated.
     ///   - data: The data that was signed.
     ///   - algorithm: The algorithm that was used to create the signature.
-    func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol
+    func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol
 }
 
 public protocol JSONWebSigningKey: JSONWebValidatingKey {
@@ -79,7 +79,7 @@ public protocol JSONWebSigningKey: JSONWebValidatingKey {
     ///   - data: The data whose signature you want.
     ///   - algorithm: The signing algorithm to use.
     /// - Returns: The digital signature or throws error on failure.
-    func sign<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
+    func signature<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
 }
 
 public struct AnyJSONWebKey: JSONWebKey {

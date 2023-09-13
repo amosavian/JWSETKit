@@ -222,7 +222,7 @@ extension JSONWebKey {
         get {
             switch keyPath {
             case \.certificateThumprint where storage.contains(key: "x5t#S256"):
-                return storage["x5t#S256"]
+                return storage["x5t#S256", true]
             default:
                 return storage[stringKey(keyPath), true]
             }
@@ -230,7 +230,7 @@ extension JSONWebKey {
         set {
             switch keyPath {
             case \.certificateThumprint where newValue?.count == SHA256.byteCount:
-                storage["x5t#S256"] = newValue
+                storage["x5t#S256", true] = newValue
             default:
                 storage[stringKey(keyPath), true] = newValue
             }

@@ -16,7 +16,7 @@ public enum JSONWebKeyError: Error {
     case operationNotAllowed
 }
 
-public enum JSONWebTokenError: LocalizedError {
+public enum JSONWebValidationError: LocalizedError {
     case tokenExpired(expiry: Date)
     case tokenInvalidBefore(notBefore: Date)
     

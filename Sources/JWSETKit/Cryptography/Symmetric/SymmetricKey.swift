@@ -48,35 +48,35 @@ extension SymmetricKey: JSONWebKey {
 }
 
 extension SymmetricKey: JSONWebSigningKey {
-    public func sign<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         var algorithm = algorithm
         if algorithm == .none {
             algorithm = self.algorithm
         }
         switch algorithm {
         case .hmacSHA256:
-            return try JSONWebKeyHMAC<SHA256>(self).sign(data, using: algorithm)
+            return try JSONWebKeyHMAC<SHA256>(self).signature(data, using: algorithm)
         case .hmacSHA384:
-            return try JSONWebKeyHMAC<SHA384>(self).sign(data, using: algorithm)
+            return try JSONWebKeyHMAC<SHA384>(self).signature(data, using: algorithm)
         case .hmacSHA512:
-            return try JSONWebKeyHMAC<SHA512>(self).sign(data, using: algorithm)
+            return try JSONWebKeyHMAC<SHA512>(self).signature(data, using: algorithm)
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }
     }
     
-    public func validate<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         var algorithm = algorithm
         if algorithm == .none {
             algorithm = self.algorithm
         }
         switch algorithm {
         case .hmacSHA256:
-            try JSONWebKeyHMAC<SHA256>(self).validate(signature, for: data, using: algorithm)
+            try JSONWebKeyHMAC<SHA256>(self).verifySignature(signature, for: data, using: algorithm)
         case .hmacSHA384:
-            try JSONWebKeyHMAC<SHA384>(self).validate(signature, for: data, using: algorithm)
+            try JSONWebKeyHMAC<SHA384>(self).verifySignature(signature, for: data, using: algorithm)
         case .hmacSHA512:
-            try JSONWebKeyHMAC<SHA512>(self).validate(signature, for: data, using: algorithm)
+            try JSONWebKeyHMAC<SHA512>(self).verifySignature(signature, for: data, using: algorithm)
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }

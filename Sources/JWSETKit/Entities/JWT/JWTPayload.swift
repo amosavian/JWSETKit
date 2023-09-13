@@ -23,18 +23,18 @@ public struct JSONWebTokenClaims: JSONWebContainer {
 /// A JWS object that contains JWT registered tokens.
 public typealias JSONWebToken = JSONWebSignature<JSONWebTokenClaims>
 
-extension JSONWebToken {
+extension JSONWebToken: Expirable {
     /// Verifies the `exp` and `nbf` headers using current date.
     ///
     /// - Parameters:
     ///   - currentDate: The date that headers will be check against. Default is current system date.
-    public func verifyDate(_ currentDate: Date = .init()) throws {
+    public func verifyDate(_ currentDate: Date) throws {
         let claims = payload.value
         if let expiry = claims.expiry, currentDate > expiry {
-            throw JSONWebTokenError.tokenExpired(expiry: expiry)
+            throw JSONWebValidationError.tokenExpired(expiry: expiry)
         }
         if let notBefore = claims.notBefore, currentDate < notBefore {
-            throw JSONWebTokenError.tokenInvalidBefore(notBefore: notBefore)
+            throw JSONWebValidationError.tokenInvalidBefore(notBefore: notBefore)
         }
     }
 }
