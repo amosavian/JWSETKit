@@ -32,7 +32,7 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey {
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
 #if canImport(CommonCrypto)
-        try SecKey(jsonWebKey: storage).verifySignature(signature, for: data, using: algorithm)
+        try SecKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
 #else
         try _RSA.Signing.PublicKey(jsonWebKey: storage).verifySignature(signature, for: data, using: algorithm)
 #endif
@@ -95,7 +95,7 @@ public struct JSONWebRSAPrivateKey: JSONWebSigningKey {
     
     public func signature<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
 #if canImport(CommonCrypto)
-        return try SecKey(jsonWebKey: storage).signature(data, using: algorithm)
+        return try SecKey.create(storage: storage).signature(data, using: algorithm)
 #else
         try _RSA.Signing.PrivateKey(jsonWebKey: storage).signature(data, using: algorithm)
 #endif
@@ -103,7 +103,7 @@ public struct JSONWebRSAPrivateKey: JSONWebSigningKey {
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
 #if canImport(CommonCrypto)
-        try SecKey(jsonWebKey: storage).verifySignature(signature, for: data, using: algorithm)
+        try SecKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
 #else
         try _RSA.Signing.PublicKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
 #endif

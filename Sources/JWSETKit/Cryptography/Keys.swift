@@ -23,13 +23,6 @@ extension JSONWebKey {
         self = try Self.create(storage: JSONDecoder().decode(JSONWebValueStorage.self, from: data))
     }
     
-    /// Creates a new JWK using json data.
-    ///
-    /// - Parameter value: JSON key-value storage.
-    public init(jsonWebKey value: JSONWebValueStorage) throws {
-        self = try Self.create(storage: value)
-    }
-    
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let value = try container.decode(JSONWebValueStorage.self)

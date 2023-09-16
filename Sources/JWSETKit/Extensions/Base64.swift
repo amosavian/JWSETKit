@@ -36,7 +36,7 @@ extension Data {
     ///
     /// - parameter urlBase64Encoded: URL-safe Base-64, UTF-8 encoded input data.
     /// - parameter options: Decoding options. Default value is `[]`.
-    public init?(urlBase64Encoded: any DataProtocol, options: NSData.Base64DecodingOptions = []) {
+    public init?(urlBase64Encoded: any DataProtocol) {
         var urlBase64Encoded = urlBase64Encoded.compactMap {
             switch $0 {
             case UInt8(ascii: "-"):
@@ -47,8 +47,10 @@ extension Data {
                 return $0
             }
         }
-        urlBase64Encoded.append(contentsOf: [UInt8](repeating: UInt8(ascii: "="), count: 3 - (urlBase64Encoded.count % 3)))
-        guard let value = Data(base64Encoded: .init(urlBase64Encoded), options: options) else {
+        if urlBase64Encoded.count % 4 != 0 {
+            urlBase64Encoded.append(contentsOf: [UInt8](repeating: .init(ascii: "="), count: 4 - urlBase64Encoded.count % 4))
+        }
+        guard let value = Data(base64Encoded: .init(urlBase64Encoded), options: [.ignoreUnknownCharacters]) else {
             return nil
         }
         self.init()
@@ -60,8 +62,8 @@ extension Data {
     /// Returns nil when the input is not recognized as valid Base-64.
     /// - parameter urlBase64Encoded: The string to parse.
     /// - parameter options: Encoding options. Default value is `[]`.
-    public init?(urlBase64Encoded: String, options: NSData.Base64DecodingOptions = []) {
-        guard let value = Data(urlBase64Encoded: Data(urlBase64Encoded.utf8), options: options) else { return nil }
+    public init?(urlBase64Encoded: String) {
+        guard let value = Data(urlBase64Encoded: Data(urlBase64Encoded.utf8)) else { return nil }
         self = value
     }
 }

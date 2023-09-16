@@ -36,29 +36,29 @@ extension AnyJSONWebKey {
         case (.elipticCurve, _):
             // swiftformat:disable:next redundantSelf
             if self.privateKey != nil {
-                return try JSONWebECPrivateKey(jsonWebKey: storage)
+                return try JSONWebECPrivateKey.create(storage: storage)
             } else {
-                return try JSONWebECPublicKey(jsonWebKey: storage)
+                return try JSONWebECPublicKey.create(storage: storage)
             }
         case (.rsa, _):
             // swiftformat:disable:next redundantSelf
             if self.privateExponent != nil {
-                return try JSONWebRSAPrivateKey(jsonWebKey: storage)
+                return try JSONWebRSAPrivateKey.create(storage: storage)
             } else {
-                return try JSONWebRSAPublicKey(jsonWebKey: storage)
+                return try JSONWebRSAPublicKey.create(storage: storage)
             }
         case (.symmetric, .aesEncryptionGCM128),
              (.symmetric, .aesEncryptionGCM192),
              (.symmetric, .aesEncryptionGCM256):
-            return try JSONWebKeyAESGCM(jsonWebKey: storage)
+            return try JSONWebKeyAESGCM.create(storage: storage)
         case (.symmetric, .hmacSHA256):
-            return try JSONWebKeyHMAC<SHA256>(jsonWebKey: storage)
+            return try JSONWebKeyHMAC<SHA256>.create(storage: storage)
         case (.symmetric, .hmacSHA384):
-            return try JSONWebKeyHMAC<SHA384>(jsonWebKey: storage)
+            return try JSONWebKeyHMAC<SHA384>.create(storage: storage)
         case (.symmetric, .hmacSHA512):
-            return try JSONWebKeyHMAC<SHA512>(jsonWebKey: storage)
+            return try JSONWebKeyHMAC<SHA512>.create(storage: storage)
         case (.symmetric, _):
-            return try SymmetricKey(jsonWebKey: storage)
+            return try SymmetricKey.create(storage: storage)
         default:
             throw JSONWebKeyError.unknownKeyType
         }

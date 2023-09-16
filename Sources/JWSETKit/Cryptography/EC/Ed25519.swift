@@ -17,6 +17,9 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
 }
 
 extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
+    /// Returns a new concrete key using json data.
+    ///
+    /// - Parameter storage: Storage of key-values.
     public init(storage: JSONWebValueStorage) {
         self = Curve25519.Signing.PrivateKey().publicKey
         self.storage = storage
@@ -34,6 +37,9 @@ extension Curve25519.Signing.PrivateKey: CryptoECPrivateKey {
 }
 
 extension Curve25519.Signing.PrivateKey: JSONWebSigningKey {
+    /// Returns a new concrete key using json data.
+    ///
+    /// - Parameter storage: Storage of key-values.
     public init(storage: JSONWebValueStorage) {
         self = try! Self.create(storage: storage)
     }

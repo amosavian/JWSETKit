@@ -15,12 +15,12 @@ import Crypto
 extension SymmetricKey: JSONWebKey {
     public var storage: JSONWebValueStorage {
         get {
-            var result = JSONWebValueStorage()
-            result["kty"] = "oct"
+            var result = AnyJSONWebKey()
+            result.keyType = .symmetric
             withUnsafeBytes {
-                result["k", true] = Data($0)
+                result.keyValue = Data($0)
             }
-            return result
+            return result.storage
         }
         mutating set {
             guard let data = newValue["k", true] else { return }
@@ -35,6 +35,9 @@ extension SymmetricKey: JSONWebKey {
         return SymmetricKey(data: key)
     }
     
+    /// Returns a new concrete key using json data.
+    ///
+    /// - Parameter storage: Storage of key-values.
     public init(storage: JSONWebValueStorage) {
         self.init(size: .bits128)
         self.storage = storage

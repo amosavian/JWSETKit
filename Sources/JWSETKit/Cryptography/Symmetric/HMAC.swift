@@ -15,7 +15,8 @@ import Crypto
 /// JSON Web Key (JWK) container for creating/verifying HMAC signatures.
 public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
     public var storage: JSONWebValueStorage
-
+    
+    /// A symmetric cryptographic key.
     public var symmetricKey: SymmetricKey {
         get throws {
             // swiftformat:disable:next redundantSelf
@@ -26,20 +27,23 @@ public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
         }
     }
     
-    public var hashFunction: H.Type {
-        H.self
-    }
-    
     public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyHMAC {
         .init(storage: storage)
     }
     
+    /// Returns a new concrete key using json data.
+    ///
+    /// - Parameter storage: Storage of key-values.
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
     }
     
+    /// Returns a new HMAC key with given symmetric key.
+    /// 
+    /// - Parameter key: Symmetric key for operation.
     public init(_ key: SymmetricKey) throws {
         self.storage = .init()
+        self.keyType = .symmetric
         self.algorithm = "HS\(key.bitCount)"
         self.keyValue = key
     }

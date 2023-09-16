@@ -73,7 +73,6 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
     /// The "signatures" member value MUST be an array of JSON objects.
     ///
     /// Each object represents a signature or MAC over the JWS Payload and the JWS Protected Header.
-
     public var signatures: [JSONWebSignatureHeader]
     
     /// The "`payload`" member MUST be present and contain the value of JWS Payload.

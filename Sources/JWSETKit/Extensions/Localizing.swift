@@ -7,9 +7,26 @@
 
 import Foundation
 
+extension Bundle {
+    static func forLocale(_ locale: Locale) -> Bundle {
+        if let url = Bundle.module.urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: jsonWebKeyLocale.identifier)?.first?.baseURL {
+            return self.init(url: url) ?? .module
+        } else if let url = Bundle.module.urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: jsonWebKeyLocale.languageCode)?.first?.baseURL {
+            return self.init(url: url) ?? .module
+        }
+        return .module
+    }
+}
+
 extension String {
     init(localizingKey key: String) {
-        self = NSLocalizedString(key, bundle: .module, comment: "")
+        let bundle: Bundle
+        if jsonWebKeyLocale != .autoupdatingCurrent, jsonWebKeyLocale != .current {
+            bundle = .forLocale(jsonWebKeyLocale)
+        } else {
+            bundle = Bundle.module
+        }
+        self = bundle.localizedString(forKey: key, value: nil, table: nil)
     }
     
     init(localizingKey key: String, _ arguments: CVarArg...) {

@@ -44,10 +44,20 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     /// Returns values of given key.
+    public subscript<T>(dynamicMember member: String) -> [T] {
+        get {
+           self[member]
+        }
+        set {
+            self[member] = newValue
+        }
+    }
+    
+    /// Returns values of given key.
     public subscript<T>(_ member: String) -> [T] {
         get {
             guard let array = claims[member]?.value as? [Any] else { return [] }
-            return array.compactMap { cast(value: $0, as: T.self) }
+            return array.compactMap { JSONWebValueStorage.cast(value: $0, as: T.self) }
         }
         set {
             if newValue.isEmpty {
@@ -138,7 +148,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         claims.removeValue(forKey: key)
     }
     
-    private func cast<T>(value: Any?, as type: T.Type) -> T? {
+    fileprivate static func cast<T>(value: Any?, as type: T.Type) -> T? {
         guard let value = value else { return nil }
         switch T.self {
         case is Date.Type:
@@ -178,7 +188,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     private func get<T>(key: String, as _: T.Type) -> T? {
-        cast(value: claims[key]?.value, as: T.self)
+        JSONWebValueStorage.cast(value: claims[key]?.value, as: T.self)
     }
     
     private mutating func updateValue(key: String, value: Any?) {

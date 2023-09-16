@@ -17,6 +17,9 @@ extension P256.Signing.PublicKey: CryptoECPublicKey {
 }
 
 extension P256.Signing.PublicKey: JSONWebValidatingKey {
+    /// Returns a new concrete key using json data.
+    ///
+    /// - Parameter storage: Storage of key-values.
     public init(storage: JSONWebValueStorage) {
         self = P256.Signing.PrivateKey().publicKey
         self.storage = storage
@@ -37,6 +40,9 @@ extension P256.Signing.PrivateKey: CryptoECPrivateKey {
 }
 
 extension P256.Signing.PrivateKey: JSONWebSigningKey {
+    /// Returns a new concrete key using json data.
+    ///
+    /// - Parameter storage: Storage of key-values.
     public init(storage: JSONWebValueStorage) {
         self.init()
         self.storage = storage

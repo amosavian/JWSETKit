@@ -30,16 +30,24 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
         .init(storage: storage)
     }
     
+    /// Returns a new concrete key using json data.
+    ///
+    /// - Parameter storage: Storage of key-values.
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
     }
     
+    /// Returns a new AES-GCM with random key.
+    ///
+    /// - Parameter keySize: Size of random key in bits.
     public init(_ keySize: SymmetricKeySize) {
         self.storage = .init()
         self.algorithm = "A\(keySize.bitCount)GCM"
         self.keyValue = Self.random()
     }
     
+    /// <#Description#>
+    /// - Parameter key: <#key description#>
     public init(_ key: SymmetricKey) throws {
         self.storage = .init()
         self.algorithm = "A\(key.bitCount)GCM"
