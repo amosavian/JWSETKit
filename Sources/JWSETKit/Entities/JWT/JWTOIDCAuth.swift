@@ -7,7 +7,7 @@
 
 import Foundation
 
-// Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
+/// Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
 public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     /// Time when the End-User authentication occurred.
     ///

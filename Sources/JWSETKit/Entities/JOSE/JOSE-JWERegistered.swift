@@ -12,6 +12,7 @@ import CryptoKit
 import Crypto
 #endif
 
+/// Registered parameters of JOSE header in [RFC 7516](https://www.rfc-editor.org/rfc/rfc7516.html).
 public struct JoseHeaderJWERegisteredParameters {
     /// The "`enc`" (encryption algorithm) Header Parameter identifies
     /// the content encryption algorithm used to perform authenticated encryption

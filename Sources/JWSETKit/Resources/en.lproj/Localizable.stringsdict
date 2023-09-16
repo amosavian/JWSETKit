@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>errorUnknownAlgorithm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Given signature/encryption algorithm is no supported.</string>
+	</dict>
+	<key>errorUnknownKeyType</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Key type is not supported.</string>
+	</dict>
+	<key>errorDecryptionFailed</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Decrypting cipher-text using given key is not possible.</string>
+	</dict>
+	<key>errorKeyNotFound</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Failed to find given key.</string>
+	</dict>
+	<key>errorOperationNotAllowed</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Operation Not Allowed.</string>
+	</dict>
+	<key>notBeforeToken</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string></string>
+	</dict>
+	<key>errorExpiredToken</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Token is invalid after %@</string>
+	</dict>
+</dict>
+</plist>

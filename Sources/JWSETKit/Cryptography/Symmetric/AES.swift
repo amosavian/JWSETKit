@@ -12,6 +12,7 @@ import CryptoKit
 import Crypto
 #endif
 
+/// JSON Web Key (JWK) container for AES-GCM keys for encryption/decryption.
 public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
     public var storage: JSONWebValueStorage
 

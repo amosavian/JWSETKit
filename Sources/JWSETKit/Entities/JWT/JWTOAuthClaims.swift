@@ -7,7 +7,7 @@
 
 import Foundation
 
-// Claims registered in [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693.html)
+/// Claims registered in [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693.html)
 public struct JSONWebTokenClaimsOAuthParameters {
     /// The authorization and token endpoints allow the client to specify the scope
     /// of the access request using the "scope" request parameter.

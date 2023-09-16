@@ -9,6 +9,7 @@ extension [Platform] {
 
 let package = Package(
     name: "JWSETKit",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v14),
         .macOS(.v11),
@@ -22,11 +23,13 @@ let package = Package(
             targets: ["JWSETKit"]),
     ],
     dependencies: [
-        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.50.4"),
         .package(url: "https://github.com/Flight-School/AnyCodable", .upToNextMajor(from: "0.6.7")),
         .package(url: "https://github.com/apple/swift-asn1.git", "0.6.0"..<"1.0.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "2.6.0")),
         .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "0.6.0")),
+        // Plugins
+        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.50.4"),
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.

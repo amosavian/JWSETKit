@@ -65,7 +65,7 @@ public struct JSONWebAddress: Hashable, Codable {
     }
 }
 
-// Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
+/// Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
 public struct JSONWebTokenClaimsPublicOIDCStandardParameters {
     /// End-User's full name in displayable form including all name parts, possibly including titles and suffixes,
     /// ordered according to the End-User's locale and preferences.

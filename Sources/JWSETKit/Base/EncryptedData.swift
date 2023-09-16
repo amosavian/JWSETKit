@@ -12,6 +12,7 @@ import CryptoKit
 import Crypto
 #endif
 
+/// A container for AES ciphers, e.g. AES, RSA, etc.
 public struct SealedData: DataProtocol, BidirectionalCollection {
     /// The nonce used to encrypt the data.
     public let iv: Data?
@@ -26,6 +27,7 @@ public struct SealedData: DataProtocol, BidirectionalCollection {
         [iv, ciphertext, tag].compactMap { $0 }
     }
     
+    /// A combined element composed of the nonce, encrypted data, and authentication tag.
     public var combined: Data {
         Data(regions.joined())
     }
@@ -58,7 +60,6 @@ public struct SealedData: DataProtocol, BidirectionalCollection {
     ///   - iv: The nonce.
     ///   - ciphertext: The encrypted data.
     ///   - tag: The authentication tag.
-
     public init(iv: Data? = nil, ciphertext: Data, tag: Data? = nil) {
         self.iv = iv
         self.ciphertext = ciphertext

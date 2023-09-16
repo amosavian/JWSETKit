@@ -10,6 +10,7 @@ import Foundation
 import UniformTypeIdentifiers
 
 extension URLRequest {
+    /// Content type of body, set in `Content-Type` header.
     public var contentType: UTType? {
         get {
             (value(forHTTPHeaderField: "Content-Type")?
@@ -24,6 +25,7 @@ extension URLRequest {
 }
 
 extension HTTPURLResponse {
+    /// Content type of body, set in `Content-Type` header.
     public var contentType: UTType? {
         (mimeType?.prefix(while: { $0 != Character(";") }))
             .map(String.init)

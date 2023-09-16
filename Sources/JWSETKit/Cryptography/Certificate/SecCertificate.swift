@@ -15,7 +15,7 @@ extension SecCertificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         get {
             var key = try! AnyJSONWebKey(storage: publicKey.storage)
-            key.certificateChain = [self]
+            key.certificateChain = try! [.init(self)]
             return key.storage
         }
         set {
@@ -48,6 +48,26 @@ extension SecCertificate: JSONWebValidatingKey {
 extension SecCertificate: Expirable {
     public func verifyDate(_ currentDate: Date) throws {
         try Certificate(self).verifyDate(currentDate)
+    }
+}
+
+extension Certificate {
+    /// Casts `X509.Certificate` into `SecCertificate`.
+    ///
+    /// - Returns: A new `SecCertificate` instance.
+    public func secCertificate() throws -> SecCertificate {
+        guard let certificate = try SecCertificateCreateWithData(kCFAllocatorDefault, derRepresentation as CFData) else {
+            throw CryptoKitASN1Error.invalidASN1Object
+        }
+        return certificate
+    }
+    
+    /// Casts `SecCertificate` into `X509.Certificate`.
+    ///
+    /// - Parameter secCertificate: `SecCertificate` instance to be casted.
+    public init(_ secCertificate: SecCertificate) throws {
+        let der = SecCertificateCopyData(secCertificate) as Data
+        try self.init(derEncoded: der)
     }
 }
 #endif

@@ -54,7 +54,12 @@ extension JSONWebContainer {
     }
 }
 
+/// A JSON Web Signature/Encryption (JWS/JWE) header or payload with can be signed.
+///
+/// This cotainer preserves original data to keep consistancy of signature as re-encoding payload
+/// may change sorting.
 public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: Codable, Hashable {
+    /// Serialized protected date of JOSE.
     public var protected: Data {
         didSet {
             if protected.isEmpty {
@@ -69,6 +74,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: Codable, H
         }
     }
     
+    /// Parsed value of data.
     public var value: Container {
         didSet {
             if value.storage == .init() {
@@ -83,11 +89,17 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: Codable, H
         }
     }
     
+    /// Initialized protected container from a JOSE data.
+    ///
+    /// - Parameter protected: Serialzed json object but **not** in `base64url` .
     public init(protected: Data) throws {
         self.protected = protected
         self.value = try JSONDecoder().decode(Container.self, from: protected)
     }
     
+    /// Initialized protected container from object.
+    ///
+    /// - Parameter value: Object that will be presented in `base64url` json.
     public init(value: Container) throws {
         self.value = value
         self.protected = try JSONEncoder().encode(value).urlBase64EncodedData()

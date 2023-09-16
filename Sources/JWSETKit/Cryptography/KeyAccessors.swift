@@ -13,6 +13,7 @@ import CryptoKit
 import Crypto
 #endif
 
+/// Registered JSON Web Key (JWK) tokens in [RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517).
 public struct JSONWebKeyRegisteredParameters {
     /// The "`kty`" (key type) parameter identifies the cryptographic algorithm family
     /// used with the key, such as "RSA" or "EC".

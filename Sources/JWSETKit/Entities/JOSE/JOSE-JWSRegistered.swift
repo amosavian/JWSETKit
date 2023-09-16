@@ -13,6 +13,7 @@ import CryptoKit
 import Crypto
 #endif
 
+/// Registered parameters of JOSE header in [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515.html).
 public struct JoseHeaderJWSRegisteredParameters {
     /// The "`alg`" (algorithm) Header Parameter identifies the cryptographic algorithm used to secure the JWS.
     ///

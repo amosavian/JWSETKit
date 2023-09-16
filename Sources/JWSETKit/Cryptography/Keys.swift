@@ -42,6 +42,7 @@ extension JSONWebKey {
     }
 }
 
+/// A JSON Web Key (JWK) able to encrypt plain-texts.
 public protocol JSONWebEncryptingKey: JSONWebKey {
     /// Encrypts plain-text data using current key.
     ///
@@ -52,6 +53,7 @@ public protocol JSONWebEncryptingKey: JSONWebKey {
     func encrypt<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData
 }
 
+/// A JSON Web Key (JWK) able to decrypt cipher-texts.
 public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
     /// Encrypts ciphered data using current key.
     ///
@@ -62,6 +64,7 @@ public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
     func decrypt<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
 }
 
+/// A JSON Web Key (JWK) able to validate a signaute.
 public protocol JSONWebValidatingKey: JSONWebKey {
     /// Verifies the cryptographic signature of a block of data using a public key and specified algorithm.
     ///
@@ -72,6 +75,7 @@ public protocol JSONWebValidatingKey: JSONWebKey {
     func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol
 }
 
+/// A JSON Web Key (JWK) able to generate a signature.
 public protocol JSONWebSigningKey: JSONWebValidatingKey {
     /// Creates the cryptographic signature for a block of data using a private key and specified algorithm.
     ///
@@ -82,6 +86,9 @@ public protocol JSONWebSigningKey: JSONWebValidatingKey {
     func signature<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
 }
 
+/// A type-erased general container for a JSON Web Key (JWK).
+///
+/// - Note: To create a key able to do operations (sign, verify, encrypt, decrypt) use `specialzed()` method.
 public struct AnyJSONWebKey: JSONWebKey {
     public var storage: JSONWebValueStorage
     

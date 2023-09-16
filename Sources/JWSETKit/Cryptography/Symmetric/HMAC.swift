@@ -12,6 +12,7 @@ import CryptoKit
 import Crypto
 #endif
 
+/// JSON Web Key (JWK) container for creating/verifying HMAC signatures.
 public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
     public var storage: JSONWebValueStorage
 

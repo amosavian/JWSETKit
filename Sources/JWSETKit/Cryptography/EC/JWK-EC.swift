@@ -12,6 +12,7 @@ import CryptoKit
 import Crypto
 #endif
 
+/// JSON Web Key (JWK) container for different types of Eliptic-Curve public keys consists of P-256, P-384, P-521, Ed25519.
 public struct JSONWebECPublicKey: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage
     
@@ -44,6 +45,7 @@ public struct JSONWebECPublicKey: JSONWebValidatingKey {
     }
 }
 
+/// JWK container for different types of Eliptic-Curve private keys consists of P-256, P-384, P-521, Ed25519.
 public struct JSONWebECPrivateKey: JSONWebSigningKey {
     public var storage: JSONWebValueStorage
     

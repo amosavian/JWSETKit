@@ -8,8 +8,11 @@
 import Foundation
 
 extension DataProtocol {
-    public func urlBase64EncodedData(options: NSData.Base64EncodingOptions = []) -> Data {
-        let result = Data(self).base64EncodedData(options: options)
+    /// Returns a URL-safe Base-64 encoded `Data`.
+    ///
+    /// - returns: The URL-safe Base-64 encoded data.
+    public func urlBase64EncodedData() -> Data {
+        let result = Data(self).base64EncodedData()
             .compactMap {
                 switch $0 {
                 case UInt8(ascii: "+"):
@@ -27,6 +30,12 @@ extension DataProtocol {
 }
 
 extension Data {
+    /// Initialize a `Data` from a URL-safe Base-64, UTF-8 encoded `Data`.
+    ///
+    /// Returns nil when the input is not recognized as valid Base-64.
+    ///
+    /// - parameter urlBase64Encoded: URL-safe Base-64, UTF-8 encoded input data.
+    /// - parameter options: Decoding options. Default value is `[]`.
     public init?(urlBase64Encoded: any DataProtocol, options: NSData.Base64DecodingOptions = []) {
         var urlBase64Encoded = urlBase64Encoded.compactMap {
             switch $0 {
@@ -46,6 +55,11 @@ extension Data {
         self = value
     }
     
+    /// Initialize a `Data` from a URL-safe Base-64 encoded String using the given options.
+    ///
+    /// Returns nil when the input is not recognized as valid Base-64.
+    /// - parameter urlBase64Encoded: The string to parse.
+    /// - parameter options: Encoding options. Default value is `[]`.
     public init?(urlBase64Encoded: String, options: NSData.Base64DecodingOptions = []) {
         guard let value = Data(urlBase64Encoded: Data(urlBase64Encoded.utf8), options: options) else { return nil }
         self = value

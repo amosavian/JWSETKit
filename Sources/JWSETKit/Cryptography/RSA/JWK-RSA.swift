@@ -18,6 +18,7 @@ import CommonCrypto
 import _CryptoExtras
 #endif
 
+/// JSON Web Key (JWK) container for RSA public keys.
 public struct JSONWebRSAPublicKey: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage
     
@@ -80,6 +81,7 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey {
     }
 }
 
+/// JWK container for RSA private keys.
 public struct JSONWebRSAPrivateKey: JSONWebSigningKey {
     public var storage: JSONWebValueStorage
     

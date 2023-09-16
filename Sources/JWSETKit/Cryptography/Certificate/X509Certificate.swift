@@ -14,11 +14,11 @@ import CryptoKit
 import Crypto
 #endif
 import _CryptoExtras
-#if canImport(CommonCrypto)
-import CommonCrypto
-#endif
 
 extension Certificate.PublicKey {
+    /// Generates a key object from the public key inside certificate.
+    ///
+    /// - Returns: A public key to validate signatures.
     public func jsonWebKey() throws -> any JSONWebValidatingKey {
         if let key = P256.Signing.PublicKey(self) {
             return key
@@ -36,11 +36,15 @@ extension Certificate.PublicKey {
     }
 }
 
-extension Certificate {
+extension DERImplicitlyTaggable {
+    /// Initializes a DER serialazable object from give data.
+    ///
+    /// - Parameter derEncoded: DER encoded object.
     public init(derEncoded: Data) throws {
         try self.init(derEncoded: [UInt8](derEncoded))
     }
     
+    /// DER serialzed data representation of object.
     public var derRepresentation: Data {
         get throws {
             var derSerializer = DER.Serializer()
@@ -48,20 +52,6 @@ extension Certificate {
             return Data(derSerializer.serializedBytes)
         }
     }
-    
-#if canImport(CommonCrypto)
-    public func secCertificate() throws -> SecCertificate {
-        guard let certificate = try SecCertificateCreateWithData(kCFAllocatorDefault, derRepresentation as CFData) else {
-            throw CryptoKitASN1Error.invalidASN1Object
-        }
-        return certificate
-    }
-    
-    public init(_ secCertificate: SecCertificate) throws {
-        let der = SecCertificateCopyData(secCertificate) as Data
-        try self.init(derEncoded: der)
-    }
-#endif
 }
 
 extension Certificate: JSONWebValidatingKey {

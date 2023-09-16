@@ -141,20 +141,20 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
     }
     
     public func encode(to encoder: Encoder) throws {
-        let representation = encoder.userInfo[.jwsEncodedRepresentation] as? JSONWebSignatureRepresentation ?? .string
+        let representation = encoder.userInfo[.jwsEncodedRepresentation] as? JSONWebSignatureRepresentation ?? .compact
         switch representation {
-        case .string:
+        case .compact:
             try encodeAsString(encoder)
-        case .automaticJSON:
+        case .json:
             switch signatures.count {
             case 0, 1:
                 try encodeAsFlattenedJSON(encoder)
             default:
                 try encodeAsCompleteJSON(encoder)
             }
-        case .completeJSON:
+        case .jsonGeneral:
             try encodeAsCompleteJSON(encoder)
-        case .flattenedJSON:
+        case .jsonFlattened:
             try encodeAsFlattenedJSON(encoder)
         }
     }
@@ -219,14 +219,49 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
     }
 }
 
+/// JWSs use one of two serializations: the JWS Compact Serialization or the JWS JSON Serialization.
+///
+/// Applications using this specification need to specify what serialization and serialization features are
+/// used for that application.
 public enum JSONWebSignatureRepresentation {
-    case string
-    case automaticJSON
-    case flattenedJSON
-    case completeJSON
+    /// The JWS Compact Serialization represents digitally signed or MACed content as a compact, URL-safe string.
+    ///
+    /// This string is:
+    /// ```
+    /// BASE64URL(UTF8(JWS Protected Header)) || '.' ||
+    /// BASE64URL(JWS Payload) || '.' ||
+    /// BASE64URL(JWS Signature)
+    /// ```
+    ///
+    /// Only one signature/MAC is supported by the JWS Compact Serialization
+    /// and it provides no syntax to represent a JWS Unprotected Header value.
+    ///
+    /// - Important: This is default encoding format when using `JSONWebSignature.encode(to:)`.
+    ///              To use other encodings, change `.jwsEncodedRepresentation`
+    ///              parameter in `userInfo`.
+    case compact
+    
+    /// The JWS JSON Serialization represents digitally signed or MACed
+    /// content as a JSON object.  This representation is neither optimized
+    /// for compactness nor URL-safe.
+    ///
+    /// The value can be a flattened representation if only one signature is present,
+    /// or a fully general syntax if more than one signature is present.
+    case json
+    
+    /// The flattened JWS JSON Serialization syntax is based upon the general
+    /// syntax but flattens it, optimizing it for the single digital signature/MAC case
+    case jsonFlattened
+    
+    /// A JSON Serialization fully general syntax, with which content can be secured
+    /// with more than one digital signature and/or MAC operation
+    case jsonGeneral
 }
 
 extension CodingUserInfoKey {
+    /// Changes serialzation of JWS.
+    ///
+    /// Default value is `.compact` if not set.
     public static var jwsEncodedRepresentation: Self {
         .init(rawValue: #function).unsafelyUnwrapped
     }
