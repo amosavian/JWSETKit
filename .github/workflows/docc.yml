@@ -1,50 +1,52 @@
-name: Docs
-
+name: Build Swift DocC and publish on GitHub Pages
+ 
 on:
   push:
+    # If you wanted to only trigger this flow on certain branches,
+    # specify them here in 
+    # branches: 
+    # alternatively, you can trigger docs only on new tags pushed:
     tags:
-    - '[0-9]+.[0-9]+.[0-9]+'
-  workflow_dispatch:
-
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
-permissions:
-  contents: read
-  pages: write
-  id-token: write
-
-# Allow one concurrent deployment
+      - '[0-9]+.[0-9]+.[0-9]+'
+ 
+# `concurrency` specifices how this action is run. 
+# Setting concurrency group makes it so that only one build process runs at a time.
 concurrency:
   group: "pages"
-  cancel-in-progress: true
-
+  cancel-in-progress: false
+ 
+env:
+  # Build target specifies which target in your Swift Package to build documentation for.
+  # To build all targets, remove this env variable, 
+  # and remove --target arg in the building step below.
+  BUILD_TARGET: JWSETKit
+ 
 jobs:
-  docs:
+  build:
     runs-on: macos-13
-
+    
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Pages
-      uses: actions/configure-pages@v1
-    - name: Generate Docs
-      uses: fwcd/swift-docc-action@v1
+    - name: Checkout
+      uses: actions/checkout@v3
       with:
-        target: JWSETKit
-        output: ./public
-        transform-for-static-hosting: 'true'
-        disable-indexing: 'true'
-        hosting-base-path: JWSETKit
-    - name: Upload artifact
-      uses: actions/upload-pages-artifact@v1
-      with:
-        path: ./public
+        fetch-depth: 0
 
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: macos-13
-    needs: docs
-
-    steps:
-    - name: Deploy Docs
-      uses: actions/deploy-pages@v1
+    # Build the DocC website using swiftPM.
+    - name: Build docs with SwiftPM
+      run: |
+        swift package --allow-writing-to-directory ./docs \
+        generate-documentation --target ${BUILD_TARGET} \
+        --output-path ./docs \
+        --disable-indexing \
+        --transform-for-static-hosting \
+        --hosting-base-path JWSETKit
+ 
+    - name: Commit and push generated documentation
+      run: |
+        git config --local user.email "github-actions[bot]@users.noreply.github.com"
+        git config --local user.name "github-actions[bot]"
+        git switch gh-pages
+        git add ./docs
+        git commit -a -m "Generated Swift DocC"
+        git push origin gh-pages
+ 
