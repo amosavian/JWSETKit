@@ -9,9 +9,9 @@ import Foundation
 
 extension Bundle {
     static func forLocale(_ locale: Locale) -> Bundle {
-        if let url = Bundle.module.urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: jsonWebKeyLocale.identifier)?.first?.baseURL {
+        if let url = Bundle.module.urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: locale.identifier)?.first?.baseURL {
             return self.init(url: url) ?? .module
-        } else if let url = Bundle.module.urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: jsonWebKeyLocale.languageCode)?.first?.baseURL {
+        } else if let url = Bundle.module.urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: locale.languageCode)?.first?.baseURL {
             return self.init(url: url) ?? .module
         }
         return .module

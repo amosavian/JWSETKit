@@ -41,4 +41,6 @@ dependencies: [
 ]
 ```
 
-For detailed usage and API documentation, check [the documentation](http://amosavian.github.io/JWSETKit).
+## Usage
+
+For detailed usage and API documentation, check [the documentation](https://amosavian.github.io/JWSETKit/documentation/jwsetkit/).

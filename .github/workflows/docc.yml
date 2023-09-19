@@ -4,11 +4,11 @@ on:
   push:
     # If you wanted to only trigger this flow on certain branches,
     # specify them here in 
-    branches:
-      - 'main'
+    # branches:
+    #   - 'main'
     # alternatively, you can trigger docs only on new tags pushed:
-    # tags:
-      # - '[0-9]+.[0-9]+.[0-9]+'
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
  
 # `concurrency` specifices how this action is run. 
 # Setting concurrency group makes it so that only one build process runs at a time.

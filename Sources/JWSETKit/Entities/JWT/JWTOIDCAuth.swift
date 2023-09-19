@@ -109,8 +109,8 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     public var codeHash: Data?
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
-        \.authenticationContextClassReference: "acr",
-        \.authenticationMethodsReferences: "amr",
+        \.authTime: "auth_time", \.authenticationContextClassReference: "acr",
+        \.authenticationMethodsReferences: "amr", \.nonce: "nonce",
         \.authorizedParty: "azp", \.authorizedPartyURL: "azp",
         \.accessTokenHash: "at_hash", \.codeHash: "c_hash",
     ]

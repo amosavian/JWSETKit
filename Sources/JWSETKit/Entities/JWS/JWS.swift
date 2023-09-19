@@ -21,7 +21,7 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
     public var header: ProtectedJSONWebContainer<JOSEHeader>
     
     /// The value JWS Unprotected Header.
-    public var unprotectedHeader: JOSEHeader
+    public var unprotectedHeader: JOSEHeader?
     
     /// Signature of protected header concatenated with payload.
     public var signature: Data
@@ -44,7 +44,7 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
     ///   - header: JWS Protected Header in byte array representation.
     ///   - unprotectedHeader: JWS unsigned header.
     ///   - signature: Signature of protected header concatenated with payload.
-    public init(header: Data, unprotectedHeader: JOSEHeader, signature: Data) throws {
+    public init(header: Data, unprotectedHeader: JOSEHeader?, signature: Data) throws {
         self.header = try ProtectedJSONWebContainer<JOSEHeader>(protected: header)
         self.unprotectedHeader = unprotectedHeader
         self.signature = signature
@@ -54,7 +54,7 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         self.header = try container.decode(ProtectedJSONWebContainer<JOSEHeader>.self, forKey: .protected)
-        self.unprotectedHeader = try container.decode(JOSEHeader.self, forKey: .header)
+        self.unprotectedHeader = try container.decodeIfPresent(JOSEHeader.self, forKey: .header)
         
         let signatureString = try container.decodeIfPresent(String.self, forKey: .signature) ?? .init()
         self.signature = Data(urlBase64Encoded: signatureString) ?? .init()
@@ -63,20 +63,21 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(header, forKey: .protected)
-        try container.encode(unprotectedHeader, forKey: .header)
+        try container.encodeIfPresent(unprotectedHeader, forKey: .header)
         try container.encode(signature.urlBase64EncodedData(), forKey: .signature)
     }
 }
 
 /// JWS represents digitally signed or MACed content using JSON data structures and `base64url` encoding.
-public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
+public struct JSONWebSignature<Payload: ProtectedWebContainer>: Codable, Hashable {
+    
     /// The "signatures" member value MUST be an array of JSON objects.
     ///
     /// Each object represents a signature or MAC over the JWS Payload and the JWS Protected Header.
     public var signatures: [JSONWebSignatureHeader]
     
     /// The "`payload`" member MUST be present and contain the value of JWS Payload.
-    public var payload: ProtectedJSONWebContainer<Payload>
+    public var payload: Payload
     
     enum CodingKeys: String, CodingKey {
         case payload
@@ -94,22 +95,35 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
             guard sections.count == 3 else {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "JWS String is not a three part data."))
             }
-            self.payload = try ProtectedJSONWebContainer<Payload>.init(protected: sections[1])
+            self.payload = try Payload.init(protected: sections[1])
             self.signatures = try [
                 .init(
                     header: sections[0],
-                    unprotectedHeader: .init(storage: .init()),
+                    unprotectedHeader: nil,
                     signature: sections[2]
                 ),
             ]
         } else if let signatures = try container.decodeIfPresent([JSONWebSignatureHeader].self, forKey: .signatures) {
-            self.payload = try container.decode(ProtectedJSONWebContainer<Payload>.self, forKey: .payload)
+            let payload = try container.decode(String.self, forKey: .payload)
+            guard let payloadData = Data(urlBase64Encoded: payload) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: [CodingKeys.payload], debugDescription: "Payload is not Base64URL"))
+            }
+            self.payload = try .init(protected: payloadData)
             self.signatures = signatures
         } else {
-            self.payload = try container.decode(ProtectedJSONWebContainer<Payload>.self, forKey: .payload)
+            let payload = try container.decode(String.self, forKey: .payload)
+            guard let payloadData = Data(urlBase64Encoded: payload) else {
+                throw DecodingError.dataCorrupted(.init(codingPath: [CodingKeys.payload], debugDescription: "Payload is not Base64URL"))
+            }
+            self.payload = try .init(protected: payloadData)
             let header = try JSONWebSignatureHeader(from: decoder)
             self.signatures = [header]
         }
+    }
+    
+    public init(signatures: [JSONWebSignatureHeader], payload: Payload) {
+        self.signatures = signatures
+        self.payload = payload
     }
     
     fileprivate func encodeAsString(_ encoder: Encoder) throws {
@@ -171,7 +185,7 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
         signatures = try signatures.map { header in
             let header = header
             let key = keys.first {
-                header.unprotectedHeader.keyId == $0.keyId || header.header.value.keyId == $0.keyId
+                header.unprotectedHeader?.keyId == $0.keyId || header.header.value.keyId == $0.keyId
             } ?? firstKey
             
             let message = header.header.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
@@ -201,7 +215,7 @@ public struct JSONWebSignature<Payload: JSONWebContainer>: Codable, Hashable {
     public func verifySignature(using keys: [any JSONWebValidatingKey]) throws {
         try keys.forEach { key in
             let header = signatures.first {
-                $0.unprotectedHeader.keyId == key.keyId || $0.header.value.keyId == key.keyId
+                $0.unprotectedHeader?.keyId == key.keyId || $0.header.value.keyId == key.keyId
             } ?? signatures.first
             guard let protectedHeadeer = header?.header, let signature = header?.signature else { return }
             let message = protectedHeadeer.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()

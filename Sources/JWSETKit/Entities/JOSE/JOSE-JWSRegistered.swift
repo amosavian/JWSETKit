@@ -155,7 +155,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.algorithm: "alg", \.jsonWebKeySetUrl: "jku",
-        \.key: "jwk", \.keyId: "kid",
+        \.key: "jwk", \.keyId: "kid", \.certificateChain: "x5c",
         \.certificateURL: "x5u", \.certificateThumprint: "x5t",
         \.type: "typ", \.contentType: "cty", \.critical: "crit",
     ]

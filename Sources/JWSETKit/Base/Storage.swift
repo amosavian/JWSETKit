@@ -46,7 +46,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     /// Returns values of given key.
     public subscript<T>(dynamicMember member: String) -> [T] {
         get {
-           self[member]
+            self[member]
         }
         set {
             self[member] = newValue
@@ -89,14 +89,16 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
             }
         }
         set {
-            updateValue(key: member, value: urlEncoded ? newValue?.urlBase64EncodedData() : newValue?.base64EncodedData())
+            updateValue(key: member, value: urlEncoded ?
+                (newValue?.urlBase64EncodedData()).map { String(decoding: $0, as: UTF8.self) } :
+                newValue?.base64EncodedString())
         }
     }
     
     /// Returns values of given key decoded using base64.
     public subscript(_ member: String, urlEncoded: Bool = false) -> [Data] {
         get {
-            guard let values = self[member] as [String]? else { return [] }
+            let values = self[member] as [String]
             if urlEncoded {
                 return values.compactMap { Data(urlBase64Encoded: $0) }
             } else {
@@ -105,7 +107,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         }
         set {
             self[member] = newValue.compactMap {
-                urlEncoded ? $0.urlBase64EncodedData() : $0.base64EncodedData()
+                urlEncoded ? String(decoding: $0.urlBase64EncodedData(), as: UTF8.self) : $0.base64EncodedString()
             }
         }
     }
@@ -138,6 +140,14 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         try container.encode(claims)
     }
     
+    public static func == (lhs: JSONWebValueStorage, rhs: JSONWebValueStorage) -> Bool {
+        let encoder = JSONEncoder()
+        let decoder = JSONDecoder()
+        let lhs = try? decoder.decode([String: AnyCodable].self, from: encoder.encode(lhs))
+        let rhs = try? decoder.decode([String: AnyCodable].self, from: encoder.encode(rhs))
+        return lhs == rhs
+    }
+    
     /// Removes value of given key from storage.
     public func contains(key: String) -> Bool {
         claims.keys.contains(key)
@@ -168,6 +178,9 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         case is URL.Type, is NSURL.Type:
             return (value as? String)
                 .map { URL(string: $0) } as? T
+        case is Locale.Type, is NSLocale.Type:
+            return (value as? String)
+                .map { Locale(bcp47: $0) } as? T
         case is (any JSONWebKey).Protocol:
             guard let data = try? JSONEncoder().encode(AnyCodable(value)) else { return nil }
             return try? AnyJSONWebKey.deserialize(data) as? T
@@ -197,11 +210,40 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         
         switch value {
         case let value as Date:
+            // Dates in JWT are `NumericDate` which is a JSON numeric value representing
+            // the number of seconds from 1970-01-01T00:00:00Z UTC until
+            // the specified UTC date/time, ignoring leap seconds.
             claims[key] = .init(Int(value.timeIntervalSince1970))
+        case let value as UUID:
+            // Standards such as ITU-T X.667 and RFC 4122 require them to be formatted
+            // using lower-case letters.
+            // The NSUUID class and UUID struct use upper-case letters when formatting.
+            claims[key] = .init(value.uuidString.lowercased())
+        case let value as Locale:
+            // Locales in OIDC is formatted using BCP-47 while Apple uses CLDR/ICU formatting.
+            claims[key] = .init(value.bcp47)
         case let value as any Decodable:
             claims[key] = .init(value)
         default:
             assertionFailure("Unknown storage type")
+        }
+    }
+}
+
+extension Locale {
+    fileprivate var bcp47: String {
+        if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
+            return identifier(.bcp47)
+        } else {
+            return identifier.replacingOccurrences(of: "_", with: "-")
+        }
+    }
+    
+    fileprivate init(bcp47: String) {
+        if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
+            self.init(components: .init(identifier: bcp47))
+        } else {
+            self.init(identifier: bcp47.replacingOccurrences(of: "-", with: "_"))
         }
     }
 }

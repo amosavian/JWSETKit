@@ -226,13 +226,13 @@ extension SecKey: JSONWebValidatingKey {
     fileprivate static let signingAlgorithms: [JSONWebAlgorithm: SecKeyAlgorithm] = [
         .ecdsaSignatureP256SHA256: .ecdsaSignatureMessageX962SHA256,
         .ecdsaSignatureP384SHA384: .ecdsaSignatureMessageX962SHA384,
-        .ecdsaSignatureP512SHA512: .ecdsaSignatureMessageX962SHA512,
+        .ecdsaSignatureP521SHA512: .ecdsaSignatureMessageX962SHA512,
         .rsaSignaturePKCS1v15SHA256: .rsaSignatureMessagePKCS1v15SHA256,
         .rsaSignaturePKCS1v15SHA384: .rsaSignatureMessagePKCS1v15SHA384,
         .rsaSignaturePKCS1v15SHA512: .rsaSignatureMessagePKCS1v15SHA512,
         .rsaSignaturePSSSHA256: .rsaSignatureMessagePSSSHA256,
         .rsaSignaturePSSSHA384: .rsaSignatureMessagePSSSHA384,
-        .rsaSignaturePSSSHA384: .rsaSignatureMessagePSSSHA384,
+        .rsaSignaturePSSSHA512: .rsaSignatureMessagePSSSHA512,
     ]
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {

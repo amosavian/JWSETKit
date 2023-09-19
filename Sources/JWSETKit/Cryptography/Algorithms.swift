@@ -69,11 +69,14 @@ extension JSONWebAlgorithm {
     /// ECDSA using P-256 and SHA-256.
     public static let ecdsaSignatureP256SHA256: Self = "ES256"
     
+    /// EdDSA signature algorithms
+    public static let eddsaSignature: Self = "EdDSA"
+    
     /// ECDSA using P-384 and SHA-384.
     public static let ecdsaSignatureP384SHA384: Self = "ES384"
     
     /// ECDSA using P-521 and SHA-512.
-    public static let ecdsaSignatureP512SHA512: Self = "ES512"
+    public static let ecdsaSignatureP521SHA512: Self = "ES512"
     
     /// RSAES-PKCS1-v1.5
     public static let rsaEncryptionPKCS1: Self = "RSA1_5"

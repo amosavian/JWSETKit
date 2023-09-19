@@ -1,6 +1,6 @@
 //
 //  LocalizingTests.swift
-//  
+//
 //
 //  Created by Amir Abbas Mousavian on 9/16/23.
 //
@@ -9,7 +9,7 @@ import XCTest
 @testable import JWSETKit
 
 final class LocalizingTests: XCTestCase {
-    func testExample() throws {
+    func testErrorLocalizing() throws {
         let date = Date(timeIntervalSince1970: 0)
         
         jsonWebKeyLocale = .init(identifier: "en-US")

@@ -1,6 +1,6 @@
 //
 //  Base64Tests.swift
-//  
+//
 //
 //  Created by Amir Abbas Mousavian on 9/16/23.
 //
@@ -30,9 +30,9 @@ final class Base64Tests: XCTestCase {
     }
 
     func testPerformanceDecode() throws {
-        self.measure {
+        measure {
             let encoded = "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
-            for _ in 1...10000 {
+            for _ in 1 ... 10000 {
                 let _ = Data(urlBase64Encoded: encoded)
             }
         }

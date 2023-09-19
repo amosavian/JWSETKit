@@ -29,12 +29,10 @@ extension ASN1Node.Content {
 }
 
 extension DER.Serializer {
-    mutating func append(_ array: [Data], as identifier: ASN1Identifier) {
-        appendConstructedNode(identifier: .sequence) {
+    mutating func append(_ array: [Data], as identifier: ASN1Identifier) throws {
+        try appendConstructedNode(identifier: .sequence) {
             for item in array {
-                $0.appendPrimitiveNode(identifier: identifier) {
-                    $0 = [UInt8](item)
-                }
+                try $0.serialize(ArraySlice<UInt8>(item))
             }
         }
     }

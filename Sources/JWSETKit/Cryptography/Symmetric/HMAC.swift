@@ -20,8 +20,8 @@ public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
     public var symmetricKey: SymmetricKey {
         get throws {
             // swiftformat:disable:next redundantSelf
-            guard let keyValue = self.keyValue, keyValue.count == H.Digest.byteCount else {
-                throw CryptoKitError.incorrectKeySize
+            guard let keyValue = self.keyValue else {
+                throw JSONWebKeyError.keyNotFound
             }
             return SymmetricKey(data: keyValue)
         }
@@ -39,13 +39,13 @@ public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
     }
     
     /// Returns a new HMAC key with given symmetric key.
-    /// 
+    ///
     /// - Parameter key: Symmetric key for operation.
     public init(_ key: SymmetricKey) throws {
         self.storage = .init()
         self.keyType = .symmetric
-        self.algorithm = "HS\(key.bitCount)"
-        self.keyValue = key
+        self.algorithm = "HS\(H.Digest.byteCount * 8)"
+        self.keyValue = key.keyValue
     }
     
     private static func random() -> SymmetricKey {

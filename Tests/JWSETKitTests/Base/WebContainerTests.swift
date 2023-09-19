@@ -1,6 +1,6 @@
 //
 //  WebContainerTests.swift
-//  
+//
 //
 //  Created by Amir Abbas Mousavian on 9/16/23.
 //
@@ -15,7 +15,7 @@ final class WebContainerTests: XCTestCase {
         let container = try ProtectedJSONWebContainer<JSONWebTokenClaims>(protected: .init(
             urlBase64Encoded: protected)!)
         XCTAssertEqual(container.value.issuer, "joe")
-        XCTAssertEqual(container.value.expiry, Date(timeIntervalSince1970: 1300819380))
+        XCTAssertEqual(container.value.expiry, Date(timeIntervalSince1970: 1_300_819_380))
         XCTAssertEqual(container.value["http://example.com/is_root"], true)
         XCTAssertEqual(container.protected, .init(urlBase64Encoded: protected)!)
     }

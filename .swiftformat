@@ -1,6 +1,6 @@
 # file options
 
---exclude Tests,Snapshots,Build,PluginTests
+--exclude Snapshots,Build
 
 # format options
 --acronyms

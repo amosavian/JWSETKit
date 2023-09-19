@@ -22,7 +22,7 @@ public struct JSONWebTokenClaims: JSONWebContainer {
 }
 
 /// A JWS object that contains JWT registered tokens.
-public typealias JSONWebToken = JSONWebSignature<JSONWebTokenClaims>
+public typealias JSONWebToken = JSONWebSignature<ProtectedJSONWebContainer<JSONWebTokenClaims>>
 
 extension JSONWebToken: Expirable {
     /// Verifies the `exp` and `nbf` headers using current date.

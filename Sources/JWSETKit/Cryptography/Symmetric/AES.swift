@@ -15,7 +15,8 @@ import Crypto
 /// JSON Web Key (JWK) container for AES-GCM keys for encryption/decryption.
 public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
     public var storage: JSONWebValueStorage
-
+    
+    /// Symmetric key using for encryption.
     public var symmetricKey: SymmetricKey {
         get throws {
             // swiftformat:disable:next redundantSelf
@@ -46,8 +47,9 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
         self.keyValue = Self.random()
     }
     
-    /// <#Description#>
-    /// - Parameter key: <#key description#>
+    /// Initializes a AES-GCM key for encryption.
+    ///
+    /// - Parameter key: A symmetric cryptographic key.
     public init(_ key: SymmetricKey) throws {
         self.storage = .init()
         self.algorithm = "A\(key.bitCount)GCM"

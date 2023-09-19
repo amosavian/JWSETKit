@@ -76,7 +76,7 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey {
             components = [modulus, publicExponent]
         }
         var result = DER.Serializer()
-        result.append(components, as: .integer)
+        try result.append(components, as: .integer)
         return Data(result.serializedBytes)
     }
 }

@@ -211,7 +211,14 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters {
     public var updatedAt: Date?
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
-        \.zoneInfo: "zoneinfo",
+        \.name: "name", \.givenName: "given_name", \.familyName: "family_name",
+        \.middleName: "middle_name", \.nickname: "nickname", \.preferredUsername: "preferred_username",
+        \.profileURL: "profile", \.pictureURL: "picture", \.websiteURL: "website",
+        \.email: "email", \.isEmailVerified: "email_verified",
+        \.gender: "gender", \.birthdate: "birthdate",
+        \.zoneInfo: "zoneinfo", \.locale: "locale",
+        \.phoneNumber: "phone_number", \.isPhoneNumberVerified: "phone_number_verified",
+        \.address: "address", \.updatedAt: "updated_at",
     ]
 }
 
@@ -238,16 +245,6 @@ extension JSONWebTokenClaims {
         }
         set {
             storage[stringKey(keyPath)] = newValue
-        }
-    }
-    
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Locale?>) -> Locale? {
-        get {
-            storage[stringKey(keyPath)]
-                .flatMap(Locale.init(identifier:))
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue?.identifier
         }
     }
     
