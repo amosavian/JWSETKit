@@ -24,6 +24,21 @@ public struct JSONWebTokenClaims: JSONWebContainer {
 /// A JWS object that contains JWT registered tokens.
 public typealias JSONWebToken = JSONWebSignature<ProtectedJSONWebContainer<JSONWebTokenClaims>>
 
+#if canImport(Foundation.NSURLSession)
+extension URLRequest {
+    public var authorizationJWT: JSONWebToken? {
+        get {
+            (value(forHTTPHeaderField: "Authorization")?
+                .replacingOccurrences(of: "Bearer ", with: "", options: [.anchored]))
+            .flatMap(JSONWebToken.init)
+        }
+        set {
+            setValue("Bearer \(description)", forHTTPHeaderField: "Authorization")
+        }
+    }
+}
+#endif
+
 extension JSONWebToken: Expirable {
     /// Verifies the `exp` and `nbf` headers using current date.
     ///

@@ -26,16 +26,31 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey {
         self.storage = storage
     }
     
+    public init(derRepresentaion: Data) throws {
+        #if canImport(CommonCrypto)
+        let key: SecKey = try handle { error in
+            let attributes = [
+                kSecAttrKeyType: kSecAttrKeyTypeRSA,
+                kSecAttrKeyClass: kSecAttrKeyClassPublic,
+            ] as CFDictionary
+            return SecKeyCreateWithData(derRepresentaion as CFData, attributes, &error)
+        }
+        self.storage = key.storage
+        #else
+        self.storage = try _RSA.Signing.PublicKey(derRepresentaion: derRepresentaion).storage
+        #endif
+    }
+    
     public static func create(storage: JSONWebValueStorage) throws -> JSONWebRSAPublicKey {
         .init(storage: storage)
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-#if canImport(CommonCrypto)
+        #if canImport(CommonCrypto)
         try SecKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
-#else
+        #else
         try _RSA.Signing.PublicKey(jsonWebKey: storage).verifySignature(signature, for: data, using: algorithm)
-#endif
+        #endif
     }
     
     static func rsaComponents(_ data: Data) throws -> [Data] {
@@ -87,6 +102,21 @@ public struct JSONWebRSAPrivateKey: JSONWebSigningKey {
     
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
+    }
+    
+    public init(derRepresentaion: Data) throws {
+        #if canImport(CommonCrypto)
+        let key: SecKey = try handle { error in
+            let attributes = [
+                kSecAttrKeyType: kSecAttrKeyTypeRSA,
+                kSecAttrKeyClass: kSecAttrKeyClassPrivate,
+            ] as CFDictionary
+            return SecKeyCreateWithData(derRepresentaion as CFData, attributes, &error)
+        }
+        self.storage = key.storage
+        #else
+        self.storage = try _RSA.Signing.PrivateKey(derRepresentaion: derRepresentaion).storage
+        #endif
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> JSONWebRSAPrivateKey {

@@ -293,7 +293,7 @@ extension SecKey: JSONWebDecryptingKey {
     }
 }
 
-fileprivate func handle<T>(_ closure: (_ error: inout Unmanaged<CFError>?) -> T?) throws -> T {
+func handle<T>(_ closure: (_ error: inout Unmanaged<CFError>?) -> T?) throws -> T {
     var error: Unmanaged<CFError>?
     let result = closure(&error)
     if let error = error?.takeRetainedValue() {

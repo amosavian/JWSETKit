@@ -1,0 +1,27 @@
+//
+//  File.swift
+//  
+//
+//  Created by Amir Abbas Mousavian on 9/21/23.
+//
+
+import Foundation
+import XCTest
+@testable import JWSETKit
+
+final class JWTTests: XCTestCase {
+    let jwtString = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SVT7VUK8eOve-SCacPaU_bkzT3SFr9wk5EQciofG4Qo"
+    
+    func testDecode() throws {
+        let jwt = try JSONWebToken(from: jwtString)
+        XCTAssertEqual(jwt.signatures.first?.header.value.algorithm, .hmacSHA256)
+        XCTAssertEqual(jwt.payload.value.issuedAt, Date(timeIntervalSince1970: 1516239022))
+        XCTAssertNoThrow(try jwt.verifySignature(using: ExampleKeys.symmetric))
+    }
+    
+    func testEncode() throws {
+        let jwt = try JSONWebToken(from: jwtString)
+        XCTAssertEqual(try String(jws: jwt), jwtString)
+        XCTAssertEqual(jwt.description, jwtString)
+    }
+}

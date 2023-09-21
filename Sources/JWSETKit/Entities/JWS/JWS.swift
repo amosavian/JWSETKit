@@ -32,7 +32,7 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
     ///   - header: JWS Protected Header.
     ///   - unprotectedHeader: JWS unsigned header.
     ///   - signature: Signature of protected header concatenated with payload.
-    public init(header: JOSEHeader, unprotectedHeader: JOSEHeader, signature: Data) throws {
+    public init(header: JOSEHeader, unprotectedHeader: JOSEHeader? = nil, signature: Data) throws {
         self.header = try .init(value: header)
         self.unprotectedHeader = unprotectedHeader
         self.signature = signature
@@ -44,7 +44,7 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
     ///   - header: JWS Protected Header in byte array representation.
     ///   - unprotectedHeader: JWS unsigned header.
     ///   - signature: Signature of protected header concatenated with payload.
-    public init(header: Data, unprotectedHeader: JOSEHeader?, signature: Data) throws {
+    public init(header: Data, unprotectedHeader: JOSEHeader? = nil, signature: Data) throws {
         self.header = try ProtectedJSONWebContainer<JOSEHeader>(protected: header)
         self.unprotectedHeader = unprotectedHeader
         self.signature = signature
@@ -84,11 +84,24 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Codable, Hashabl
         case signatures
     }
     
+    public init<D: DataProtocol>(from data: D) throws {
+        let container: Data
+        if data.starts(with: Data("ey".utf8)) {
+            container = Data("{\"payload\":\"".utf8) + Data(data) + Data("\"}".utf8)
+        } else if data.starts(with: Data("{".utf8)) {
+            container = Data(#"{"payload":#.utf8) + Data(data) + Data(#"}"#.utf8)
+        } else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid JWS."))
+        }
+        self = try JSONDecoder().decode(JWSContainer<Payload>.self, from: container).payload
+    }
+    
+    public init<S: StringProtocol>(from string: S) throws {
+        try self.init(from: Data(string.utf8))
+    }
+    
     public init(from decoder: Decoder) throws {
-        let stringContainer = try decoder.singleValueContainer()
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        
-        if let value = try? stringContainer.decode(String.self) {
+        if let stringContainer = try? decoder.singleValueContainer(), let value = try? stringContainer.decode(String.self) {
             let sections = value
                 .components(separatedBy: ".")
                 .map { Data(urlBase64Encoded: $0) ?? .init() }
@@ -103,7 +116,11 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Codable, Hashabl
                     signature: sections[2]
                 ),
             ]
-        } else if let signatures = try container.decodeIfPresent([JSONWebSignatureHeader].self, forKey: .signatures) {
+            return
+        }
+        
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        if let signatures = try container.decodeIfPresent([JSONWebSignatureHeader].self, forKey: .signatures) {
             let payload = try container.decode(String.self, forKey: .payload)
             guard let payloadData = Data(urlBase64Encoded: payload) else {
                 throw DecodingError.dataCorrupted(.init(codingPath: [CodingKeys.payload], debugDescription: "Payload is not Base64URL"))
@@ -278,4 +295,31 @@ extension CodingUserInfoKey {
     public static var jwsEncodedRepresentation: Self {
         .init(rawValue: #function).unsafelyUnwrapped
     }
+}
+
+extension String {
+    public init<Payload: ProtectedWebContainer>(jws: JSONWebSignature<Payload>) throws {
+        self = String(String(decoding: try JSONEncoder().encode(jws), as: UTF8.self).dropFirst().dropLast())
+    }
+}
+
+extension JSONWebSignature: LosslessStringConvertible, CustomDebugStringConvertible {
+    public init?(_ description: String) {
+        guard let jws = try? JSONWebSignature<Payload>(from: description) else {
+            return nil
+        }
+        self = jws
+    }
+    
+    public var description: String {
+        (try? String(jws: self)) ?? ""
+    }
+    
+    public var debugDescription: String {
+        "Signatures: \(signatures.debugDescription)\nPayload: \(String(decoding: payload.protected.urlBase64EncodedData(), as: UTF8.self))"
+    }
+}
+
+fileprivate struct JWSContainer<Payload: ProtectedWebContainer>: Codable {
+    let payload: JSONWebSignature<Payload>
 }

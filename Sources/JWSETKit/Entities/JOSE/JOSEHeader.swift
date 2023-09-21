@@ -23,6 +23,17 @@ public struct JOSEHeader: JSONWebContainer {
         self.storage = storage
     }
     
+    public init() {
+        self.storage = .init()
+    }
+    
+    public init(algorithm: JSONWebAlgorithm, type: String, keyId: String? = nil) {
+        self.storage = .init()
+        self.algorithm = algorithm
+        self.type = type
+        self.keyId = keyId
+    }
+    
     public static func create(storage: JSONWebValueStorage) throws -> JOSEHeader {
         .init(storage: storage)
     }
