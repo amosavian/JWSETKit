@@ -58,6 +58,9 @@ public enum JSONWebValidationError: LocalizedError {
     /// Current date is before `"nbf"` claim in token.
     case tokenInvalidBefore(notBefore: Date)
     
+    /// Given audience is not enlisted in `"aud"` claim in token.
+    case audienceNotIntended(String)
+    
     /// A localized message describing what error occurred.
     public var errorDescription: String? {
         let dateFormatter = DateFormatter()
@@ -69,6 +72,8 @@ public enum JSONWebValidationError: LocalizedError {
             return .init(localizingKey: "errorExpiredToken", dateFormatter.string(from: date))
         case .tokenInvalidBefore(let date):
             return .init(localizingKey: "errorNotBeforeToken", dateFormatter.string(from: date))
+        case .audienceNotIntended(let audience):
+            return .init(localizingKey: "errorInvalidAudience", audience)
         }
     }
 }

@@ -24,21 +24,16 @@ public struct JSONWebTokenClaims: JSONWebContainer {
 /// A JWS object that contains JWT registered tokens.
 public typealias JSONWebToken = JSONWebSignature<ProtectedJSONWebContainer<JSONWebTokenClaims>>
 
-#if canImport(Foundation.NSURLSession)
-extension URLRequest {
-    /// The `Authorization` http header in `Bearer` with given JSON Web Token (JWT).
-    public var authorizationToken: JSONWebToken? {
-        get {
-            (value(forHTTPHeaderField: "Authorization")?
-                .replacingOccurrences(of: "Bearer ", with: "", options: [.anchored]))
-            .flatMap(JSONWebToken.init)
-        }
-        set {
-            setValue((newValue.map { "Bearer \($0.description)" }), forHTTPHeaderField: "Authorization")
+extension JSONWebToken {
+    /// Verify that the given audience is included as one of the claim's intended audiences.
+    ///
+    /// - Parameter audience: The exact intended audience.
+    public func verifyAudience(includes audience: String) throws {
+        guard payload.value.audience.contains(audience) else {
+            throw JSONWebValidationError.tokenExpired(expiry: .init())
         }
     }
 }
-#endif
 
 extension JSONWebToken: Expirable {
     /// Verifies the `exp` and `nbf` headers using current date.
@@ -55,3 +50,19 @@ extension JSONWebToken: Expirable {
         }
     }
 }
+
+#if canImport(Foundation.NSURLSession)
+extension URLRequest {
+    /// The `Authorization` http header in `Bearer` with given JSON Web Token (JWT).
+    public var authorizationToken: JSONWebToken? {
+        get {
+            (value(forHTTPHeaderField: "Authorization")?
+                .replacingOccurrences(of: "Bearer ", with: "", options: [.anchored]))
+                .flatMap(JSONWebToken.init)
+        }
+        set {
+            setValue((newValue.map { "Bearer \($0.description)" }), forHTTPHeaderField: "Authorization")
+        }
+    }
+}
+#endif

@@ -102,7 +102,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// any processing of this parameter is performed by the JWS application.
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var type: String?
+    public var type: JSONWebContentType?
     
     /// The "`cty`" (content type) Header Parameter is used by JWS applications
     /// to declare the media type [IANA.MediaTypes] of the secured content (the payload).
@@ -116,7 +116,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// this parameter is performed by the JWS application.
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var contentType: String?
+    public var contentType: JSONWebContentType?
     
     /// The "crit" (critical) Header Parameter indicates that extensions to this specification and/or [JWA]
     /// are being used that MUST be understood and processed.

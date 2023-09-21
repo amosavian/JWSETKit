@@ -2,6 +2,11 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>errorInvalidAudience</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Audience &quot;%@&quot; is not intended for the token.</string>
+	</dict>
 	<key>errorUnknownAlgorithm</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>

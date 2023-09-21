@@ -37,7 +37,7 @@ public struct JOSEHeader: JSONWebContainer {
     ///   - algorithm: Contains JWA to deremine signing/encryption algorithm.
     ///   - type: Payload type, usually `"JWT"` for JSON Web Token.
     ///   - keyId: Key ID that generated signature.
-    public init(algorithm: JSONWebAlgorithm, type: String, keyId: String? = nil) {
+    public init(algorithm: JSONWebAlgorithm, type: JSONWebContentType, keyId: String? = nil) {
         self.storage = .init()
         self.algorithm = algorithm
         self.type = type
@@ -47,4 +47,32 @@ public struct JOSEHeader: JSONWebContainer {
     public static func create(storage: JSONWebValueStorage) throws -> JOSEHeader {
         .init(storage: storage)
     }
+}
+
+/// Content type of payload in JOSE header..
+public struct JSONWebContentType: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
+    public let rawValue: String
+    
+    public init(rawValue: String) {
+        self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
+    }
+    
+    public init(stringLiteral value: StringLiteralType) {
+        self.rawValue = value.trimmingCharacters(in: .whitespaces)
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        self.rawValue = try container.decode(String.self)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+}
+
+extension JSONWebContentType {
+    /// Payload contains a JSON with JSON Web Token (JWT) claims.
+    public static let jwt: Self = "JWT"
 }

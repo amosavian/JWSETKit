@@ -5,16 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/9/23.
 //
 
-import Foundation
-import SwiftASN1
-#if canImport(CryptoKit)
-import CryptoKit
-#else
-import Crypto
-#endif
-
 #if canImport(CommonCrypto)
 import CommonCrypto
+import CryptoKit
+import Foundation
+import SwiftASN1
 
 extension SecKey: JSONWebKey {
     public var storage: JSONWebValueStorage {
@@ -38,7 +33,11 @@ extension SecKey: JSONWebKey {
         case .rsa:
             keyType = kSecAttrKeyTypeRSA
         case .symmetric:
+#if os(macOS)
             keyType = kSecAttrKeyTypeAES
+#else
+            fallthrough
+#endif
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -116,7 +115,7 @@ extension SecKey: JSONWebKey {
             switch cfKeyType {
             case kSecAttrKeyTypeRSA:
                 return .rsa
-            case kSecAttrKeyTypeEC, kSecAttrKeyTypeECDSA, kSecAttrKeyTypeECSECPrimeRandom:
+            case kSecAttrKeyTypeEC, kSecAttrKeyTypeECSECPrimeRandom:
                 return .elipticCurve
             default:
                 throw JSONWebKeyError.unknownKeyType

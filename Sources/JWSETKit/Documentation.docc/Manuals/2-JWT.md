@@ -99,6 +99,9 @@ do {
     case .tokenInvalidBefore(let notBefore):
         // Token is not valid yet accoring to `nbf`
         print(error.localizedDescription)
+    case .audienceNotIntended(let audience):
+        // Invalid audience.
+        print(error.localizedDescription)
     }
 } catch {
     print(error.localizedDescription)

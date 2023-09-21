@@ -5,8 +5,8 @@
 //  Created by Amir Abbas Mousavian on 9/17/23.
 //
 
-import XCTest
 import X509
+import XCTest
 #if canImport(CryptoKit)
 import CryptoKit
 #else
@@ -16,9 +16,10 @@ import Crypto
 
 final class JWSTests: XCTestCase {
     let jws = try! JSONWebToken(
-            signatures: [.init(header: Data(urlBase64Encoded: "eyJhbGciOiJSUzI1NiJ9")!, unprotectedHeader: nil, signature: Data())],
-            payload: .init(protected: Data(
-                urlBase64Encoded: "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ")!))
+        signatures: [.init(header: Data(urlBase64Encoded: "eyJhbGciOiJSUzI1NiJ9")!, unprotectedHeader: nil, signature: Data())],
+        payload: .init(protected: Data(
+            urlBase64Encoded: "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ")!)
+    )
     
     func testSignatureHS256() throws {
         let signature = Data(base64Encoded: "kPJsVyAmQ4DGGRjTQ2HO0l1WzypM3Ewvhof4s1A3HPg=")
@@ -112,6 +113,6 @@ final class JWSTests: XCTestCase {
     
     func testVerifyDates() throws {
         XCTAssertThrowsError(try jws.verifyDate())
-        XCTAssertNoThrow(try jws.verifyDate(.init(timeIntervalSince1970: 1300819370)))
+        XCTAssertNoThrow(try jws.verifyDate(.init(timeIntervalSince1970: 1_300_819_370)))
     }
 }

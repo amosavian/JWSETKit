@@ -5,8 +5,8 @@
 //  Created by Amir Abbas Mousavian on 9/17/23.
 //
 
-import XCTest
 import X509
+import XCTest
 #if canImport(CryptoKit)
 import CryptoKit
 #else
@@ -62,8 +62,8 @@ final class JOSEHeaderJWSTests: XCTestCase {
         XCTAssertEqual(claims.certificateURL, URL(string: "http://example.com/janedoe"))
         XCTAssertEqual(claims.certificateThumprint, Data(base64Encoded: "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck="))
         XCTAssertEqual(claims.certificateChain, [cert1, cert2, cert3])
-        XCTAssertEqual(claims.type, "JWT")
-        XCTAssertEqual(claims.contentType, "application/json")
+        XCTAssertEqual(claims.type, .jwt)
+        XCTAssertEqual(claims.contentType, .init(rawValue: "application/json"))
         XCTAssertEqual(claims.critical, ["b64"])
     }
     
@@ -77,8 +77,8 @@ final class JOSEHeaderJWSTests: XCTestCase {
         claims.certificateURL = URL(string: "http://example.com/janedoe")
         claims.certificateThumprint = Data(base64Encoded: "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck=")
         claims.certificateChain = [cert1, cert2, cert3]
-        claims.type = "JWT"
-        claims.contentType = "application/json"
+        claims.type = .jwt
+        claims.contentType = .init(rawValue: "application/json")
         claims.critical = ["b64"]
         
         let decoder = JSONDecoder()

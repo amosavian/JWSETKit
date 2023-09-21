@@ -70,7 +70,6 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
 
 /// JWS represents digitally signed or MACed content using JSON data structures and `base64url` encoding.
 public struct JSONWebSignature<Payload: ProtectedWebContainer>: Codable, Hashable {
-    
     /// The "signatures" member value MUST be an array of JSON objects.
     ///
     /// Each object represents a signature or MAC over the JWS Payload and the JWS Protected Header.
@@ -113,7 +112,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Codable, Hashabl
             guard sections.count == 3 else {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "JWS String is not a three part data."))
             }
-            self.payload = try Payload.init(protected: sections[1])
+            self.payload = try Payload(protected: sections[1])
             self.signatures = try [
                 .init(
                     header: sections[0],
@@ -341,7 +340,7 @@ extension JSONWebSignature: EncodableWithConfiguration {
 
 extension String {
     public init<Payload: ProtectedWebContainer>(jws: JSONWebSignature<Payload>) throws {
-        self = String(String(decoding: try JSONEncoder().encode(jws), as: UTF8.self).dropFirst().dropLast())
+        self = try String(String(decoding: JSONEncoder().encode(jws), as: UTF8.self).dropFirst().dropLast())
     }
 }
 
