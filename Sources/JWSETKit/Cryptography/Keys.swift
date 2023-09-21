@@ -89,11 +89,17 @@ public struct AnyJSONWebKey: JSONWebKey {
         AnyJSONWebKey(storage: storage)
     }
     
-    init(storage: JSONWebValueStorage) {
+    /// Returns a new concrete key using json data.
+    ///
+    /// - Parameter storage: Storage of key-values.
+    public init(storage: JSONWebValueStorage) {
         self.storage = storage
     }
     
-    init(_ key: any JSONWebKey) {
+    /// A type-erased JWK value.
+    ///
+    /// - Parameter key: Key to wrap.
+    public init(_ key: any JSONWebKey) {
         self.storage = key.storage
     }
     
@@ -118,7 +124,10 @@ public struct JSONWebKeySet: Codable, Hashable {
     /// can choose to assign a meaning to the order for their purposes, if desired.
     public var keys: [any JSONWebKey]
     
-    init(keys: [any JSONWebKey]) {
+    /// Initializes JWKSet using given array of key.
+    ///
+    /// - Parameter keys: An array of JWKs.
+    public init(keys: [any JSONWebKey]) {
         self.keys = keys
     }
     

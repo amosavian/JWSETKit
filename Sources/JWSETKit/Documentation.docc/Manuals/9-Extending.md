@@ -56,7 +56,7 @@ struct DPoPClaims: JSONWebContainer {
     }
 }
 
-public typealias DPoP = JSONWebSignature<DPoPClaims>
+public typealias DPoP = JSONWebSignature<ProtectedJSONWebContainer<DPoPClaims>>
 ```
 
 then extend `DPoP` to support defined

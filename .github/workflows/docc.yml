@@ -44,6 +44,7 @@ jobs:
         generate-documentation --target ${BUILD_TARGET} \
         --output-path ./docs \
         --disable-indexing \
+        --include-extended-types \
         --transform-for-static-hosting \
         --hosting-base-path JWSETKit
  

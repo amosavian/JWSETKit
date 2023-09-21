@@ -24,4 +24,12 @@ final class JWTTests: XCTestCase {
         XCTAssertEqual(try String(jws: jwt), jwtString)
         XCTAssertEqual(jwt.description, jwtString)
     }
+#if canImport(Foundation.NSURLSession)
+    func testAuthorization() throws {
+        let jwt = try JSONWebToken(from: jwtString)
+        var request = URLRequest(url: .init(string: "https://www.example.com.")!)
+        request.authorizationToken = jwt
+        XCTAssertEqual(request.value(forHTTPHeaderField: "Authorization"), "Bearer \(jwtString)")
+    }
+#endif
 }

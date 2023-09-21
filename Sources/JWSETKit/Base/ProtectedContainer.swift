@@ -12,6 +12,9 @@ public protocol ProtectedWebContainer: Hashable {
     /// Signed data.
     var protected: Data { get set }
     
+    /// Initializes the container using given data.
+    ///
+    /// - Parameter protected: Data that has been signed.
     init(protected: Data) throws
 }
 

@@ -8,11 +8,11 @@
 import Foundation
 
 extension Bundle {
-    static func forLocale(_ locale: Locale) -> Bundle {
-        if let url = Bundle.module.urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: locale.identifier)?.first?.baseURL {
-            return self.init(url: url) ?? .module
+    func forLocale(_ locale: Locale) -> Bundle {
+        if let url = urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: locale.identifier)?.first?.baseURL {
+            return Bundle(url: url) ?? .module
         } else if let url = Bundle.module.urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: locale.languageCode)?.first?.baseURL {
-            return self.init(url: url) ?? .module
+            return Bundle(url: url) ?? .module
         }
         return .module
     }
@@ -22,7 +22,7 @@ extension String {
     init(localizingKey key: String) {
         let bundle: Bundle
         if jsonWebKeyLocale != .autoupdatingCurrent, jsonWebKeyLocale != .current {
-            bundle = .forLocale(jsonWebKeyLocale)
+            bundle = Bundle.module.forLocale(jsonWebKeyLocale)
         } else {
             bundle = Bundle.module
         }

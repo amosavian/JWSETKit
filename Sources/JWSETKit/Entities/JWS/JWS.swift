@@ -84,18 +84,23 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Codable, Hashabl
         case signatures
     }
     
+    /// Decodes a data that may contain either Base64URL encoded string of JWS or a Complete/Flattened JWS representation.
+    ///
+    /// - Parameter data: Either Base64URL encoded string of JWS or a JSON with Complete/Flattened JWS representation.
     public init<D: DataProtocol>(from data: D) throws {
-        let container: Data
         if data.starts(with: Data("ey".utf8)) {
-            container = Data("{\"payload\":\"".utf8) + Data(data) + Data("\"}".utf8)
+            let container = Data("\"".utf8) + Data(data) + Data("\"".utf8)
+            self = try JSONDecoder().decode(JSONWebSignature<Payload>.self, from: container)
         } else if data.starts(with: Data("{".utf8)) {
-            container = Data(#"{"payload":#.utf8) + Data(data) + Data(#"}"#.utf8)
+            self = try JSONDecoder().decode(JSONWebSignature<Payload>.self, from: Data(data))
         } else {
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid JWS."))
         }
-        self = try JSONDecoder().decode(JWSContainer<Payload>.self, from: container).payload
     }
     
+    /// Initialzes JWS using Base64URL encoded String.
+    ///
+    /// - Parameter string: Base64URL encoded String.
     public init<S: StringProtocol>(from string: S) throws {
         try self.init(from: Data(string.utf8))
     }
@@ -138,6 +143,11 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Codable, Hashabl
         }
     }
     
+    /// Initializes a new JWS with given payload and signature(s).
+    ///
+    /// - Parameters:
+    ///   - signatures: An array of signatures and JOSE headers.
+    ///   - payload: Protected payload data/object.
     public init(signatures: [JSONWebSignatureHeader], payload: Payload) {
         self.signatures = signatures
         self.payload = payload
@@ -297,6 +307,38 @@ extension CodingUserInfoKey {
     }
 }
 
+@available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
+public struct JSONWebSignatureCodableConfiguration {
+    public let representation: JSONWebSignatureRepresentation
+    
+    public init(representation: JSONWebSignatureRepresentation) {
+        self.representation = representation
+    }
+}
+
+@available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
+extension JSONWebSignature: EncodableWithConfiguration {
+    public typealias EncodingConfiguration = JSONWebSignatureCodableConfiguration
+    
+    public func encode(to encoder: Encoder, configuration: JSONWebSignatureCodableConfiguration) throws {
+        switch configuration.representation {
+        case .compact:
+            try encodeAsString(encoder)
+        case .json:
+            switch signatures.count {
+            case 0, 1:
+                try encodeAsFlattenedJSON(encoder)
+            default:
+                try encodeAsCompleteJSON(encoder)
+            }
+        case .jsonGeneral:
+            try encodeAsCompleteJSON(encoder)
+        case .jsonFlattened:
+            try encodeAsFlattenedJSON(encoder)
+        }
+    }
+}
+
 extension String {
     public init<Payload: ProtectedWebContainer>(jws: JSONWebSignature<Payload>) throws {
         self = String(String(decoding: try JSONEncoder().encode(jws), as: UTF8.self).dropFirst().dropLast())
@@ -318,8 +360,4 @@ extension JSONWebSignature: LosslessStringConvertible, CustomDebugStringConverti
     public var debugDescription: String {
         "Signatures: \(signatures.debugDescription)\nPayload: \(String(decoding: payload.protected.urlBase64EncodedData(), as: UTF8.self))"
     }
-}
-
-fileprivate struct JWSContainer<Payload: ProtectedWebContainer>: Codable {
-    let payload: JSONWebSignature<Payload>
 }

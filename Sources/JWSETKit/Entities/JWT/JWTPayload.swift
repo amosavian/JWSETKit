@@ -26,14 +26,15 @@ public typealias JSONWebToken = JSONWebSignature<ProtectedJSONWebContainer<JSONW
 
 #if canImport(Foundation.NSURLSession)
 extension URLRequest {
-    public var authorizationJWT: JSONWebToken? {
+    /// The `Authorization` http header in `Bearer` with given JSON Web Token (JWT).
+    public var authorizationToken: JSONWebToken? {
         get {
             (value(forHTTPHeaderField: "Authorization")?
                 .replacingOccurrences(of: "Bearer ", with: "", options: [.anchored]))
             .flatMap(JSONWebToken.init)
         }
         set {
-            setValue("Bearer \(description)", forHTTPHeaderField: "Authorization")
+            setValue((newValue.map { "Bearer \($0.description)" }), forHTTPHeaderField: "Authorization")
         }
     }
 }

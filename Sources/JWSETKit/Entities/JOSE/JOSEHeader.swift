@@ -19,14 +19,24 @@ import Crypto
 public struct JOSEHeader: JSONWebContainer {
     public var storage: JSONWebValueStorage
     
+    /// Initialzes a new JOSE header with given key/values.
+    ///
+    /// - Parameter storage: Header key/values.
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
     }
     
+    /// Initializes an empty JOSE header.
     public init() {
         self.storage = .init()
     }
     
+    /// Initializes a JOSE header with given algorithm, type and key ID if exists.
+    ///
+    /// - Parameters:
+    ///   - algorithm: Contains JWA to deremine signing/encryption algorithm.
+    ///   - type: Payload type, usually `"JWT"` for JSON Web Token.
+    ///   - keyId: Key ID that generated signature.
     public init(algorithm: JSONWebAlgorithm, type: String, keyId: String? = nil) {
         self.storage = .init()
         self.algorithm = algorithm
