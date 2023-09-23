@@ -6,6 +6,11 @@
 //
 
 import Foundation
+#if canImport(CryptoKit)
+import CryptoKit
+#else
+import Crypto
+#endif
 
 /// Represents a signature or MAC over the JWS Payload and the JWS Protected Header.
 public struct JSONWebSignatureHeader: Hashable, Codable {
@@ -38,7 +43,7 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
         self.signature = signature
     }
     
-    /// /// Creates a new JWS header using components.
+    /// Creates a new JWS header using components.
     ///
     /// - Parameters:
     ///   - header: JWS Protected Header in byte array representation.
@@ -205,17 +210,18 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Codable, Hashabl
     /// - Parameters:
     ///   - keys: An array of `JSONWebSigningKey` that would be used for signing.
     public mutating func updateSignature(using keys: [any JSONWebSigningKey]) throws {
-        guard let firstKey = keys.first else {
-            throw JSONWebKeyError.keyNotFound
-        }
         signatures = try signatures.map { header in
-            let header = header
-            let key = keys.first {
-                header.unprotectedHeader?.keyId == $0.keyId || header.header.value.keyId == $0.keyId
-            } ?? firstKey
-            
             let message = header.header.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
-            let signature = try key.signature(message, using: header.header.value.algorithm)
+            let algorithm = header.header.value.algorithm
+            let keyId: String? = header.header.value.keyId ?? header.unprotectedHeader?.keyId
+            let signature: Data
+            if algorithm == .none {
+                signature = .init()
+            } else if let key = keys.bestMatch(for: algorithm, id: keyId) {
+                signature = try key.signature(message, using: algorithm)
+            } else {
+                throw JSONWebKeyError.keyNotFound
+            }
             return try .init(
                 header: header.header.protected,
                 unprotectedHeader: header.unprotectedHeader,
@@ -236,16 +242,30 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Codable, Hashabl
     ///
     /// This methos finds appropriate key for the header using `kid` value in protected or unprotected header.
     ///
+    /// - Note: No signature algorithm (`alg`) may have been set to "`none`" otherwise
+    ///     `JSONWebKeyError.operationNotAllowed` will be thrown.
+    ///
     /// - Parameters:
     ///   - keys: An array of `JSONWebValidatingKey` that would be used for validation.
     public func verifySignature(using keys: [any JSONWebValidatingKey]) throws {
-        try keys.forEach { key in
-            let header = signatures.first {
-                $0.unprotectedHeader?.keyId == key.keyId || $0.header.value.keyId == key.keyId
-            } ?? signatures.first
-            guard let protectedHeadeer = header?.header, let signature = header?.signature else { return }
-            let message = protectedHeadeer.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
-            try key.verifySignature(signature, for: message, using: protectedHeadeer.value.algorithm)
+        guard !signatures.isEmpty else {
+            throw CryptoKitError.authenticationFailure
+        }
+        try signatures.forEach { header in
+            let message = header.header.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
+            let algorithm = header.header.value.algorithm
+            let keyId: String? = header.header.value.keyId ?? header.unprotectedHeader?.keyId
+            if algorithm == .none {
+                // If we allow "none" algorithm in verification, a malicious user may simply
+                // remove the signature and change the algorithm to "none".
+                // As this scenario may lead to a critical security vulnaribility, "none"
+                // is not supported algorithm .
+                throw JSONWebKeyError.operationNotAllowed
+            } else if let key = keys.bestMatch(for: algorithm, id: keyId) {
+                try key.verifySignature(header.signature, for: message, using: algorithm)
+            } else {
+                throw JSONWebKeyError.keyNotFound
+            }
         }
     }
     

@@ -100,6 +100,86 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     }
 }
 
+extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
+    public var storage: JSONWebValueStorage {
+        get {
+            let components = try! JSONWebRSAPublicKey.rsaComponents(pkcs1DERRepresentation)
+            var key = AnyJSONWebKey()
+            key.keyType = .rsa
+            key.modulus = components[0]
+            key.exponent = components[1]
+            return key.storage
+        }
+        set {
+            if let value = try? Self.create(storage: newValue) {
+                self = value
+            }
+        }
+    }
+    
+    public static func create(storage: JSONWebValueStorage) throws -> _RSA.Encryption.PublicKey {
+        let der = try JSONWebRSAPublicKey.pkcs1Representation(AnyJSONWebKey(storage: storage))
+        return try .init(derRepresentation: der)
+    }
+    
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+        try .init(ciphertext: encrypt(data, padding: algorithm.rsaEncryptionPadding))
+    }
+    
+    public static func == (lhs: _RSA.Encryption.PublicKey, rhs: _RSA.Encryption.PublicKey) -> Bool {
+        lhs.pkcs1DERRepresentation == rhs.pkcs1DERRepresentation
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(pkcs1DERRepresentation)
+    }
+}
+
+extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
+    public var storage: JSONWebValueStorage {
+        get {
+            let components = try! JSONWebRSAPublicKey.rsaComponents(derRepresentation)
+            var key = AnyJSONWebKey()
+            key.keyType = .rsa
+            key.modulus = components[1]
+            key.exponent = components[2]
+            key.privateExponent = components[3]
+            key.firstPrimeFactor = components[4]
+            key.secondPrimeFactor = components[5]
+            key.firstFactorCRTExponent = components[6]
+            key.secondFactorCRTExponent = components[7]
+            key.firstCRTCoefficient = components[8]
+            return key.storage
+        }
+        set {
+            if let value = try? Self.create(storage: newValue) {
+                self = value
+            }
+        }
+    }
+    
+    public static func create(storage: JSONWebValueStorage) throws -> _RSA.Encryption.PrivateKey {
+        let der = try JSONWebRSAPublicKey.pkcs1Representation(AnyJSONWebKey(storage: storage))
+        return try .init(derRepresentation: der)
+    }
+    
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+        try .init(ciphertext: publicKey.encrypt(data, padding: algorithm.rsaEncryptionPadding))
+    }
+    
+    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+        try decrypt(data, padding: algorithm.rsaEncryptionPadding)
+    }
+    
+    public static func == (lhs: _RSA.Encryption.PrivateKey, rhs: _RSA.Encryption.PrivateKey) -> Bool {
+        lhs.derRepresentation == rhs.derRepresentation
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(derRepresentation)
+    }
+}
+
 extension JSONWebAlgorithm {
     fileprivate var rsaPadding: _RSA.Signing.Padding {
         get throws {
@@ -123,6 +203,19 @@ extension JSONWebAlgorithm {
                 return SHA384.self
             case .rsaSignaturePSSSHA512, .rsaSignaturePKCS1v15SHA512:
                 return SHA512.self
+            default:
+                throw JSONWebKeyError.unknownAlgorithm
+            }
+        }
+    }
+    
+    fileprivate var rsaEncryptionPadding: _RSA.Encryption.Padding {
+        get throws {
+            switch self {
+            case .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256, .rsaEncryptionOAEPSHA384, .rsaEncryptionOAEPSHA512:
+                return .PKCS1_OAEP
+            case .rsaEncryptionPKCS1:
+                fallthrough
             default:
                 throw JSONWebKeyError.unknownAlgorithm
             }

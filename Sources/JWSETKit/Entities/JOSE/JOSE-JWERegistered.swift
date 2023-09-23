@@ -13,7 +13,8 @@ import Crypto
 #endif
 
 /// Registered parameters of JOSE header in [RFC 7516](https://www.rfc-editor.org/rfc/rfc7516.html).
-public struct JoseHeaderJWERegisteredParameters {
+public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
+    public typealias Container = JOSEHeader
     /// The "`enc`" (encryption algorithm) Header Parameter identifies
     /// the content encryption algorithm used to perform authenticated encryption
     /// on the plaintext to produce the ciphertext and the Authentication Tag.
@@ -36,19 +37,13 @@ public struct JoseHeaderJWERegisteredParameters {
     /// -  "DEF" - Compression with the DEFLATE [RFC1951] algorithm
     public var compressionAlgorithm: JSONWebCompressionAlgorithm?
     
-    fileprivate static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [PartialKeyPath<Self>: String] = [
         \.encryptionAlgorithm: "enc", \.compressionAlgorithm: "zip",
     ]
 }
 
 extension JOSEHeader {
-    private func stringKey<T>(_ keyPath: KeyPath<JoseHeaderJWERegisteredParameters, T>) -> String {
-        if let key = JoseHeaderJWERegisteredParameters.keys[keyPath] {
-            return key
-        }
-        return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
-    }
-    
+    @_documentation(visibility: private)
     public subscript<T>(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -58,15 +53,7 @@ extension JOSEHeader {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, [String]>) -> [String] {
-        get {
-            storage[stringKey(keyPath)]
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
-        }
-    }
-    
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, JSONWebAlgorithm>) -> JSONWebAlgorithm {
         get {
             storage[stringKey(keyPath)] ?? .none

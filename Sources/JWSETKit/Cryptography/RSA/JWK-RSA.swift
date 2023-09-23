@@ -19,7 +19,7 @@ import _CryptoExtras
 #endif
 
 /// JSON Web Key (JWK) container for RSA public keys.
-public struct JSONWebRSAPublicKey: JSONWebValidatingKey {
+public struct JSONWebRSAPublicKey: JSONWebValidatingKey, JSONWebEncryptingKey {
     public var storage: JSONWebValueStorage
     
     public init(storage: JSONWebValueStorage) {
@@ -50,6 +50,14 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey {
         try SecKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
 #else
         try _RSA.Signing.PublicKey(jsonWebKey: storage).verifySignature(signature, for: data, using: algorithm)
+#endif
+    }
+    
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+#if canImport(CommonCrypto)
+        try SecKey.create(storage: storage).encrypt(data, using: algorithm)
+#else
+        try _RSA.Encryption.PublicKey(jsonWebKey: storage).encrypt(data, using: algorithm)
 #endif
     }
     
@@ -97,7 +105,7 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey {
 }
 
 /// JWK container for RSA private keys.
-public struct JSONWebRSAPrivateKey: JSONWebSigningKey {
+public struct JSONWebRSAPrivateKey: JSONWebSigningKey, JSONWebDecryptingKey {
     public var storage: JSONWebValueStorage
     
     public init(storage: JSONWebValueStorage) {
@@ -136,6 +144,22 @@ public struct JSONWebRSAPrivateKey: JSONWebSigningKey {
         try SecKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
 #else
         try _RSA.Signing.PublicKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
+#endif
+    }
+    
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+#if canImport(CommonCrypto)
+        try SecKey.create(storage: storage).encrypt(data, using: algorithm)
+#else
+        try _RSA.Encryption.PublicKey(jsonWebKey: storage).encrypt(data, using: algorithm)
+#endif
+    }
+    
+    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+#if canImport(CommonCrypto)
+        try SecKey.create(storage: storage).decrypt(data, using: algorithm)
+#else
+        try _RSA.Encryption.PublicKey(jsonWebKey: storage).decrypt(data, using: algorithm)
 #endif
     }
 }

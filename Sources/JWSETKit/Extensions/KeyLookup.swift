@@ -7,6 +7,32 @@
 
 import Foundation
 
+@_documentation(visibility: private)
+public protocol JSONWebContainerParameters<Container> {
+    associatedtype Container: JSONWebContainer
+    
+    static var keys: [PartialKeyPath<Self>: String] { get }
+    static var localizableKeys: [PartialKeyPath<Self>] { get }
+}
+
+extension JSONWebContainerParameters {
+    public static var localizableKeys: [PartialKeyPath<Self>] { [] }
+}
+
+extension JSONWebContainer {
+    @_documentation(visibility: private)
+    public func stringKey<P: JSONWebContainerParameters<Self>, T>(_ keyPath: KeyPath<P, T>) -> String {
+        let key = P.keys[keyPath] ?? String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
+        guard P.localizableKeys.contains(keyPath) else { return key }
+        let locales = storage.storageKeys
+            .filter { $0.hasPrefix(key + "#") }
+            .map { $0.replacingOccurrences(of: key + "#", with: "", options: [.anchored]) }
+            .map(Locale.init(identifier:))
+        guard let bestLocale = JSONWebKit.locale.bestMatch(in: locales) else { return key }
+        return "\(key)#\(bestLocale.identifier)"
+    }
+}
+
 extension String {
     var snakeCased: String {
         let pattern = "([a-z0-9])([A-Z])"

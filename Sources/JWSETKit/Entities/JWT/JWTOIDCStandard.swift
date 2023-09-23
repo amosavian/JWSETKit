@@ -66,7 +66,8 @@ public struct JSONWebAddress: Hashable, Codable {
 }
 
 /// Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
-public struct JSONWebTokenClaimsPublicOIDCStandardParameters {
+public struct JSONWebTokenClaimsPublicOIDCStandardParameters: JSONWebContainerParameters {
+    public typealias Container = JSONWebTokenClaims
     /// End-User's full name in displayable form including all name parts, possibly including titles and suffixes,
     /// ordered according to the End-User's locale and preferences.
     public var name: String?
@@ -210,7 +211,7 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters {
     /// until the date/time.
     public var updatedAt: Date?
     
-    fileprivate static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [PartialKeyPath<Self>: String] = [
         \.name: "name", \.givenName: "given_name", \.familyName: "family_name",
         \.middleName: "middle_name", \.nickname: "nickname", \.preferredUsername: "preferred_username",
         \.profileURL: "profile", \.pictureURL: "picture", \.websiteURL: "website",
@@ -220,16 +221,15 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters {
         \.phoneNumber: "phone_number", \.isPhoneNumberVerified: "phone_number_verified",
         \.address: "address", \.updatedAt: "updated_at",
     ]
+    
+    public static let localizableKeys: [PartialKeyPath<Self>] = [
+        \.name, \.givenName, \.familyName, \.middleName, \.nickname,
+        \.profileURL, \.websiteURL,
+    ]
 }
 
 extension JSONWebTokenClaims {
-    private func stringKey<T>(_ keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T>) -> String {
-        if let key = JSONWebTokenClaimsPublicOIDCStandardParameters.keys[keyPath] {
-            return key
-        }
-        return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
-    }
-    
+    @_documentation(visibility: private)
     public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -239,6 +239,7 @@ extension JSONWebTokenClaims {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Bool>) -> Bool {
         get {
             storage[stringKey(keyPath)]
@@ -248,16 +249,7 @@ extension JSONWebTokenClaims {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, TimeZone?>) -> TimeZone? {
-        get {
-            storage[stringKey(keyPath)]
-                .flatMap(TimeZone.init(identifier:))
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue?.identifier
-        }
-    }
-    
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Date?>) -> Date? {
         get {
             let key = stringKey(keyPath)

@@ -8,7 +8,8 @@
 import Foundation
 
 /// Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
-public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
+public struct JSONWebTokenClaimsPublicOIDCAuthParameters: JSONWebContainerParameters {
+    public typealias Container = JSONWebTokenClaims
     /// Time when the End-User authentication occurred.
     ///
     /// Its value is a JSON number representing the number of seconds from
@@ -108,7 +109,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
     /// this is REQUIRED; otherwise, its inclusion is OPTIONAL.
     public var codeHash: Data?
     
-    fileprivate static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [PartialKeyPath<Self>: String] = [
         \.authTime: "auth_time", \.authenticationContextClassReference: "acr",
         \.authenticationMethodsReferences: "amr", \.nonce: "nonce",
         \.authorizedParty: "azp", \.authorizedPartyURL: "azp",
@@ -117,13 +118,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters {
 }
 
 extension JSONWebTokenClaims {
-    private func stringKey<T>(_ keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, T>) -> String {
-        if let key = JSONWebTokenClaimsPublicOIDCAuthParameters.keys[keyPath] {
-            return key
-        }
-        return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
-    }
-    
+    @_documentation(visibility: private)
     public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -133,6 +128,7 @@ extension JSONWebTokenClaims {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, Data?>) -> Data? {
         get {
             storage[stringKey(keyPath), true]
@@ -142,6 +138,7 @@ extension JSONWebTokenClaims {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, [String]>) -> [String] {
         get {
             storage[stringKey(keyPath)]

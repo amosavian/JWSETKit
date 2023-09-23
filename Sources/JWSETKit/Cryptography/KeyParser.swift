@@ -73,3 +73,48 @@ extension AnyJSONWebKey {
         return try webKey.specialized()
     }
 }
+
+private let keyTypeTable: [JSONWebAlgorithm: JSONWebKeyType] = [
+    .hmacSHA256: .symmetric, .hmacSHA384: .symmetric, .hmacSHA512: .symmetric,
+    .aesEncryptionGCM128: .symmetric, .aesEncryptionGCM192: .symmetric, .aesEncryptionGCM256: .symmetric,
+    .ecdsaSignatureP256SHA256: .elipticCurve, .ecdsaSignatureP384SHA384: .elipticCurve,
+    .ecdsaSignatureP521SHA512: .elipticCurve, .eddsaSignature: .elipticCurve,
+    .rsaSignaturePSSSHA256: .rsa, .rsaSignaturePSSSHA384: .rsa, .rsaSignaturePSSSHA512: .rsa,
+    .rsaEncryptionPKCS1: .rsa, .rsaSignaturePKCS1v15SHA256: .rsa,
+    .rsaSignaturePKCS1v15SHA384: .rsa, .rsaSignaturePKCS1v15SHA512: .rsa,
+    .rsaEncryptionOAEP: .rsa, .rsaEncryptionOAEPSHA256: .rsa,
+    .rsaEncryptionOAEPSHA384: .rsa, .rsaEncryptionOAEPSHA512: .rsa,
+]
+
+private let curveTable: [JSONWebAlgorithm: JSONWebKeyCurve] = [
+    .ecdsaSignatureP256SHA256: .p256, .ecdsaSignatureP384SHA384: .p384,
+    .ecdsaSignatureP521SHA512: .p521, .eddsaSignature: .ed25519,
+]
+
+extension [any JSONWebSigningKey] {
+    func bestMatch(for algorithm: JSONWebAlgorithm, id: String? = nil) -> (any JSONWebSigningKey)? {
+        guard let keyType = keyTypeTable[algorithm] else { return nil }
+        let candidates = filter {
+            $0.keyType == keyType && $0.curve == curveTable[algorithm]
+        }
+        if let key = candidates.first(where: { $0.keyId == id }) {
+            return key
+        } else {
+            return candidates.first
+        }
+    }
+}
+
+extension [any JSONWebValidatingKey] {
+    func bestMatch(for algorithm: JSONWebAlgorithm, id: String? = nil) -> (any JSONWebValidatingKey)? {
+        guard let keyType = keyTypeTable[algorithm] else { return nil }
+        let candidates = filter {
+            $0.keyType == keyType && $0.curve == curveTable[algorithm]
+        }
+        if let key = candidates.first(where: { $0.keyId == id }) {
+            return key
+        } else {
+            return candidates.first
+        }
+    }
+}

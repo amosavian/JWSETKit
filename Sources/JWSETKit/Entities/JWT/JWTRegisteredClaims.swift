@@ -8,7 +8,8 @@
 import Foundation
 
 /// JWT Registered Claims Regarding [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519.html)
-public struct JSONWebTokenClaimsRegisteredParameters {
+public struct JSONWebTokenClaimsRegisteredParameters: JSONWebContainerParameters {
+    public typealias Container = JSONWebTokenClaims
     /// The "`aud`" (audience) claim identifies the recipients that the JWT is intended for.
     ///
     /// Each principal intended to process the JWT MUST identify itself with a value in the audience claim.
@@ -140,7 +141,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
     /// Use of this claim is OPTIONAL.
     public var subjectURL: URL?
     
-    fileprivate static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [PartialKeyPath<Self>: String] = [
         \.audience: "aud", \.audienceURL: "aud", \.expiry: "exp",
         \.issuedAt: "iat", \.issuer: "iss", \.issuerURL: "iss",
         \.jwtId: "jti", \.jwtUUID: "jti", \.notBefore: "nbf",
@@ -149,13 +150,7 @@ public struct JSONWebTokenClaimsRegisteredParameters {
 }
 
 extension JSONWebTokenClaims {
-    private func stringKey<T>(_ keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, T>) -> String {
-        if let key = JSONWebTokenClaimsRegisteredParameters.keys[keyPath] {
-            return key
-        }
-        return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
-    }
-    
+    @_documentation(visibility: private)
     public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -165,6 +160,7 @@ extension JSONWebTokenClaims {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, [String]>) -> [String] {
         get {
             let key = stringKey(keyPath)
@@ -184,6 +180,7 @@ extension JSONWebTokenClaims {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, [URL]>) -> [URL] {
         get {
             let key = stringKey(keyPath)

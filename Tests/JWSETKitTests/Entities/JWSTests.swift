@@ -22,27 +22,30 @@ final class JWSTests: XCTestCase {
     )
     
     func testSignatureHS256() throws {
-        let signature = Data(base64Encoded: "kPJsVyAmQ4DGGRjTQ2HO0l1WzypM3Ewvhof4s1A3HPg=")
+        let signature = Data(base64Encoded: "dCfJaSBBMSnC8CXslIf5orCzS7AboBan4qE7aXuYSDs=")
         let key = try JSONWebKeyHMAC<SHA256>(ExampleKeys.symmetric)
         var jws = jws
+        jws.signatures[0].header.value.algorithm = .hmacSHA256
         try jws.updateSignature(using: key)
         XCTAssertEqual(jws.signatures.first?.signature, signature)
         XCTAssertNoThrow(try jws.verifySignature(using: key))
     }
     
     func testSignatureHS384() throws {
-        let signature = Data(base64Encoded: "HtUYwLglVMRcHlYsPa+/gqP1Ah/W1Yd3hXkj7p45SMSALxZ4ziCjdPcxNbVRVG1A")
+        let signature = Data(base64Encoded: "oXDrZsBTd6/RlkXLUTQJ0DSfHx5raR4Pq5jlRHf5v0WTm+zt8xcsCvXagNl0J4eM")
         let key = try JSONWebKeyHMAC<SHA384>(ExampleKeys.symmetric)
         var jws = jws
+        jws.signatures[0].header.value.algorithm = .hmacSHA384
         try jws.updateSignature(using: key)
         XCTAssertEqual(jws.signatures.first?.signature, signature)
         XCTAssertNoThrow(try jws.verifySignature(using: key))
     }
     
     func testSignatureHS512() throws {
-        let signature = Data(base64Encoded: "9O19/Twcl/2WbpM3ZjvOnfI7V5VMSOrYOh82QG3cSkcwdQnpteLTEBpuT+0SJp/THGb3iTjK22p5U7ISACjUIw==")
+        let signature = Data(base64Encoded: "CyfHecbVPqPzB3zBwYd3rgVBi2Dgg+eAeX7JT8B85QbKLwSXyll8WKGdehse606szf9G3i+jr24QGkEtMAGSpg==")
         let key = try JSONWebKeyHMAC<SHA512>(ExampleKeys.symmetric)
         var jws = jws
+        jws.signatures[0].header.value.algorithm = .hmacSHA512
         try jws.updateSignature(using: key)
         XCTAssertEqual(jws.signatures.first?.signature, signature)
         XCTAssertNoThrow(try jws.verifySignature(using: key))

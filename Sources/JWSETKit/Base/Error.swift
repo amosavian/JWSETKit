@@ -7,8 +7,10 @@
 
 import Foundation
 
+enum JSONWebKit {
+    public static var locale: Locale = .autoupdatingCurrent
+}
 /// Localiztion used for translating errors.
-public var jsonWebKeyLocale: Locale = .autoupdatingCurrent
 
 /// Errors occured during key creation or usage.
 ///
@@ -64,7 +66,7 @@ public enum JSONWebValidationError: LocalizedError {
     /// A localized message describing what error occurred.
     public var errorDescription: String? {
         let dateFormatter = DateFormatter()
-        dateFormatter.locale = jsonWebKeyLocale
+        dateFormatter.locale = JSONWebKit.locale
         dateFormatter.dateStyle = .medium
         dateFormatter.timeStyle = .medium
         switch self {

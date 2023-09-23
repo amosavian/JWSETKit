@@ -23,6 +23,16 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         }
     }
     
+    /// Returns values of given key.
+    public subscript<T>(dynamicMember member: String) -> [T] {
+        get {
+            self[member]
+        }
+        set {
+            self[member] = newValue
+        }
+    }
+    
     /// Returns value of given key.
     public subscript<T>(_ member: String) -> T? {
         get {
@@ -40,16 +50,6 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         }
         set {
             updateValue(key: member, value: newValue)
-        }
-    }
-    
-    /// Returns values of given key.
-    public subscript<T>(dynamicMember member: String) -> [T] {
-        get {
-            self[member]
-        }
-        set {
-            self[member] = newValue
         }
     }
     
@@ -148,6 +148,11 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         return lhs == rhs
     }
     
+    /// List of all keys that have data.
+    public var storageKeys: [String] {
+        [String](claims.keys)
+    }
+    
     /// Removes value of given key from storage.
     public func contains(key: String) -> Bool {
         claims.keys.contains(key)
@@ -181,6 +186,9 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         case is Locale.Type, is NSLocale.Type:
             return (value as? String)
                 .map { Locale(bcp47: $0) } as? T
+        case is TimeZone.Type, is NSTimeZone.Type:
+            return (value as? String)
+                .map { TimeZone(identifier: $0) } as? T
         case is (any JSONWebKey).Protocol:
             guard let data = try? JSONEncoder().encode(AnyCodable(value)) else { return nil }
             return try? AnyJSONWebKey.deserialize(data) as? T
@@ -205,8 +213,10 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     private mutating func updateValue(key: String, value: Any?) {
-        remove(key: key)
-        guard let value = value else { return }
+        guard let value = value else {
+            remove(key: key)
+            return
+        }
         
         switch value {
         case let value as Date:
@@ -222,28 +232,13 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         case let value as Locale:
             // Locales in OIDC is formatted using BCP-47 while Apple uses CLDR/ICU formatting.
             claims[key] = .init(value.bcp47)
+        case let value as TimeZone:
+            claims[key] = .init(value.identifier)
         case let value as any Decodable:
             claims[key] = .init(value)
         default:
+            remove(key: key)
             assertionFailure("Unknown storage type")
-        }
-    }
-}
-
-extension Locale {
-    fileprivate var bcp47: String {
-        if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
-            return identifier(.bcp47)
-        } else {
-            return identifier.replacingOccurrences(of: "_", with: "-")
-        }
-    }
-    
-    fileprivate init(bcp47: String) {
-        if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
-            self.init(components: .init(identifier: bcp47))
-        } else {
-            self.init(identifier: bcp47.replacingOccurrences(of: "-", with: "_"))
         }
     }
 }

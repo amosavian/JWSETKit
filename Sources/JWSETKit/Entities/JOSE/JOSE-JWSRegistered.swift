@@ -14,7 +14,8 @@ import Crypto
 #endif
 
 /// Registered parameters of JOSE header in [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515.html).
-public struct JoseHeaderJWSRegisteredParameters {
+public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
+    public typealias Container = JOSEHeader
     /// The "`alg`" (algorithm) Header Parameter identifies the cryptographic algorithm used to secure the JWS.
     ///
     /// The JWS Signature value is not valid if the "`alg`" value does not represent
@@ -153,7 +154,7 @@ public struct JoseHeaderJWSRegisteredParameters {
     /// The value of the "`url`" header parameter MUST be a string representing the target URL.
     public var url: URL?
     
-    fileprivate static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [PartialKeyPath<Self>: String] = [
         \.algorithm: "alg", \.jsonWebKeySetUrl: "jku",
         \.key: "jwk", \.keyId: "kid", \.certificateChain: "x5c",
         \.certificateURL: "x5u", \.certificateThumprint: "x5t",
@@ -162,13 +163,7 @@ public struct JoseHeaderJWSRegisteredParameters {
 }
 
 extension JOSEHeader {
-    private func stringKey<T>(_ keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, T>) -> String {
-        if let key = JoseHeaderJWSRegisteredParameters.keys[keyPath] {
-            return key
-        }
-        return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
-    }
-    
+    @_documentation(visibility: private)
     public subscript<T>(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -178,6 +173,7 @@ extension JOSEHeader {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, [String]>) -> [String] {
         get {
             storage[stringKey(keyPath)]
@@ -187,6 +183,7 @@ extension JOSEHeader {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, JSONWebAlgorithm>) -> JSONWebAlgorithm {
         get {
             storage[stringKey(keyPath)] ?? .none
@@ -196,6 +193,7 @@ extension JOSEHeader {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, [Certificate]>) -> [Certificate] {
         get {
             storage[stringKey(keyPath), false]
