@@ -9,23 +9,17 @@ with proposed new claims and add a `JSONWebTokenClaims.subscript(dynamicMember:)
 in order to access the claim.
 
 ```swift
-struct JSONWebTokenClaimsJwkParameters {
+struct JSONWebTokenClaimsJwkParameters: JSONWebContainerParameters {
+    typealias Container = JOSEHeader
     var subJsonWebToken: (any JsonWebKey)?
 
     // Key lookup to convert claim to string key.
-    fileprivate static let keys: [PartialKeyPath<Self>: String] = [
+    static let keys: [PartialKeyPath<Self>: String] = [
         \.subJsonWebToken: "sub_jwk",
     ]
 }
 
 extension JSONWebTokenClaims {
-    private func stringKey<T>(_ keyPath: KeyPath<JSONWebTokenClaimsJwkParameters, T>) -> String {
-        if let key = JSONWebTokenClaimsJwkParameters.keys[keyPath] {
-            return key
-        }
-        return String(reflecting: keyPath).components(separatedBy: ".").last!
-    }
-    
     subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsJwkParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -43,7 +37,6 @@ It is possible to create a completely new container for new purpose, e.g. to
 support [DPoP](https://datatracker.ietf.org/doc/html/rfc9449):
 
 ```swift
-@dynamicMemberLookup
 struct DPoPClaims: JSONWebContainer {
     var storage: JSONWebValueStorage
     

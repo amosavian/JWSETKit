@@ -58,3 +58,29 @@ extension P256.Signing.PrivateKey: JSONWebSigningKey {
         try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
 }
+
+#if canImport(Darwin)
+extension SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
+    var rawRepresentation: Data {
+        fatalError("Private Keys in Secure Enclave are not encodable.")
+    }
+    
+    init(rawRepresentation _: Data) throws {
+        throw JSONWebKeyError.operationNotAllowed
+    }
+    
+    typealias PublicKey = P256.Signing.PublicKey
+}
+
+extension SecureEnclave.P256.Signing.PrivateKey: JSONWebSigningKey {
+    public func signature<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+        var digest = SHA256()
+        digest.update(data: data)
+        return try signature(for: digest.finalize()).rawRepresentation
+    }
+    
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try publicKey.verifySignature(signature, for: data, using: algorithm)
+    }
+}
+#endif

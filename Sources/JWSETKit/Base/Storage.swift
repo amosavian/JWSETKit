@@ -11,7 +11,7 @@ import Foundation
 /// Storage for values in JOSE headers or JWT claims
 @dynamicMemberLookup
 public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLiteral {
-    private var claims: [String: AnyCodable]
+    private var storage: [String: AnyCodable]
     
     /// Returns value of given key.
     public subscript<T>(dynamicMember member: String) -> T? {
@@ -56,7 +56,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     /// Returns values of given key.
     public subscript<T>(_ member: String) -> [T] {
         get {
-            guard let array = claims[member]?.value as? [Any] else { return [] }
+            guard let array = storage[member]?.value as? [Any] else { return [] }
             return array.compactMap { JSONWebValueStorage.cast(value: $0, as: T.self) }
         }
         set {
@@ -114,22 +114,22 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     
     /// Initializes empty storage.
     public init() {
-        self.claims = [:]
+        self.storage = [:]
     }
     
     public init(dictionaryLiteral elements: (String, Any)...) {
         let elements = elements.map { ($0, AnyCodable($1)) }
-        self.claims = .init(uniqueKeysWithValues: elements)
+        self.storage = .init(uniqueKeysWithValues: elements)
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let claims = try? container.decode([String: AnyCodable].self) {
-            self.claims = claims
+            self.storage = claims
         } else if let base64url = try? container.decode(String.self),
                   let data = Data(urlBase64Encoded: base64url)
         {
-            self.claims = try JSONDecoder().decode([String: AnyCodable].self, from: data)
+            self.storage = try JSONDecoder().decode([String: AnyCodable].self, from: data)
         } else {
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: ""))
         }
@@ -137,7 +137,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        try container.encode(claims)
+        try container.encode(storage)
     }
     
     public static func == (lhs: JSONWebValueStorage, rhs: JSONWebValueStorage) -> Bool {
@@ -150,17 +150,17 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     
     /// List of all keys that have data.
     public var storageKeys: [String] {
-        [String](claims.keys)
+        [String](storage.keys)
     }
     
     /// Removes value of given key from storage.
     public func contains(key: String) -> Bool {
-        claims.keys.contains(key)
+        storage.keys.contains(key)
     }
     
     /// Removes value of given key from storage.
     public mutating func remove(key: String) {
-        claims.removeValue(forKey: key)
+        storage.removeValue(forKey: key)
     }
     
     fileprivate static func cast<T>(value: Any?, as type: T.Type) -> T? {
@@ -209,7 +209,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     private func get<T>(key: String, as _: T.Type) -> T? {
-        JSONWebValueStorage.cast(value: claims[key]?.value, as: T.self)
+        JSONWebValueStorage.cast(value: storage[key]?.value, as: T.self)
     }
     
     private mutating func updateValue(key: String, value: Any?) {
@@ -223,19 +223,19 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
             // Dates in JWT are `NumericDate` which is a JSON numeric value representing
             // the number of seconds from 1970-01-01T00:00:00Z UTC until
             // the specified UTC date/time, ignoring leap seconds.
-            claims[key] = .init(Int(value.timeIntervalSince1970))
+            storage[key] = .init(Int(value.timeIntervalSince1970))
         case let value as UUID:
             // Standards such as ITU-T X.667 and RFC 4122 require them to be formatted
             // using lower-case letters.
             // The NSUUID class and UUID struct use upper-case letters when formatting.
-            claims[key] = .init(value.uuidString.lowercased())
+            storage[key] = .init(value.uuidString.lowercased())
         case let value as Locale:
             // Locales in OIDC is formatted using BCP-47 while Apple uses CLDR/ICU formatting.
-            claims[key] = .init(value.bcp47)
+            storage[key] = .init(value.bcp47)
         case let value as TimeZone:
-            claims[key] = .init(value.identifier)
+            storage[key] = .init(value.identifier)
         case let value as any Decodable:
-            claims[key] = .init(value)
+            storage[key] = .init(value)
         default:
             remove(key: key)
             assertionFailure("Unknown storage type")

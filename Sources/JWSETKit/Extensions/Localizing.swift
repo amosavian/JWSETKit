@@ -39,7 +39,7 @@ extension String {
 }
 
 extension Locale {
-    fileprivate var languageIdentifier: String? {
+    private var languageIdentifier: String? {
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             return language.languageCode?.identifier
         } else {
@@ -47,7 +47,7 @@ extension Locale {
         }
     }
     
-    fileprivate var countryCode: String? {
+    private var countryCode: String? {
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             return region?.identifier
         } else {
@@ -55,7 +55,7 @@ extension Locale {
         }
     }
     
-    fileprivate var writeScript: String? {
+    private var writeScript: String? {
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             return language.script?.identifier
         } else {

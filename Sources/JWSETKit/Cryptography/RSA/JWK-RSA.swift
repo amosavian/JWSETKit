@@ -53,7 +53,7 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey, JSONWebEncryptingKey {
 #endif
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
 #if canImport(CommonCrypto)
         try SecKey.create(storage: storage).encrypt(data, using: algorithm)
 #else
@@ -147,7 +147,7 @@ public struct JSONWebRSAPrivateKey: JSONWebSigningKey, JSONWebDecryptingKey {
 #endif
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
 #if canImport(CommonCrypto)
         try SecKey.create(storage: storage).encrypt(data, using: algorithm)
 #else
@@ -155,7 +155,7 @@ public struct JSONWebRSAPrivateKey: JSONWebSigningKey, JSONWebDecryptingKey {
 #endif
     }
     
-    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
 #if canImport(CommonCrypto)
         try SecKey.create(storage: storage).decrypt(data, using: algorithm)
 #else

@@ -7,10 +7,11 @@
 
 import Foundation
 
+/// General settings and configurations.
 enum JSONWebKit {
+    /// Localiztion used for key lookups and translating errors.
     public static var locale: Locale = .autoupdatingCurrent
 }
-/// Localiztion used for translating errors.
 
 /// Errors occured during key creation or usage.
 ///

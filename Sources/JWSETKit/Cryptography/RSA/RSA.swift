@@ -122,7 +122,7 @@ extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
         return try .init(derRepresentation: der)
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
         try .init(ciphertext: encrypt(data, padding: algorithm.rsaEncryptionPadding))
     }
     
@@ -163,11 +163,11 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
         return try .init(derRepresentation: der)
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
         try .init(ciphertext: publicKey.encrypt(data, padding: algorithm.rsaEncryptionPadding))
     }
     
-    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D : DataProtocol {
+    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         try decrypt(data, padding: algorithm.rsaEncryptionPadding)
     }
     

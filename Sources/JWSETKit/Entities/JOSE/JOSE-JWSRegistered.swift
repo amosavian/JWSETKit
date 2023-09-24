@@ -208,6 +208,7 @@ extension JOSEHeader {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, Data?>) -> Data? {
         get {
             switch keyPath {

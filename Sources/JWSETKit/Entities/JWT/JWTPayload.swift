@@ -8,7 +8,6 @@
 import Foundation
 
 /// Claims and payload in a JWT.
-@dynamicMemberLookup
 public struct JSONWebTokenClaims: JSONWebContainer {
     public var storage: JSONWebValueStorage
     

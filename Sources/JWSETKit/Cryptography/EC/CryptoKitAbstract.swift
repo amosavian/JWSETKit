@@ -96,10 +96,10 @@ extension CryptoECPrivateKey {
     }
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(rawRepresentation)
+        hasher.combine(publicKey)
     }
     
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.rawRepresentation == rhs.rawRepresentation
+        lhs.publicKey == rhs.publicKey
     }
 }
