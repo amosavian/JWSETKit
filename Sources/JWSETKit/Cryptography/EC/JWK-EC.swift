@@ -49,6 +49,12 @@ public struct JSONWebECPublicKey: JSONWebValidatingKey {
 public struct JSONWebECPrivateKey: JSONWebSigningKey {
     public var storage: JSONWebValueStorage
     
+    public var publicKey: JSONWebECPublicKey {
+        var result = JSONWebECPublicKey(storage: storage)
+        result.privateKey = nil
+        return result
+    }
+    
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
     }

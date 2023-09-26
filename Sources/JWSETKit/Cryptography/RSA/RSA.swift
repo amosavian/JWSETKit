@@ -87,10 +87,6 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
         return try signature(for: hashFunction.finalize(), padding: algorithm.rsaPadding).rawRepresentation
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try publicKey.verifySignature(signature, for: data, using: algorithm)
-    }
-    
     public static func == (lhs: _RSA.Signing.PrivateKey, rhs: _RSA.Signing.PrivateKey) -> Bool {
         lhs.derRepresentation == rhs.derRepresentation
     }
@@ -162,11 +158,6 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
         let der = try JSONWebRSAPublicKey.pkcs1Representation(AnyJSONWebKey(storage: storage))
         return try .init(derRepresentation: der)
     }
-    
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
-        try .init(ciphertext: publicKey.encrypt(data, padding: algorithm.rsaEncryptionPadding))
-    }
-    
     public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         try decrypt(data, padding: algorithm.rsaEncryptionPadding)
     }

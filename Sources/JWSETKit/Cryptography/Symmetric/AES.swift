@@ -14,6 +14,10 @@ import Crypto
 
 /// JSON Web Key (JWK) container for AES-GCM keys for encryption/decryption.
 public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
+    public typealias PublicKey = Self
+    
+    public var publicKey: JSONWebKeyAESGCM { self }
+    
     public var storage: JSONWebValueStorage
     
     /// Symmetric key using for encryption.

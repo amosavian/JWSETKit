@@ -108,6 +108,17 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey, JSONWebEncryptingKey {
 public struct JSONWebRSAPrivateKey: JSONWebSigningKey, JSONWebDecryptingKey {
     public var storage: JSONWebValueStorage
     
+    public var publicKey: JSONWebRSAPublicKey {
+        var result = JSONWebRSAPublicKey(storage: storage)
+        result.privateExponent = nil
+        result.firstPrimeFactor = nil
+        result.secondPrimeFactor = nil
+        result.firstFactorCRTExponent = nil
+        result.secondFactorCRTExponent = nil
+        result.firstCRTCoefficient = nil
+        return result
+    }
+    
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
     }
@@ -136,22 +147,6 @@ public struct JSONWebRSAPrivateKey: JSONWebSigningKey, JSONWebDecryptingKey {
         return try SecKey.create(storage: storage).signature(data, using: algorithm)
 #else
         try _RSA.Signing.PrivateKey(jsonWebKey: storage).signature(data, using: algorithm)
-#endif
-    }
-    
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-#if canImport(CommonCrypto)
-        try SecKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
-#else
-        try _RSA.Signing.PublicKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
-#endif
-    }
-    
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
-#if canImport(CommonCrypto)
-        try SecKey.create(storage: storage).encrypt(data, using: algorithm)
-#else
-        try _RSA.Encryption.PublicKey(jsonWebKey: storage).encrypt(data, using: algorithm)
 #endif
     }
     

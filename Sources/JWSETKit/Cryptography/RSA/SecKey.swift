@@ -21,6 +21,10 @@ extension SecKey: JSONWebKey {
         }
     }
     
+    public var publicKey: SecKey {
+        SecKeyCopyPublicKey(self)!
+    }
+    
     public static func create(storage: JSONWebValueStorage) throws -> Self {
         try createKeyFromComponents(.init(storage: storage)) as! Self
     }

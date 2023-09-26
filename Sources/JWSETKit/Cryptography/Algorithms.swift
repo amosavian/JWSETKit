@@ -219,3 +219,30 @@ extension JSONWebCompressionAlgorithm {
     /// Compression with the DEFLATE [RFC1951](https://www.rfc-editor.org/rfc/rfc1951) algorithm
     public static let deflate: Self = "DEF"
 }
+
+extension JSONWebAlgorithm {
+    private static let keyTypeTable: [JSONWebAlgorithm: JSONWebKeyType] = [
+        .hmacSHA256: .symmetric, .hmacSHA384: .symmetric, .hmacSHA512: .symmetric,
+        .aesEncryptionGCM128: .symmetric, .aesEncryptionGCM192: .symmetric, .aesEncryptionGCM256: .symmetric,
+        .ecdsaSignatureP256SHA256: .elipticCurve, .ecdsaSignatureP384SHA384: .elipticCurve,
+        .ecdsaSignatureP521SHA512: .elipticCurve, .eddsaSignature: .elipticCurve,
+        .rsaSignaturePSSSHA256: .rsa, .rsaSignaturePSSSHA384: .rsa, .rsaSignaturePSSSHA512: .rsa,
+        .rsaEncryptionPKCS1: .rsa, .rsaSignaturePKCS1v15SHA256: .rsa,
+        .rsaSignaturePKCS1v15SHA384: .rsa, .rsaSignaturePKCS1v15SHA512: .rsa,
+        .rsaEncryptionOAEP: .rsa, .rsaEncryptionOAEPSHA256: .rsa,
+        .rsaEncryptionOAEPSHA384: .rsa, .rsaEncryptionOAEPSHA512: .rsa,
+    ]
+    
+    private static let curveTable: [JSONWebAlgorithm: JSONWebKeyCurve] = [
+        .ecdsaSignatureP256SHA256: .p256, .ecdsaSignatureP384SHA384: .p384,
+        .ecdsaSignatureP521SHA512: .p521, .eddsaSignature: .ed25519,
+    ]
+    
+    var keyType: JSONWebKeyType? {
+        JSONWebAlgorithm.keyTypeTable[self]
+    }
+    
+    var curve: JSONWebKeyCurve? {
+        JSONWebAlgorithm.curveTable[self]
+    }
+}

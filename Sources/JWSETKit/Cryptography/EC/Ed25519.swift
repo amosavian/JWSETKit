@@ -33,10 +33,6 @@ extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension Curve25519.Signing.PrivateKey: CryptoECPrivateKey {
-    typealias PublicKey = Curve25519.Signing.PublicKey
-}
-
-extension Curve25519.Signing.PrivateKey: JSONWebSigningKey {
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
@@ -46,9 +42,5 @@ extension Curve25519.Signing.PrivateKey: JSONWebSigningKey {
     
     public func signature<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         try signature(for: data)
-    }
-    
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
 }

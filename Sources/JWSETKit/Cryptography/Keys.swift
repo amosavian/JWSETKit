@@ -48,6 +48,11 @@ public protocol JSONWebEncryptingKey: JSONWebKey {
 
 /// A JSON Web Key (JWK) able to decrypt cipher-texts.
 public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
+    associatedtype PublicKey: JSONWebEncryptingKey
+    
+    /// Public key.
+    var publicKey: PublicKey { get }
+    
     /// Encrypts ciphered data using current key.
     ///
     /// - Parameters:
@@ -55,6 +60,12 @@ public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
     ///   - algorithm: Algorithm of encryption.
     /// - Returns: Plain-text data
     func decrypt<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
+}
+
+extension JSONWebDecryptingKey {
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+        try publicKey.encrypt(data, using: algorithm)
+    }
 }
 
 /// A JSON Web Key (JWK) able to validate a signaute.
@@ -70,6 +81,11 @@ public protocol JSONWebValidatingKey: JSONWebKey {
 
 /// A JSON Web Key (JWK) able to generate a signature.
 public protocol JSONWebSigningKey: JSONWebValidatingKey {
+    associatedtype PublicKey: JSONWebValidatingKey
+    
+    /// Public key.
+    var publicKey: PublicKey { get }
+    
     /// Creates the cryptographic signature for a block of data using a private key and specified algorithm.
     ///
     /// - Parameters:
@@ -77,6 +93,12 @@ public protocol JSONWebSigningKey: JSONWebValidatingKey {
     ///   - algorithm: The signing algorithm to use.
     /// - Returns: The digital signature or throws error on failure.
     func signature<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
+}
+
+extension JSONWebSigningKey {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try publicKey.verifySignature(signature, for: data, using: algorithm)
+    }
 }
 
 /// A type-erased general container for a JSON Web Key (JWK).
@@ -143,7 +165,7 @@ public struct JSONWebKeySet: Codable, Hashable {
     }
     
     public static func == (lhs: JSONWebKeySet, rhs: JSONWebKeySet) -> Bool {
-        lhs.keys.map(\.storage) == rhs.keys.map(\.storage)
+        Set(lhs.keys.map(\.storage)) == Set(rhs.keys.map(\.storage))
     }
     
     public func hash(into hasher: inout Hasher) {

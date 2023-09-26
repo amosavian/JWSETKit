@@ -28,6 +28,8 @@ extension SymmetricKey: JSONWebKey {
         }
     }
     
+    public var publicKey: SymmetricKey { self }
+    
     public static func create(storage: JSONWebValueStorage) throws -> SymmetricKey {
         guard let key = (storage["k", true] as Data?) else {
             throw CryptoKitError.incorrectKeySize

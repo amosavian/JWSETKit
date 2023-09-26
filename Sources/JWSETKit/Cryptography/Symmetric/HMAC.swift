@@ -14,6 +14,8 @@ import Crypto
 
 /// JSON Web Key (JWK) container for creating/verifying HMAC signatures.
 public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
+    public var publicKey: Self { self }
+    
     public var storage: JSONWebValueStorage
     
     /// A symmetric cryptographic key.

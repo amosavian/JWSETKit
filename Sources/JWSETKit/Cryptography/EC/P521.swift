@@ -36,10 +36,6 @@ extension P521.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension P521.Signing.PrivateKey: CryptoECPrivateKey {
-    typealias PublicKey = P521.Signing.PublicKey
-}
-
-extension P521.Signing.PrivateKey: JSONWebSigningKey {
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
@@ -52,9 +48,5 @@ extension P521.Signing.PrivateKey: JSONWebSigningKey {
         var digest = SHA512()
         digest.update(data: data)
         return try signature(for: digest.finalize()).rawRepresentation
-    }
-    
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
 }
