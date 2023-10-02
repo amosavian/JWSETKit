@@ -16,6 +16,9 @@ public protocol ProtectedWebContainer: Hashable, Encodable {
     ///
     /// - Parameter protected: Data that has been signed.
     init(protected: Data) throws
+    
+    /// Validates contents and required fields if applicable.
+    func validate() throws
 }
 
 extension ProtectedWebContainer {
@@ -26,6 +29,8 @@ extension ProtectedWebContainer {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(protected)
     }
+    
+    public func validate() throws { }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
@@ -134,5 +139,9 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
         }
         self._protected = protected
         self._value = try JSONDecoder().decode(Container.self, from: protected)
+    }
+    
+    public func validate() throws {
+        try value.validate()
     }
 }

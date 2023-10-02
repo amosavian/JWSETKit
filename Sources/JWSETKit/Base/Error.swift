@@ -52,7 +52,7 @@ public enum JSONWebKeyError: LocalizedError {
 }
 
 /// Validation errors including expired token.
-///
+/// 
 /// - Note: Localization of `errorDescription` can be changes by setting `jsonWebKeyLocale`.
 public enum JSONWebValidationError: LocalizedError {
     /// Current date is after `"exp"` claim in token.
@@ -63,6 +63,9 @@ public enum JSONWebValidationError: LocalizedError {
     
     /// Given audience is not enlisted in `"aud"` claim in token.
     case audienceNotIntended(String)
+    
+    /// A required field is missing.
+    case missingRequiredField(key: String)
     
     /// A localized message describing what error occurred.
     public var errorDescription: String? {
@@ -77,6 +80,8 @@ public enum JSONWebValidationError: LocalizedError {
             return .init(localizingKey: "errorNotBeforeToken", dateFormatter.string(from: date))
         case .audienceNotIntended(let audience):
             return .init(localizingKey: "errorInvalidAudience", audience)
+        case .missingRequiredField(let key):
+            return .init(localizingKey: "errorMissingField", key)
         }
     }
 }

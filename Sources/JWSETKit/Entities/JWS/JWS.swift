@@ -147,6 +147,12 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable {
     public func verifySignature(using key: any JSONWebValidatingKey) throws {
         try verifySignature(using: [key])
     }
+    
+    /// Validates contents and required fields if applicable.
+    public func validate() throws {
+        try signatures.forEach { try $0.header.validate() }
+        try payload.validate()
+    }
 }
 
 extension String {

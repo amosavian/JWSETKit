@@ -60,10 +60,7 @@ For detailed usage and API documentation, check [the documentation][docs].
 
 It's appreciated to contribute to this library to make it better.
 
-Some issues that 
-
 - [ ] JWE structure and encryption
-
 
 
 [RFC7159]: https://www.rfc-editor.org/rfc/rfc7159

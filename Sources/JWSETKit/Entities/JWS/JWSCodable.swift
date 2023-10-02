@@ -202,6 +202,7 @@ extension JSONWebSignature: Codable {
     }
     
     public func encode(to encoder: Encoder) throws {
+        try validate()
         let representation = encoder.userInfo[.jwsEncodedRepresentation] as? JSONWebSignatureRepresentation ?? .automatic
         try encodeFunction(for: representation)(encoder)
     }
@@ -221,6 +222,7 @@ extension JSONWebSignature: EncodableWithConfiguration {
     public typealias EncodingConfiguration = JSONWebSignatureCodableConfiguration
     
     public func encode(to encoder: Encoder, configuration: JSONWebSignatureCodableConfiguration) throws {
+        try validate()
         try encodeFunction(for: configuration.representation)(encoder)
     }
 }

@@ -66,6 +66,8 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
     }
     
     public func encode(to encoder: Encoder) throws {
+        try header.validate()
+        
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(header, forKey: .protected)
         try container.encodeIfPresent(unprotectedHeader, forKey: .header)

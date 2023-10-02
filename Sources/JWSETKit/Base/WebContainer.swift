@@ -19,6 +19,9 @@ public protocol JSONWebContainer: Codable, Hashable {
     ///
     /// - Returns: A new instance of current class.
     static func create(storage: JSONWebValueStorage) throws -> Self
+    
+    /// Validates contents and required fields if applicable.
+    func validate() throws
 }
 
 extension JSONWebContainer {
@@ -32,6 +35,8 @@ extension JSONWebContainer {
         var container = encoder.singleValueContainer()
         try container.encode(storage)
     }
+    
+    public func validate() throws { }
     
     /// Returns value of given key.
     public subscript<T>(_ member: String) -> T? {

@@ -46,6 +46,12 @@ public struct JOSEHeader: JSONWebContainer {
     public static func create(storage: JSONWebValueStorage) throws -> JOSEHeader {
         .init(storage: storage)
     }
+    
+    public func validate() throws {
+        guard storage.contains(key: "alg") else {
+            throw JSONWebValidationError.missingRequiredField(key: "alg")
+        }
+    }
 }
 
 /// Content type of payload in JOSE header..
