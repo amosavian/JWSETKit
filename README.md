@@ -6,7 +6,7 @@ A library for working with JSON Web Signature (JWS) and JSON Web Token (JWT).
 
 JSON Web Signature (JWS) represents content secured with digital
 signatures or Message Authentication Codes (MACs) using JSON-based
-[RFC7159](https://www.rfc-editor.org/rfc/rfc7159) data structures.
+[RFC7159][RFC7159] data structures.
 The JWS cryptographic mechanisms provide integrity protection for 
 an arbitrary sequence of octets.
 
@@ -27,7 +27,7 @@ To use JWSETKit, add the following dependency to your Package.swift:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.1.0"))
+    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.5.0"))
 ]
 ```
 
@@ -43,4 +43,30 @@ dependencies: [
 
 ## Usage
 
-For detailed usage and API documentation, check [the documentation](https://amosavian.github.io/JWSETKit/documentation/jwsetkit/).
+For detailed usage and API documentation, check [the documentation][docs].
+
+## Comparison To Other Libraries
+
+|                           | JWSETKit | [jwt-kit] | [JOSESwift] |
+|:--------------------------|:--:|:--:|:--:|
+| JSON Web Signature (JWS) | ✅ | ❌ | ✅ |
+| JWS Multiple Signatures | ✅ | ❌ | ❌ |
+| JSON Web Token (JWT) | ✅ | ✅ | ✅ |
+| JSON Web Encryption (JWE) | ❌ | ❌ | ✅ |
+| Support CommonCrypto Keys | ✅ | ❌ | ❌ |
+| Support CryptoKit Keys | ✅ | ❌ | ❌ |
+
+## To Do List
+
+It's appreciated to contribute to this library to make it better.
+
+Some issues that 
+
+- [ ] JWE structure and encryption
+
+
+
+[RFC7159]: https://www.rfc-editor.org/rfc/rfc7159
+[docs]: https://amosavian.github.io/JWSETKit/documentation/jwsetkit/
+[jwt-kit]: https://github.com/vapor/jwt-kit
+[JOSESwift]: https://github.com/airsidemobile/JOSESwift

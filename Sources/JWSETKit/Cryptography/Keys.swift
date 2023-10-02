@@ -63,7 +63,7 @@ public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
 }
 
 extension JSONWebDecryptingKey {
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D : DataProtocol {
+    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
         try publicKey.encrypt(data, using: algorithm)
     }
 }

@@ -158,6 +158,7 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
         let der = try JSONWebRSAPublicKey.pkcs1Representation(AnyJSONWebKey(storage: storage))
         return try .init(derRepresentation: der)
     }
+
     public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         try decrypt(data, padding: algorithm.rsaEncryptionPadding)
     }

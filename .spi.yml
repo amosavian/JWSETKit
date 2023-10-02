@@ -1,0 +1,10 @@
+version: 1
+builder:
+  configs:
+  - platform: ios
+    scheme: JWSETKit
+  - platform: macos-xcodebuild
+    scheme: JWSETKit
+  - platform: tvos
+    scheme: JWSETKit
+  - documentation_targets: [JWSETKit]

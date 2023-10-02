@@ -8,7 +8,7 @@
 import Foundation
 
 /// Data value that must be protected by JWS.
-public protocol ProtectedWebContainer: Hashable {
+public protocol ProtectedWebContainer: Hashable, Encodable {
     /// Signed data.
     var protected: Data { get set }
     
@@ -16,6 +16,33 @@ public protocol ProtectedWebContainer: Hashable {
     ///
     /// - Parameter protected: Data that has been signed.
     init(protected: Data) throws
+}
+
+extension ProtectedWebContainer {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.protected == rhs.protected
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(protected)
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        let encoded = protected.urlBase64EncodedData()
+        try container.encode(String(decoding: encoded, as: UTF8.self))
+    }
+}
+
+public protocol TypedProtectedWebContainer<Container>: ProtectedWebContainer {
+    associatedtype Container
+    /// Parsed value of data.
+    var value: Container { get set }
+    
+    /// Initialized protected container from object.
+    ///
+    /// - Parameter value: Object that will be presented in `protected`.
+    init(value: Container) throws
 }
 
 public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
@@ -34,19 +61,13 @@ public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
         }
         self.protected = protected
     }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        let encoded = protected.urlBase64EncodedData()
-        try container.encode(encoded)
-    }
 }
 
 /// A JSON Web Signature/Encryption (JWS/JWE) header or payload with can be signed.
 ///
 /// This cotainer preserves original data to keep consistancy of signature as re-encoding payload
 /// may change sorting.
-public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: ProtectedWebContainer, Codable {
+public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProtectedWebContainer, Codable {
     private var _protected: Data
     private var _value: Container
     
@@ -113,19 +134,5 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: ProtectedW
         }
         self._protected = protected
         self._value = try JSONDecoder().decode(Container.self, from: protected)
-    }
-    
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-        let encoded = _protected.urlBase64EncodedData()
-        try container.encode(encoded)
-    }
-    
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs._protected == rhs._protected
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(_protected)
     }
 }

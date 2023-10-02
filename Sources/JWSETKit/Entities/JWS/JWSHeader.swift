@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  JWSHeader.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 9/27/23.
 //
@@ -70,5 +70,15 @@ public struct JSONWebSignatureHeader: Hashable, Codable {
         try container.encode(header, forKey: .protected)
         try container.encodeIfPresent(unprotectedHeader, forKey: .header)
         try container.encode(signature.urlBase64EncodedData(), forKey: .signature)
+    }
+}
+
+extension JSONWebSignatureHeader {
+    func signedData(_ payload: any ProtectedWebContainer) -> Data {
+        if header.value.critical.contains("b64"), header.value.b64 == false {
+            return header.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected
+        } else {
+            return header.protected.urlBase64EncodedData() + Data(".".utf8) + payload.protected.urlBase64EncodedData()
+        }
     }
 }
