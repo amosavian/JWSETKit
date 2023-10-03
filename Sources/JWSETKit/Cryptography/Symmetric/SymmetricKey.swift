@@ -102,6 +102,12 @@ extension SymmetricKey: JSONWebDecryptingKey {
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try aesGCMDecrypt(data)
+        case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256:
+            if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
+                return try AES.KeyWrap.unwrap(data, using: self).withUnsafeBytes { Data($0) }
+            } else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }
@@ -111,6 +117,12 @@ extension SymmetricKey: JSONWebDecryptingKey {
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try .init(AES.GCM.seal(data, using: self))
+        case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256:
+            if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
+                return try .init(ciphertext: AES.KeyWrap.wrap(.init(data: Data(data)), using: self))
+            } else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }

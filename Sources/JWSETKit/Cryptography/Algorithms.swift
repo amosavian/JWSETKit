@@ -35,71 +35,90 @@ public struct JSONWebAlgorithm: RawRepresentable, Hashable, Codable, Expressible
     }
 }
 
+// Signatures
 extension JSONWebAlgorithm {
-    /// No digital signature or MAC performed.
+    /// **Signature**: No digital signature or MAC performed.
     public static let none: Self = "none"
     
-    /// HMAC using SHA-256.
+    /// **Signature**: HMAC using SHA-256.
     public static let hmacSHA256: Self = "HS256"
     
-    /// HMAC using SHA-384.
+    /// **Signature**: HMAC using SHA-384.
     public static let hmacSHA384: Self = "HS384"
     
-    /// HMAC using SHA-512.
+    /// **Signature**: HMAC using SHA-512.
     public static let hmacSHA512: Self = "HS512"
     
-    /// RSASSA-PKCS1-v1.5 using SHA-256.
+    /// **Signature**: RSASSA-PKCS1-v1.5 using SHA-256.
     public static let rsaSignaturePKCS1v15SHA256: Self = "RS256"
     
-    /// RSASSA-PKCS1-v1.5 using SHA-384.
+    /// **Signature**: RSASSA-PKCS1-v1.5 using SHA-384.
     public static let rsaSignaturePKCS1v15SHA384: Self = "RS384"
     
-    /// RSASSA-PKCS1-v1.5 using SHA-512 .
+    /// **Signature**: RSASSA-PKCS1-v1.5 using SHA-512 .
     public static let rsaSignaturePKCS1v15SHA512: Self = "RS512"
     
-    /// RSASSA-PSS using SHA-256 and MGF1 with SHA-256.
+    /// **Signature**: RSASSA-PSS using SHA-256 and MGF1 with SHA-256.
     public static let rsaSignaturePSSSHA256: Self = "PS256"
     
-    /// RSASSA-PSS using SHA-384 and MGF1 with SHA-384.
+    /// **Signature**: RSASSA-PSS using SHA-384 and MGF1 with SHA-384.
     public static let rsaSignaturePSSSHA384: Self = "PS384"
     
-    /// RSASSA-PSS using SHA-512 and MGF1 with SHA-512.
+    /// **Signature**: RSASSA-PSS using SHA-512 and MGF1 with SHA-512.
     public static let rsaSignaturePSSSHA512: Self = "PS512"
     
-    /// ECDSA using P-256 and SHA-256.
+    /// **Signature**: ECDSA using P-256 and SHA-256.
     public static let ecdsaSignatureP256SHA256: Self = "ES256"
     
-    /// EdDSA signature algorithms
+    /// **Signature**: EdDSA signature algorithms
     public static let eddsaSignature: Self = "EdDSA"
     
-    /// ECDSA using P-384 and SHA-384.
+    /// **Signature**: ECDSA using P-384 and SHA-384.
     public static let ecdsaSignatureP384SHA384: Self = "ES384"
     
-    /// ECDSA using P-521 and SHA-512.
+    /// **Signature**: ECDSA using P-521 and SHA-512.
     public static let ecdsaSignatureP521SHA512: Self = "ES512"
-    
-    /// RSAES-PKCS1-v1.5
+}
+
+// Key Management
+extension JSONWebAlgorithm {
+    /// **Key Management**: RSAES-PKCS1-v1.5
     public static let rsaEncryptionPKCS1: Self = "RSA1_5"
     
-    /// RSAES OAEP using default parameters.
+    /// **Key Management**: RSAES OAEP using default parameters.
     public static let rsaEncryptionOAEP: Self = "RSA-OAEP"
     
-    /// RSAES OAEP using SHA-256 and MGF1 with SHA-256.
+    /// **Key Management**: RSAES OAEP using SHA-256 and MGF1 with SHA-256.
     public static let rsaEncryptionOAEPSHA256: Self = "RSA-OAEP-256"
     
-    /// RSA-OAEP using SHA-384 and MGF1 with SHA-384.
+    /// **Key Management**: RSA-OAEP using SHA-384 and MGF1 with SHA-384.
     public static let rsaEncryptionOAEPSHA384: Self = "RSA-OAEP-384"
     
-    /// RSA-OAEP using SHA-512 and MGF1 with SHA-512.
+    /// **Key Management**: RSA-OAEP using SHA-512 and MGF1 with SHA-512.
     public static let rsaEncryptionOAEPSHA512: Self = "RSA-OAEP-512"
     
-    /// AES GCM using 128-bit key.
+    /// **Key Management**: AES Key-Wrap using 128-bit key.
+    public static let aesKeyWrap128: Self = "A128KW"
+    
+    /// **Key Management**: AES Key-Wrap using 192-bit key.
+    public static let aesKeyWrap192: Self = "A192KW"
+    
+    /// **Key Management**: AES Key-Wrap using 256-bit key.
+    public static let aesKeyWrap256: Self = "A256KW"
+    
+    /// **Key Management**: No encryption for content key.
+    public static let direct: Self = "direct"
+}
+
+// Content Encryption
+extension JSONWebAlgorithm {
+    /// **Content Encryption**: AES GCM using 128-bit key.
     public static let aesEncryptionGCM128: Self = "A128GCM"
     
-    /// AES GCM using 192-bit key.
+    /// **Content Encryption**: AES GCM using 192-bit key.
     public static let aesEncryptionGCM192: Self = "A192GCM"
     
-    /// AES GCM using 256-bit key.
+    /// **Content Encryption**: AES GCM using 256-bit key.
     public static let aesEncryptionGCM256: Self = "A256GCM"
 }
 

@@ -51,6 +51,14 @@ extension AnyJSONWebKey {
              (.symmetric, .aesEncryptionGCM192),
              (.symmetric, .aesEncryptionGCM256):
             return try JSONWebKeyAESGCM.create(storage: storage)
+        case (.symmetric, .aesKeyWrap128),
+             (.symmetric, .aesKeyWrap192),
+             (.symmetric, .aesKeyWrap256):
+            if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
+                return try JSONWebKeyAESKW.create(storage: storage)
+            } else {
+                throw JSONWebKeyError.unknownKeyType
+            }
         case (.symmetric, .hmacSHA256):
             return try JSONWebKeyHMAC<SHA256>.create(storage: storage)
         case (.symmetric, .hmacSHA384):
