@@ -67,8 +67,8 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable {
     public mutating func updateSignature(using keys: [any JSONWebSigningKey]) throws {
         signatures = try signatures.map { header in
             let message = header.signedData(payload)
-            let algorithm = header.header.value.algorithm
-            let keyId: String? = header.header.value.keyId ?? header.unprotectedHeader?.keyId
+            let algorithm = header.protected.value.algorithm
+            let keyId: String? = header.protected.value.keyId ?? header.unprotected?.keyId
             let signature: Data
             if algorithm == .none {
                 signature = .init()
@@ -78,8 +78,8 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable {
                 throw JSONWebKeyError.keyNotFound
             }
             return try .init(
-                header: header.header.protected,
-                unprotectedHeader: header.unprotectedHeader,
+                protected: header.protected.encoded,
+                unprotected: header.unprotected,
                 signature: signature
             )
         }
@@ -116,8 +116,8 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable {
         }
         try signatures.forEach { header in
             let message = header.signedData(payload)
-            let algorithm = header.header.value.algorithm
-            let keyId: String? = header.header.value.keyId ?? header.unprotectedHeader?.keyId
+            let algorithm = header.protected.value.algorithm
+            let keyId: String? = header.protected.value.keyId ?? header.unprotected?.keyId
             if algorithm == .none {
                 // If we allow "none" algorithm in verification, a malicious user may simply
                 // remove the signature and change the algorithm to "none".
@@ -150,7 +150,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable {
     
     /// Validates contents and required fields if applicable.
     public func validate() throws {
-        try signatures.forEach { try $0.header.validate() }
+        try signatures.forEach { try $0.protected.validate() }
         try payload.validate()
     }
 }
@@ -174,6 +174,6 @@ extension JSONWebSignature: LosslessStringConvertible, CustomDebugStringConverti
     }
     
     public var debugDescription: String {
-        "Signatures: \(signatures.debugDescription)\nPayload: \(String(decoding: payload.protected.urlBase64EncodedData(), as: UTF8.self))"
+        "Signatures: \(signatures.debugDescription)\nPayload: \(String(decoding: payload.encoded.urlBase64EncodedData(), as: UTF8.self))"
     }
 }

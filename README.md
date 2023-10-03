@@ -47,14 +47,16 @@ For detailed usage and API documentation, check [the documentation][docs].
 
 ## Comparison To Other Libraries
 
-|                           | JWSETKit | [jwt-kit] | [JOSESwift] |
-|:--------------------------|:--:|:--:|:--:|
-| JSON Web Signature (JWS) | ✅ | ❌ | ✅ |
-| JWS Multiple Signatures | ✅ | ❌ | ❌ |
-| JSON Web Token (JWT) | ✅ | ✅ | ✅ |
-| JSON Web Encryption (JWE) | ❌ | ❌ | ✅ |
-| Support CommonCrypto Keys | ✅ | ❌ | ❌ |
-| Support CryptoKit Keys | ✅ | ❌ | ❌ |
+|                               | JWSETKit | [jwt-kit] | [JOSESwift] | Auth0's [JWTDecode] |
+|:------------------------------|:--:|:--:|:--:|:--:|
+| JSON Web Signature (JWS)      | ✅ | ❌ | ✅ | ❌ |
+| JWS Multiple Signatures       | ✅ | ❌ | ❌ | ❌ |
+| JSON Web Token (JWT)          | ✅ | ✅ | ✅ | ✅ |
+| JWT Signature Verfication     | ✅ | ❌ | ✅ | ❌ |
+| JWT Expire/NotBefore Validity | ✅ | ✅ | ✅ | ❌ |
+| JSON Web Encryption (JWE)     | ❌ | ❌ | ✅ | ❌ |
+| Support [CommonCrypto] Keys   | ✅ | ❌ | ❌ | ❌ |
+| Support [CryptoKit] Keys      | ✅ | ❌ | ❌ | ❌ |
 
 ## To Do List
 
@@ -67,3 +69,6 @@ It's appreciated to contribute to this library to make it better.
 [docs]: https://amosavian.github.io/JWSETKit/documentation/jwsetkit/
 [jwt-kit]: https://github.com/vapor/jwt-kit
 [JOSESwift]: https://github.com/airsidemobile/JOSESwift
+[JWTDecode]: https://github.com/auth0/JWTDecode.swift
+[CommonCrypto]: https://developer.apple.com/documentation/security/certificate_key_and_trust_services
+[CryptoKit]: https://developer.apple.com/documentation/cryptokit/

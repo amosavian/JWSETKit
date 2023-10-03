@@ -13,7 +13,7 @@ import Crypto
 #endif
 
 /// A container for AES ciphers, e.g. AES, RSA, etc.
-public struct SealedData: DataProtocol, BidirectionalCollection {
+public struct SealedData: DataProtocol, BidirectionalCollection, Hashable {
     /// The nonce used to encrypt the data.
     public let iv: Data?
     
@@ -74,6 +74,10 @@ public struct SealedData: DataProtocol, BidirectionalCollection {
         self.iv = Data(sealedBox.nonce)
         self.ciphertext = sealedBox.ciphertext
         self.tag = sealedBox.tag
+    }
+    
+    public static func == (lhs: SealedData, rhs: SealedData) -> Bool {
+        lhs.iv ?? .init() == rhs.iv ?? .init() && lhs.ciphertext == rhs.ciphertext && lhs.tag ?? .init() == rhs.tag ?? .init()
     }
 }
 

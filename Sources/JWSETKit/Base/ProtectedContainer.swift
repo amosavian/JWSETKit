@@ -10,12 +10,12 @@ import Foundation
 /// Data value that must be protected by JWS.
 public protocol ProtectedWebContainer: Hashable, Encodable {
     /// Signed data.
-    var protected: Data { get set }
+    var encoded: Data { get set }
     
     /// Initializes the container using given data.
     ///
     /// - Parameter protected: Data that has been signed.
-    init(protected: Data) throws
+    init(encoded: Data) throws
     
     /// Validates contents and required fields if applicable.
     func validate() throws
@@ -23,18 +23,18 @@ public protocol ProtectedWebContainer: Hashable, Encodable {
 
 extension ProtectedWebContainer {
     public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.protected == rhs.protected
+        lhs.encoded == rhs.encoded
     }
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(protected)
+        hasher.combine(encoded)
     }
     
-    public func validate() throws { }
+    public func validate() throws {}
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        let encoded = protected.urlBase64EncodedData()
+        let encoded = encoded.urlBase64EncodedData()
         try container.encode(String(decoding: encoded, as: UTF8.self))
     }
 }
@@ -51,10 +51,10 @@ public protocol TypedProtectedWebContainer<Container>: ProtectedWebContainer {
 }
 
 public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
-    public var protected: Data
+    public var encoded: Data
     
-    public init(protected: Data) throws {
-        self.protected = protected
+    public init(encoded: Data) throws {
+        self.encoded = encoded
     }
     
     public init(from decoder: Decoder) throws {
@@ -64,7 +64,7 @@ public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
         guard let protected = Data(urlBase64Encoded: encoded) else {
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Protected is not a valid bas64url."))
         }
-        self.protected = protected
+        self.encoded = protected
     }
 }
 
@@ -77,7 +77,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
     private var _value: Container
     
     /// Serialized protected data of JOSE.
-    public var protected: Data {
+    public var encoded: Data {
         get {
             _protected
         }
@@ -117,9 +117,9 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
     /// Initialized protected container from a JOSE data.
     ///
     /// - Parameter protected: Serialzed json object but **not** in `base64url` .
-    public init(protected: Data) throws {
-        self._protected = protected
-        self._value = try JSONDecoder().decode(Container.self, from: protected)
+    public init(encoded: Data) throws {
+        self._protected = encoded
+        self._value = try JSONDecoder().decode(Container.self, from: encoded)
     }
     
     /// Initialized protected container from object.

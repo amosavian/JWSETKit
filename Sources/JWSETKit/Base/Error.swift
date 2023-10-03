@@ -52,7 +52,7 @@ public enum JSONWebKeyError: LocalizedError {
 }
 
 /// Validation errors including expired token.
-/// 
+///
 /// - Note: Localization of `errorDescription` can be changes by setting `jsonWebKeyLocale`.
 public enum JSONWebValidationError: LocalizedError {
     /// Current date is after `"exp"` claim in token.

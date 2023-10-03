@@ -5,12 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/9/23.
 //
 
-
 import Foundation
 #if canImport(CommonCrypto)
-import X509
-import CryptoKit
 import CommonCrypto
+import CryptoKit
+import X509
 
 extension SecCertificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {

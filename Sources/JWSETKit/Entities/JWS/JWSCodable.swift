@@ -93,11 +93,11 @@ extension JSONWebSignature: Codable {
             guard sections.count == 3 else {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "JWS String is not a three part data."))
             }
-            self.payload = try Payload(protected: sections[1])
+            self.payload = try Payload(encoded: sections[1])
             self.signatures = try [
                 .init(
-                    header: sections[0],
-                    unprotectedHeader: nil,
+                    protected: sections[0],
+                    unprotected: nil,
                     signature: sections[2]
                 ),
             ]
@@ -110,14 +110,14 @@ extension JSONWebSignature: Codable {
             guard let payloadData = Data(urlBase64Encoded: payload) else {
                 throw DecodingError.dataCorrupted(.init(codingPath: [CodingKeys.payload], debugDescription: "Payload is not Base64URL"))
             }
-            self.payload = try .init(protected: payloadData)
+            self.payload = try .init(encoded: payloadData)
             self.signatures = signatures
         } else {
             let payload = try container.decode(String.self, forKey: .payload)
             guard let payloadData = Data(urlBase64Encoded: payload) else {
                 throw DecodingError.dataCorrupted(.init(codingPath: [CodingKeys.payload], debugDescription: "Payload is not Base64URL"))
             }
-            self.payload = try .init(protected: payloadData)
+            self.payload = try .init(encoded: payloadData)
             let header = try JSONWebSignatureHeader(from: decoder)
             self.signatures = [header]
         }
@@ -126,8 +126,8 @@ extension JSONWebSignature: Codable {
     fileprivate func encodeAsString(_ encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         let value = [
-            signatures.first?.header.protected.urlBase64EncodedData() ?? .init(),
-            payload.protected.urlBase64EncodedData(),
+            signatures.first?.protected.encoded.urlBase64EncodedData() ?? .init(),
+            payload.encoded.urlBase64EncodedData(),
             signatures.first?.signature.urlBase64EncodedData() ?? .init(),
         ]
         .map { String(decoding: $0, as: UTF8.self) }
@@ -138,7 +138,7 @@ extension JSONWebSignature: Codable {
     fileprivate func encodeAsDetachedString(_ encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         let value = [
-            signatures.first?.header.protected.urlBase64EncodedData() ?? .init(),
+            signatures.first?.protected.encoded.urlBase64EncodedData() ?? .init(),
             signatures.first?.signature.urlBase64EncodedData() ?? .init(),
         ]
         .map { String(decoding: $0, as: UTF8.self) }
@@ -148,16 +148,16 @@ extension JSONWebSignature: Codable {
     
     fileprivate func encodeAsCompleteJSON(_ encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(payload.protected.urlBase64EncodedData(), forKey: .payload)
+        try container.encode(payload.encoded.urlBase64EncodedData(), forKey: .payload)
         try container.encode(signatures, forKey: .signatures)
     }
     
     fileprivate func encodeAsFlattenedJSON(_ encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(payload.protected.urlBase64EncodedData(), forKey: .payload)
+        try container.encode(payload.encoded.urlBase64EncodedData(), forKey: .payload)
         var headerContainer = encoder.container(keyedBy: JSONWebSignatureHeader.CodingKeys.self)
-        try headerContainer.encodeIfPresent(signatures.first?.header, forKey: .protected)
-        try headerContainer.encodeIfPresent(signatures.first?.unprotectedHeader, forKey: .header)
+        try headerContainer.encodeIfPresent(signatures.first?.protected, forKey: .protected)
+        try headerContainer.encodeIfPresent(signatures.first?.unprotected, forKey: .header)
         try headerContainer.encodeIfPresent(signatures.first?.signature, forKey: .signature)
     }
     
@@ -165,8 +165,8 @@ extension JSONWebSignature: Codable {
         switch signatures.count {
         case 0:
             return .compact
-        case 1 where signatures[0].unprotectedHeader == nil:
-            if signatures[0].header.value.storage.contains(key: "b64"), signatures[0].header.value.b64 == false {
+        case 1 where signatures[0].unprotected == nil:
+            if signatures[0].protected.value.storage.contains(key: "b64"), signatures[0].protected.value.b64 == false {
                 return .compactDetached
             }
             return .compact

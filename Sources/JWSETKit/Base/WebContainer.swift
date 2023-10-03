@@ -36,7 +36,7 @@ extension JSONWebContainer {
         try container.encode(storage)
     }
     
-    public func validate() throws { }
+    public func validate() throws {}
     
     /// Returns value of given key.
     public subscript<T>(_ member: String) -> T? {
