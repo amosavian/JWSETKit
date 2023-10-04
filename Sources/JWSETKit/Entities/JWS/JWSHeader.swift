@@ -13,7 +13,7 @@ import Crypto
 #endif
 
 /// Represents a signature or MAC over the JWS Payload and the JWS Protected Header.
-public struct JSONWebSignatureHeader: Hashable, Codable {
+public struct JSONWebSignatureHeader: Hashable, Codable, Sendable {
     enum CodingKeys: CodingKey {
         case protected
         case header

@@ -13,7 +13,7 @@ import Crypto
 #endif
 
 /// A container for AES ciphers, e.g. AES, RSA, etc.
-public struct SealedData: DataProtocol, BidirectionalCollection, Hashable {
+public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Sendable {
     /// The nonce used to encrypt the data.
     public let iv: Data?
     

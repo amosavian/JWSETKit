@@ -13,14 +13,9 @@ import X509
 
 extension SecCertificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
-        get {
-            var key = try! AnyJSONWebKey(storage: publicKey.storage)
-            key.certificateChain = try! [.init(self)]
-            return key.storage
-        }
-        set {
-            preconditionFailure("Operation not allowed.")
-        }
+        var key = try! AnyJSONWebKey(storage: publicKey.storage)
+        key.certificateChain = try! [.init(self)]
+        return key.storage
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
@@ -48,6 +43,48 @@ extension SecCertificate: JSONWebValidatingKey {
 extension SecCertificate: Expirable {
     public func verifyDate(_ currentDate: Date) throws {
         try Certificate(self).verifyDate(currentDate)
+    }
+}
+
+extension SecTrust: JSONWebValidatingKey {
+    public var storage: JSONWebValueStorage {
+        var key = AnyJSONWebKey(storage: .init())
+        key.certificateChain = try! certificateChain.map(Certificate.init)
+        return key.storage
+    }
+    
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try certificateChain.first?.verifySignature(signature, for: data, using: algorithm)
+    }
+    
+    public static func create(storage: JSONWebValueStorage) throws -> Self {
+        let key = AnyJSONWebKey(storage: storage)
+        let certificates = try key.certificateChain.map { try $0.secCertificate() }
+        var result: SecTrust?
+        SecTrustCreateWithCertificates(certificates as CFArray, SecPolicyCreateBasicX509(), &result)
+        guard result != nil else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        return result.unsafelyUnwrapped as! Self
+    }
+    
+    /// Certificate chain
+    public var certificateChain: [SecCertificate] {
+        get throws {
+            let count = SecTrustGetCertificateCount(self)
+            guard count > 0 else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            return (0..<count).compactMap {
+                SecTrustGetCertificateAtIndex(self, $0)
+            }
+        }
+    }
+}
+
+extension SecTrust : Expirable {
+    public func verifyDate(_ currentDate: Date) throws {
+        try certificateChain.forEach { try $0.verifyDate(currentDate) }
     }
 }
 

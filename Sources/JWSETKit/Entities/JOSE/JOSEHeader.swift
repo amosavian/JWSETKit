@@ -55,7 +55,7 @@ public struct JOSEHeader: JSONWebContainer {
 }
 
 /// Content type of payload in JOSE header..
-public struct JSONWebContentType: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
+public struct JSONWebContentType: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
     public let rawValue: String
     
     public init(rawValue: String) {

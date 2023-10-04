@@ -9,16 +9,14 @@ import Foundation
 
 /// JSON container for payloads and sections of JWS and JWE structures.
 @dynamicMemberLookup
-public protocol JSONWebContainer: Codable, Hashable {
+public protocol JSONWebContainer: Codable, Hashable, Sendable {
     /// Storage of container values.
     var storage: JSONWebValueStorage { get set }
     
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
-    ///
-    /// - Returns: A new instance of current class.
-    static func create(storage: JSONWebValueStorage) throws -> Self
+    init(storage: JSONWebValueStorage) throws
     
     /// Validates contents and required fields if applicable.
     func validate() throws
@@ -26,7 +24,7 @@ public protocol JSONWebContainer: Codable, Hashable {
 
 extension JSONWebContainer {
     public init(from decoder: Decoder) throws {
-        self = try Self.create(storage: .init())
+        self = try Self(storage: .init())
         let container = try decoder.singleValueContainer()
         self.storage = try container.decode(JSONWebValueStorage.self)
     }

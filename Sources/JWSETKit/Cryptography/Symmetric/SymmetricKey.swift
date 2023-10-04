@@ -14,18 +14,10 @@ import Crypto
 
 extension SymmetricKey: JSONWebKey {
     public var storage: JSONWebValueStorage {
-        get {
-            var result = AnyJSONWebKey()
-            result.keyType = .symmetric
-            withUnsafeBytes {
-                result.keyValue = Data($0)
-            }
-            return result.storage
-        }
-        mutating set {
-            guard let data = newValue["k", true] else { return }
-            self = SymmetricKey(data: data)
-        }
+        var result = AnyJSONWebKey()
+        result.keyType = .symmetric
+        result.keyValue = self
+        return result.storage
     }
     
     public var publicKey: SymmetricKey { self }
@@ -41,8 +33,11 @@ extension SymmetricKey: JSONWebKey {
     ///
     /// - Parameter storage: Storage of key-values.
     public init(storage: JSONWebValueStorage) {
-        self.init(size: .bits128)
-        self.storage = storage
+        guard let data = AnyJSONWebKey(storage: storage).keyValue else {
+            self.init(size: .bits128)
+            return
+        }
+        self.init(data: data)
     }
     
     public func hash(into hasher: inout Hasher) {

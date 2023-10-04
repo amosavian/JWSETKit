@@ -47,16 +47,17 @@ For detailed usage and API documentation, check [the documentation][docs].
 
 ## Comparison To Other Libraries
 
-|                               | JWSETKit | [jwt-kit] | [JOSESwift] | Auth0's [JWTDecode] |
-|:------------------------------|:--:|:--:|:--:|:--:|
-| JSON Web Signature (JWS)      | ✅ | ❌ | ✅ | ❌ |
-| JWS Multiple Signatures       | ✅ | ❌ | ❌ | ❌ |
-| JSON Web Token (JWT)          | ✅ | ✅ | ✅ | ✅ |
-| JWT Signature Verfication     | ✅ | ❌ | ✅ | ❌ |
-| JWT Expire/NotBefore Validity | ✅ | ✅ | ✅ | ❌ |
-| JSON Web Encryption (JWE)     | ❌ | ❌ | ✅ | ❌ |
-| Support [CommonCrypto] Keys   | ✅ | ❌ | ❌ | ❌ |
-| Support [CryptoKit] Keys      | ✅ | ❌ | ❌ | ❌ |
+|                                | JWSETKit | [jwt-kit] | [JOSESwift] | Auth0's [JWTDecode] |
+|:-------------------------------|:--:|:--:|:--:|:--:|
+| JSON Web Signature (JWS)       | ✅ | ❌ | ✅ | ❌ |
+| JWS Multiple Signatures        | ✅ | ❌ | ❌ | ❌ |
+| JWS Unencoded/Detached Payload | ✅ | ❌ | ❌ | ❌ |
+| JSON Web Token (JWT)           | ✅ | ✅ | ✅ | ✅ |
+| JWT Signature Verfication      | ✅ | ✅ | ✅ | ❌ |
+| JWT Expire/NotBefore Validity  | ✅ | ✅ | ✅ | ❌ |
+| JSON Web Encryption (JWE)      | ❌ | ❌ | ✅ | ❌ |
+| Support [CommonCrypto] Keys    | ✅ | ❌ | ❌ | ❌ |
+| Support [CryptoKit] Keys       | ✅ | ❌ | ❌ | ❌ |
 
 ## To Do List
 

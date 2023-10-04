@@ -20,22 +20,13 @@ protocol CryptoECPublicKey: JSONWebValidatingKey {
 
 extension CryptoECPublicKey {
     public var storage: JSONWebValueStorage {
-        get {
-            var result = AnyJSONWebKey()
-            let rawRepresentation = rawRepresentation
-            result.keyType = .elipticCurve
-            result.curve = Self.curve
-            result.xCoordinate = rawRepresentation.prefix(rawRepresentation.count / 2)
-            result.yCoordinate = rawRepresentation.suffix(rawRepresentation.count / 2)
-            return result.storage
-        }
-        set {
-            guard let newValue = try? Self.create(storage: newValue) else {
-                assertionFailure(CryptoKitError.incorrectKeySize.localizedDescription)
-                return
-            }
-            self = newValue
-        }
+        var result = AnyJSONWebKey()
+        let rawRepresentation = rawRepresentation
+        result.keyType = .elipticCurve
+        result.curve = Self.curve
+        result.xCoordinate = rawRepresentation.prefix(rawRepresentation.count / 2)
+        result.yCoordinate = rawRepresentation.suffix(rawRepresentation.count / 2)
+        return result.storage
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
@@ -65,23 +56,14 @@ protocol CryptoECPrivateKey: JSONWebSigningKey where PublicKey: CryptoECPublicKe
 
 extension CryptoECPrivateKey {
     public var storage: JSONWebValueStorage {
-        get {
-            var result = AnyJSONWebKey()
-            let rawRepresentation = rawRepresentation
-            result.keyType = .elipticCurve
-            result.curve = PublicKey.curve
-            result.xCoordinate = publicKey.rawRepresentation.prefix(rawRepresentation.count / 2)
-            result.yCoordinate = publicKey.rawRepresentation.suffix(rawRepresentation.count / 2)
-            result.privateKey = rawRepresentation
-            return result.storage
-        }
-        set {
-            guard let newValue = try? Self.create(storage: newValue) else {
-                assertionFailure(CryptoKitError.incorrectKeySize.localizedDescription)
-                return
-            }
-            self = newValue
-        }
+        var result = AnyJSONWebKey()
+        let rawRepresentation = rawRepresentation
+        result.keyType = .elipticCurve
+        result.curve = PublicKey.curve
+        result.xCoordinate = publicKey.rawRepresentation.prefix(rawRepresentation.count / 2)
+        result.yCoordinate = publicKey.rawRepresentation.suffix(rawRepresentation.count / 2)
+        result.privateKey = rawRepresentation
+        return result.storage
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {

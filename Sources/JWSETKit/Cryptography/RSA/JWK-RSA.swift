@@ -19,7 +19,7 @@ import _CryptoExtras
 #endif
 
 /// JSON Web Key (JWK) container for RSA public keys.
-public struct JSONWebRSAPublicKey: JSONWebValidatingKey, JSONWebEncryptingKey {
+public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSONWebEncryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
     public init(storage: JSONWebValueStorage) {
@@ -105,7 +105,7 @@ public struct JSONWebRSAPublicKey: JSONWebValidatingKey, JSONWebEncryptingKey {
 }
 
 /// JWK container for RSA private keys.
-public struct JSONWebRSAPrivateKey: JSONWebSigningKey, JSONWebDecryptingKey {
+public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWebDecryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
     public var publicKey: JSONWebRSAPublicKey {

@@ -17,14 +17,6 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
 }
 
 extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
-    /// Returns a new concrete key using json data.
-    ///
-    /// - Parameter storage: Storage of key-values.
-    public init(storage: JSONWebValueStorage) {
-        self = Curve25519.Signing.PrivateKey().publicKey
-        self.storage = storage
-    }
-    
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         if !isValidSignature(signature, for: data) {
             throw CryptoKitError.authenticationFailure
@@ -33,13 +25,6 @@ extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension Curve25519.Signing.PrivateKey: CryptoECPrivateKey {
-    /// Returns a new concrete key using json data.
-    ///
-    /// - Parameter storage: Storage of key-values.
-    public init(storage: JSONWebValueStorage) {
-        self = try! Self.create(storage: storage)
-    }
-    
     public func signature<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         try signature(for: data)
     }

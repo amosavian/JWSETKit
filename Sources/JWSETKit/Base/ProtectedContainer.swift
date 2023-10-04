@@ -8,7 +8,7 @@
 import Foundation
 
 /// Data value that must be protected by JWS.
-public protocol ProtectedWebContainer: Hashable, Encodable {
+public protocol ProtectedWebContainer: Hashable, Encodable, Sendable {
     /// Signed data.
     var encoded: Data { get set }
     
@@ -109,7 +109,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
             do {
                 _protected = try JSONEncoder().encode(newValue)
             } catch {
-                _value = try! .create(storage: .init())
+                _value = try! .init(storage: .init())
             }
         }
     }

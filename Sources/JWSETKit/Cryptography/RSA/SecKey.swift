@@ -13,12 +13,7 @@ import SwiftASN1
 
 extension SecKey: JSONWebKey {
     public var storage: JSONWebValueStorage {
-        get {
-            try! jsonWebKey().storage
-        }
-        set {
-            preconditionFailure("Operation not allowed.")
-        }
+        try! jsonWebKey().storage
     }
     
     public var publicKey: SecKey {

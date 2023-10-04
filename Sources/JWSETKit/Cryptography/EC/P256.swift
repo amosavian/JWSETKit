@@ -17,14 +17,6 @@ extension P256.Signing.PublicKey: CryptoECPublicKey {
 }
 
 extension P256.Signing.PublicKey: JSONWebValidatingKey {
-    /// Returns a new concrete key using json data.
-    ///
-    /// - Parameter storage: Storage of key-values.
-    public init(storage: JSONWebValueStorage) {
-        self = P256.Signing.PrivateKey().publicKey
-        self.storage = storage
-    }
-    
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let signature = try P256.Signing.ECDSASignature(rawRepresentation: signature)
         var digest = SHA256()
@@ -36,14 +28,6 @@ extension P256.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension P256.Signing.PrivateKey: CryptoECPrivateKey {
-    /// Returns a new concrete key using json data.
-    ///
-    /// - Parameter storage: Storage of key-values.
-    public init(storage: JSONWebValueStorage) {
-        self.init()
-        self.storage = storage
-    }
-    
     public func signature<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         var digest = SHA256()
         digest.update(data: data)

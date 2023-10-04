@@ -17,7 +17,7 @@ import Foundation
 /// or they MAY return just the individual component fields using the other sub-fields,
 /// or they MAY return both. If both variants are returned, they SHOULD be describing the same address,
 /// with the formatted address indicating how the component fields are combined.
-public struct JSONWebAddress: Hashable, Codable {
+public struct JSONWebAddress: Hashable, Codable, Sendable {
     enum CodingKeys: String, CodingKey {
         case formatted
         case streetAddress = "street_address"

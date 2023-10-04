@@ -13,7 +13,7 @@ import Crypto
 #endif
 
 /// JSON Web Signature and Encryption Algorithms
-public struct JSONWebAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
+public struct JSONWebAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
     public let rawValue: String
     
     public init(rawValue: String) {
@@ -48,6 +48,10 @@ extension JSONWebAlgorithm {
     
     /// **Signature**: HMAC using SHA-512.
     public static let hmacSHA512: Self = "HS512"
+    
+    static func hmac(bitCount: Int) -> Self {
+        .init(rawValue: "HS\(bitCount)")
+    }
     
     /// **Signature**: RSASSA-PKCS1-v1.5 using SHA-256.
     public static let rsaSignaturePKCS1v15SHA256: Self = "RS256"
@@ -106,6 +110,10 @@ extension JSONWebAlgorithm {
     /// **Key Management**: AES Key-Wrap using 256-bit key.
     public static let aesKeyWrap256: Self = "A256KW"
     
+    static func aesKeyWrap(bitCount: Int) -> Self {
+        .init(rawValue: "A\(bitCount)KW")
+    }
+    
     /// **Key Management**: No encryption for content key.
     public static let direct: Self = "direct"
 }
@@ -120,10 +128,14 @@ extension JSONWebAlgorithm {
     
     /// **Content Encryption**: AES GCM using 256-bit key.
     public static let aesEncryptionGCM256: Self = "A256GCM"
+    
+    static func aesEncryptionGCM(bitCount: Int) -> Self {
+        .init(rawValue: "A\(bitCount)GCM")
+    }
 }
 
 /// JSON Key Type, e.g. `RSA`, `EC`, etc.
-public struct JSONWebKeyType: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
+public struct JSONWebKeyType: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
     public let rawValue: String
     
     public init(rawValue: String) {
@@ -146,6 +158,8 @@ public struct JSONWebKeyType: RawRepresentable, Hashable, Codable, ExpressibleBy
 }
 
 extension JSONWebKeyType {
+    static let empty: Self = ""
+    
     /// Elliptic Curve
     public static let elipticCurve: Self = "EC"
     
@@ -157,7 +171,7 @@ extension JSONWebKeyType {
 }
 
 /// JSON EC Curves.
-public struct JSONWebKeyCurve: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
+public struct JSONWebKeyCurve: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
     public let rawValue: String
     
     public init(rawValue: String) {
@@ -180,6 +194,8 @@ public struct JSONWebKeyCurve: RawRepresentable, Hashable, Codable, ExpressibleB
 }
 
 extension JSONWebKeyCurve {
+    static let empty: Self = ""
+    
     /// NIST P-256 (secp256r1) curve.
     public static let p256: Self = "P-256"
     
@@ -212,7 +228,7 @@ extension JSONWebKeyCurve {
 }
 
 /// JSON Web Compression Algorithms.
-public struct JSONWebCompressionAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral {
+public struct JSONWebCompressionAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
     public let rawValue: String
     
     public init(rawValue: String) {

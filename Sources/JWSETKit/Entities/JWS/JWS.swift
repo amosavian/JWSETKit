@@ -13,7 +13,7 @@ import Crypto
 #endif
 
 /// JWS represents digitally signed or MACed content using JSON data structures and `base64url` encoding.
-public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable {
+public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendable {
     /// The "signatures" member value MUST be an array of JSON objects.
     ///
     /// Each object represents a signature or MAC over the JWS Payload and the JWS Protected Header.

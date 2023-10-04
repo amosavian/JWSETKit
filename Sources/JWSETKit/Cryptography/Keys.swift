@@ -15,7 +15,28 @@ import Crypto
 /// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159]
 /// data structure that represents a cryptographic key.
 @dynamicMemberLookup
-public protocol JSONWebKey: JSONWebContainer {}
+public protocol JSONWebKey: Codable, Hashable {
+    /// Storage of container values.
+    var storage: JSONWebValueStorage { get }
+    
+    /// Returns a new concrete key using json data.
+    ///
+    /// - Parameter storage: Storage of key-values.
+    ///
+    /// - Returns: A new instance of current class.
+    static func create(storage: JSONWebValueStorage) throws -> Self
+    
+    /// Validates contents and required fields if applicable.
+    func validate() throws
+}
+
+/// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159]
+/// data structure that represents a cryptographic key.
+@dynamicMemberLookup
+public protocol MutableJSONWebKey: JSONWebKey {
+    /// Storage of container values.
+    var storage: JSONWebValueStorage { get set }
+}
 
 extension JSONWebKey {
     /// Creates a new JWK using json data.
@@ -25,13 +46,38 @@ extension JSONWebKey {
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        let value = try container.decode(JSONWebValueStorage.self)
-        self = try Self.create(storage: value)
+        self = try Self.create(storage: container.decode(JSONWebValueStorage.self))
     }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(storage)
+    }
+    
+    public func validate() throws {
+        // swiftformat:disable:next redundantSelf
+        guard let keyType = self.keyType else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+        switch keyType {
+        case .rsa:
+            // swiftformat:disable:next redundantSelf
+            guard self.modulus != nil, self.exponent != nil else {
+                throw JSONWebKeyError.keyNotFound
+            }
+        case .elipticCurve:
+            // swiftformat:disable:next redundantSelf
+            guard self.xCoordinate != nil, self.yCoordinate != nil else {
+                throw JSONWebKeyError.keyNotFound
+            }
+        case .symmetric:
+            // swiftformat:disable:next redundantSelf
+            guard self.keyValue != nil else {
+                throw JSONWebKeyError.keyNotFound
+            }
+        default:
+            break
+        }
     }
 }
 
@@ -104,7 +150,7 @@ extension JSONWebSigningKey {
 /// A type-erased general container for a JSON Web Key (JWK).
 ///
 /// - Note: To create a key able to do operations (sign, verify, encrypt, decrypt) use `specialzed()` method.
-public struct AnyJSONWebKey: JSONWebKey {
+public struct AnyJSONWebKey: MutableJSONWebKey {
     public var storage: JSONWebValueStorage
     
     public static func create(storage: JSONWebValueStorage) throws -> AnyJSONWebKey {

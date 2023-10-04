@@ -56,14 +56,9 @@ extension DERImplicitlyTaggable {
 
 extension Certificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
-        get {
-            var key = try! AnyJSONWebKey(storage: publicKey.jsonWebKey().storage)
-            key.certificateChain = [self]
-            return key.storage
-        }
-        set {
-            fatalError()
-        }
+        var key = try! AnyJSONWebKey(storage: publicKey.jsonWebKey().storage)
+        key.certificateChain = [self]
+        return key.storage
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> X509.Certificate {

@@ -22,7 +22,7 @@ import Foundation
 ///     print(error)
 /// }
 /// ```
-public enum JSONWebSignatureRepresentation {
+public enum JSONWebSignatureRepresentation: Sendable {
     /// Use compact or detached serialization if only one signature and
     /// no unprotected header is present, regarding `b64` header value.
     ///
@@ -125,10 +125,15 @@ extension JSONWebSignature: Codable {
     
     fileprivate func encodeAsString(_ encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
+        guard let signature = signatures.first else {
+            try container.encode("..")
+            return
+        }
+        let plainPayload = signatures[0].protected.value.storage.contains(key: "b64") && signatures[0].protected.value.b64 == false
         let value = [
-            signatures.first?.protected.encoded.urlBase64EncodedData() ?? .init(),
-            payload.encoded.urlBase64EncodedData(),
-            signatures.first?.signature.urlBase64EncodedData() ?? .init(),
+            signature.protected.encoded.urlBase64EncodedData(),
+            plainPayload ? payload.encoded : payload.encoded.urlBase64EncodedData(),
+            signature.signature.urlBase64EncodedData(),
         ]
         .map { String(decoding: $0, as: UTF8.self) }
         .joined(separator: ".")
@@ -137,9 +142,13 @@ extension JSONWebSignature: Codable {
     
     fileprivate func encodeAsDetachedString(_ encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
+        guard let signature = signatures.first else {
+            try container.encode("..")
+            return
+        }
         let value = [
-            signatures.first?.protected.encoded.urlBase64EncodedData() ?? .init(),
-            signatures.first?.signature.urlBase64EncodedData() ?? .init(),
+            signature.protected.encoded.urlBase64EncodedData(),
+            signature.signature.urlBase64EncodedData(),
         ]
         .map { String(decoding: $0, as: UTF8.self) }
         .joined(separator: "..")
@@ -209,7 +218,7 @@ extension JSONWebSignature: Codable {
 }
 
 @available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
-public struct JSONWebSignatureCodableConfiguration {
+public struct JSONWebSignatureCodableConfiguration: Sendable {
     public let representation: JSONWebSignatureRepresentation
     
     public init(representation: JSONWebSignatureRepresentation) {

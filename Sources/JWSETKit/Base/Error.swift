@@ -16,7 +16,7 @@ enum JSONWebKit {
 /// Errors occured during key creation or usage.
 ///
 /// - Note: Localization of `errorDescription` can be changes by setting `jsonWebKeyLocale`.
-public enum JSONWebKeyError: LocalizedError {
+public enum JSONWebKeyError: LocalizedError, Sendable {
     /// Given algorithm is unsupported in the framework.
     case unknownAlgorithm
     
@@ -54,7 +54,7 @@ public enum JSONWebKeyError: LocalizedError {
 /// Validation errors including expired token.
 ///
 /// - Note: Localization of `errorDescription` can be changes by setting `jsonWebKeyLocale`.
-public enum JSONWebValidationError: LocalizedError {
+public enum JSONWebValidationError: LocalizedError, Sendable {
     /// Current date is after `"exp"` claim in token.
     case tokenExpired(expiry: Date)
     

@@ -13,7 +13,7 @@ import Crypto
 #endif
 
 /// JSON Web Key (JWK) container for AES-GCM keys for encryption/decryption.
-public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
+public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebDecryptingKey, Sendable {
     public typealias PublicKey = Self
     
     public var publicKey: JSONWebKeyAESGCM { self }
@@ -47,10 +47,8 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
     /// - Parameter keySize: Size of random key in bits.
     public init(_ keySize: SymmetricKeySize) {
         self.storage = .init()
-        self.algorithm = "A\(keySize.bitCount)GCM"
-        self.keyValue = SymmetricKey(size: .bits128).withUnsafeBytes {
-            Data($0)
-        }
+        self.algorithm = .aesEncryptionGCM(bitCount: keySize.bitCount)
+        self.keyValue = SymmetricKey(size: keySize)
     }
     
     /// Initializes a AES-GCM key for encryption.
@@ -58,7 +56,7 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
     /// - Parameter key: A symmetric cryptographic key.
     public init(_ key: SymmetricKey) throws {
         self.storage = .init()
-        self.algorithm = "A\(key.bitCount)GCM"
+        self.algorithm = .aesEncryptionGCM(bitCount: key.bitCount)
         self.keyValue = key
     }
     
@@ -78,7 +76,7 @@ public struct JSONWebKeyAESGCM: JSONWebDecryptingKey {
 
 /// JSON Web Key (JWK) container for AES Key Wrap for encryption/decryption.
 @available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *)
-public struct JSONWebKeyAESKW: JSONWebDecryptingKey {
+public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebDecryptingKey, Sendable {
     public typealias PublicKey = Self
     
     public var publicKey: JSONWebKeyAESKW { self }
@@ -112,10 +110,8 @@ public struct JSONWebKeyAESKW: JSONWebDecryptingKey {
     /// - Parameter keySize: Size of random key in bits.
     public init(_ keySize: SymmetricKeySize) {
         self.storage = .init()
-        self.algorithm = "A\(keySize.bitCount)KW"
-        self.keyValue = SymmetricKey(size: .bits128).withUnsafeBytes {
-            Data($0)
-        }
+        self.algorithm = .aesKeyWrap(bitCount: keySize.bitCount)
+        self.keyValue = SymmetricKey(size: keySize)
     }
     
     /// Initializes a AES-GCM key for encryption.
@@ -123,7 +119,7 @@ public struct JSONWebKeyAESKW: JSONWebDecryptingKey {
     /// - Parameter key: A symmetric cryptographic key.
     public init(_ key: SymmetricKey) throws {
         self.storage = .init()
-        self.algorithm = "A\(key.bitCount)KW"
+        self.algorithm = .aesKeyWrap(bitCount: key.bitCount)
         self.keyValue = key
     }
     

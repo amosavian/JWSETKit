@@ -13,7 +13,7 @@ import Crypto
 #endif
 
 /// JSON Web Key (JWK) container for creating/verifying HMAC signatures.
-public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
+public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSigningKey, Sendable {
     public var publicKey: Self { self }
     
     public var storage: JSONWebValueStorage
@@ -46,7 +46,7 @@ public struct JSONWebKeyHMAC<H: HashFunction>: JSONWebSigningKey {
     public init(_ key: SymmetricKey) throws {
         self.storage = .init()
         self.keyType = .symmetric
-        self.algorithm = "HS\(H.Digest.byteCount * 8)"
+        self.algorithm = .hmac(bitCount: H.Digest.byteCount * 8)
         self.keyValue = key.keyValue
     }
     

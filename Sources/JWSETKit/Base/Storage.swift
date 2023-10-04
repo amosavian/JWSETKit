@@ -5,12 +5,12 @@
 //  Created by Amir Abbas Mousavian on 9/6/23.
 //
 
-import AnyCodable
+@preconcurrency import AnyCodable
 import Foundation
 
 /// Storage for values in JOSE headers or JWT claims
 @dynamicMemberLookup
-public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLiteral {
+public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLiteral, Sendable {
     private var storage: [String: AnyCodable]
     
     /// Returns value of given key.

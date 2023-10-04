@@ -16,19 +16,12 @@ import _CryptoExtras
 
 extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
-        get {
-            let components = try! JSONWebRSAPublicKey.rsaComponents(pkcs1DERRepresentation)
-            var key = AnyJSONWebKey()
-            key.keyType = .rsa
-            key.modulus = components[0]
-            key.exponent = components[1]
-            return key.storage
-        }
-        set {
-            if let value = try? Self.create(storage: newValue) {
-                self = value
-            }
-        }
+        let components = try! JSONWebRSAPublicKey.rsaComponents(pkcs1DERRepresentation)
+        var key = AnyJSONWebKey()
+        key.keyType = .rsa
+        key.modulus = components[0]
+        key.exponent = components[1]
+        return key.storage
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Signing.PublicKey {

@@ -13,7 +13,7 @@ import Crypto
 #endif
 
 /// JSON Web Key (JWK) container for different types of Eliptic-Curve public keys consists of P-256, P-384, P-521, Ed25519.
-public struct JSONWebECPublicKey: JSONWebValidatingKey {
+public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Sendable {
     public var storage: JSONWebValueStorage
     
     public init(storage: JSONWebValueStorage) {
@@ -26,7 +26,7 @@ public struct JSONWebECPublicKey: JSONWebValidatingKey {
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         // swiftformat:disable:next redundantSelf
-        switch (self.keyType ?? .init(rawValue: ""), self.curve ?? .init(rawValue: "")) {
+        switch (self.keyType ?? .empty, self.curve ?? .empty) {
         case (JSONWebKeyType.elipticCurve, .p256):
             try P256.Signing.PublicKey.create(storage: storage)
                 .verifySignature(signature, for: data, using: algorithm)
@@ -46,7 +46,7 @@ public struct JSONWebECPublicKey: JSONWebValidatingKey {
 }
 
 /// JWK container for different types of Eliptic-Curve private keys consists of P-256, P-384, P-521, Ed25519.
-public struct JSONWebECPrivateKey: JSONWebSigningKey {
+public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendable {
     public var storage: JSONWebValueStorage
     
     public var publicKey: JSONWebECPublicKey {
@@ -65,7 +65,7 @@ public struct JSONWebECPrivateKey: JSONWebSigningKey {
     
     public func signature<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
         // swiftformat:disable:next redundantSelf
-        switch (self.keyType ?? .init(rawValue: ""), self.curve ?? .init(rawValue: "")) {
+        switch (self.keyType ?? .empty, self.curve ?? .empty) {
         case (JSONWebKeyType.elipticCurve, .p256):
             return try P256.Signing.PrivateKey.create(storage: storage)
                 .signature(data, using: algorithm)
@@ -85,7 +85,7 @@ public struct JSONWebECPrivateKey: JSONWebSigningKey {
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         // swiftformat:disable:next redundantSelf
-        switch (self.keyType ?? .init(rawValue: ""), self.curve ?? .init(rawValue: "")) {
+        switch (self.keyType ?? .empty, self.curve ?? .empty) {
         case (JSONWebKeyType.elipticCurve, .p256):
             try P256.Signing.PublicKey.create(storage: storage)
                 .verifySignature(signature, for: data, using: algorithm)

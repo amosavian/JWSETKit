@@ -53,7 +53,7 @@ final class StorageTests: XCTestCase {
         let keys = storage.keys as [any JSONWebKey]
         XCTAssertEqual(keys[0].keyType, .elipticCurve)
         XCTAssertEqual(
-            P256.Signing.PublicKey(storage: keys[0].storage).rawRepresentation,
+            try P256.Signing.PublicKey.create(storage: keys[0].storage).rawRepresentation,
             Data(base64Encoded: "MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D7gS2XpJFbZiItSs3m9+9Ue6GnvHw/GW2ZZaVtszggXIw==")
         )
         XCTAssertEqual(keys[1].keyType, .rsa)
