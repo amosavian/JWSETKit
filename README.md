@@ -27,7 +27,7 @@ To use JWSETKit, add the following dependency to your Package.swift:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.5.0"))
+    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.6.0"))
 ]
 ```
 
