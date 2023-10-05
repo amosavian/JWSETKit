@@ -108,16 +108,40 @@ extension SymmetricKey: JSONWebDecryptingKey {
         }
     }
     
-    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
+    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
-            return try .init(AES.GCM.seal(data, using: self))
+            return try AES.GCM.seal(data, using: self).combined ?? .init()
         case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256:
             if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-                return try .init(ciphertext: AES.KeyWrap.wrap(.init(data: Data(data)), using: self))
+                return try AES.KeyWrap.wrap(.init(data: Data(data)), using: self)
             } else {
                 throw JSONWebKeyError.unknownAlgorithm
             }
+        default:
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+    }
+}
+
+extension SymmetricKey: JSONWebSealingKey {
+    public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using algorithm: JWA) throws -> SealedData where D : DataProtocol, IV : DataProtocol, AAD : DataProtocol, JWA : JSONWebAlgorithm {
+        switch algorithm {
+        case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
+            return try JSONWebKeyAESGCM(self).seal(data, iv: iv, authenticating: authenticating, using: algorithm)
+        case .aesEncryptionCBC128SHA256, .aesEncryptionCBC192SHA384, .aesEncryptionCBC256SHA512:
+            return try JSONWebKeyAESCBCHMAC(self).seal(data, iv: iv, authenticating: authenticating, using: algorithm)
+        default:
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+    }
+    
+    public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using algorithm: JWA) throws -> Data where AAD : DataProtocol, JWA : JSONWebAlgorithm {
+        switch algorithm {
+        case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
+            return try JSONWebKeyAESGCM(self).open(data, authenticating: authenticating, using: algorithm)
+        case .aesEncryptionCBC128SHA256, .aesEncryptionCBC192SHA384, .aesEncryptionCBC256SHA512:
+            return try JSONWebKeyAESCBCHMAC(self).open(data, authenticating: authenticating, using: algorithm)
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }

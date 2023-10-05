@@ -59,6 +59,10 @@ extension AnyJSONWebKey {
             } else {
                 throw JSONWebKeyError.unknownKeyType
             }
+        case (.symmetric, .aesEncryptionCBC128SHA256),
+             (.symmetric, .aesEncryptionCBC192SHA384),
+             (.symmetric, .aesEncryptionCBC256SHA512):
+            return try JSONWebKeyAESCBCHMAC.create(storage: storage)
         case (.symmetric, .hmacSHA256):
             return try JSONWebKeyHMAC<SHA256>.create(storage: storage)
         case (.symmetric, .hmacSHA384):
@@ -115,6 +119,12 @@ extension [any JSONWebDecryptingKey] {
 }
 
 extension [any JSONWebEncryptingKey] {
+    func bestMatch(for algorithm: any JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
+        (self as [any JSONWebKey]).bestMatch(for: algorithm, id: id) as? Self.Element
+    }
+}
+
+extension [any JSONWebSealingKey] {
     func bestMatch(for algorithm: any JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
         (self as [any JSONWebKey]).bestMatch(for: algorithm, id: id) as? Self.Element
     }

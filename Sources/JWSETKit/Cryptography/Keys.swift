@@ -86,10 +86,10 @@ public protocol JSONWebEncryptingKey: JSONWebKey {
     /// Encrypts plain-text data using current key.
     ///
     /// - Parameters:
-    ///   - data: Plain-text to be ecnrypted.
+    ///   - data: Plain-text to be encrypted.
     ///   - algorithm: Algorithm of encryption.
     /// - Returns: Cipher-text data.
-    func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm
+    func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm
 }
 
 /// A JSON Web Key (JWK) able to decrypt cipher-texts.
@@ -99,7 +99,7 @@ public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
     /// Public key.
     var publicKey: PublicKey { get }
     
-    /// Encrypts ciphered data using current key.
+    /// Decrypts ciphered data using current key.
     ///
     /// - Parameters:
     ///   - data: Cipher-text that ought to be decrypted.
@@ -109,8 +109,86 @@ public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
 }
 
 extension JSONWebDecryptingKey {
-    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
+    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         try publicKey.encrypt(data, using: algorithm)
+    }
+}
+
+/// A JSON Web Key (JWK) able to encrypt/decrypt plain-texts with authentication-tag.
+public protocol JSONWebSealingKey: JSONWebKey {
+    /// Encrypts plain-text data using current key.
+    ///
+    /// - Parameters:
+    ///   - data: Plain-text to be sealed.
+    ///   - iv: Initial vector/Nouce.
+    ///   - authenticating: Additional data to be authenticated.
+    ///   - algorithm: Algorithm of encryption.
+    /// - Returns: Cipher-text data with IV and authentication tag.
+    func seal<D, IV, AAD, JWA>(
+        _ data: D, iv: IV?,
+        authenticating: AAD?,
+        using algorithm: JWA
+    ) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm
+    
+    /// Decrypts cipher-text data using current key.
+    ///
+    /// - Parameters:
+    ///   - data: Plain-text to be decrypted.
+    ///   - authenticating: Additional data to be authenticated.
+    ///   - algorithm: Algorithm of encryption.
+    /// - Returns: Cipher-text data with IV and authentication tag.
+    func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using algorithm: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm
+}
+
+extension JSONWebSealingKey {
+    /// Encrypts plain-text data using current key.
+    ///
+    /// - Parameters:
+    ///   - data: Plain-text to be sealed.
+    ///   - algorithm: Algorithm of encryption.
+    /// - Returns: Cipher-text data with IV and authentication tag.
+    func seal<D, JWA>(
+        _ data: D, using algorithm: JWA
+    ) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
+        try seal(data, iv: Data?.none, authenticating: Data?.none, using: algorithm)
+    }
+    
+    /// Encrypts plain-text data using current key.
+    ///
+    /// - Parameters:
+    ///   - data: Plain-text to be sealed.
+    ///   - iv: Initial vector/Nouce.
+    ///   - algorithm: Algorithm of encryption.
+    /// - Returns: Cipher-text data with IV and authentication tag.
+    func seal<D, IV, JWA>(
+        _ data: D, iv: IV,
+        using algorithm: JWA
+    ) throws -> SealedData where D: DataProtocol, IV: DataProtocol, JWA: JSONWebAlgorithm {
+        try seal(data, iv: iv, authenticating: Data?.none, using: algorithm)
+    }
+    
+    /// Encrypts plain-text data using current key.
+    ///
+    /// - Parameters:
+    ///   - data: Plain-text to be sealed.
+    ///   - authenticating: Additional data to be authenticated.
+    ///   - algorithm: Algorithm of encryption.
+    /// - Returns: Cipher-text data with IV and authentication tag.
+    func seal<D, AAD, JWA>(
+        _ data: D, authenticating: AAD,
+        using algorithm: JWA
+    ) throws -> SealedData where D: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
+        try seal(data, iv: Data?.none, authenticating: authenticating, using: algorithm)
+    }
+    
+    /// Decrypts cipher-text data using current key.
+    ///
+    /// - Parameters:
+    ///   - data: Plain-text to be decrypted.
+    ///   - algorithm: Algorithm of encryption.
+    /// - Returns: Cipher-text data with IV and authentication tag.
+    func open< JWA>(_ data: SealedData, using algorithm: JWA) throws -> Data where JWA: JSONWebAlgorithm {
+        try open(data, authenticating: Data?.none, using: algorithm)
     }
 }
 

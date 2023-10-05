@@ -12,19 +12,19 @@ import CryptoKit
 import Crypto
 #endif
 
-/// A container for AES ciphers, e.g. AES, RSA, etc.
+/// A container for AES ciphers, e.g. AES-GCM, AES-CBC-HMAC, etc.
 public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Sendable {
     /// The nonce used to encrypt the data.
-    public let iv: Data?
+    public let iv: Data
     
     /// The encrypted data.
     public let ciphertext: Data
     
     /// An authentication tag.
-    public let tag: Data?
+    public let tag: Data
     
     public var regions: [Data] {
-        [iv, ciphertext, tag].compactMap { $0 }
+        [iv, ciphertext, tag].map { $0 }
     }
     
     /// A combined element composed of the nonce, encrypted data, and authentication tag.
@@ -37,16 +37,16 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     }
     
     public var endIndex: Int {
-        (iv?.count ?? 0) + ciphertext.count + (tag?.count ?? 0)
+        iv.count + ciphertext.count + tag.count
     }
     
     public subscript(position: Int) -> UInt8 {
-        if position < (iv?.count ?? 0) {
-            return iv?[position] ?? 0
-        } else if position < (iv?.count ?? 0) + ciphertext.count {
-            return ciphertext[position - (iv?.count ?? 0)]
+        if position < iv.count {
+            return iv[position]
+        } else if position < iv.count + ciphertext.count {
+            return ciphertext[position - iv.count ]
         } else {
-            return tag?[position] ?? 0
+            return tag[position]
         }
     }
     
@@ -60,7 +60,7 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     ///   - iv: The nonce.
     ///   - ciphertext: The encrypted data.
     ///   - tag: The authentication tag.
-    public init(iv: Data? = nil, ciphertext: Data, tag: Data? = nil) {
+    public init(iv: Data, ciphertext: Data, tag: Data) {
         self.iv = iv
         self.ciphertext = ciphertext
         self.tag = tag
@@ -77,7 +77,7 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     }
     
     public static func == (lhs: SealedData, rhs: SealedData) -> Bool {
-        lhs.iv ?? .init() == rhs.iv ?? .init() && lhs.ciphertext == rhs.ciphertext && lhs.tag ?? .init() == rhs.tag ?? .init()
+        lhs.iv == rhs.iv && lhs.ciphertext == rhs.ciphertext && lhs.tag == rhs.tag
     }
 }
 
@@ -88,9 +88,9 @@ extension AES.GCM.SealedBox {
     ///   - sealedBox: Container for your data.
     public init(_ sealedData: SealedData) throws {
         self = try .init(
-            nonce: .init(data: sealedData.iv ?? .init()),
+            nonce: .init(data: sealedData.iv),
             ciphertext: sealedData.ciphertext,
-            tag: sealedData.tag ?? .init()
+            tag: sealedData.tag
         )
     }
 }

@@ -59,13 +59,6 @@ For detailed usage and API documentation, check [the documentation][docs].
 | Support [CommonCrypto] Keys    | ✅ | ❌ | ❌ | ❌ |
 | Support [CryptoKit] Keys       | ✅ | ❌ | ❌ | ❌ |
 
-## To Do List
-
-It's appreciated to contribute to this library to make it better.
-
-- [ ] JWE structure and encryption
-
-
 [RFC7159]: https://www.rfc-editor.org/rfc/rfc7159
 [docs]: https://amosavian.github.io/JWSETKit/documentation/jwsetkit/
 [jwt-kit]: https://github.com/vapor/jwt-kit

@@ -111,8 +111,8 @@ extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
         return try .init(derRepresentation: der)
     }
     
-    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
-        try .init(ciphertext: encrypt(data, padding: algorithm.rsaEncryptionPadding))
+    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
+        try encrypt(data, padding: algorithm.rsaEncryptionPadding)
     }
     
     public static func == (lhs: _RSA.Encryption.PublicKey, rhs: _RSA.Encryption.PublicKey) -> Bool {

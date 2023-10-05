@@ -279,7 +279,7 @@ extension SecKey: JSONWebDecryptingKey {
         } as Data
     }
     
-    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
+    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         guard let secAlgorithm = Self.encAlgorithms[.init(algorithm.rawValue)] else {
             throw JSONWebKeyError.operationNotAllowed
         }
@@ -287,7 +287,7 @@ extension SecKey: JSONWebDecryptingKey {
         let result = try handle { error in
             SecKeyCreateEncryptedData(self, secAlgorithm, Data(data) as CFData, &error)
         }
-        return .init(ciphertext: result as Data)
+        return result as Data
     }
 }
 

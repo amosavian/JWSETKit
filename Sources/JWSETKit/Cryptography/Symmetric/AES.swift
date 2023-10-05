@@ -13,7 +13,7 @@ import Crypto
 #endif
 
 /// JSON Web Key (JWK) container for AES-GCM keys for encryption/decryption.
-public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebDecryptingKey, Sendable {
+public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, Sendable {
     public typealias PublicKey = Self
     
     public var publicKey: JSONWebKeyAESGCM { self }
@@ -60,17 +60,20 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebDecryptingKey, Sendabl
         self.keyValue = key
     }
     
-    public func decrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        switch data {
-        case let data as SealedData:
-            return try AES.GCM.open(.init(data), using: symmetricKey)
-        default:
-            return try AES.GCM.open(.init(combined: data), using: symmetricKey)
+    public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using algorithm: JWA) throws -> SealedData where D : DataProtocol, IV : DataProtocol, AAD : DataProtocol, JWA : JSONWebAlgorithm {
+        if let authenticating {
+            return try .init(AES.GCM.seal(data, using: symmetricKey, nonce: iv.map(AES.GCM.Nonce.init(data:)), authenticating: authenticating))
+        } else {
+            return try .init(AES.GCM.seal(data, using: symmetricKey, nonce: iv.map(AES.GCM.Nonce.init(data:))))
         }
     }
     
-    public func encrypt<D, JWA>(_ data: D, using _: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
-        try .init(AES.GCM.seal(data, using: symmetricKey))
+    public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using algorithm: JWA) throws -> Data where AAD : DataProtocol, JWA : JSONWebAlgorithm {
+        if let authenticating {
+            return try AES.GCM.open(.init(data), using: symmetricKey, authenticating: authenticating)
+        } else {
+            return try AES.GCM.open(.init(data), using: symmetricKey)
+        }
     }
 }
 
@@ -127,7 +130,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebDecryptingKey, Sendable
         try unwrap(data).withUnsafeBytes { Data($0) }
     }
     
-    public func encrypt<D, JWA>(_ data: D, using _: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
+    public func encrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         try wrap(.init(data: Data(data)))
     }
     
@@ -135,7 +138,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebDecryptingKey, Sendable
         try AES.KeyWrap.unwrap(data, using: symmetricKey)
     }
     
-    public func wrap(_ key: SymmetricKey) throws -> SealedData {
-        try .init(ciphertext: AES.KeyWrap.wrap(key, using: symmetricKey))
+    public func wrap(_ key: SymmetricKey) throws -> Data {
+        try AES.KeyWrap.wrap(key, using: symmetricKey)
     }
 }
