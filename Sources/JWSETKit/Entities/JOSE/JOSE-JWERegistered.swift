@@ -29,7 +29,7 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
     /// The "enc" value is a case-sensitive ASCII string containing a `StringOrURI` value.
     ///
     /// This Header Parameter MUST be present and MUST be understood and processed by implementations.
-    public var encryptionAlgorithm: JSONWebAlgorithm?
+    public var encryptionAlgorithm: JSONWebContentEncryptionAlgorithm?
     
     /// The "zip" (compression algorithm) applied to the plaintext before encryption, if any.
     ///
@@ -47,16 +47,6 @@ extension JOSEHeader {
     public subscript<T>(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
-        }
-    }
-    
-    @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, JSONWebAlgorithm>) -> JSONWebAlgorithm {
-        get {
-            storage[stringKey(keyPath)] ?? .none
         }
         set {
             storage[stringKey(keyPath)] = newValue

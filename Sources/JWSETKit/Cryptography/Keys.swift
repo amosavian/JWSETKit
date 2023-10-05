@@ -89,7 +89,7 @@ public protocol JSONWebEncryptingKey: JSONWebKey {
     ///   - data: Plain-text to be ecnrypted.
     ///   - algorithm: Algorithm of encryption.
     /// - Returns: Cipher-text data.
-    func encrypt<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData
+    func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm
 }
 
 /// A JSON Web Key (JWK) able to decrypt cipher-texts.
@@ -105,11 +105,11 @@ public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
     ///   - data: Cipher-text that ought to be decrypted.
     ///   - algorithm: Algorithm of encryption.
     /// - Returns: Plain-text data
-    func decrypt<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
+    func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm
 }
 
 extension JSONWebDecryptingKey {
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
+    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
         try publicKey.encrypt(data, using: algorithm)
     }
 }
@@ -122,7 +122,7 @@ public protocol JSONWebValidatingKey: JSONWebKey {
     ///   - signature: The signature that must be validated.
     ///   - data: The data that was signed.
     ///   - algorithm: The algorithm that was used to create the signature.
-    func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol
+    func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol
 }
 
 /// A JSON Web Key (JWK) able to generate a signature.
@@ -138,11 +138,11 @@ public protocol JSONWebSigningKey: JSONWebValidatingKey {
     ///   - data: The data whose signature you want.
     ///   - algorithm: The signing algorithm to use.
     /// - Returns: The digital signature or throws error on failure.
-    func signature<D: DataProtocol>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data
+    func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol
 }
 
 extension JSONWebSigningKey {
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
 }

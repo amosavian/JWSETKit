@@ -36,7 +36,7 @@ public struct JOSEHeader: JSONWebContainer {
     ///   - algorithm: Contains JWA to deremine signing/encryption algorithm.
     ///   - type: Payload type, usually `"JWT"` for JSON Web Token.
     ///   - keyId: Key ID that generated signature.
-    public init(algorithm: JSONWebAlgorithm, type: JSONWebContentType, keyId: String? = nil) {
+    public init(algorithm: any JSONWebAlgorithm, type: JSONWebContentType, keyId: String? = nil) {
         self.storage = .init()
         self.algorithm = algorithm
         self.type = type

@@ -24,7 +24,7 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Senda
         .init(storage: storage)
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         // swiftformat:disable:next redundantSelf
         switch (self.keyType ?? .empty, self.curve ?? .empty) {
         case (JSONWebKeyType.elipticCurve, .p256):
@@ -63,7 +63,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
         .init(storage: storage)
     }
     
-    public func signature<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         // swiftformat:disable:next redundantSelf
         switch (self.keyType ?? .empty, self.curve ?? .empty) {
         case (JSONWebKeyType.elipticCurve, .p256):
@@ -83,7 +83,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
         }
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         // swiftformat:disable:next redundantSelf
         switch (self.keyType ?? .empty, self.curve ?? .empty) {
         case (JSONWebKeyType.elipticCurve, .p256):

@@ -18,7 +18,7 @@ extension SecCertificate: JSONWebValidatingKey {
         return key.storage
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
     
@@ -53,8 +53,21 @@ extension SecTrust: JSONWebValidatingKey {
         return key.storage
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try certificateChain.first?.verifySignature(signature, for: data, using: algorithm)
+    /// Certificate chain
+    public var certificateChain: [SecCertificate] {
+        get throws {
+            if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
+                return (SecTrustCopyCertificateChain(self) as? [SecCertificate]) ?? []
+            } else {
+                let count = SecTrustGetCertificateCount(self)
+                guard count > 0 else {
+                    throw JSONWebKeyError.keyNotFound
+                }
+                return (0 ..< count).compactMap {
+                    SecTrustGetCertificateAtIndex(self, $0)
+                }
+            }
+        }
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
@@ -68,21 +81,12 @@ extension SecTrust: JSONWebValidatingKey {
         return result.unsafelyUnwrapped as! Self
     }
     
-    /// Certificate chain
-    public var certificateChain: [SecCertificate] {
-        get throws {
-            let count = SecTrustGetCertificateCount(self)
-            guard count > 0 else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            return (0..<count).compactMap {
-                SecTrustGetCertificateAtIndex(self, $0)
-            }
-        }
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try certificateChain.first?.verifySignature(signature, for: data, using: algorithm)
     }
 }
 
-extension SecTrust : Expirable {
+extension SecTrust: Expirable {
     public func verifyDate(_ currentDate: Date) throws {
         try certificateChain.forEach { try $0.verifyDate(currentDate) }
     }

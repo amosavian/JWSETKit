@@ -62,7 +62,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// The "alg" value is a case-sensitive ASCII string.
     ///
     /// Use of this member is OPTIONAL.
-    public var algorithm: JSONWebAlgorithm
+    public var algorithm: any JSONWebAlgorithm
     
     /// The "`kid`" (key ID) parameter is used to match a specific key.
     ///
@@ -177,18 +177,23 @@ extension JSONWebKey {
         }
         return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
+    
+    @_documentation(visibility: private)
     public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
         storage[stringKey(keyPath)]
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [String]>) -> [String] {
         storage[stringKey(keyPath)]
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, JSONWebAlgorithm>) -> JSONWebAlgorithm {
-        storage[stringKey(keyPath)] ?? .none
+    @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, any JSONWebAlgorithm>) -> any JSONWebAlgorithm {
+        storage[stringKey(keyPath)].map(AnyJSONWebAlgorithm.specialized) ?? .none
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [Certificate]>) -> [Certificate] {
         storage[stringKey(keyPath), false]
             .compactMap {
@@ -196,10 +201,12 @@ extension JSONWebKey {
             }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, SymmetricKey?>) -> SymmetricKey? {
         (storage[stringKey(keyPath), true] as Data?).map(SymmetricKey.init(data:))
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, Data?>) -> Data? {
         switch keyPath {
         case \.certificateThumprint where storage.contains(key: "x5t#S256"):
@@ -211,6 +218,7 @@ extension JSONWebKey {
 }
 
 extension MutableJSONWebKey {
+    @_documentation(visibility: private)
     public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -220,6 +228,7 @@ extension MutableJSONWebKey {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [String]>) -> [String] {
         get {
             storage[stringKey(keyPath)]
@@ -229,15 +238,17 @@ extension MutableJSONWebKey {
         }
     }
     
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, JSONWebAlgorithm>) -> JSONWebAlgorithm {
+    @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, any JSONWebAlgorithm>) -> any JSONWebAlgorithm {
         get {
-            storage[stringKey(keyPath)] ?? .none
+            storage[stringKey(keyPath)].map(AnyJSONWebAlgorithm.specialized) ?? .none
         }
         set {
-            storage[stringKey(keyPath)] = newValue
+            storage[stringKey(keyPath)] = newValue.rawValue
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [Certificate]>) -> [Certificate] {
         get {
             storage[stringKey(keyPath), false]
@@ -252,6 +263,7 @@ extension MutableJSONWebKey {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, SymmetricKey?>) -> SymmetricKey? {
         get {
             (storage[stringKey(keyPath), true] as Data?).map(SymmetricKey.init(data:))
@@ -261,6 +273,7 @@ extension MutableJSONWebKey {
         }
     }
     
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, Data?>) -> Data? {
         get {
             switch keyPath {

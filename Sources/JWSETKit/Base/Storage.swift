@@ -192,6 +192,10 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         case is (any JSONWebKey).Protocol:
             guard let data = try? JSONEncoder().encode(AnyCodable(value)) else { return nil }
             return try? AnyJSONWebKey.deserialize(data) as? T
+        case is (any JSONWebAlgorithm).Protocol:
+            guard let data = try? JSONEncoder().encode(AnyCodable(value)) else { return nil }
+            guard let string = try? JSONDecoder().decode(String.self, from: data) else { return nil }
+            return AnyJSONWebAlgorithm.specialized(string) as? T
         case let type as any Decodable.Type:
             if let value = value as? T {
                 return value

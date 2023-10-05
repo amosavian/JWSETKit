@@ -129,7 +129,7 @@ extension JSONWebSignature: Codable {
             try container.encode("..")
             return
         }
-        let plainPayload = signatures[0].protected.value.storage.contains(key: "b64") && signatures[0].protected.value.b64 == false
+        let plainPayload = signatures[0].protected.value.base64 == false
         let value = [
             signature.protected.encoded.urlBase64EncodedData(),
             plainPayload ? payload.encoded : payload.encoded.urlBase64EncodedData(),
@@ -175,7 +175,7 @@ extension JSONWebSignature: Codable {
         case 0:
             return .compact
         case 1 where signatures[0].unprotected == nil:
-            if signatures[0].protected.value.storage.contains(key: "b64"), signatures[0].protected.value.b64 == false {
+            if signatures[0].protected.value.base64 == false {
                 return .compactDetached
             }
             return .compact

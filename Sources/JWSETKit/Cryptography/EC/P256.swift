@@ -17,7 +17,7 @@ extension P256.Signing.PublicKey: CryptoECPublicKey {
 }
 
 extension P256.Signing.PublicKey: JSONWebValidatingKey {
-    public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let signature = try P256.Signing.ECDSASignature(rawRepresentation: signature)
         var digest = SHA256()
         digest.update(data: data)
@@ -28,7 +28,7 @@ extension P256.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension P256.Signing.PrivateKey: CryptoECPrivateKey {
-    public func signature<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         var digest = SHA256()
         digest.update(data: data)
         return try signature(for: digest.finalize()).rawRepresentation
@@ -45,7 +45,7 @@ extension SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
         throw JSONWebKeyError.operationNotAllowed
     }
     
-    public func signature<D>(_ data: D, using _: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         var digest = SHA256()
         digest.update(data: data)
         return try signature(for: digest.finalize()).rawRepresentation

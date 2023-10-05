@@ -48,10 +48,10 @@ extension SymmetricKey: JSONWebKey {
 }
 
 extension SymmetricKey: JSONWebSigningKey {
-    public func signature<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         var algorithm = algorithm
         if algorithm == .none {
-            algorithm = self.algorithm
+            algorithm = .init(self.algorithm.rawValue)
         }
         switch algorithm {
         case .hmacSHA256:
@@ -65,10 +65,10 @@ extension SymmetricKey: JSONWebSigningKey {
         }
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         var algorithm = algorithm
         if algorithm == .none {
-            algorithm = self.algorithm
+            algorithm = .init(self.algorithm.rawValue)
         }
         switch algorithm {
         case .hmacSHA256:
@@ -93,7 +93,7 @@ extension SymmetricKey: JSONWebDecryptingKey {
         }
     }
     
-    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try aesGCMDecrypt(data)
@@ -108,7 +108,7 @@ extension SymmetricKey: JSONWebDecryptingKey {
         }
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
+    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try .init(AES.GCM.seal(data, using: self))

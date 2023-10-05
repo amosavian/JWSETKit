@@ -221,7 +221,7 @@ extension SecKey: JSONWebKey {
 }
 
 extension SecKey: JSONWebValidatingKey {
-    fileprivate static let signingAlgorithms: [JSONWebAlgorithm: SecKeyAlgorithm] = [
+    fileprivate static let signingAlgorithms: [JSONWebSignatureAlgorithm: SecKeyAlgorithm] = [
         .ecdsaSignatureP256SHA256: .ecdsaSignatureMessageX962SHA256,
         .ecdsaSignatureP384SHA384: .ecdsaSignatureMessageX962SHA384,
         .ecdsaSignatureP521SHA512: .ecdsaSignatureMessageX962SHA512,
@@ -233,7 +233,7 @@ extension SecKey: JSONWebValidatingKey {
         .rsaSignaturePSSSHA512: .rsaSignatureMessagePSSSHA512,
     ]
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
@@ -251,7 +251,7 @@ extension SecKey: JSONWebValidatingKey {
 }
 
 extension SecKey: JSONWebSigningKey {
-    public func signature<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
             throw JSONWebKeyError.operationNotAllowed
         }
@@ -262,16 +262,16 @@ extension SecKey: JSONWebSigningKey {
 }
 
 extension SecKey: JSONWebDecryptingKey {
-    fileprivate static let encAlgorithms: [JSONWebAlgorithm: SecKeyAlgorithm] = [
+    fileprivate static let encAlgorithms: [JSONWebKeyEncryptionAlgorithm: SecKeyAlgorithm] = [
         .rsaEncryptionPKCS1: .rsaEncryptionPKCS1,
-        .rsaEncryptionOAEP: .rsaEncryptionOAEPSHA1,
+        .rsaEncryptionOAEP: .rsaEncryptionOAEPSHA256,
         .rsaEncryptionOAEPSHA256: .rsaEncryptionOAEPSHA256,
         .rsaEncryptionOAEPSHA384: .rsaEncryptionOAEPSHA384,
         .rsaEncryptionOAEPSHA512: .rsaEncryptionOAEPSHA512,
     ]
     
-    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
-        guard let secAlgorithm = Self.encAlgorithms[algorithm] else {
+    public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
+        guard let secAlgorithm = Self.encAlgorithms[.init(algorithm.rawValue)] else {
             throw JSONWebKeyError.operationNotAllowed
         }
         return try handle { error in
@@ -279,8 +279,8 @@ extension SecKey: JSONWebDecryptingKey {
         } as Data
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
-        guard let secAlgorithm = Self.encAlgorithms[algorithm] else {
+    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
+        guard let secAlgorithm = Self.encAlgorithms[.init(algorithm.rawValue)] else {
             throw JSONWebKeyError.operationNotAllowed
         }
         

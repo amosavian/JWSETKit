@@ -67,7 +67,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     public mutating func updateSignature(using keys: [any JSONWebSigningKey]) throws {
         signatures = try signatures.map { header in
             let message = header.signedData(payload)
-            let algorithm = header.protected.value.algorithm
+            let algorithm = JSONWebSignatureAlgorithm(header.protected.value.algorithm.rawValue)
             let keyId: String? = header.protected.value.keyId ?? header.unprotected?.keyId
             let signature: Data
             if algorithm == .none {
@@ -116,7 +116,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
         }
         try signatures.forEach { header in
             let message = header.signedData(payload)
-            let algorithm = header.protected.value.algorithm
+            let algorithm = JSONWebSignatureAlgorithm(header.protected.value.algorithm.rawValue)
             let keyId: String? = header.protected.value.keyId ?? header.unprotected?.keyId
             if algorithm == .none {
                 // If we allow "none" algorithm in verification, a malicious user may simply

@@ -26,18 +26,18 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
         self.storage = storage
     }
     
-    public init(derRepresentaion: Data) throws {
+    public init(derRepresentation: Data) throws {
 #if canImport(CommonCrypto)
         let key: SecKey = try handle { error in
             let attributes = [
                 kSecAttrKeyType: kSecAttrKeyTypeRSA,
                 kSecAttrKeyClass: kSecAttrKeyClassPublic,
             ] as CFDictionary
-            return SecKeyCreateWithData(derRepresentaion as CFData, attributes, &error)
+            return SecKeyCreateWithData(derRepresentation as CFData, attributes, &error)
         }
         self.storage = key.storage
 #else
-        self.storage = try _RSA.Signing.PublicKey(derRepresentaion: derRepresentaion).storage
+        self.storage = try _RSA.Signing.PublicKey(derRepresentation: derRepresentation).storage
 #endif
     }
     
@@ -45,19 +45,19 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
         .init(storage: storage)
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
 #if canImport(CommonCrypto)
         try SecKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
 #else
-        try _RSA.Signing.PublicKey(jsonWebKey: storage).verifySignature(signature, for: data, using: algorithm)
+        try _RSA.Signing.PublicKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
 #endif
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
+    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
 #if canImport(CommonCrypto)
         try SecKey.create(storage: storage).encrypt(data, using: algorithm)
 #else
-        try _RSA.Encryption.PublicKey(jsonWebKey: storage).encrypt(data, using: algorithm)
+        try _RSA.Encryption.PublicKey.create(storage: storage).encrypt(data, using: algorithm)
 #endif
     }
     
@@ -123,18 +123,18 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
         self.storage = storage
     }
     
-    public init(derRepresentaion: Data) throws {
+    public init(derRepresentation: Data) throws {
 #if canImport(CommonCrypto)
         let key: SecKey = try handle { error in
             let attributes = [
                 kSecAttrKeyType: kSecAttrKeyTypeRSA,
                 kSecAttrKeyClass: kSecAttrKeyClassPrivate,
             ] as CFDictionary
-            return SecKeyCreateWithData(derRepresentaion as CFData, attributes, &error)
+            return SecKeyCreateWithData(derRepresentation as CFData, attributes, &error)
         }
         self.storage = key.storage
 #else
-        self.storage = try _RSA.Signing.PrivateKey(derRepresentaion: derRepresentaion).storage
+        self.storage = try _RSA.Signing.PrivateKey(derRepresentation: derRepresentation).storage
 #endif
     }
     
@@ -142,19 +142,19 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
         .init(storage: storage)
     }
     
-    public func signature<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
 #if canImport(CommonCrypto)
         return try SecKey.create(storage: storage).signature(data, using: algorithm)
 #else
-        try _RSA.Signing.PrivateKey(jsonWebKey: storage).signature(data, using: algorithm)
+        try _RSA.Signing.PrivateKey.create(storage: storage).signature(data, using: algorithm)
 #endif
     }
     
-    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
 #if canImport(CommonCrypto)
         try SecKey.create(storage: storage).decrypt(data, using: algorithm)
 #else
-        try _RSA.Encryption.PublicKey(jsonWebKey: storage).decrypt(data, using: algorithm)
+        try _RSA.Encryption.PrivateKey.create(storage: storage).decrypt(data, using: algorithm)
 #endif
     }
 }

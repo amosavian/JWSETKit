@@ -11,7 +11,7 @@ import XCTest
 final class JOSEHeaderJWETests: XCTestCase {
     let testClaims = """
     {
-       "enc":"RS256",
+       "enc":"A128GCM",
        "zip":"DEF"
     }
     """
@@ -19,14 +19,14 @@ final class JOSEHeaderJWETests: XCTestCase {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JOSEHeader.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims.encryptionAlgorithm, .rsaSignaturePKCS1v15SHA256)
+        XCTAssertEqual(claims.encryptionAlgorithm, .aesEncryptionGCM128)
         XCTAssertEqual(claims.compressionAlgorithm, .deflate)
     }
     
     func testDecodeParams() throws {
         var claims = JOSEHeader(storage: .init())
         
-        claims.encryptionAlgorithm = .rsaSignaturePKCS1v15SHA256
+        claims.encryptionAlgorithm = .aesEncryptionGCM128
         claims.compressionAlgorithm = .deflate
         let decoder = JSONDecoder()
         let decodedClaims = try decoder.decode(JOSEHeader.self, from: .init(testClaims.utf8))

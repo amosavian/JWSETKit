@@ -29,7 +29,7 @@ extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
         return try .init(derRepresentation: der)
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         var hashFunction = try algorithm.rsaHashFunction.init()
         hashFunction.update(data: data)
         if try !isValidSignature(.init(rawRepresentation: signature), for: hashFunction.finalize(), padding: algorithm.rsaPadding) {
@@ -74,7 +74,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
         return try .init(derRepresentation: der)
     }
     
-    public func signature<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         var hashFunction = try algorithm.rsaHashFunction.init()
         hashFunction.update(data: data)
         return try signature(for: hashFunction.finalize(), padding: algorithm.rsaPadding).rawRepresentation
@@ -111,7 +111,7 @@ extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
         return try .init(derRepresentation: der)
     }
     
-    public func encrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> SealedData where D: DataProtocol {
+    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> SealedData where D: DataProtocol, JWA: JSONWebAlgorithm {
         try .init(ciphertext: encrypt(data, padding: algorithm.rsaEncryptionPadding))
     }
     
@@ -152,7 +152,7 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
         return try .init(derRepresentation: der)
     }
 
-    public func decrypt<D>(_ data: D, using algorithm: JSONWebAlgorithm) throws -> Data where D: DataProtocol {
+    public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         try decrypt(data, padding: algorithm.rsaEncryptionPadding)
     }
     

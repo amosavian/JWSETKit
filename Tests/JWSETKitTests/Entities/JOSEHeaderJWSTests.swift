@@ -17,7 +17,7 @@ import Crypto
 final class JOSEHeaderJWSTests: XCTestCase {
     let testClaims = """
     {
-      "alg": "A128GCM",
+      "alg": "HS256",
       "jku": "http://example.com/janedoe",
       "jwk": {
         "kty":"EC",
@@ -55,7 +55,7 @@ final class JOSEHeaderJWSTests: XCTestCase {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JOSEHeader.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims.algorithm, .aesEncryptionGCM128)
+        XCTAssert(claims.algorithm == .hmacSHA256)
         XCTAssertEqual(claims.jsonWebKeySetUrl, URL(string: "http://example.com/janedoe"))
         XCTAssertEqual(claims.key?.storage, ecKey.storage)
         XCTAssertEqual(claims.keyId, "2011-04-29")
@@ -70,7 +70,7 @@ final class JOSEHeaderJWSTests: XCTestCase {
     func testDecodeParams() throws {
         var claims = JOSEHeader(storage: .init())
         
-        claims.algorithm = .aesEncryptionGCM128
+        claims.algorithm = .hmacSHA256
         claims.jsonWebKeySetUrl = URL(string: "http://example.com/janedoe")
         claims.key = ecKey
         claims.keyId = "2011-04-29"

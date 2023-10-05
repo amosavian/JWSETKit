@@ -40,43 +40,63 @@ extension String {
 
 extension Locale {
     private var languageIdentifier: String? {
+#if canImport(Darwin)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             return language.languageCode?.identifier
         } else {
             return languageCode
         }
+#else
+        return languageCode
+#endif
     }
     
     private var countryCode: String? {
+#if canImport(Darwin)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             return region?.identifier
         } else {
             return regionCode
         }
+#else
+        return regionCode
+#endif
     }
     
     private var writeScript: String? {
+#if canImport(Darwin)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             return language.script?.identifier
         } else {
             return scriptCode
         }
+#else
+        return scriptCode
+#endif
     }
     
     var bcp47: String {
+#if canImport(Darwin)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             return identifier(.bcp47)
         } else {
             return identifier.replacingOccurrences(of: "_", with: "-")
         }
+#else
+        return identifier.replacingOccurrences(of: "_", with: "-")
+#endif
     }
     
     init(bcp47: String) {
+#if canImport(Darwin)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             self.init(components: .init(identifier: bcp47))
         } else {
             self.init(identifier: bcp47.replacingOccurrences(of: "-", with: "_"))
         }
+#else
+        self.init(identifier: bcp47.replacingOccurrences(of: "-", with: "_"))
+#endif
     }
     
     func bestMatch(in locales: [Locale]) -> Locale? {

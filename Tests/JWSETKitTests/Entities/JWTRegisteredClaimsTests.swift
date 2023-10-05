@@ -8,6 +8,12 @@
 import XCTest
 @testable import JWSETKit
 
+extension JSONWebContainerCustomParameters {
+    fileprivate var exp: Date? { fatalError() }
+    fileprivate var iat: Date? { fatalError() }
+    fileprivate var nbf: Int? { fatalError() }
+}
+
 final class JWTRegisteredClaimsTests: XCTestCase {
     let testClaims = """
     {
@@ -36,14 +42,14 @@ final class JWTRegisteredClaimsTests: XCTestCase {
         
         XCTAssertEqual(claims.expiry, Date(timeIntervalSince1970: 1_311_281_970))
         XCTAssertEqual(claims.exp, Date(timeIntervalSince1970: 1_311_281_970))
-        XCTAssertEqual(claims.exp, 1_311_281_970)
+        XCTAssertEqual(claims["exp"], 1_311_281_970)
         
         XCTAssertEqual(claims.issuedAt, Date(timeIntervalSince1970: 1_311_280_970))
         XCTAssertEqual(claims.iat, Date(timeIntervalSince1970: 1_311_280_970))
-        XCTAssertEqual(claims.iat, 1_311_280_970)
+        XCTAssertEqual(claims["iat"], 1_311_280_970)
         
         XCTAssertEqual(claims.notBefore, Date(timeIntervalSince1970: 1_311_280_970))
-        XCTAssertEqual(claims.nbf, Date(timeIntervalSince1970: 1_311_280_970))
+        XCTAssertEqual(claims["nbf"], Date(timeIntervalSince1970: 1_311_280_970))
         XCTAssertEqual(claims.nbf, 1_311_280_970)
         
         XCTAssertEqual(claims.jwtId, "88150e93-6dc8-4a7a-bb47-8b6052d62875")
@@ -63,7 +69,7 @@ final class JWTRegisteredClaimsTests: XCTestCase {
         let decoder = JSONDecoder()
         let decodedClaims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims.exp, 1_311_281_970)
+        XCTAssertEqual(claims["exp"], 1_311_281_970)
         XCTAssertEqual(claims, decodedClaims)
     }
 }

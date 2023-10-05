@@ -29,7 +29,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     /// The "`alg`" value is a case-sensitive ASCII string containing a `StringOrURI` value.
     ///
     /// This Header Parameter MUST be present and MUST be understood and processed by implementations.
-    public var algorithm: JSONWebAlgorithm
+    public var algorithm: any JSONWebAlgorithm
     
     /// The "`jku`" (JWK Set URL) Header Parameter is a URI  that
     /// refers to a resource for a set of JSON-encoded public keys,
@@ -154,11 +154,17 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     /// The value of the "`url`" header parameter MUST be a string representing the target URL.
     public var url: URL?
     
+    /// The "`b64`"  header parameter specifies the payload is encoded with `Base64URL` or not.
+    ///
+    /// The value is `true` if not present
+    public var base64: Bool?
+    
     public static let keys: [PartialKeyPath<Self>: String] = [
         \.algorithm: "alg", \.jsonWebKeySetUrl: "jku",
         \.key: "jwk", \.keyId: "kid", \.certificateChain: "x5c",
         \.certificateURL: "x5u", \.certificateThumprint: "x5t",
         \.type: "typ", \.contentType: "cty", \.critical: "crit",
+        \.base64: "b64",
     ]
 }
 
@@ -184,12 +190,12 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, JSONWebAlgorithm>) -> JSONWebAlgorithm {
+    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, any JSONWebAlgorithm>) -> any JSONWebAlgorithm {
         get {
-            storage[stringKey(keyPath)] ?? .none
+            storage[stringKey(keyPath)].map(AnyJSONWebAlgorithm.specialized) ?? .none
         }
         set {
-            storage[stringKey(keyPath)] = newValue
+            storage[stringKey(keyPath)] = newValue.rawValue
         }
     }
     

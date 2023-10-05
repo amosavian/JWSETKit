@@ -22,6 +22,9 @@ public protocol JSONWebContainer: Codable, Hashable, Sendable {
     func validate() throws
 }
 
+@_documentation(visibility: private)
+public struct JSONWebContainerCustomParameters {}
+
 extension JSONWebContainer {
     public init(from decoder: Decoder) throws {
         self = try Self(storage: .init())
@@ -46,13 +49,18 @@ extension JSONWebContainer {
         }
     }
     
+    private func stringKey<T>(_ keyPath: KeyPath<JSONWebContainerCustomParameters, T>) -> String {
+        String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
+    }
+    
     /// Returns value of given key.
-    public subscript<T>(dynamicMember member: String) -> T? {
+    @_documentation(visibility: private)
+    public subscript<T>(dynamicMember member: KeyPath<JSONWebContainerCustomParameters, T?>) -> T? {
         get {
-            storage[member.jsonWebKey]
+            storage[stringKey(member)]
         }
         set {
-            storage[member.jsonWebKey] = newValue
+            storage[stringKey(member)] = newValue
         }
     }
 }

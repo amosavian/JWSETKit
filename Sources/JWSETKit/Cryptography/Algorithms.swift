@@ -12,21 +12,26 @@ import CryptoKit
 import Crypto
 #endif
 
-/// JSON Web Signature and Encryption Algorithms
-public struct JSONWebAlgorithm: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
-    public let rawValue: String
+public protocol JSONWebAlgorithm: RawRepresentable<String>, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
+    var keyType: JSONWebKeyType? { get }
+    var curve: JSONWebKeyCurve? { get }
+    init<S: StringProtocol>(_ rawValue: S)
+}
+
+extension JSONWebAlgorithm {
+    public var curve: JSONWebKeyCurve? { nil }
     
     public init(rawValue: String) {
-        self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
+        self.init(rawValue.trimmingCharacters(in: .whitespacesAndNewlines))
     }
     
-    public init(stringLiteral value: StringLiteralType) {
-        self.rawValue = value.trimmingCharacters(in: .whitespaces)
+    public init(stringLiteral value: String) {
+        self.init(value)
     }
     
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self.rawValue = try container.decode(String.self)
+        try self.init(container.decode(String.self))
     }
     
     public func encode(to encoder: Encoder) throws {
@@ -35,102 +40,207 @@ public struct JSONWebAlgorithm: RawRepresentable, Hashable, Codable, Expressible
     }
 }
 
-// Signatures
+public func == <RHS: JSONWebAlgorithm>(lhs: any JSONWebAlgorithm, rhs: RHS) -> Bool {
+    lhs.rawValue == rhs.rawValue
+}
+
+public func == <RHS: JSONWebAlgorithm>(lhs: (any JSONWebAlgorithm)?, rhs: RHS) -> Bool {
+    lhs?.rawValue == rhs.rawValue
+}
+
+public func == <LHS: JSONWebAlgorithm>(lhs: LHS, rhs: any JSONWebAlgorithm) -> Bool {
+    lhs.rawValue == rhs.rawValue
+}
+
+public func == <LHS: JSONWebAlgorithm>(lhs: LHS, rhs: (any JSONWebAlgorithm)?) -> Bool {
+    lhs.rawValue == rhs?.rawValue
+}
+
+public func == <LHS: JSONWebAlgorithm, RHS: JSONWebAlgorithm>(lhs: LHS, rhs: RHS) -> Bool {
+    lhs.rawValue == rhs.rawValue
+}
+
+public func ~= <JWA: JSONWebAlgorithm>(lhs: JWA, rhs: JWA) -> Bool {
+    lhs.rawValue == rhs.rawValue
+}
+
+public func ~= <LHS: JSONWebAlgorithm, RHS: JSONWebAlgorithm>(lhs: LHS, rhs: RHS) -> Bool {
+    lhs.rawValue == rhs.rawValue
+}
+
 extension JSONWebAlgorithm {
+    static func specialized(_ rawValue: String) -> any JSONWebAlgorithm {
+        if JSONWebSignatureAlgorithm(rawValue: rawValue).keyType != nil {
+            return JSONWebSignatureAlgorithm(rawValue: rawValue)
+        } else if JSONWebKeyEncryptionAlgorithm(rawValue: rawValue).keyType != nil {
+            return JSONWebKeyEncryptionAlgorithm(rawValue: rawValue)
+        } else if JSONWebContentEncryptionAlgorithm(rawValue: rawValue).keyType != nil {
+            return JSONWebContentEncryptionAlgorithm(rawValue: rawValue)
+        }
+        return AnyJSONWebAlgorithm(rawValue)
+    }
+}
+
+/// JSON Web Signature Algorithms
+public struct AnyJSONWebAlgorithm: JSONWebAlgorithm {
+    public let rawValue: String
+    
+    public var keyType: JSONWebKeyType? {
+        if JSONWebSignatureAlgorithm(rawValue: rawValue).keyType != nil {
+            return JSONWebSignatureAlgorithm(rawValue: rawValue).keyType
+        } else if JSONWebKeyEncryptionAlgorithm(rawValue: rawValue).keyType != nil {
+            return JSONWebKeyEncryptionAlgorithm(rawValue: rawValue).keyType
+        } else if JSONWebContentEncryptionAlgorithm(rawValue: rawValue).keyType != nil {
+            return JSONWebContentEncryptionAlgorithm(rawValue: rawValue).keyType
+        }
+        return nil
+    }
+    
+    public var curve: JSONWebKeyCurve? {
+        JSONWebSignatureAlgorithm(rawValue: rawValue).curve
+    }
+    
+    public init<S>(_ rawValue: S) where S: StringProtocol {
+        self.rawValue = String(rawValue)
+    }
+}
+
+/// JSON Web Signature Algorithms
+public struct JSONWebSignatureAlgorithm: JSONWebAlgorithm {
+    public let rawValue: String
+    
+    public init<S>(_ rawValue: S) where S: StringProtocol {
+        self.rawValue = String(rawValue)
+    }
+}
+
+// Signatures
+extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     /// **Signature**: No digital signature or MAC performed.
-    public static let none: Self = "none"
+    public static var none: Self { "none" }
     
     /// **Signature**: HMAC using SHA-256.
-    public static let hmacSHA256: Self = "HS256"
+    public static var hmacSHA256: Self { "HS256" }
     
     /// **Signature**: HMAC using SHA-384.
-    public static let hmacSHA384: Self = "HS384"
+    public static var hmacSHA384: Self { "HS384" }
     
     /// **Signature**: HMAC using SHA-512.
-    public static let hmacSHA512: Self = "HS512"
+    public static var hmacSHA512: Self { "HS512" }
     
     static func hmac(bitCount: Int) -> Self {
         .init(rawValue: "HS\(bitCount)")
     }
     
     /// **Signature**: RSASSA-PKCS1-v1.5 using SHA-256.
-    public static let rsaSignaturePKCS1v15SHA256: Self = "RS256"
+    public static var rsaSignaturePKCS1v15SHA256: Self { "RS256" }
     
     /// **Signature**: RSASSA-PKCS1-v1.5 using SHA-384.
-    public static let rsaSignaturePKCS1v15SHA384: Self = "RS384"
+    public static var rsaSignaturePKCS1v15SHA384: Self { "RS384" }
     
     /// **Signature**: RSASSA-PKCS1-v1.5 using SHA-512 .
-    public static let rsaSignaturePKCS1v15SHA512: Self = "RS512"
+    public static var rsaSignaturePKCS1v15SHA512: Self { "RS512" }
     
     /// **Signature**: RSASSA-PSS using SHA-256 and MGF1 with SHA-256.
-    public static let rsaSignaturePSSSHA256: Self = "PS256"
+    public static var rsaSignaturePSSSHA256: Self { "PS256" }
     
     /// **Signature**: RSASSA-PSS using SHA-384 and MGF1 with SHA-384.
-    public static let rsaSignaturePSSSHA384: Self = "PS384"
+    public static var rsaSignaturePSSSHA384: Self { "PS384" }
     
     /// **Signature**: RSASSA-PSS using SHA-512 and MGF1 with SHA-512.
-    public static let rsaSignaturePSSSHA512: Self = "PS512"
+    public static var rsaSignaturePSSSHA512: Self { "PS512" }
     
     /// **Signature**: ECDSA using P-256 and SHA-256.
-    public static let ecdsaSignatureP256SHA256: Self = "ES256"
+    public static var ecdsaSignatureP256SHA256: Self { "ES256" }
     
     /// **Signature**: EdDSA signature algorithms
-    public static let eddsaSignature: Self = "EdDSA"
+    public static var eddsaSignature: Self { "EdDSA" }
     
     /// **Signature**: ECDSA using P-384 and SHA-384.
-    public static let ecdsaSignatureP384SHA384: Self = "ES384"
+    public static var ecdsaSignatureP384SHA384: Self { "ES384" }
     
     /// **Signature**: ECDSA using P-521 and SHA-512.
-    public static let ecdsaSignatureP521SHA512: Self = "ES512"
+    public static var ecdsaSignatureP521SHA512: Self { "ES512" }
+}
+
+/// JSON Web Key Encryption Algorithms
+public struct JSONWebKeyEncryptionAlgorithm: JSONWebAlgorithm {
+    public let rawValue: String
+    
+    public init<S>(_ rawValue: S) where S: StringProtocol {
+        self.rawValue = String(rawValue)
+    }
 }
 
 // Key Management
-extension JSONWebAlgorithm {
+extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     /// **Key Management**: RSAES-PKCS1-v1.5
-    public static let rsaEncryptionPKCS1: Self = "RSA1_5"
+    public static var rsaEncryptionPKCS1: Self { "RSA1_5" }
     
     /// **Key Management**: RSAES OAEP using default parameters.
-    public static let rsaEncryptionOAEP: Self = "RSA-OAEP"
+    public static var rsaEncryptionOAEP: Self { "RSA-OAEP" }
     
     /// **Key Management**: RSAES OAEP using SHA-256 and MGF1 with SHA-256.
-    public static let rsaEncryptionOAEPSHA256: Self = "RSA-OAEP-256"
+    public static var rsaEncryptionOAEPSHA256: Self { "RSA-OAEP-256" }
     
     /// **Key Management**: RSA-OAEP using SHA-384 and MGF1 with SHA-384.
-    public static let rsaEncryptionOAEPSHA384: Self = "RSA-OAEP-384"
+    public static var rsaEncryptionOAEPSHA384: Self { "RSA-OAEP-384" }
     
     /// **Key Management**: RSA-OAEP using SHA-512 and MGF1 with SHA-512.
-    public static let rsaEncryptionOAEPSHA512: Self = "RSA-OAEP-512"
+    public static var rsaEncryptionOAEPSHA512: Self { "RSA-OAEP-512" }
     
     /// **Key Management**: AES Key-Wrap using 128-bit key.
-    public static let aesKeyWrap128: Self = "A128KW"
+    public static var aesKeyWrap128: Self { "A128KW" }
     
     /// **Key Management**: AES Key-Wrap using 192-bit key.
-    public static let aesKeyWrap192: Self = "A192KW"
+    public static var aesKeyWrap192: Self { "A192KW" }
     
     /// **Key Management**: AES Key-Wrap using 256-bit key.
-    public static let aesKeyWrap256: Self = "A256KW"
+    public static var aesKeyWrap256: Self { "A256KW" }
     
     static func aesKeyWrap(bitCount: Int) -> Self {
         .init(rawValue: "A\(bitCount)KW")
     }
     
     /// **Key Management**: No encryption for content key.
-    public static let direct: Self = "direct"
+    public static var direct: Self { "direct" }
+}
+
+/// JSON Web Key Encryption Algorithms
+public struct JSONWebContentEncryptionAlgorithm: JSONWebAlgorithm {
+    public let rawValue: String
+    
+    public init<S>(_ rawValue: S) where S: StringProtocol {
+        self.rawValue = String(rawValue)
+    }
 }
 
 // Content Encryption
-extension JSONWebAlgorithm {
+extension JSONWebAlgorithm where Self == JSONWebContentEncryptionAlgorithm {
     /// **Content Encryption**: AES GCM using 128-bit key.
-    public static let aesEncryptionGCM128: Self = "A128GCM"
+    public static var aesEncryptionGCM128: Self { "A128GCM" }
     
     /// **Content Encryption**: AES GCM using 192-bit key.
-    public static let aesEncryptionGCM192: Self = "A192GCM"
+    public static var aesEncryptionGCM192: Self { "A192GCM" }
     
     /// **Content Encryption**: AES GCM using 256-bit key.
-    public static let aesEncryptionGCM256: Self = "A256GCM"
+    public static var aesEncryptionGCM256: Self { "A256GCM" }
     
     static func aesEncryptionGCM(bitCount: Int) -> Self {
         .init(rawValue: "A\(bitCount)GCM")
+    }
+    
+    /// **Content Encryption**: `AES_128_CBC_HMAC_SHA_256` authenticated encryption algorithm.
+    public static var aesEncryptionCBC128SHA256: Self { "A128CBC-HS256" }
+    
+    /// **Content Encryption**: `AES_192_CBC_HMAC_SHA_384` authenticated encryption algorithm.
+    public static var aesEncryptionCBC192SHA384: Self { "A192CBC-HS384" }
+    
+    /// **Content Encryption**: `AES_256_CBC_HMAC_SHA_512` authenticated encryption algorithm.
+    public static var aesEncryptionCBC256SHA512: Self { "A256CBC-HS512" }
+    
+    static func aesEncryptionCBCSHA(bitCount: Int) -> Self {
+        .init(rawValue: "A\(bitCount)CBC-HS\(bitCount * 2)")
     }
 }
 
@@ -255,29 +365,43 @@ extension JSONWebCompressionAlgorithm {
     public static let deflate: Self = "DEF"
 }
 
-extension JSONWebAlgorithm {
-    private static let keyTypeTable: [JSONWebAlgorithm: JSONWebKeyType] = [
+extension JSONWebSignatureAlgorithm {
+    private static let keyTypeTable: [Self: JSONWebKeyType] = [
         .hmacSHA256: .symmetric, .hmacSHA384: .symmetric, .hmacSHA512: .symmetric,
-        .aesEncryptionGCM128: .symmetric, .aesEncryptionGCM192: .symmetric, .aesEncryptionGCM256: .symmetric,
         .ecdsaSignatureP256SHA256: .elipticCurve, .ecdsaSignatureP384SHA384: .elipticCurve,
         .ecdsaSignatureP521SHA512: .elipticCurve, .eddsaSignature: .elipticCurve,
         .rsaSignaturePSSSHA256: .rsa, .rsaSignaturePSSSHA384: .rsa, .rsaSignaturePSSSHA512: .rsa,
-        .rsaEncryptionPKCS1: .rsa, .rsaSignaturePKCS1v15SHA256: .rsa,
-        .rsaSignaturePKCS1v15SHA384: .rsa, .rsaSignaturePKCS1v15SHA512: .rsa,
-        .rsaEncryptionOAEP: .rsa, .rsaEncryptionOAEPSHA256: .rsa,
-        .rsaEncryptionOAEPSHA384: .rsa, .rsaEncryptionOAEPSHA512: .rsa,
+        .rsaSignaturePKCS1v15SHA256: .rsa, .rsaSignaturePKCS1v15SHA384: .rsa, .rsaSignaturePKCS1v15SHA512: .rsa,
     ]
     
-    private static let curveTable: [JSONWebAlgorithm: JSONWebKeyCurve] = [
+    private static let curveTable: [Self: JSONWebKeyCurve] = [
         .ecdsaSignatureP256SHA256: .p256, .ecdsaSignatureP384SHA384: .p384,
         .ecdsaSignatureP521SHA512: .p521, .eddsaSignature: .ed25519,
     ]
     
-    var keyType: JSONWebKeyType? {
-        JSONWebAlgorithm.keyTypeTable[self]
+    public var keyType: JSONWebKeyType? {
+        Self.keyTypeTable[self]
     }
     
-    var curve: JSONWebKeyCurve? {
-        JSONWebAlgorithm.curveTable[self]
+    public var curve: JSONWebKeyCurve? {
+        Self.curveTable[self]
+    }
+}
+
+extension JSONWebKeyEncryptionAlgorithm {
+    private static let keyTypeTable: [Self: JSONWebKeyType] = [
+        .aesKeyWrap128: .symmetric, .aesKeyWrap192: .symmetric, .aesKeyWrap256: .symmetric,
+        .rsaEncryptionPKCS1: .rsa, .rsaEncryptionOAEP: .rsa, .rsaEncryptionOAEPSHA256: .rsa,
+        .rsaEncryptionOAEPSHA384: .rsa, .rsaEncryptionOAEPSHA512: .rsa,
+    ]
+    
+    public var keyType: JSONWebKeyType? {
+        Self.keyTypeTable[self]
+    }
+}
+
+extension JSONWebContentEncryptionAlgorithm {
+    public var keyType: JSONWebKeyType? {
+        .symmetric
     }
 }

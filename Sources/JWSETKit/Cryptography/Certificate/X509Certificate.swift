@@ -69,7 +69,7 @@ extension Certificate: JSONWebValidatingKey {
         return certificate
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         try publicKey.jsonWebKey().verifySignature(signature, for: data, using: algorithm)
     }
 }

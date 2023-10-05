@@ -54,14 +54,14 @@ public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSigning
         SymmetricKey(size: .init(bitCount: H.Digest.byteCount * 8))
     }
     
-    public func signature<D: DataProtocol>(_ data: D, using _: JSONWebAlgorithm) throws -> Data {
+    public func signature<D: DataProtocol>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data {
         var hmac = try HMAC<H>(key: symmetricKey)
         hmac.update(data: data)
         let mac = hmac.finalize()
         return Data(mac)
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         var hmac = try HMAC<H>(key: symmetricKey)
         hmac.update(data: data)
         let mac = hmac.finalize()
