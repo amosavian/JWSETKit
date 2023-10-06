@@ -125,7 +125,7 @@ extension SymmetricKey: JSONWebDecryptingKey {
 }
 
 extension SymmetricKey: JSONWebSealingKey {
-    public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using algorithm: JWA) throws -> SealedData where D : DataProtocol, IV : DataProtocol, AAD : DataProtocol, JWA : JSONWebAlgorithm {
+    public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using algorithm: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try JSONWebKeyAESGCM(self).seal(data, iv: iv, authenticating: authenticating, using: algorithm)
@@ -136,7 +136,7 @@ extension SymmetricKey: JSONWebSealingKey {
         }
     }
     
-    public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using algorithm: JWA) throws -> Data where AAD : DataProtocol, JWA : JSONWebAlgorithm {
+    public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using algorithm: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try JSONWebKeyAESGCM(self).open(data, authenticating: authenticating, using: algorithm)

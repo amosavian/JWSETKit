@@ -44,7 +44,7 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
         if position < iv.count {
             return iv[position]
         } else if position < iv.count + ciphertext.count {
-            return ciphertext[position - iv.count ]
+            return ciphertext[position - iv.count]
         } else {
             return tag[position]
         }

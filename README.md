@@ -2,6 +2,12 @@
 
 A library for working with JSON Web Signature (JWS) and JSON Web Token (JWT).
 
+[![Swift](https://github.com/amosavian/JWSETKit/actions/workflows/swift.yml/badge.svg)](https://github.com/amosavian/JWSETKit/actions/workflows/swift.yml)
+[![CodeQL](https://github.com/amosavian/JWSETKit/actions/workflows/codeql.yml/badge.svg)](https://github.com/amosavian/JWSETKit/actions/workflows/codeql.yml)
+
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Famosavian%2FJWSETKit%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/amosavian/JWSETKit)
+[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Famosavian%2FJWSETKit%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/amosavian/JWSETKit)
+
 ## Overview
 
 JSON Web Signature (JWS) represents content secured with digital

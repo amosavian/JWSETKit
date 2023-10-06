@@ -187,7 +187,7 @@ extension JSONWebSealingKey {
     ///   - data: Plain-text to be decrypted.
     ///   - algorithm: Algorithm of encryption.
     /// - Returns: Cipher-text data with IV and authentication tag.
-    func open< JWA>(_ data: SealedData, using algorithm: JWA) throws -> Data where JWA: JSONWebAlgorithm {
+    func open<JWA>(_ data: SealedData, using algorithm: JWA) throws -> Data where JWA: JSONWebAlgorithm {
         try open(data, authenticating: Data?.none, using: algorithm)
     }
 }

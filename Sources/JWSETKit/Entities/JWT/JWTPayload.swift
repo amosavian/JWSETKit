@@ -42,8 +42,10 @@ extension JSONWebToken {
                 protected: JOSEHeader(
                     algorithm: algorithm,
                     type: .jwt,
-                    keyId: signingKey.keyId),
-                signature: .init())
+                    keyId: signingKey.keyId
+                ),
+                signature: .init()
+            ),
         ]
         self.payload = try .init(value: payload)
         try updateSignature(using: signingKey)

@@ -83,7 +83,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendab
         self.keyValue = key
     }
     
-    public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using algorithm: JWA) throws -> SealedData where D : DataProtocol, IV : DataProtocol, AAD : DataProtocol, JWA : JSONWebAlgorithm {
+    public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using _: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
         var generator = SystemRandomNumberGenerator()
         let iv = iv.map { Data($0) } ?? Data((0 ..< ivLength).map { _ in UInt8.random(in: UInt8.min ... UInt8.max, using: &generator) })
         guard iv.count == ivLength else {
@@ -95,7 +95,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendab
         return .init(iv: Data(iv), ciphertext: ciphertext, tag: tag.prefix(tagLength))
     }
     
-    public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using algorithm: JWA) throws -> Data where AAD : DataProtocol, JWA : JSONWebAlgorithm {
+    public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using _: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {
         let authenticated = authenticating.map { Data($0) } ?? .init()
         let tagData = authenticated + Data(data.iv) + data.ciphertext + Data(authenticated.count.bigEndian)
         guard try data.tag == hmac(tagData).prefix(tagLength) else {

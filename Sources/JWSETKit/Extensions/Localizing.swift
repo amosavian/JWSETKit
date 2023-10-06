@@ -128,7 +128,7 @@ extension Locale {
             let matchedCountry = matchedScript.filter { $0.countryCode == countryCode }
             switch matchedCountry.count {
             case 0:
-                return matchedScript[0]
+                return matchedScript.first { $0.countryCode == nil } ?? matchedScript[0]
             default:
                 return matchedCountry[0]
             }

@@ -19,5 +19,19 @@ final class LocalizingTests: XCTestCase {
         JSONWebKit.locale = Locale(identifier: "fa-IR")
         XCTAssertEqual(JSONWebKeyError.unknownAlgorithm.errorDescription, "الگوریتم انتخابی برای امضا/رمز پشتیبانی نمی‌شود.")
         XCTAssert(JSONWebValidationError.tokenExpired(expiry: date).errorDescription!.hasPrefix("توکن برای پس از"))
+        
+        JSONWebKit.locale = .autoupdatingCurrent
+        XCTAssertNotNil(JSONWebKeyError.unknownAlgorithm.errorDescription)
+    }
+    
+    func testBestMatch() throws {
+        XCTAssertEqual(Locale(bcp47: "fa-IR").identifier, "fa_IR")
+        
+        XCTAssertEqual(Locale(identifier: "fa-IR").bestMatch(in: [
+            .init(identifier: "en-US"),
+            .init(identifier: "en-IR"),
+            .init(identifier: "fa-AF"),
+            .init(identifier: "fa")
+        ])?.identifier, "fa")
     }
 }
