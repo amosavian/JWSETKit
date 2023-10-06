@@ -24,6 +24,31 @@ public struct JSONWebTokenClaims: JSONWebContainer {
 public typealias JSONWebToken = JSONWebSignature<ProtectedJSONWebContainer<JSONWebTokenClaims>>
 
 extension JSONWebToken {
+    /// Creates a new JWT with given payload then signs with given key.
+    /// - Parameters:
+    ///   - payload: JWT payload.
+    ///   - algorithm: Sign and hash algorithm.
+    ///   - signingKey: The key to sign the payload.
+    public init<SK>(
+        payload: JSONWebTokenClaims,
+        algorithm: JSONWebSignatureAlgorithm,
+        using signingKey: SK
+    ) throws where SK: JSONWebSigningKey {
+        guard algorithm.keyType == signingKey.keyType else {
+            throw JSONWebKeyError.operationNotAllowed
+        }
+        self.signatures = try [
+            .init(
+                protected: JOSEHeader(
+                    algorithm: algorithm,
+                    type: .jwt,
+                    keyId: signingKey.keyId),
+                signature: .init())
+        ]
+        self.payload = try .init(value: payload)
+        try updateSignature(using: signingKey)
+    }
+    
     /// Verify that the given audience is included as one of the claim's intended audiences.
     ///
     /// - Parameter audience: The exact intended audience.

@@ -24,6 +24,16 @@ final class JWTTests: XCTestCase {
         XCTAssertEqual(try String(jws: jwt), jwtString)
         XCTAssertEqual(jwt.description, jwtString)
     }
+    
+    func testInit() throws {
+        let payload = try JSONWebTokenClaims { container in
+            container.issuedAt = .init()
+            container.expiry = .init(timeIntervalSinceNow: 3600)
+            container.jwtUUID = .init()
+        }
+        let jwt = try JSONWebToken(payload: payload, algorithm: .hmacSHA256, using: ExampleKeys.symmetric)
+        XCTAssertNoThrow(try jwt.verifySignature(using: ExampleKeys.symmetric))
+    }
 
 #if canImport(Foundation.NSURLSession)
     func testAuthorization() throws {

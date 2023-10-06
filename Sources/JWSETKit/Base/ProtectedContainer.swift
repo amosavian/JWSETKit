@@ -127,7 +127,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
     /// - Parameter value: Object that will be presented in `base64url` json.
     public init(value: Container) throws {
         self._value = value
-        self._protected = try JSONEncoder().encode(value).urlBase64EncodedData()
+        self._protected = try JSONEncoder().encode(value)
     }
     
     public init(from decoder: Decoder) throws {
