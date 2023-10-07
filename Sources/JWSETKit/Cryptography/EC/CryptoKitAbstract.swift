@@ -22,7 +22,7 @@ extension CryptoECPublicKey {
     public var storage: JSONWebValueStorage {
         var result = AnyJSONWebKey()
         let rawRepresentation = rawRepresentation
-        result.keyType = .elipticCurve
+        result.keyType = .ellipticCurve
         result.curve = Self.curve
         result.xCoordinate = rawRepresentation.prefix(rawRepresentation.count / 2)
         result.yCoordinate = rawRepresentation.suffix(rawRepresentation.count / 2)
@@ -58,7 +58,7 @@ extension CryptoECPrivateKey {
     public var storage: JSONWebValueStorage {
         var result = AnyJSONWebKey()
         let rawRepresentation = rawRepresentation
-        result.keyType = .elipticCurve
+        result.keyType = .ellipticCurve
         result.curve = PublicKey.curve
         result.xCoordinate = publicKey.rawRepresentation.prefix(rawRepresentation.count / 2)
         result.yCoordinate = publicKey.rawRepresentation.suffix(rawRepresentation.count / 2)

@@ -27,7 +27,7 @@ extension SecKey: JSONWebKey {
     private static func createPairKey(type: JSONWebKeyType, bits length: Int) throws -> SecKey {
         let keyType: CFString
         switch type {
-        case .elipticCurve:
+        case .ellipticCurve:
             keyType = kSecAttrKeyTypeECSECPrimeRandom
         case .rsa:
             keyType = kSecAttrKeyTypeRSA
@@ -57,7 +57,7 @@ extension SecKey: JSONWebKey {
             throw JSONWebKeyError.unknownKeyType
         }
         switch type {
-        case .elipticCurve:
+        case .ellipticCurve:
             guard let xCoordinate = key.xCoordinate, let yCoordinate = key.yCoordinate else {
                 throw CryptoKitError.incorrectKeySize
             }
@@ -115,7 +115,7 @@ extension SecKey: JSONWebKey {
             case kSecAttrKeyTypeRSA:
                 return .rsa
             case kSecAttrKeyTypeEC, kSecAttrKeyTypeECSECPrimeRandom:
-                return .elipticCurve
+                return .ellipticCurve
             default:
                 throw JSONWebKeyError.unknownKeyType
             }
@@ -190,12 +190,12 @@ extension SecKey: JSONWebKey {
         var key = AnyJSONWebKey()
         switch components.count {
         case 2:
-            key.keyType = .elipticCurve
+            key.keyType = .ellipticCurve
             key.xCoordinate = components[0]
             key.yCoordinate = components[1]
             return JSONWebECPublicKey(storage: key.storage)
         case 3:
-            key.keyType = .elipticCurve
+            key.keyType = .ellipticCurve
             key.xCoordinate = components[0]
             key.yCoordinate = components[1]
             key.privateKey = components[2]
@@ -210,7 +210,7 @@ extension SecKey: JSONWebKey {
             SecKeyCopyExternalRepresentation(self, &error)
         } as Data
         switch try keyType {
-        case .elipticCurve:
+        case .ellipticCurve:
             return try Self.ecWebKey(data: keyData, isPrivateKey: isPrivateKey)
         case .rsa:
             return try Self.rsaWebKey(data: keyData)

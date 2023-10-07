@@ -271,7 +271,7 @@ extension JSONWebKeyType {
     static let empty: Self = ""
     
     /// Elliptic Curve
-    public static let elipticCurve: Self = "EC"
+    public static let ellipticCurve: Self = "EC"
     
     /// RSA
     public static let rsa: Self = "RSA"
@@ -368,8 +368,8 @@ extension JSONWebCompressionAlgorithm {
 extension JSONWebSignatureAlgorithm {
     private static let keyTypeTable: [Self: JSONWebKeyType] = [
         .hmacSHA256: .symmetric, .hmacSHA384: .symmetric, .hmacSHA512: .symmetric,
-        .ecdsaSignatureP256SHA256: .elipticCurve, .ecdsaSignatureP384SHA384: .elipticCurve,
-        .ecdsaSignatureP521SHA512: .elipticCurve, .eddsaSignature: .elipticCurve,
+        .ecdsaSignatureP256SHA256: .ellipticCurve, .ecdsaSignatureP384SHA384: .ellipticCurve,
+        .ecdsaSignatureP521SHA512: .ellipticCurve, .eddsaSignature: .ellipticCurve,
         .rsaSignaturePSSSHA256: .rsa, .rsaSignaturePSSSHA384: .rsa, .rsaSignaturePSSSHA512: .rsa,
         .rsaSignaturePKCS1v15SHA256: .rsa, .rsaSignaturePKCS1v15SHA384: .rsa, .rsaSignaturePKCS1v15SHA512: .rsa,
     ]
