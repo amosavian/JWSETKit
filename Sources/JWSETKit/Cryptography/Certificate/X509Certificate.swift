@@ -37,14 +37,14 @@ extension Certificate.PublicKey {
 }
 
 extension DERImplicitlyTaggable {
-    /// Initializes a DER serialazable object from give data.
+    /// Initializes a DER serializable object from give data.
     ///
     /// - Parameter derEncoded: DER encoded object.
     public init(derEncoded: Data) throws {
         try self.init(derEncoded: [UInt8](derEncoded))
     }
     
-    /// DER serialzed data representation of object.
+    /// DER serialized data representation of object.
     public var derRepresentation: Data {
         get throws {
             var derSerializer = DER.Serializer()
