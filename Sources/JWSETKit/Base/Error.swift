@@ -9,11 +9,11 @@ import Foundation
 
 /// General settings and configurations.
 enum JSONWebKit {
-    /// Localiztion used for key lookups and translating errors.
+    /// Localization used for key lookups and translating errors.
     public static var locale: Locale = .autoupdatingCurrent
 }
 
-/// Errors occured during key creation or usage.
+/// Errors occurred during key creation or usage.
 ///
 /// - Note: Localization of `errorDescription` can be changes by setting `jsonWebKeyLocale`.
 public enum JSONWebKeyError: LocalizedError, Sendable {
