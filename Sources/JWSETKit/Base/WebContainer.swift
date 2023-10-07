@@ -26,7 +26,7 @@ public protocol JSONWebContainer: Codable, Hashable, Sendable {
 public struct JSONWebContainerCustomParameters {}
 
 extension JSONWebContainer {
-    /// Initalizes container wth filled data.
+    /// Initializes container with filled data.
     ///
     /// - Parameter initializer: Setter of fields.
     public init(_ initializer: (_ container: inout Self) -> Void) throws {
