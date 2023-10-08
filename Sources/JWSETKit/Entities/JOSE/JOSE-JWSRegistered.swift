@@ -89,7 +89,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     /// Note that certificate thumbprints are also sometimes known as certificate fingerprints.
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var certificateThumprint: Data?
+    public var certificateThumbprint: Data?
     
     /// The "`typ`" (type) Header Parameter is used by JWS applications
     /// to declare the media type [IANA.MediaTypes] of this complete JWS.
@@ -162,7 +162,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     public static let keys: [PartialKeyPath<Self>: String] = [
         \.algorithm: "alg", \.jsonWebKeySetUrl: "jku",
         \.key: "jwk", \.keyId: "kid", \.certificateChain: "x5c",
-        \.certificateURL: "x5u", \.certificateThumprint: "x5t",
+        \.certificateURL: "x5u", \.certificateThumbprint: "x5t",
         \.type: "typ", \.contentType: "cty", \.critical: "crit",
         \.base64: "b64",
     ]
@@ -218,7 +218,7 @@ extension JOSEHeader {
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, Data?>) -> Data? {
         get {
             switch keyPath {
-            case \.certificateThumprint where storage.contains(key: "x5t#S256"):
+            case \.certificateThumbprint where storage.contains(key: "x5t#S256"):
                 return storage["x5t#S256"]
             default:
                 return storage[stringKey(keyPath)]
@@ -226,7 +226,7 @@ extension JOSEHeader {
         }
         set {
             switch keyPath {
-            case \.certificateThumprint where newValue?.count == SHA256.byteCount:
+            case \.certificateThumbprint where newValue?.count == SHA256.byteCount:
                 storage["x5t#S256"] = newValue
             default:
                 storage[stringKey(keyPath)] = newValue
