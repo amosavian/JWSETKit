@@ -270,6 +270,9 @@ public struct JSONWebKeyType: RawRepresentable, Hashable, Codable, ExpressibleBy
 extension JSONWebKeyType {
     static let empty: Self = ""
     
+    @available(*, deprecated, renamed: "ellipticCurve")
+    public static let elipticCurve: Self = ellipticCurve
+    
     /// Elliptic Curve
     public static let ellipticCurve: Self = "EC"
     
