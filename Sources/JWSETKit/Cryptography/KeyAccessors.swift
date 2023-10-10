@@ -275,7 +275,7 @@ extension MutableJSONWebKey {
             (storage[stringKey(keyPath), true] as Data?).map(SymmetricKey.init(data:))
         }
         set {
-            storage[stringKey(keyPath), true] = newValue?.withUnsafeBytes { Data($0) }
+            storage[stringKey(keyPath), true] = newValue?.data
         }
     }
     

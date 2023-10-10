@@ -45,6 +45,10 @@ extension SymmetricKey: JSONWebKey {
             hasher.combine(bytes: $0)
         }
     }
+    
+    var data: Data {
+        withUnsafeBytes { Data($0) }
+    }
 }
 
 extension SymmetricKey: JSONWebSigningKey {
@@ -99,7 +103,7 @@ extension SymmetricKey: JSONWebDecryptingKey {
             return try aesGCMDecrypt(data)
         case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256:
             if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-                return try AES.KeyWrap.unwrap(data, using: self).withUnsafeBytes { Data($0) }
+                return try AES.KeyWrap.unwrap(data, using: self).data
             } else {
                 throw JSONWebKeyError.unknownAlgorithm
             }

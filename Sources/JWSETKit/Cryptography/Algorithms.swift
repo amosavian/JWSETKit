@@ -202,8 +202,49 @@ extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
         .init(rawValue: "A\(bitCount)KW")
     }
     
+    /// **Key Management**: Key wrapping with AES GCM using 128-bit key
+    public static var aesGCM128KeyWrap: Self { "A128GCMKW" }
+    
+    /// **Key Management**: Key wrapping with AES GCM using 192-bit key
+    public static var aesGCM192KeyWrap: Self { "A192GCMKW" }
+    
+    /// **Key Management**: Key wrapping with AES GCM using 256-bit key
+    public static var aesGCM256KeyWrap: Self { "A256GCMKW" }
+    
+    static func aesGCMKeyWrap(bitCount: Int) -> Self {
+        .init(rawValue: "A\(bitCount)GCMKW")
+    }
+    
+    /// **Key Management**: PBES2 with HMAC SHA-256 and "A128KW" wrapping.
+    public static var pbes2hmac256: Self { "PBES2-HS256+A128KW" }
+    
+    /// **Key Management**: PBES2 with HMAC SHA-384 and "A192KW" wrapping.
+    public static var pbes2hmac384: Self { "PBES2-HS384+A192KW" }
+    
+    /// **Key Management**: PBES2 with HMAC SHA-512 and "A256KW" wrapping.
+    public static var pbes2hmac512: Self { "PBES2-HS512+A256KW" }
+    
+    static func pbes2hmac(bitCount: Int) -> Self {
+        .init(rawValue: "PBES2-HS\(bitCount)+A\(bitCount / 2)KW")
+    }
+    
     /// **Key Management**: No encryption for content key.
     public static var direct: Self { "direct" }
+}
+
+extension JSONWebKeyEncryptionAlgorithm {
+    var keyLength: Int {
+        switch self {
+        case .aesKeyWrap128, .aesGCM128KeyWrap, .pbes2hmac256:
+            return SHA256.byteCount
+        case .aesKeyWrap192, .aesGCM192KeyWrap, .pbes2hmac384:
+            return SHA384.byteCount
+        case .aesKeyWrap256, .aesGCM192KeyWrap, .pbes2hmac512:
+            return SHA512.byteCount
+        default:
+            return 0
+        }
+    }
 }
 
 /// JSON Web Key Encryption Algorithms
@@ -369,21 +410,20 @@ extension JSONWebCompressionAlgorithm {
 }
 
 extension JSONWebSignatureAlgorithm {
-    private static let keyTypeTable: [Self: JSONWebKeyType] = [
-        .hmacSHA256: .symmetric, .hmacSHA384: .symmetric, .hmacSHA512: .symmetric,
-        .ecdsaSignatureP256SHA256: .ellipticCurve, .ecdsaSignatureP384SHA384: .ellipticCurve,
-        .ecdsaSignatureP521SHA512: .ellipticCurve, .eddsaSignature: .ellipticCurve,
-        .rsaSignaturePSSSHA256: .rsa, .rsaSignaturePSSSHA384: .rsa, .rsaSignaturePSSSHA512: .rsa,
-        .rsaSignaturePKCS1v15SHA256: .rsa, .rsaSignaturePKCS1v15SHA384: .rsa, .rsaSignaturePKCS1v15SHA512: .rsa,
-    ]
-    
     private static let curveTable: [Self: JSONWebKeyCurve] = [
         .ecdsaSignatureP256SHA256: .p256, .ecdsaSignatureP384SHA384: .p384,
         .ecdsaSignatureP521SHA512: .p521, .eddsaSignature: .ed25519,
     ]
     
     public var keyType: JSONWebKeyType? {
-        Self.keyTypeTable[self]
+        switch rawValue.prefix(2) {
+        case "RS", "PS":
+            return .rsa
+        case "ES", "Ed":
+            return .ellipticCurve
+        default:
+            return .symmetric
+        }
     }
     
     public var curve: JSONWebKeyCurve? {
@@ -399,7 +439,12 @@ extension JSONWebKeyEncryptionAlgorithm {
     ]
     
     public var keyType: JSONWebKeyType? {
-        Self.keyTypeTable[self]
+        switch rawValue.prefix(1) {
+        case "R":
+            return .rsa
+        default:
+            return .symmetric
+        }
     }
 }
 

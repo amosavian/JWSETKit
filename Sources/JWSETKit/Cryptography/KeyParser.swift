@@ -111,21 +111,3 @@ extension [any JSONWebValidatingKey] {
         (self as [any JSONWebKey]).bestMatch(for: algorithm, id: id) as? Self.Element
     }
 }
-
-extension [any JSONWebDecryptingKey] {
-    func bestMatch(for algorithm: any JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        (self as [any JSONWebKey]).bestMatch(for: algorithm, id: id) as? Self.Element
-    }
-}
-
-extension [any JSONWebEncryptingKey] {
-    func bestMatch(for algorithm: any JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        (self as [any JSONWebKey]).bestMatch(for: algorithm, id: id) as? Self.Element
-    }
-}
-
-extension [any JSONWebSealingKey] {
-    func bestMatch(for algorithm: any JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        (self as [any JSONWebKey]).bestMatch(for: algorithm, id: id) as? Self.Element
-    }
-}

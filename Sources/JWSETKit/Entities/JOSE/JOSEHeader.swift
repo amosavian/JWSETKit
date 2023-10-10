@@ -18,7 +18,7 @@ import Crypto
 public struct JOSEHeader: JSONWebContainer {
     public var storage: JSONWebValueStorage
     
-    /// Initialzes a new JOSE header with given key/values.
+    /// Initializes a new JOSE header with given key/values.
     ///
     /// - Parameter storage: Header key/values.
     public init(storage: JSONWebValueStorage) {

@@ -37,9 +37,9 @@ final class JWTTests: XCTestCase {
     
     func testVerify() throws {
         let jwt = try JSONWebToken(from: jwtString)
-        XCTAssertNoThrow(try jwt.verifyDate(.init(timeIntervalSince1970: 1516239024)))
-        XCTAssertThrowsError(try jwt.verifyDate(.init(timeIntervalSince1970: 1516239021)))
-        XCTAssertThrowsError(try jwt.verifyDate(.init(timeIntervalSince1970: 1516249024)))
+        XCTAssertNoThrow(try jwt.verifyDate(.init(timeIntervalSince1970: 1_516_239_024)))
+        XCTAssertThrowsError(try jwt.verifyDate(.init(timeIntervalSince1970: 1_516_239_021)))
+        XCTAssertThrowsError(try jwt.verifyDate(.init(timeIntervalSince1970: 1_516_249_024)))
         XCTAssertNoThrow(try jwt.verifyAudience(includes: "google.com"))
         XCTAssertThrowsError(try jwt.verifyAudience(includes: "yahoo.com"))
     }

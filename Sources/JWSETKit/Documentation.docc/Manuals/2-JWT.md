@@ -97,7 +97,7 @@ do {
         print(error.localizedDescription)
         await renewToken()
     case .tokenInvalidBefore(let notBefore):
-        // Token is not valid yet accoring to `nbf`
+        // Token is not valid yet according to `nbf`
         print(error.localizedDescription)
     case .audienceNotIntended(let audience):
         // Invalid audience.

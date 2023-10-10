@@ -13,7 +13,7 @@ with this specification are described in the separate JSON Web
 Algorithms (JWA) specification and an IANA registry defined by that
 specification. 
 
-See [Keys documetation](4-keys) to find supported keys for verification and singing.
+See [Keys documentation](4-keys) to find supported keys for verification and singing.
 
 Supports `HS256`, `HS384` and `HS512` algorithms for signature.
 
