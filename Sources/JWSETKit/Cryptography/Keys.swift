@@ -65,7 +65,7 @@ extension JSONWebKey {
             guard self.modulus != nil, self.exponent != nil else {
                 throw JSONWebKeyError.keyNotFound
             }
-        case .elipticCurve:
+        case .ellipticCurve:
             // swiftformat:disable:next redundantSelf
             guard self.xCoordinate != nil, self.yCoordinate != nil else {
                 throw JSONWebKeyError.keyNotFound

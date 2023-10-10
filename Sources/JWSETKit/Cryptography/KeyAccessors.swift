@@ -104,6 +104,12 @@ public struct JSONWebKeyRegisteredParameters {
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
     public var certificateChain: [Certificate]
     
+    @available(*, deprecated, renamed: "certificateThumbprint")
+    public var certificateThumprint: Data? {
+        get { certificateThumbprint }
+        set { certificateThumbprint = newValue }
+    }
+    
     /// The "`x5t`"/"`x5t#S256`" (X.509 certificate SHA-1/256 thumbprint)
     /// Header Parameter is a `base64url-encoded` SHA-1/256 thumbprint
     /// (a.k.a. digest) of the `DER` encoding of the X.509 certificate [RFC5280]
@@ -112,7 +118,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// Note that certificate thumbprints are also sometimes known as certificate fingerprints.
     ///
     /// Use of this Header Parameter is OPTIONAL.
-    public var certificateThumprint: Data?
+    public var certificateThumbprint: Data?
     
     /// ECC curve or the subtype of key pair.
     public var curve: JSONWebKeyCurve?
@@ -160,7 +166,7 @@ public struct JSONWebKeyRegisteredParameters {
         \.keyType: "kty", \.keyUsage: "use", \.keyOperations: "key_ops",
         \.algorithm: "alg", \.keyId: "kid",
         \.certificateURL: "x5u", \.certificateChain: "x5c",
-        \.certificateThumprint: "x5t",
+        \.certificateThumbprint: "x5t",
         \.curve: "crv", \.xCoordinate: "x", \.yCoordinate: "y",
         \.privateKey: "d", \.modulus: "n", \.exponent: "e",
         \.privateExponent: "d", \.firstPrimeFactor: "p", \.secondPrimeFactor: "q",
@@ -209,7 +215,7 @@ extension JSONWebKey {
     @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, Data?>) -> Data? {
         switch keyPath {
-        case \.certificateThumprint where storage.contains(key: "x5t#S256"):
+        case \.certificateThumbprint where storage.contains(key: "x5t#S256"):
             return storage["x5t#S256", true]
         default:
             return storage[stringKey(keyPath), true]
@@ -277,7 +283,7 @@ extension MutableJSONWebKey {
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, Data?>) -> Data? {
         get {
             switch keyPath {
-            case \.certificateThumprint where storage.contains(key: "x5t#S256"):
+            case \.certificateThumbprint where storage.contains(key: "x5t#S256"):
                 return storage["x5t#S256", true]
             default:
                 return storage[stringKey(keyPath), true]
@@ -285,7 +291,7 @@ extension MutableJSONWebKey {
         }
         set {
             switch keyPath {
-            case \.certificateThumprint where newValue?.count == SHA256.byteCount:
+            case \.certificateThumbprint where newValue?.count == SHA256.byteCount:
                 storage["x5t#S256", true] = newValue
             default:
                 storage[stringKey(keyPath), true] = newValue

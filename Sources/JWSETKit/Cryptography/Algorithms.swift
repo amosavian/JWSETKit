@@ -311,8 +311,11 @@ public struct JSONWebKeyType: RawRepresentable, Hashable, Codable, ExpressibleBy
 extension JSONWebKeyType {
     static let empty: Self = ""
     
+    @available(*, deprecated, renamed: "ellipticCurve")
+    
+    public static var elipticCurve: Self { ellipticCurve }
     /// Elliptic Curve
-    public static let elipticCurve: Self = "EC"
+    public static let ellipticCurve: Self = "EC"
     
     /// RSA
     public static let rsa: Self = "RSA"
@@ -417,7 +420,7 @@ extension JSONWebSignatureAlgorithm {
         case "RS", "PS":
             return .rsa
         case "ES", "Ed":
-            return .elipticCurve
+            return .ellipticCurve
         default:
             return .symmetric
         }

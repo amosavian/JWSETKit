@@ -60,7 +60,7 @@ final class JOSEHeaderJWSTests: XCTestCase {
         XCTAssertEqual(claims.key?.storage, ecKey.storage)
         XCTAssertEqual(claims.keyId, "2011-04-29")
         XCTAssertEqual(claims.certificateURL, URL(string: "http://example.com/janedoe"))
-        XCTAssertEqual(claims.certificateThumprint, Data(base64Encoded: "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck="))
+        XCTAssertEqual(claims.certificateThumbprint, Data(base64Encoded: "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck="))
         XCTAssertEqual(claims.certificateChain, [cert1, cert2, cert3])
         XCTAssertEqual(claims.type, .jwt)
         XCTAssertEqual(claims.contentType, .init(rawValue: "application/json"))
@@ -75,7 +75,7 @@ final class JOSEHeaderJWSTests: XCTestCase {
         claims.key = ecKey
         claims.keyId = "2011-04-29"
         claims.certificateURL = URL(string: "http://example.com/janedoe")
-        claims.certificateThumprint = Data(base64Encoded: "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck=")
+        claims.certificateThumbprint = Data(base64Encoded: "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck=")
         claims.certificateChain = [cert1, cert2, cert3]
         claims.type = .jwt
         claims.contentType = .init(rawValue: "application/json")
