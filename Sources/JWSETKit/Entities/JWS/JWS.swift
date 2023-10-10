@@ -41,7 +41,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
         }
     }
     
-    /// Initialzes JWS using Base64URL encoded String.
+    /// Initializes JWS using Base64URL encoded String.
     ///
     /// - Parameter string: Base64URL encoded String.
     public init<S: StringProtocol>(from string: S) throws {
@@ -60,7 +60,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     
     /// Renews all signatures for protected header(s) using given keys.
     ///
-    /// This methos finds appropriate key for the header using `kid` value in protected or unprotected header.
+    /// This method finds appropriate key for the header using `kid` value in protected or unprotected header.
     ///
     /// - Parameters:
     ///   - keys: An array of `JSONWebSigningKey` that would be used for signing.
@@ -103,7 +103,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     
     /// Verifies all signatures for protected header(s) using given keys.
     ///
-    /// This methos finds appropriate key for the header using `kid` value in protected or unprotected header.
+    /// This method finds appropriate key for the header using `kid` value in protected or unprotected header.
     ///
     /// - Note: No signature algorithm (`alg`) may have been set to "`none`" otherwise
     ///     `JSONWebKeyError.operationNotAllowed` will be thrown.

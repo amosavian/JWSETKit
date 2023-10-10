@@ -76,7 +76,7 @@ public enum JSONWebSignatureRepresentation: Sendable {
 }
 
 extension CodingUserInfoKey {
-    /// Changes serialzation of JWS.
+    /// Changes serialization of JWS.
     ///
     /// Default value is `.compact` if not set.
     public static var jwsEncodedRepresentation: Self {
