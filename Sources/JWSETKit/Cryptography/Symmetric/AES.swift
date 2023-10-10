@@ -127,7 +127,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebDecryptingKey, Sendable
     }
     
     public func decrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        try unwrap(data).withUnsafeBytes { Data($0) }
+        try unwrap(data).data
     }
     
     public func encrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {

@@ -41,7 +41,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendab
     /// AES-CBC symmetric key using for encryption.
     public var aesSymmetricKey: SymmetricKey {
         get throws {
-            let key = try symmetricKey.withUnsafeBytes { Data($0) }
+            let key = try symmetricKey.data
             return SymmetricKey(data: key.suffix(key.count / 2))
         }
     }
@@ -49,7 +49,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendab
     /// HMAC symmetric key using for encryption.
     public var hmacSymmetricKey: SymmetricKey {
         get throws {
-            let key = try symmetricKey.withUnsafeBytes { Data($0) }
+            let key = try symmetricKey.data
             return SymmetricKey(data: key.prefix(key.count / 2))
         }
     }
@@ -85,7 +85,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendab
     
     public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using _: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
         var generator = SystemRandomNumberGenerator()
-        let iv = iv.map { Data($0) } ?? Data((0 ..< ivLength).map { _ in UInt8.random(in: UInt8.min ... UInt8.max, using: &generator) })
+        let iv = iv.map { Data($0) } ?? SymmetricKey(size: .init(bitCount: ivLength * 8)).data
         guard iv.count == ivLength else {
             throw CryptoKitError.incorrectParameterSize
         }
@@ -127,8 +127,8 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendab
 extension Data {
     init<T: FixedWidthInteger>(_ value: T) {
         let count = T.bitWidth / 8
-        var _endian = value
-        let bytePtr = withUnsafePointer(to: &_endian) {
+        var value = value
+        let bytePtr = withUnsafePointer(to: &value) {
             $0.withMemoryRebound(to: UInt8.self, capacity: count) {
                 UnsafeBufferPointer(start: $0, count: count)
             }

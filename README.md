@@ -2,11 +2,13 @@
 
 A library for working with JSON Web Signature (JWS) and JSON Web Token (JWT).
 
-[![Swift](https://github.com/amosavian/JWSETKit/actions/workflows/swift.yml/badge.svg)](https://github.com/amosavian/JWSETKit/actions/workflows/swift.yml)
-[![CodeQL](https://github.com/amosavian/JWSETKit/actions/workflows/codeql.yml/badge.svg)](https://github.com/amosavian/JWSETKit/actions/workflows/codeql.yml)
+[![Swift][swift-workflow-badge]][swift-workflow-url]
+[![CodeQL][codeql-workflow-badge]][codeql-workflow-url]
+[![License][license-badge]][license-url]
+[![Release version][release-badge]][release-url]
 
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Famosavian%2FJWSETKit%2Fbadge%3Ftype%3Dswift-versions)](https://swiftpackageindex.com/amosavian/JWSETKit)
-[![](https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Famosavian%2FJWSETKit%2Fbadge%3Ftype%3Dplatforms)](https://swiftpackageindex.com/amosavian/JWSETKit)
+[![][swift-versions-badge]][spi-url]
+[![][platforms-badge]][spi-url]
 
 ## Overview
 
@@ -64,6 +66,19 @@ For detailed usage and API documentation, check [the documentation][docs].
 | JSON Web Encryption (JWE)      | ❌ | ❌ | ✅ | ❌ |
 | Support [CommonCrypto] Keys    | ✅ | ❌ | ❌ | ❌ |
 | Support [CryptoKit] Keys       | ✅ | ❌ | ❌ | ❌ |
+
+
+[swift-workflow-badge]: https://github.com/amosavian/JWSETKit/actions/workflows/swift.yml/badge.svg
+[swift-workflow-url]: https://github.com/amosavian/JWSETKit/actions/workflows/swift.yml
+[codeql-workflow-badge]: https://github.com/amosavian/JWSETKit/actions/workflows/codeql.yml/badge.svg
+[codeql-workflow-url]: https://github.com/amosavian/JWSETKit/actions/workflows/codeql.yml
+[license-badge]: https://img.shields.io/github/license/amosavian/JWSETKit.svg
+[license-url]: LICENSE
+[release-badge]: https://img.shields.io/github/release/amosavian/JWSETKit.svg
+[release-url]: https://github.com/amosavian/JWSETKit/releases
+[swift-versions-badge]: https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Famosavian%2FJWSETKit%2Fbadge%3Ftype%3Dswift-versions
+[spi-url]: https://swiftpackageindex.com/amosavian/JWSETKit
+[platforms-badge]: https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Famosavian%2FJWSETKit%2Fbadge%3Ftype%3Dplatforms
 
 [RFC7159]: https://www.rfc-editor.org/rfc/rfc7159
 [docs]: https://amosavian.github.io/JWSETKit/documentation/jwsetkit/

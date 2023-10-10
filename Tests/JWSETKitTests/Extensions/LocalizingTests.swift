@@ -31,7 +31,7 @@ final class LocalizingTests: XCTestCase {
             .init(identifier: "en-US"),
             .init(identifier: "en-IR"),
             .init(identifier: "fa-AF"),
-            .init(identifier: "fa")
+            .init(identifier: "fa"),
         ])?.identifier, "fa")
     }
 }

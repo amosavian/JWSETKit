@@ -50,8 +50,8 @@ public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSigning
         self.keyValue = key.keyValue
     }
     
-    private static func random() -> SymmetricKey {
-        SymmetricKey(size: .init(bitCount: H.Digest.byteCount * 8))
+    public init() throws {
+        try self.init(SymmetricKey(size: .init(bitCount: H.Digest.byteCount * 8)))
     }
     
     public func signature<D: DataProtocol>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data {
