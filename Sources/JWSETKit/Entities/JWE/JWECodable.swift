@@ -8,10 +8,10 @@
 import Foundation
 
 /// JWSs use one of two serializations: the JWE Compact Serialization or the JWEJSON Serialization.
-///  
+///
 /// Applications using this specification need to specify what serialization and serialization features are
 /// used for that application.
-///  
+///
 /// To change the representation  of JWE during encoding to flattened JSON:
 /// ```swift
 /// do {

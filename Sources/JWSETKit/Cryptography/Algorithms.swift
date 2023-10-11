@@ -239,7 +239,7 @@ extension JSONWebKeyEncryptionAlgorithm {
             return SHA256.byteCount
         case .aesKeyWrap192, .aesGCM192KeyWrap, .pbes2hmac384:
             return SHA384.byteCount
-        case .aesKeyWrap256, .aesGCM192KeyWrap, .pbes2hmac512:
+        case .aesKeyWrap256, .aesGCM256KeyWrap, .pbes2hmac512:
             return SHA512.byteCount
         default:
             return 0

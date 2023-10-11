@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct JSONWebEncryptionRecipient: Hashable, Codable {
+public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
     enum CodingKeys: String, CodingKey {
         case header
         case encrypedKey = "encrypted_key"

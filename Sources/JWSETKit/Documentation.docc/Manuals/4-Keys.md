@@ -35,6 +35,11 @@ which is usually a private or symmetric key.
 This protocol defines method to decrypt a cipher-text,
 which is usually a private or symmetric key.
 
+### JSONWebSealingKey
+
+This method defines method to encrypt/decrypt a plain-text with initial vector
+and resulting an authentication tag, which is asymmetric key.
+
 ## Implementations
 
 ### Symmetric
@@ -47,17 +52,31 @@ Usable for validating and signing. See [JSONWebKeyHMAC](jsonwebkeyhmac).
 
 #### SymmetricKey
 
-Supports `HS256`, `HS384` and `HS512` algorithms for signature and
-`A128GCM`, `A192GCM` and `A256GCM` algorithms for encryption.
+Supports `HS256`, `HS384` and `HS512` algorithms for signature,
+`A128GCM`, `A192GCM`, `A256GCM`, `A128CBC-HS256`, `A192CBC-HS384` and
+`A256CBC-HS512` algorithms for sealing, and `A128KW`, `A192KW`, `A256KW`,
+`PBES2-HS256+A128KW`, `PBES2-HS384+A192KW` and `PBES2-HS512+A256KW` for
+encryption/decryption.
 
 Usable for validating, signing, decryption and encrypting.
 See [SymmetricKey](cryptokit/symmetrickey).
+
+##### Generating SymmetricKey using PBKDF2
+
+To generate a symmetric key using PBKDF2 use
+[SymmetricKey.pbkdf2(pbkdf2password:salt:hashfunction:iterations:)](cryptokit/symmetrickey/pbkdf2(pbkdf2password:salt:hashfunction:iterations:)) method.
 
 #### JSONWebKeyAESGCM
 
 Supports `A128GCM`, `A192GCM` and `A256GCM` algorithms for encryption.
 
 Usable for decryption and encrypting. See [JSONWebKeyAESGCM](jsonwebkeyaesgcm).
+
+#### JSONWebKeyAESCBCHMAC
+
+Supports `A128CBC-HS256`, `A192CBC-HS384` and `A256CBC-HS512` algorithms for encryption.
+
+Usable for decryption and encrypting. See [JSONWebKeyAESCBCHMAC](jsonwebkeyaescbchmac).
 
 ### Eliptic-Curve
 

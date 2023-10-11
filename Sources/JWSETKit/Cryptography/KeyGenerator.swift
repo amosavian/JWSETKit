@@ -30,7 +30,7 @@ extension JSONWebSignatureAlgorithm {
             return P521.Signing.PrivateKey()
         case .rsaSignaturePKCS1v15SHA256, .rsaSignaturePSSSHA256,
              .rsaSignaturePKCS1v15SHA384, .rsaSignaturePSSSHA384,
-             .rsaSignaturePKCS1v15SHA512, .rsaSignaturePKCS1v15SHA512:
+             .rsaSignaturePKCS1v15SHA512, .rsaSignaturePSSSHA512:
             return try _RSA.Signing.PrivateKey(keySize: .bits2048)
         default:
             throw JSONWebKeyError.unknownAlgorithm

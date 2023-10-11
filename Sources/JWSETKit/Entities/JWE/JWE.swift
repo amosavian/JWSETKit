@@ -14,7 +14,7 @@ import Crypto
 
 /// The JWE cryptographic mechanisms encrypt and provide integrity protection
 /// for an arbitrary sequence of octets.
-public struct JSONWebEncryption: Hashable {
+public struct JSONWebEncryption: Hashable, Sendable {
     /// Contains JWE Protected Header and JWE Shared Unprotected Header.
     public var header: JSONWebEncryptionHeader
     
@@ -78,6 +78,10 @@ public struct JSONWebEncryption: Hashable {
     
     /// Creates new JWE container with encrypted data using given recipients public key.
     ///
+    /// - Important: For `PBES2` algorithms, provide password using
+    ///         `SymmetricKey(data: Data(password.utf8))` to`keyEncryptionKey`.\
+    ///         `pbes2Count` and `pbes2Salt` must be provided in `protected` fields.
+    ///
     /// - Parameters:
     ///   - plainData: Data to be encrypted.
     ///   - compressionAlgorithm: Compression algorithm of plain-text, if applicable.
@@ -90,6 +94,7 @@ public struct JSONWebEncryption: Hashable {
     ///         with `contentEncryptionAlgorithm` if `nil` is passed.
     public init<D: DataProtocol>(
         plainData: D,
+        protected: JOSEHeader? = nil,
         compressionAlgorithm: JSONWebCompressionAlgorithm? = nil,
         additionalAuthenticatedData: Data? = nil,
         keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
@@ -97,7 +102,8 @@ public struct JSONWebEncryption: Hashable {
         contentEncryptionAlgorithm: JSONWebContentEncryptionAlgorithm,
         contentEncryptionKey: (any JSONWebSealingKey)? = nil
     ) throws {
-        var header = JOSEHeader(algorithm: keyEncryptingAlgorithm, type: "JWE")
+        var header = protected ?? JOSEHeader(algorithm: keyEncryptingAlgorithm, type: "JWE")
+        header.algorithm = keyEncryptingAlgorithm
         header.encryptionAlgorithm = contentEncryptionAlgorithm
         header.compressionAlgorithm = compressionAlgorithm
         
@@ -115,7 +121,21 @@ public struct JSONWebEncryption: Hashable {
             header.authenticationTag = sealed.tag
             self.recipients = [.init(encrypedKey: sealed.ciphertext)]
         case .pbes2hmac256, .pbes2hmac384, .pbes2hmac512:
-            fatalError()
+            guard let password = keyEncryptionKey?.keyValue?.data else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            guard let iterations = header.pbes2Count else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            let salt = Data(keyEncryptingAlgorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
+            let key = try SymmetricKey.pbkdf2(
+                pbkdf2Password: password, salt: salt,
+                hashFunction: keyEncryptingAlgorithm.hashFunction,
+                iterations: iterations
+            )
+            self.recipients = try [
+                .init(encrypedKey: key.encrypt(cekData, using: keyEncryptingAlgorithm)),
+            ]
         default:
             guard let keyEncryptionKey else {
                 throw JSONWebKeyError.keyNotFound
@@ -144,7 +164,7 @@ public struct JSONWebEncryption: Hashable {
         } else if data.starts(with: Data("{".utf8)) {
             self = try JSONDecoder().decode(JSONWebEncryption.self, from: Data(data))
         } else {
-            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid JWS."))
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid JWE."))
         }
     }
     
@@ -156,6 +176,12 @@ public struct JSONWebEncryption: Hashable {
     }
     
     /// Decrypts encrypted data, using given private key.
+    ///
+    /// - Important: For `PBES2` algorithms, provide password using
+    ///         `SymmetricKey(data: Data(password.utf8))` to`key`.
+    ///
+    /// - Parameter key: Key that used to encrypt the content encryption key.
+    /// - Returns: Decrypted payload.
     public func decrypt(using key: any JSONWebKey) throws -> Data {
         guard let algorithm = AnyJSONWebAlgorithm.specialized(header.protected.value.algorithm.rawValue) as? JSONWebKeyEncryptionAlgorithm else {
             throw JSONWebKeyError.unknownAlgorithm
@@ -185,7 +211,24 @@ public struct JSONWebEncryption: Hashable {
             }
             cek = SymmetricKey(data: cekData)
         case .pbes2hmac256, .pbes2hmac384, .pbes2hmac512:
-            fatalError()
+            guard let password = key.keyValue?.data else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            guard let iterations = header.protected.value.pbes2Count else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            let salt = Data(algorithm.rawValue.utf8) + [0x00] + (header.protected.value.pbes2Salt ?? .init())
+            let key = try SymmetricKey.pbkdf2(
+                pbkdf2Password: password, salt: salt,
+                hashFunction: algorithm.hashFunction,
+                iterations: iterations
+            )
+            guard let cekData = recipients.compactMap({
+                try? key.decrypt($0.encrypedKey, using: algorithm)
+            }).first else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            cek = SymmetricKey(data: cekData)
         default:
             guard let key = key as? (any JSONWebDecryptingKey) else {
                 throw JSONWebKeyError.keyNotFound
@@ -199,5 +242,50 @@ public struct JSONWebEncryption: Hashable {
         }
         let authenticating = header.protected.encoded.urlBase64EncodedData() + (additionalAuthenticatedData ?? .init())
         return try cek.open(sealed, authenticating: authenticating, using: contentEncAlgorithm)
+    }
+}
+
+extension String {
+    public init(jwe: JSONWebEncryption) throws {
+        self = try String(String(decoding: JSONEncoder().encode(jwe), as: UTF8.self).dropFirst().dropLast())
+    }
+}
+
+extension JSONWebEncryption: LosslessStringConvertible, CustomDebugStringConvertible {
+    public init?(_ description: String) {
+        guard let jws = try? JSONWebEncryption(from: description) else {
+            return nil
+        }
+        self = jws
+    }
+    
+    public var description: String {
+        (try? String(jwe: self)) ?? ""
+    }
+    
+    public var debugDescription: String {
+        """
+        Protected Header: \(header.protected.value)
+        Unprotected Header: \(String(describing: header.unprotected))
+        Recipients: \(recipients)
+        IV: \(String(decoding: sealed.iv.urlBase64EncodedData(), as: UTF8.self))
+        CipherText: \(String(decoding: sealed.ciphertext.urlBase64EncodedData(), as: UTF8.self))
+        Tag: \(String(decoding: sealed.tag.urlBase64EncodedData(), as: UTF8.self))
+        """
+    }
+}
+
+extension JSONWebKeyEncryptionAlgorithm {
+    fileprivate var hashFunction: any HashFunction.Type {
+        switch self {
+        case .pbes2hmac256:
+            return SHA256.self
+        case .pbes2hmac384:
+            return SHA384.self
+        case .pbes2hmac512:
+            return SHA256.self
+        default:
+            fatalError("Invalid input.")
+        }
     }
 }

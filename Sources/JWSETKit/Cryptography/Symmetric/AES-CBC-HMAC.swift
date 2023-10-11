@@ -84,7 +84,6 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendab
     }
     
     public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using _: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
-        var generator = SystemRandomNumberGenerator()
         let iv = iv.map { Data($0) } ?? SymmetricKey(size: .init(bitCount: ivLength * 8)).data
         guard iv.count == ivLength else {
             throw CryptoKitError.incorrectParameterSize
