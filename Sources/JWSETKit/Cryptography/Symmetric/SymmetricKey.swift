@@ -102,12 +102,8 @@ extension SymmetricKey: JSONWebDecryptingKey {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try aesGCMDecrypt(data)
         case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256,
-                .pbes2hmac256, .pbes2hmac384, .pbes2hmac512:
-            if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-                return try AES.KeyWrap.unwrap(data, using: self).data
-            } else {
-                throw JSONWebKeyError.unknownAlgorithm
-            }
+             .pbes2hmac256, .pbes2hmac384, .pbes2hmac512:
+            return try JSONWebKeyAESKW(storage: storage).unwrap(data).data
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }
@@ -118,12 +114,8 @@ extension SymmetricKey: JSONWebDecryptingKey {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try AES.GCM.seal(data, using: self).combined ?? .init()
         case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256,
-                .pbes2hmac256, .pbes2hmac384, .pbes2hmac512:
-            if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-                return try AES.KeyWrap.wrap(.init(data: Data(data)), using: self)
-            } else {
-                throw JSONWebKeyError.unknownAlgorithm
-            }
+             .pbes2hmac256, .pbes2hmac384, .pbes2hmac512:
+            return try JSONWebKeyAESKW(storage: storage).wrap(.init(data: Data(data)))
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }

@@ -35,7 +35,7 @@ To use JWSETKit, add the following dependency to your Package.swift:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.6.0"))
+    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.8.0"))
 ]
 ```
 
@@ -55,6 +55,8 @@ For detailed usage and API documentation, check [the documentation][docs].
 
 ## Comparison To Other Libraries
 
+### Features
+
 |                                | JWSETKit | [jwt-kit] | [JOSESwift] | Auth0's [JWTDecode] |
 |:-------------------------------|:--:|:--:|:--:|:--:|
 | JSON Web Signature (JWS)       | ✅ | ❌ | ✅ | ❌ |
@@ -63,9 +65,63 @@ For detailed usage and API documentation, check [the documentation][docs].
 | JSON Web Token (JWT)           | ✅ | ✅ | ✅ | ✅ |
 | JWT Signature Verfication      | ✅ | ✅ | ✅ | ❌ |
 | JWT Expire/NotBefore Validity  | ✅ | ✅ | ✅ | ❌ |
-| JSON Web Encryption (JWE)      | ❌ | ❌ | ✅ | ❌ |
+| JSON Web Encryption (JWE)      | ✅ | ❌ | ✅ | ❌ |
 | Support [CommonCrypto] Keys    | ✅ | ❌ | ❌ | ❌ |
 | Support [CryptoKit] Keys       | ✅ | ❌ | ❌ | ❌ |
+
+### Supported Algorithms
+
+#### Signature/HMAC
+
+|       | JWSETKit | [jwt-kit] | [JOSESwift] | Auth0's [JWTDecode] |
+|:------|:--:|:--:|:--:|:--:|
+| HS256 | ✅ | ✅ | ✅ | ❌ |
+| HS384 | ✅ | ✅ | ✅ | ❌ |
+| HS512 | ✅ | ✅ | ✅ | ❌ |
+| RS256 | ✅ | ✅ | ✅ | ❌ |
+| RS384 | ✅ | ✅ | ✅ | ❌ |
+| RS512 | ✅ | ✅ | ✅ | ❌ |
+| ES256 | ✅ | ✅ | ✅ | ❌ |
+| ES384 | ✅ | ✅ | ✅ | ❌ |
+| ES512 | ✅ | ✅ | ✅ | ❌ |
+| PS256 | ✅ | ✅ | ✅ | ❌ |
+| PS384 | ✅ | ✅ | ✅ | ❌ |
+| PS512 | ✅ | ✅ | ✅ | ❌ |
+| PS512 | ✅ | ✅ | ✅ | ❌ |
+| EdDSA | ✅ | ✅ | ✅ | ❌ |
+
+#### Key Encryption
+
+|                    | JWSETKit | [JOSESwift] |
+|:-------------------|:--:|:--:|
+| RSA1_5             | ✅ | ✅ |
+| RSA-OAEP           | ✅ | ✅ |
+| RSA-OAEP-256       | ✅ | ✅ |
+| A128KW             | ✅ | ✅ |
+| A192KW             | ✅ | ✅ |
+| A256KW             | ✅ | ✅ |
+| dir                | ✅ | ✅ |
+| ECDH-ES            | ❌ | ❌ |
+| ECDH-ES+A128KW     | ❌ | ❌ |
+| ECDH-ES+A192KW     | ❌ | ❌ |
+| ECDH-ES+A256KW     | ❌ | ❌ |
+| A128GCMKW          | ✅ | ❌ |
+| A192GCMKW          | ✅ | ❌ |
+| A256GCMKW          | ✅ | ❌ |
+| PBES2-HS256+A128KW | ✅ | ❌ |
+| PBES2-HS384+A192KW | ✅ | ❌ |
+| PBES2-HS512+A256KW | ✅ | ❌ |
+
+#### Content Encryption
+
+|               | JWSETKit | [JOSESwift] |
+|:--------------|:--:|:--:|
+| A128CBC-HS256 | ✅ | ✅ |
+| A192CBC-HS384 | ✅ | ✅ |
+| A256CBC-HS512 | ✅ | ✅ |
+| A128GCM       | ✅ | ❌ |
+| A192GCM       | ✅ | ❌ |
+| A256GCM       | ✅ | ❌ |
 
 
 [swift-workflow-badge]: https://github.com/amosavian/JWSETKit/actions/workflows/swift.yml/badge.svg

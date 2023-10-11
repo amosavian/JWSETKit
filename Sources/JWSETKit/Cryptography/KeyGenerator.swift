@@ -39,22 +39,14 @@ extension JSONWebSignatureAlgorithm {
 }
 
 extension JSONWebKeyEncryptionAlgorithm {
-    private func generateAESKW(keySize: SymmetricKeySize) throws -> any JSONWebDecryptingKey {
-        if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            return JSONWebKeyAESKW(keySize)
-        } else {
-            throw JSONWebKeyError.unknownAlgorithm
-        }
-    }
-    
     public func generateRandomKey() throws -> any JSONWebDecryptingKey {
         switch self {
         case .aesKeyWrap128:
-            return try generateAESKW(keySize: .bits128)
+            return JSONWebKeyAESKW(.bits128)
         case .aesKeyWrap192:
-            return try generateAESKW(keySize: .bits192)
+            return JSONWebKeyAESKW(.bits192)
         case .aesKeyWrap256:
-            return try generateAESKW(keySize: .bits256)
+            return JSONWebKeyAESKW(.bits256)
         case .rsaEncryptionPKCS1, .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256,
              .rsaEncryptionOAEPSHA384, .rsaEncryptionOAEPSHA512:
             return try _RSA.Encryption.PrivateKey(keySize: .bits2048)

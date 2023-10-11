@@ -1,4 +1,4 @@
-# JSON Web Signature (JWS)
+# ``JSONWebSignature``
 
 Using JWS to create, sign and verify a custom payload.
 
@@ -143,7 +143,3 @@ try jws.updateSignature(using: hmacKey)
 - ``JOSEHeader``
 - ``JoseHeaderJWSRegisteredParameters``
 - ``JoseHeaderJWERegisteredParameters``
-
-### Signature
-
-- ``JSONWebSignature``

@@ -11,6 +11,9 @@ import CryptoKit
 #else
 import Crypto
 #endif
+#if canImport(CommonCrypto)
+import CommonCrypto
+#endif
 
 /// JSON Web Key (JWK) container for AES-GCM keys for encryption/decryption.
 public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, Sendable {
@@ -78,7 +81,6 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, Sendable {
 }
 
 /// JSON Web Key (JWK) container for AES Key Wrap for encryption/decryption.
-@available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *)
 public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebDecryptingKey, Sendable {
     public typealias PublicKey = Self
     
@@ -135,10 +137,86 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebDecryptingKey, Sendable
     }
     
     public func unwrap<D>(_ data: D) throws -> SymmetricKey where D: DataProtocol {
-        try AES.KeyWrap.unwrap(data, using: symmetricKey)
+        if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
+            return try AES.KeyWrap.unwrap(data, using: symmetricKey)
+        } else {
+#if canImport(CommonCrypto)
+            let wrappedKey = Data(data)
+            var rawKey = Data(repeating: 0, count: CCSymmetricUnwrappedSize(CCWrappingAlgorithm(kCCWRAPAES), wrappedKey.count))
+            let (result, unwrappedKeyCount) = try symmetricKey.data.withUnsafeBytes { kek in
+                wrappedKey.withUnsafeBytes { wrappedKey in
+                    rawKey.withUnsafeMutableBytes { rawKey in
+                        var unwrappedKeyCount = 0
+                        let result = CCSymmetricKeyUnwrap(
+                            CCWrappingAlgorithm(kCCWRAPAES),
+                            CCrfc3394_iv,
+                            CCrfc3394_ivLen,
+                            kek.baseAddress,
+                            kek.count,
+                            wrappedKey.baseAddress!,
+                            wrappedKey.count,
+                            rawKey.baseAddress,
+                            &unwrappedKeyCount
+                        )
+                        return (result, unwrappedKeyCount)
+                    }
+                }
+            }
+            switch Int(result) {
+            case kCCSuccess:
+                return .init(data: rawKey.prefix(unwrappedKeyCount))
+            case kCCParamError:
+                throw CryptoKitError.incorrectParameterSize
+            case kCCBufferTooSmall:
+                throw CryptoKitError.incorrectKeySize
+            default:
+                throw CryptoKitError.underlyingCoreCryptoError(error: result)
+            }
+#else
+            fatalError()
+#endif
+        }
     }
     
     public func wrap(_ key: SymmetricKey) throws -> Data {
-        try AES.KeyWrap.wrap(key, using: symmetricKey)
+        if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
+            return try AES.KeyWrap.wrap(key, using: symmetricKey)
+        } else {
+#if canImport(CommonCrypto)
+            let rawKey = key.data
+            var wrappedKey = Data(repeating: 0, count: CCSymmetricWrappedSize(CCWrappingAlgorithm(kCCWRAPAES), rawKey.count))
+            let (result, wrappedKeyCount) = try symmetricKey.data.withUnsafeBytes { kek in
+                rawKey.withUnsafeBytes { rawKey in
+                    wrappedKey.withUnsafeMutableBytes { wrappedKey in
+                        var wrappedKeyCount = 0
+                        let result = CCSymmetricKeyWrap(
+                            CCWrappingAlgorithm(kCCWRAPAES),
+                            CCrfc3394_iv,
+                            CCrfc3394_ivLen,
+                            kek.baseAddress,
+                            kek.count,
+                            rawKey.baseAddress,
+                            rawKey.count,
+                            wrappedKey.baseAddress,
+                            &wrappedKeyCount
+                        )
+                        return (result, wrappedKeyCount)
+                    }
+                }
+            }
+            switch Int(result) {
+            case kCCSuccess:
+                return wrappedKey.prefix(wrappedKeyCount)
+            case kCCParamError:
+                throw CryptoKitError.incorrectParameterSize
+            case kCCBufferTooSmall:
+                throw CryptoKitError.incorrectKeySize
+            default:
+                throw CryptoKitError.underlyingCoreCryptoError(error: result)
+            }
+#else
+            fatalError()
+#endif
+        }
     }
 }
