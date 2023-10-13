@@ -34,8 +34,7 @@ extension ProtectedWebContainer {
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        let encoded = encoded.urlBase64EncodedData()
-        try container.encode(String(decoding: encoded, as: UTF8.self))
+        try container.encode(encoded.urlBase64EncodedString())
     }
 }
 

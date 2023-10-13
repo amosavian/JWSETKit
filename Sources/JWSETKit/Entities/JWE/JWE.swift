@@ -78,13 +78,16 @@ public struct JSONWebEncryption: Hashable, Sendable {
     
     /// Creates new JWE container with encrypted data using given recipients public key.
     ///
+    /// - Note: `algorithm` and `encryptionAlgorithm` paramteres in `protected` shall
+    ///         be overrided by `keyEncryptingAlgorithm` and `contentEncryptionAlgorithm`.
+    ///
     /// - Important: For `PBES2` algorithms, provide password using
     ///         `SymmetricKey(data: Data(password.utf8))` to`keyEncryptionKey`.\
     ///         `pbes2Count` and `pbes2Salt` must be provided in `protected` fields.
     ///
     /// - Parameters:
+    ///   - protected: Protected header of JWE.
     ///   - plainData: Data to be encrypted.
-    ///   - compressionAlgorithm: Compression algorithm of plain-text, if applicable.
     ///   - additionalAuthenticatedData: An input to an AEAD operation that is integrity protected but not encrypted.
     ///   - keyEncryptingAlgorithm: Encryption algorithm applied to `contentEncryptionKey`
     ///         using `keyEncryptionKey`.
@@ -93,9 +96,8 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///   - contentEncryptionKey: AEAD key, generates a new key compatible
     ///         with `contentEncryptionAlgorithm` if `nil` is passed.
     public init<D: DataProtocol>(
-        plainData: D,
         protected: JOSEHeader? = nil,
-        compressionAlgorithm: JSONWebCompressionAlgorithm? = nil,
+        plainData: D,
         additionalAuthenticatedData: Data? = nil,
         keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
         keyEncryptionKey: (any JSONWebEncryptingKey)?,
@@ -105,7 +107,6 @@ public struct JSONWebEncryption: Hashable, Sendable {
         var header = protected ?? JOSEHeader(algorithm: keyEncryptingAlgorithm, type: "JWE")
         header.algorithm = keyEncryptingAlgorithm
         header.encryptionAlgorithm = contentEncryptionAlgorithm
-        header.compressionAlgorithm = compressionAlgorithm
         
         let cek = try contentEncryptionKey ?? contentEncryptionAlgorithm.generateRandomKey()
         let cekData = try JSONEncoder().encode(cek)
@@ -268,9 +269,9 @@ extension JSONWebEncryption: LosslessStringConvertible, CustomDebugStringConvert
         Protected Header: \(header.protected.value)
         Unprotected Header: \(String(describing: header.unprotected))
         Recipients: \(recipients)
-        IV: \(String(decoding: sealed.iv.urlBase64EncodedData(), as: UTF8.self))
-        CipherText: \(String(decoding: sealed.ciphertext.urlBase64EncodedData(), as: UTF8.self))
-        Tag: \(String(decoding: sealed.tag.urlBase64EncodedData(), as: UTF8.self))
+        IV: \(sealed.iv.urlBase64EncodedString())
+        CipherText: \(sealed.ciphertext.urlBase64EncodedString())
+        Tag: \(sealed.tag.urlBase64EncodedString())
         """
     }
 }

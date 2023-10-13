@@ -37,6 +37,7 @@ public struct JSONWebTokenClaimsOAuthParameters: JSONWebContainerParameters {
     /// The authorization server SHOULD document the size of any identifier it issues.
     public var clientID: String?
     
+    @_documentation(visibility: private)
     public static let keys: [PartialKeyPath<Self>: String] = [
         \.scope: "scope", \.scopes: "scope", \.clientID: "client_id",
     ]

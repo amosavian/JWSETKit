@@ -27,6 +27,13 @@ extension DataProtocol {
             }
         return Data(result)
     }
+    
+    /// Returns a URL-safe Base-64 encoded `Data` in String representation.
+    ///
+    /// - returns: The URL-safe Base-64 encoded data in string representation.
+    public func urlBase64EncodedString() -> String {
+        String(decoding: urlBase64EncodedData(), as: UTF8.self)
+    }
 }
 
 extension Data {

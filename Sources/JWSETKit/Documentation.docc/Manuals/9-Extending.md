@@ -53,7 +53,37 @@ public typealias DPoP = JSONWebSignature<ProtectedJSONWebContainer<DPoPClaims>>
 ```
 
 then extend `DPoP` to support defined
-[claims](https://datatracker.ietf.org/doc/html/rfc9449#section-4.2):
+[claims](https://datatracker.ietf.org/doc/html/rfc9449#section-4.2)
+
+``` swift
+public struct DPoPRegisteredParameters: JSONWebContainerParameters {
+    public typealias Container = DPoPClaims
+    
+    public var jwtId: String?
+    public var httpMethod: String?
+    public var httpURL: URL?
+    public var issuedAt: Date?
+    public var accessTokenHash: Data?
+    public var nonce: String?
+
+    static let keys: [PartialKeyPath<Self>: String] = [
+        \.jwtId: "jti", \.httpMethod: "htm", \.httpURL: "htu",
+        \.issuedAt: "iat", \.accessTokenHash: "ath", \.nonce: "nonce",
+    ]
+}
+
+extension DPoPClaims {
+    @_documentation(visibility: private)
+    public subscript<T>(dynamicMember keyPath: KeyPath<DPoPRegisteredParameters, T?>) -> T? {
+        get {
+            storage[stringKey(keyPath)]
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue
+        }
+    }
+}
+```
 
 ## Topics
 

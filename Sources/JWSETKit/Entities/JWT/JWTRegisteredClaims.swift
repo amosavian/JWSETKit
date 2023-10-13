@@ -141,6 +141,7 @@ public struct JSONWebTokenClaimsRegisteredParameters: JSONWebContainerParameters
     /// Use of this claim is OPTIONAL.
     public var subjectURL: URL?
     
+    @_documentation(visibility: private)
     public static let keys: [PartialKeyPath<Self>: String] = [
         \.audience: "aud", \.audienceURL: "aud", \.expiry: "exp",
         \.issuedAt: "iat", \.issuer: "iss", \.issuerURL: "iss",

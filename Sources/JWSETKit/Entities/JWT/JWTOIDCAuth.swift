@@ -109,6 +109,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters: JSONWebContainerParame
     /// this is REQUIRED; otherwise, its inclusion is OPTIONAL.
     public var codeHash: Data?
     
+    @_documentation(visibility: private)
     public static let keys: [PartialKeyPath<Self>: String] = [
         \.authTime: "auth_time", \.authenticationContextClassReference: "acr",
         \.authenticationMethodsReferences: "amr", \.nonce: "nonce",
@@ -125,16 +126,6 @@ extension JSONWebTokenClaims {
         }
         set {
             storage[stringKey(keyPath)] = newValue
-        }
-    }
-    
-    @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, Data?>) -> Data? {
-        get {
-            storage[stringKey(keyPath), true]
-        }
-        set {
-            storage[stringKey(keyPath), true] = newValue
         }
     }
     

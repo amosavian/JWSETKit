@@ -76,6 +76,20 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
         self.tag = sealedBox.tag
     }
     
+    /// Creates a sealed box from the given AES sealed box.
+    ///
+    /// - Parameters:
+    ///   - sealedBox: Container for your data.
+    public init<D>(data: D, ivLength: Int, tagLength: Int) throws where D: DataProtocol {
+        guard ivLength > 0, tagLength > 0, data.count >= ivLength + tagLength else {
+            throw CryptoKitError.incorrectParameterSize
+        }
+        let data = Data(data)
+        self.iv = data.prefix(ivLength)
+        self.ciphertext = data.dropFirst(ivLength).dropLast(tagLength)
+        self.tag = data.suffix(tagLength)
+    }
+    
     public static func == (lhs: SealedData, rhs: SealedData) -> Bool {
         lhs.iv == rhs.iv && lhs.ciphertext == rhs.ciphertext && lhs.tag == rhs.tag
     }

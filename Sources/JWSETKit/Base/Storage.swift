@@ -89,9 +89,10 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
             }
         }
         set {
-            updateValue(key: member, value: urlEncoded ?
-                (newValue?.urlBase64EncodedData()).map { String(decoding: $0, as: UTF8.self) } :
-                newValue?.base64EncodedString())
+            updateValue(
+                key: member,
+                value: urlEncoded ? newValue?.urlBase64EncodedString() : newValue?.base64EncodedString()
+            )
         }
     }
     
@@ -107,7 +108,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         }
         set {
             self[member] = newValue.compactMap {
-                urlEncoded ? String(decoding: $0.urlBase64EncodedData(), as: UTF8.self) : $0.base64EncodedString()
+                urlEncoded ? $0.urlBase64EncodedString() : $0.base64EncodedString()
             }
         }
     }
@@ -183,6 +184,11 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         case is URL.Type, is NSURL.Type:
             return (value as? String)
                 .map { URL(string: $0) } as? T
+        case is Data.Type, is NSData.Type, is [UInt8].Type:
+            return (value as? String)
+                .map {
+                    Data(urlBase64Encoded: $0) ?? Data(base64Encoded: $0, options: [.ignoreUnknownCharacters])
+                } as? T
         case is Locale.Type, is NSLocale.Type:
             return (value as? String)
                 .map { Locale(bcp47: $0) } as? T
@@ -223,6 +229,9 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         }
         
         switch value {
+        case let value as Data:
+            // Default encoding for data is `Base64URL`.
+            storage[key] = .init(value.urlBase64EncodedString())
         case let value as Date:
             // Dates in JWT are `NumericDate` which is a JSON numeric value representing
             // the number of seconds from 1970-01-01T00:00:00Z UTC until

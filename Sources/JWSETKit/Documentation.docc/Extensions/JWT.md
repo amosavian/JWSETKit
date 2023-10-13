@@ -21,7 +21,8 @@ To create a JWT instance from `String` or `Data`,
 let jwt = try JSONWebToken(from: authorization)
 ```
 
-To assign a JWT to [`URLRequest`]()'s `Authorization` header,
+To assign a JWT to [`URLRequest`](https://developer.apple.com/documentation/foundation/urlrequest)'s
+`Authorization` header,
 
 ```swift
 var request = URLRequest(url: URL(string: "https://www.example.com")!)
@@ -81,7 +82,7 @@ Also `nbf` and `exp` claims can be verified using system date or a custom date.
 
 ### Verify Signature
 
-See [JWS Signature Verification](3-jws#Verify-Signature)
+See [JWS Signature Verification](jsonwebsignature#Verify-Signature)
 
 ### Verify Expiration
 
@@ -112,7 +113,7 @@ A custom date can be passed to `verifyDate()`.
 
 ## Updating Signature
 
-See [JWS Signature Update](3-jws#UpdatingAdding-Signature)
+See [JWS Signature Update](jsonwebsignature#UpdatingAdding-Signature)
 
 ## Topics
 

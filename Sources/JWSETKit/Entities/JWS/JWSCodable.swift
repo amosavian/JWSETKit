@@ -147,23 +147,22 @@ extension JSONWebSignature: Codable {
             return
         }
         let value = [
-            signature.protected.encoded.urlBase64EncodedData(),
-            signature.signature.urlBase64EncodedData(),
+            signature.protected.encoded.urlBase64EncodedString(),
+            signature.signature.urlBase64EncodedString(),
         ]
-        .map { String(decoding: $0, as: UTF8.self) }
         .joined(separator: "..")
         try container.encode(value)
     }
     
     fileprivate func encodeAsCompleteJSON(_ encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(payload.encoded.urlBase64EncodedData(), forKey: .payload)
+        try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
         try container.encode(signatures, forKey: .signatures)
     }
     
     fileprivate func encodeAsFlattenedJSON(_ encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(payload.encoded.urlBase64EncodedData(), forKey: .payload)
+        try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
         var headerContainer = encoder.container(keyedBy: JSONWebSignatureHeader.CodingKeys.self)
         try headerContainer.encodeIfPresent(signatures.first?.protected, forKey: .protected)
         try headerContainer.encodeIfPresent(signatures.first?.unprotected, forKey: .header)

@@ -53,9 +53,7 @@ To verify the signature(s), first [create public key(s)](4-keys) then use
 
 If an array of keys is passed to `verifySignature(using:)` the most appropriate
 key will be selected according `alg` value and then `kid` value if multiple keys
-are candidates regarding [JOSE header](joseheader) counterpart of signature.
-
-- Note: ``JSONWebSignature`` currently don't honor `b64` key in JOSE header if set to `false`.
+are candidates regarding ``JOSEHeader`` counterpart of signature.
 
 Using symmetric key for `HS256`, etc.,
 ```swift
@@ -129,7 +127,7 @@ Then [create private key(s)](4-keys) for signing operation.
 
 If an array of keys is passed to `updateSignature(using:)` the most appropriate
 key will be selected according `alg` value and then `kid` value if multiple keys
-are candidates regarding [JOSE header](joseheader) counterpart of signature.
+are candidates regarding ``JOSEHeader`` counterpart of signature.
 
 ```swift
 let hmacKey = SymmetricKey(size: .bits128)

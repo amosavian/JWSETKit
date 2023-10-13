@@ -130,7 +130,7 @@ extension JSONWebEncryption: Codable {
             sealed.ciphertext,
             sealed.tag,
         ]
-        .map { String(decoding: $0.urlBase64EncodedData(), as: UTF8.self) }
+        .map { $0.urlBase64EncodedString() }
         .joined(separator: ".")
         try container.encode(value)
     }

@@ -81,12 +81,6 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
     public var certificateChain: [Certificate]
     
-    @available(*, deprecated, renamed: "certificateThumbprint")
-    public var certificateThumprint: Data? {
-        get { certificateThumbprint }
-        set { certificateThumbprint = newValue }
-    }
-    
     /// The "`x5t`"/"`x5t#S256`" (X.509 certificate SHA-1/256 thumbprint)
     /// Header Parameter is a `base64url-encoded` SHA-1/256 thumbprint
     /// (a.k.a. digest) of the `DER` encoding of the X.509 certificate [RFC5280]
@@ -125,7 +119,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     /// Use of this Header Parameter is OPTIONAL.
     public var contentType: JSONWebContentType?
     
-    /// The "crit" (critical) Header Parameter indicates that extensions to this specification and/or [JWA]
+    /// The "`crit`" (critical) Header Parameter indicates that extensions to this specification and/or [JWA]
     /// are being used that MUST be understood and processed.
     ///
     /// Its value is an array listing the Header Parameter names present in
@@ -156,7 +150,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     
     /// The "`url`" header parameter specifies the URL to which this JWS object is directed.
     ///
-    /// The "url" header parameter MUST be carried in the protected header of the JWS.
+    /// The "`url`" header parameter MUST be carried in the protected header of the JWS.
     /// The value of the "`url`" header parameter MUST be a string representing the target URL.
     public var url: URL?
     
@@ -165,6 +159,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     /// The value is `true` if not present
     public var base64: Bool?
     
+    @_documentation(visibility: private)
     public static let keys: [PartialKeyPath<Self>: String] = [
         \.algorithm: "alg", \.jsonWebKeySetUrl: "jku",
         \.key: "jwk", \.keyId: "kid", \.certificateChain: "x5c",

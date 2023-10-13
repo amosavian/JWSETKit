@@ -7,6 +7,8 @@
 
 import Foundation
 
+/// Contains JWE Per-Recipient Unprotected Header and
+/// content encryption key encrypted using recipient's public key.
 public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
     enum CodingKeys: String, CodingKey {
         case header
@@ -26,6 +28,11 @@ public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
     /// plaintext to produce the ciphertext and the Authentication Tag.
     public var encrypedKey: Data
     
+    /// Initializes a new recipient with given header and encrypted key.
+    ///
+    /// - Parameters:
+    ///   - header: JWE Per-Recipient Unprotected Header.
+    ///   - encrypedKey: Content Encryption Key (CEK).
     public init(header: JOSEHeader? = nil, encrypedKey: Data) {
         self.header = header
         self.encrypedKey = encrypedKey
@@ -46,6 +53,6 @@ public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         try container.encodeIfPresent(header, forKey: .header)
-        try container.encode(encrypedKey.urlBase64EncodedData(), forKey: .encrypedKey)
+        try container.encode(encrypedKey.urlBase64EncodedString(), forKey: .encrypedKey)
     }
 }

@@ -40,30 +40,37 @@ extension JSONWebAlgorithm {
     }
 }
 
+@_documentation(visibility: private)
 public func == <RHS: JSONWebAlgorithm>(lhs: any JSONWebAlgorithm, rhs: RHS) -> Bool {
     lhs.rawValue == rhs.rawValue
 }
 
+@_documentation(visibility: private)
 public func == <RHS: JSONWebAlgorithm>(lhs: (any JSONWebAlgorithm)?, rhs: RHS) -> Bool {
     lhs?.rawValue == rhs.rawValue
 }
 
+@_documentation(visibility: private)
 public func == <LHS: JSONWebAlgorithm>(lhs: LHS, rhs: any JSONWebAlgorithm) -> Bool {
     lhs.rawValue == rhs.rawValue
 }
 
+@_documentation(visibility: private)
 public func == <LHS: JSONWebAlgorithm>(lhs: LHS, rhs: (any JSONWebAlgorithm)?) -> Bool {
     lhs.rawValue == rhs?.rawValue
 }
 
+@_documentation(visibility: private)
 public func == <LHS: JSONWebAlgorithm, RHS: JSONWebAlgorithm>(lhs: LHS, rhs: RHS) -> Bool {
     lhs.rawValue == rhs.rawValue
 }
 
+@_documentation(visibility: private)
 public func ~= <JWA: JSONWebAlgorithm>(lhs: JWA, rhs: JWA) -> Bool {
     lhs.rawValue == rhs.rawValue
 }
 
+@_documentation(visibility: private)
 public func ~= <LHS: JSONWebAlgorithm, RHS: JSONWebAlgorithm>(lhs: LHS, rhs: RHS) -> Bool {
     lhs.rawValue == rhs.rawValue
 }
@@ -311,9 +318,6 @@ public struct JSONWebKeyType: RawRepresentable, Hashable, Codable, ExpressibleBy
 extension JSONWebKeyType {
     static let empty: Self = ""
     
-    @available(*, deprecated, renamed: "ellipticCurve")
-    
-    public static var elipticCurve: Self { ellipticCurve }
     /// Elliptic Curve
     public static let ellipticCurve: Self = "EC"
     

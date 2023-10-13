@@ -174,6 +174,6 @@ extension JSONWebSignature: LosslessStringConvertible, CustomDebugStringConverti
     }
     
     public var debugDescription: String {
-        "Signatures: \(signatures.debugDescription)\nPayload: \(String(decoding: payload.encoded.urlBase64EncodedData(), as: UTF8.self))"
+        "Signatures: \(signatures.debugDescription)\nPayload: \(payload.encoded.urlBase64EncodedString())"
     }
 }

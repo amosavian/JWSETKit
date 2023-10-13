@@ -6,7 +6,7 @@ JWS / JWE / JWT Kit for Swift
 
 JSON Web Signature (JWS) represents content secured with digital
 signatures or Message Authentication Codes (MACs) using JSON-based
-[RFC7159][RFC7159] data structures.
+[RFC7159](https://datatracker.ietf.org/doc/html/rfc7159) data structures.
 The JWS cryptographic mechanisms provide integrity protection for 
 an arbitrary sequence of octets.
 
@@ -36,3 +36,20 @@ dependencies: [
     .product(name: "JWSETKit", package: "JWSETKit"),
 ]
 ```
+
+## Usage
+
+### JSON Web Token (JWT)
+
+Check ``JSONWebToken`` documentation for usage, validation and signing
+of JWT.
+
+### JSON Web Signature (JWS)
+
+Check ``JSONWebSignature`` documentation for usage, validation and signing
+of JWS.
+
+### JSON Web Encryption (JWE)
+
+Check ``JSONWebEncryption`` documentation for usage, encrypting and decrypting
+payload.

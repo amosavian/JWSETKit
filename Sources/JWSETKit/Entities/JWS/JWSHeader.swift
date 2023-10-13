@@ -71,7 +71,7 @@ public struct JSONWebSignatureHeader: Hashable, Codable, Sendable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(protected, forKey: .protected)
         try container.encodeIfPresent(unprotected, forKey: .header)
-        try container.encode(signature.urlBase64EncodedData(), forKey: .signature)
+        try container.encode(signature.urlBase64EncodedString(), forKey: .signature)
     }
 }
 

@@ -47,7 +47,27 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
     /// or they can be ignored.
     public var ephemeralPublicKey: (any JSONWebKey)?
     
-    /// The "iv" (initialization vector) Header Parameter value is the
+    /// The "`apu`" (agreement PartyUInfo) value for key agreement algorithms
+    /// using it (such as "`ECDH-ES`"), represented as a `base64url`-encoded string.
+    ///
+    /// When used, the PartyUInfo value contains information about
+    /// the producer.  Use of this Header Parameter is OPTIONAL.
+    ///
+    /// This Header Parameter MUST be understood and processed by
+    /// implementations when these algorithms are used.
+    public var agreementPartyUInfo: Data?
+    
+    /// The "`apv`" (agreement PartyVInfo) value for key agreement algorithms
+    /// using it (such as "`ECDH-ES`"), represented as a `base64url` encoded string.
+    ///
+    /// When used, the PartyVInfo value contains information about
+    /// the recipient.  Use of this Header Parameter is OPTIONAL.
+    ///
+    /// This Header Parameter MUST be understood and processed by
+    /// implementations when these algorithms are used.
+    public var agreementPartyVInfo: Data?
+    
+    /// The "`iv`" (initialization vector) Header Parameter value is the
     /// `base64url-encoded` representation of the 96-bit IV value used for the
     /// key encryption operation.
     ///
@@ -55,7 +75,7 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
     /// processed by implementations when these algorithms are used.
     public var initialVector: Data?
     
-    /// The "tag" (authentication tag) Header Parameter value is the
+    /// The "`tag`" (authentication tag) Header Parameter value is the
     /// `base64url-encoded` representation of the 128-bit Authentication Tag
     /// value resulting from the key encryption operation.
     ///
@@ -63,10 +83,10 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
     /// implementations when these algorithms are used.
     public var authenticationTag: Data?
     
-    /// The "p2s" (PBES2 salt input) Header Parameter encodes a Salt Input
-    /// value, which is used as part of the PBKDF2 salt value.
+    /// The "`p2s`" (`PBES2` salt input) Header Parameter encodes a Salt Input
+    /// value, which is used as part of the `PBKDF2` salt value.
     ///
-    /// The "p2s" value is BASE64URL(Salt Input).
+    /// The "`p2s`" value is `BASE64URL(Salt Input)`.
     ///
     /// This Header Parameter MUST be present and MUST be understood
     /// and processed by implementations when these algorithms are used.
@@ -74,11 +94,11 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
     /// A Salt Input value containing 8 or more octets MUST be used.
     /// A new Salt Input value MUST be generated randomly for every
     /// encryption operation; see RFC 4086 for considerations on
-    /// generating random values.  The salt value used is (UTF8(Alg) || 0x00
-    /// || Salt Input), where Alg is the "alg" (algorithm) Header Parameter value.
+    /// generating random values.  The salt value used is `(UTF8(Alg) || 0x00 || Salt Input)`, 
+    /// where Alg is the "`alg`" (algorithm) Header Parameter value.
     public var pbes2Salt: Data?
     
-    /// The "p2c" (PBES2 count) Header Parameter contains the PBKDF2
+    /// The "`p2c`" (`PBES2` count) Header Parameter contains the `PBKDF2`
     /// iteration count, represented as a positive JSON integer.
     ///
     /// This Header Parameter MUST be present and MUST be understood and processed by
@@ -89,9 +109,10 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
     /// iteration count of 1000 is RECOMMENDED. (600,000 by OWASP as of 2023)
     public var pbes2Count: Int?
     
+    @_documentation(visibility: private)
     public static let keys: [PartialKeyPath<Self>: String] = [
         \.encryptionAlgorithm: "enc", \.compressionAlgorithm: "zip",
-        \.ephemeralPublicKey: "epk",
+        \.ephemeralPublicKey: "epk", \.agreementPartyUInfo: "apu", \.agreementPartyVInfo: "apv",
         \.initialVector: "iv", \.authenticationTag: "tag",
         \.pbes2Salt: "p2s", \.pbes2Count: "p2c",
     ]
@@ -105,16 +126,6 @@ extension JOSEHeader {
         }
         set {
             storage[stringKey(keyPath)] = newValue
-        }
-    }
-    
-    @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, Data?>) -> Data? {
-        get {
-            storage[stringKey(keyPath), true]
-        }
-        set {
-            storage[stringKey(keyPath), true] = newValue
         }
     }
 }

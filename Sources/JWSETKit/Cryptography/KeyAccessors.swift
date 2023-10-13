@@ -104,12 +104,6 @@ public struct JSONWebKeyRegisteredParameters {
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
     public var certificateChain: [Certificate]
     
-    @available(*, deprecated, renamed: "certificateThumbprint")
-    public var certificateThumprint: Data? {
-        get { certificateThumbprint }
-        set { certificateThumbprint = newValue }
-    }
-    
     /// The "`x5t`"/"`x5t#S256`" (X.509 certificate SHA-1/256 thumbprint)
     /// Header Parameter is a `base64url-encoded` SHA-1/256 thumbprint
     /// (a.k.a. digest) of the `DER` encoding of the X.509 certificate [RFC5280]
@@ -155,9 +149,6 @@ public struct JSONWebKeyRegisteredParameters {
     
     /// RSA private key first CRT coefficient.
     public var firstCRTCoefficient: Data?
-    
-//    /// RSA private key other primes info.
-//    public var otherPrimesInfo: Data?
     
     /// Symmetric Key Value.
     public var keyValue: SymmetricKey?

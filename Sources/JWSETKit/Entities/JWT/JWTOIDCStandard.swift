@@ -211,6 +211,7 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters: JSONWebContainerPa
     /// until the date/time.
     public var updatedAt: Date?
     
+    @_documentation(visibility: private)
     public static let keys: [PartialKeyPath<Self>: String] = [
         \.name: "name", \.givenName: "given_name", \.familyName: "family_name",
         \.middleName: "middle_name", \.nickname: "nickname", \.preferredUsername: "preferred_username",
@@ -222,6 +223,7 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters: JSONWebContainerPa
         \.address: "address", \.updatedAt: "updated_at",
     ]
     
+    @_documentation(visibility: private)
     public static let localizableKeys: [PartialKeyPath<Self>] = [
         \.name, \.givenName, \.familyName, \.middleName, \.nickname,
         \.profileURL, \.websiteURL,
