@@ -14,7 +14,7 @@ import Crypto
 import _CryptoExtras
 
 /// JSON Web Key (JWK) container for AES-CBC keys for encryption/decryption with HMAC authentication.
-public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendable {
+public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWebDecryptingKey, Sendable {
     public typealias PublicKey = Self
     
     public var publicKey: JSONWebKeyAESCBCHMAC { self }
@@ -54,6 +54,10 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendab
         }
     }
     
+    public init() throws {
+        self.init(size: .bits128)
+    }
+    
     public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyAESCBCHMAC {
         .init(storage: storage)
     }
@@ -68,10 +72,10 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendab
     /// Returns a new AES-CBC with HMAC with random key.
     ///
     /// - Parameter keySize: Size of random key for AES-CBC in bits.
-    public init(_ keySize: SymmetricKeySize) {
+    public init(size: SymmetricKeySize) {
         self.storage = .init()
-        self.algorithm = .aesEncryptionCBCSHA(bitCount: keySize.bitCount)
-        self.keyValue = SymmetricKey(size: .init(bitCount: keySize.bitCount * 2))
+        self.algorithm = .aesEncryptionCBCSHA(bitCount: size.bitCount)
+        self.keyValue = SymmetricKey(size: .init(bitCount: size.bitCount * 2))
     }
     
     /// Initializes a AES-CBC with HMAC key for encryption.
@@ -101,6 +105,14 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, Sendab
             throw CryptoKitError.authenticationFailure
         }
         return try AES._CBC.decrypt(data.ciphertext, using: aesSymmetricKey, iv: .init(ivBytes: data.iv))
+    }
+    
+    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
+        try seal(data, using: algorithm).combined
+    }
+    
+    public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
+        try open(.init(data: data, ivLength: ivLength, tagLength: tagLength), using: algorithm)
     }
     
     private func hmac(_ data: Data) throws -> Data {

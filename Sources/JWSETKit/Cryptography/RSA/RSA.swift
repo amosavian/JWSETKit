@@ -69,6 +69,10 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
         }
     }
     
+    public init() throws {
+        try self.init(keySize: .bits2048)
+    }
+    
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Signing.PrivateKey {
         let der = try JSONWebRSAPublicKey.pkcs1Representation(AnyJSONWebKey(storage: storage))
         return try .init(derRepresentation: der)
@@ -145,6 +149,10 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
                 self = value
             }
         }
+    }
+    
+    public init() throws {
+        try self.init(keySize: .bits2048)
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Encryption.PrivateKey {

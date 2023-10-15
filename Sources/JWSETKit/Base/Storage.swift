@@ -136,6 +136,15 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         }
     }
     
+    public func merging(_ other: JSONWebValueStorage, uniquingKeysWith combine: (Any, Any) throws -> Any) rethrows -> JSONWebValueStorage {
+        let storage = try storage.merging(other.storage) {
+            try .init(combine($0.value, $1.value))
+        }
+        var result = JSONWebValueStorage()
+        result.storage = storage
+        return result
+    }
+    
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(storage)

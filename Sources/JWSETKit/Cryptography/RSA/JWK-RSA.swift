@@ -14,9 +14,8 @@ import Crypto
 #endif
 #if canImport(CommonCrypto)
 import CommonCrypto
-#else
-import _CryptoExtras
 #endif
+import _CryptoExtras
 
 /// JSON Web Key (JWK) container for RSA public keys.
 public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSONWebEncryptingKey, Sendable {
@@ -117,6 +116,10 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
         result.secondFactorCRTExponent = nil
         result.firstCRTCoefficient = nil
         return result
+    }
+    
+    public init() throws {
+        self.storage = try _RSA.Signing.PrivateKey(keySize: .bits2048).storage
     }
     
     public init(storage: JSONWebValueStorage) {

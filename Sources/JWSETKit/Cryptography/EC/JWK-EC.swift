@@ -59,6 +59,10 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
         self.storage = storage
     }
     
+    public init() throws {
+        self.storage = try P256.Signing.PrivateKey().storage
+    }
+    
     public static func create(storage: JSONWebValueStorage) throws -> JSONWebECPrivateKey {
         .init(storage: storage)
     }

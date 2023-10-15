@@ -131,7 +131,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             let salt = Data(keyEncryptingAlgorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
             let key = try SymmetricKey.pbkdf2(
                 pbkdf2Password: password, salt: salt,
-                hashFunction: keyEncryptingAlgorithm.hashFunction,
+                hashFunction: keyEncryptingAlgorithm.hashFunction.unsafelyUnwrapped,
                 iterations: iterations
             )
             self.recipients = try [
@@ -183,64 +183,25 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///
     /// - Parameter key: Key that used to encrypt the content encryption key.
     /// - Returns: Decrypted payload.
-    public func decrypt(using key: any JSONWebKey) throws -> Data {
-        guard let algorithm = AnyJSONWebAlgorithm.specialized(header.protected.value.algorithm.rawValue) as? JSONWebKeyEncryptionAlgorithm else {
-            throw JSONWebKeyError.unknownAlgorithm
-        }
+    public func decrypt(using key: any JSONWebDecryptingKey, keyId: String? = nil) throws -> Data {
+        let recipient = try recipients.match(for: key, keyId: keyId)
+        let combinedHeader = header.protected.value
+            .merging(header.unprotected ?? .init(), uniquingKeysWith: { p, _ in p })
+            .merging(recipient.header ?? .init(), uniquingKeysWith: { p, _ in p })
         guard let contentEncAlgorithm = header.protected.value.encryptionAlgorithm else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        let cek: any JSONWebSealingKey
-        switch algorithm {
-        case .direct:
-            guard let cekCandidate = key as? (any JSONWebSealingKey) else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            cek = cekCandidate
-        case .aesGCM128KeyWrap, .aesGCM192KeyWrap, .aesGCM256KeyWrap:
-            guard let key = key as? (any JSONWebSealingKey) else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            guard let iv = header.protected.value.initialVector, let tag = header.protected.value.authenticationTag else {
-                throw CryptoKitError.authenticationFailure
-            }
-            let algorithm = JSONWebContentEncryptionAlgorithm(algorithm.rawValue.dropLast(2))
-            guard let cekData = recipients.compactMap({
-                try? key.open(.init(iv: iv, ciphertext: $0.encrypedKey, tag: tag), using: algorithm)
-            }).first else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            cek = SymmetricKey(data: cekData)
-        case .pbes2hmac256, .pbes2hmac384, .pbes2hmac512:
-            guard let password = key.keyValue?.data else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            guard let iterations = header.protected.value.pbes2Count else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            let salt = Data(algorithm.rawValue.utf8) + [0x00] + (header.protected.value.pbes2Salt ?? .init())
-            let key = try SymmetricKey.pbkdf2(
-                pbkdf2Password: password, salt: salt,
-                hashFunction: algorithm.hashFunction,
-                iterations: iterations
-            )
-            guard let cekData = recipients.compactMap({
-                try? key.decrypt($0.encrypedKey, using: algorithm)
-            }).first else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            cek = SymmetricKey(data: cekData)
-        default:
-            guard let key = key as? (any JSONWebDecryptingKey) else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            guard let cekData = recipients.compactMap({
-                try? key.decrypt($0.encrypedKey, using: algorithm)
-            }).first else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            cek = SymmetricKey(data: cekData)
+        
+        
+        var encryptedKey = recipient.encrypedKey
+        let algorithmValue = combinedHeader.algorithm.rawValue
+        guard let algorithm = AnyJSONWebAlgorithm.specialized(algorithmValue) as? JSONWebKeyEncryptionAlgorithm else {
+            throw JSONWebKeyError.unknownAlgorithm
         }
+        
+        var decryptingKey = key
+        try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &encryptedKey)        
+        let cek = try SymmetricKey(data: decryptingKey.decrypt(encryptedKey, using: algorithm))
         let authenticating = header.protected.encoded.urlBase64EncodedData() + (additionalAuthenticatedData ?? .init())
         return try cek.open(sealed, authenticating: authenticating, using: contentEncAlgorithm)
     }
@@ -273,20 +234,5 @@ extension JSONWebEncryption: LosslessStringConvertible, CustomDebugStringConvert
         CipherText: \(sealed.ciphertext.urlBase64EncodedString())
         Tag: \(sealed.tag.urlBase64EncodedString())
         """
-    }
-}
-
-extension JSONWebKeyEncryptionAlgorithm {
-    fileprivate var hashFunction: any HashFunction.Type {
-        switch self {
-        case .pbes2hmac256:
-            return SHA256.self
-        case .pbes2hmac384:
-            return SHA384.self
-        case .pbes2hmac512:
-            return SHA256.self
-        default:
-            fatalError("Invalid input.")
-        }
     }
 }

@@ -94,7 +94,7 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
     /// A Salt Input value containing 8 or more octets MUST be used.
     /// A new Salt Input value MUST be generated randomly for every
     /// encryption operation; see RFC 4086 for considerations on
-    /// generating random values.  The salt value used is `(UTF8(Alg) || 0x00 || Salt Input)`, 
+    /// generating random values.  The salt value used is `(UTF8(Alg) || 0x00 || Salt Input)`,
     /// where Alg is the "`alg`" (algorithm) Header Parameter value.
     public var pbes2Salt: Data?
     

@@ -28,6 +28,10 @@ extension P256.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension P256.Signing.PrivateKey: CryptoECPrivateKey {
+    public init() throws {
+        self.init(compactRepresentable: true)
+    }
+    
     public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         var digest = SHA256()
         digest.update(data: data)
@@ -39,6 +43,10 @@ extension P256.Signing.PrivateKey: CryptoECPrivateKey {
 extension SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
     var rawRepresentation: Data {
         fatalError("Private Keys in Secure Enclave are not encodable.")
+    }
+    
+    public init() throws {
+        try self.init(compactRepresentable: true)
     }
     
     init(rawRepresentation _: Data) throws {

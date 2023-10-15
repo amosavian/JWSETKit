@@ -56,3 +56,21 @@ public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
         try container.encode(encrypedKey.urlBase64EncodedString(), forKey: .encrypedKey)
     }
 }
+
+extension [JSONWebEncryptionRecipient] {
+    func match(for key: any JSONWebKey, keyId: String? = nil) throws -> Self.Element {
+        if let keyId, let recipient = first(where: {
+            $0.header?.keyId == keyId
+        }) {
+            return recipient
+        } else if let recipient = first(where: {
+            $0.header?.algorithm.keyType == key.keyType && $0.header?.algorithm.curve == key.curve
+        }) {
+            return recipient
+        } else if let recipient = first {
+            return recipient
+        } else {
+            throw JSONWebKeyError.keyNotFound
+        }
+    }
+}

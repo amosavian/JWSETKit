@@ -28,6 +28,10 @@ extension P521.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension P521.Signing.PrivateKey: CryptoECPrivateKey {
+    public init() throws {
+        self.init(compactRepresentable: true)
+    }
+    
     public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         var digest = SHA512()
         digest.update(data: data)

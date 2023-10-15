@@ -52,21 +52,19 @@ extension SymmetricKey: JSONWebKey {
 }
 
 extension SymmetricKey: JSONWebSigningKey {
+    public init() throws {
+        self.init(size: .bits128)
+    }
+    
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         var algorithm = algorithm
         if algorithm == .none {
             algorithm = .init(self.algorithm.rawValue)
         }
-        switch algorithm {
-        case .hmacSHA256:
-            return try JSONWebKeyHMAC<SHA256>(self).signature(data, using: algorithm)
-        case .hmacSHA384:
-            return try JSONWebKeyHMAC<SHA384>(self).signature(data, using: algorithm)
-        case .hmacSHA512:
-            return try JSONWebKeyHMAC<SHA512>(self).signature(data, using: algorithm)
-        default:
+        guard let keyClass = algorithm.keyClass?.private as? any JSONWebSymmetricSigningKey.Type else {
             throw JSONWebKeyError.unknownAlgorithm
         }
+        return try keyClass.init(self).signature(data, using: algorithm)
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
@@ -74,48 +72,36 @@ extension SymmetricKey: JSONWebSigningKey {
         if algorithm == .none {
             algorithm = .init(self.algorithm.rawValue)
         }
-        switch algorithm {
-        case .hmacSHA256:
-            try JSONWebKeyHMAC<SHA256>(self).verifySignature(signature, for: data, using: algorithm)
-        case .hmacSHA384:
-            try JSONWebKeyHMAC<SHA384>(self).verifySignature(signature, for: data, using: algorithm)
-        case .hmacSHA512:
-            try JSONWebKeyHMAC<SHA512>(self).verifySignature(signature, for: data, using: algorithm)
-        default:
+        
+        guard let keyClass = algorithm.keyClass?.public as? any JSONWebSymmetricSigningKey.Type else {
             throw JSONWebKeyError.unknownAlgorithm
         }
+        try keyClass.init(self).verifySignature(signature, for: data, using: algorithm)
     }
 }
 
 extension SymmetricKey: JSONWebDecryptingKey {
-    fileprivate func aesGCMDecrypt<D>(_ data: D) throws -> Data where D: DataProtocol {
-        switch data {
-        case let data as SealedData:
-            return try AES.GCM.open(.init(data), using: self)
-        default:
-            return try AES.GCM.open(.init(combined: data), using: self)
-        }
-    }
-    
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
+        if let keyClass = JSONWebKeyEncryptionAlgorithm(algorithm.rawValue).keyClass?.private as? any JSONWebSymmetricDecryptingKey.Type {
+            return try keyClass.init(self).decrypt(data, using: algorithm)
+        }
+        
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
-            return try aesGCMDecrypt(data)
-        case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256,
-             .pbes2hmac256, .pbes2hmac384, .pbes2hmac512:
-            return try JSONWebKeyAESKW(storage: storage).unwrap(data).data
+            return try JSONWebKeyAESGCM(self).open(.init(data: data, ivLength: 12, tagLength: 16), using: algorithm)
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }
     }
     
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
+        if let keyClass = JSONWebKeyEncryptionAlgorithm(algorithm.rawValue).keyClass?.private as? any JSONWebSymmetricDecryptingKey.Type {
+            return try keyClass.init(self).encrypt(data, using: algorithm)
+        }
+        
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
-            return try AES.GCM.seal(data, using: self).combined ?? .init()
-        case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256,
-             .pbes2hmac256, .pbes2hmac384, .pbes2hmac512:
-            return try JSONWebKeyAESKW(storage: storage).wrap(.init(data: Data(data)))
+            return try JSONWebKeyAESGCM(self).seal(data, using: algorithm).combined
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }
@@ -123,25 +109,21 @@ extension SymmetricKey: JSONWebDecryptingKey {
 }
 
 extension SymmetricKey: JSONWebSealingKey {
+    public init(_ key: SymmetricKey) throws {
+        self = key
+    }
+    
     public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using algorithm: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
-        switch algorithm {
-        case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
-            return try JSONWebKeyAESGCM(self).seal(data, iv: iv, authenticating: authenticating, using: algorithm)
-        case .aesEncryptionCBC128SHA256, .aesEncryptionCBC192SHA384, .aesEncryptionCBC256SHA512:
-            return try JSONWebKeyAESCBCHMAC(self).seal(data, iv: iv, authenticating: authenticating, using: algorithm)
-        default:
+        guard let keyClass = (algorithm as? JSONWebContentEncryptionAlgorithm)?.keyClass else {
             throw JSONWebKeyError.unknownAlgorithm
         }
+        return try keyClass.init(self).seal(data, iv: iv, authenticating: authenticating, using: algorithm)
     }
     
     public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using algorithm: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {
-        switch algorithm {
-        case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
-            return try JSONWebKeyAESGCM(self).open(data, authenticating: authenticating, using: algorithm)
-        case .aesEncryptionCBC128SHA256, .aesEncryptionCBC192SHA384, .aesEncryptionCBC256SHA512:
-            return try JSONWebKeyAESCBCHMAC(self).open(data, authenticating: authenticating, using: algorithm)
-        default:
+        guard let keyClass = (algorithm as? JSONWebContentEncryptionAlgorithm)?.keyClass else {
             throw JSONWebKeyError.unknownAlgorithm
         }
+        return try keyClass.init(self).open(data, authenticating: authenticating, using: algorithm)
     }
 }

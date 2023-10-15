@@ -250,6 +250,12 @@ extension SecKey: JSONWebValidatingKey {
     }
 }
 
+extension JSONWebSigningKey where Self: SecKey {
+    public init() throws {
+        throw JSONWebKeyError.operationNotAllowed
+    }
+}
+
 extension SecKey: JSONWebSigningKey {
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {

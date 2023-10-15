@@ -99,6 +99,9 @@ public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
     /// Public key.
     var publicKey: PublicKey { get }
     
+    /// Generates new random key.
+    init() throws
+    
     /// Decrypts ciphered data using current key.
     ///
     /// - Parameters:
@@ -114,8 +117,23 @@ extension JSONWebDecryptingKey {
     }
 }
 
+/// A JSON Web Key (JWK) able to decrypt cipher-texts using a symmetric key.
+public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey {
+    init(_ key: SymmetricKey) throws
+}
+
 /// A JSON Web Key (JWK) able to encrypt/decrypt plain-texts with authentication-tag.
 public protocol JSONWebSealingKey: JSONWebKey {
+    /// Initializes a key for encryption with given `SymmetricKey`.
+    ///
+    /// - Parameter key: A symmetric cryptographic key.
+    init(_ key: SymmetricKey) throws
+    
+    /// Returns a new random key.
+    ///
+    /// - Parameter keySize: Size of random key in bits.
+    init(size: SymmetricKeySize)
+    
     /// Encrypts plain-text data using current key.
     ///
     /// - Parameters:
@@ -210,6 +228,9 @@ public protocol JSONWebSigningKey: JSONWebValidatingKey {
     /// Public key.
     var publicKey: PublicKey { get }
     
+    /// Generates new random key.
+    init() throws
+    
     /// Creates the cryptographic signature for a block of data using a private key and specified algorithm.
     ///
     /// - Parameters:
@@ -223,6 +244,11 @@ extension JSONWebSigningKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
+}
+
+/// A JSON Web Key (JWK) able to generate a signature using a symmetric key.
+public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey {
+    init(_ key: SymmetricKey) throws
 }
 
 /// A type-erased general container for a JSON Web Key (JWK).

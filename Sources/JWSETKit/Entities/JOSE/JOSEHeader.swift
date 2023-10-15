@@ -47,6 +47,11 @@ public struct JOSEHeader: JSONWebContainer {
         .init(storage: storage)
     }
     
+    public func merging(_ other: JOSEHeader, uniquingKeysWith combine: (Any, Any) throws -> Any) rethrows -> JOSEHeader {
+        let storage = try storage.merging(other.storage, uniquingKeysWith: combine)
+        return .init(storage: storage)
+    }
+    
     public func validate() throws {
         guard storage.contains(key: "alg") else {
             throw JSONWebValidationError.missingRequiredField(key: "alg")
