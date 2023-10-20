@@ -178,10 +178,16 @@ extension JSONWebKeyCurve {
         .p521: 66,
     ]
     
+    /// Key size in bytes.
     public var keySize: Int? {
         Self.keySizes[self]
     }
     
+    /// Registers a new curve for ECDSA/EdDSA.
+    ///
+    /// - Parameters:
+    ///   - curve: Curve name.
+    ///   - keySize: Uncompressed key size in bytes.
     public static func register(_ curve: Self, keySize: Int) {
         keySizes[curve] = keySize
     }

@@ -87,7 +87,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///
     /// - Parameters:
     ///   - protected: Protected header of JWE.
-    ///   - plainData: Data to be encrypted.
+    ///   - content: Data to be encrypted.
     ///   - additionalAuthenticatedData: An input to an AEAD operation that is integrity protected but not encrypted.
     ///   - keyEncryptingAlgorithm: Encryption algorithm applied to `contentEncryptionKey`
     ///         using `keyEncryptionKey`.
@@ -97,7 +97,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///         with `contentEncryptionAlgorithm` if `nil` is passed.
     public init<D: DataProtocol>(
         protected: JOSEHeader? = nil,
-        plainData: D,
+        content: D,
         additionalAuthenticatedData: Data? = nil,
         keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
         keyEncryptionKey: (any JSONWebEncryptingKey)?,
@@ -107,6 +107,13 @@ public struct JSONWebEncryption: Hashable, Sendable {
         var header = protected ?? JOSEHeader(algorithm: keyEncryptingAlgorithm, type: .jwe)
         header.algorithm = keyEncryptingAlgorithm
         header.encryptionAlgorithm = contentEncryptionAlgorithm
+        
+        let plainData: any DataProtocol
+        if let compressor = protected?.compressionAlgorithm?.compressor {
+            plainData = try compressor.compress(content)
+        } else {
+            plainData = content
+        }
         
         let cek = try contentEncryptionKey ?? contentEncryptionAlgorithm.generateRandomKey()
         guard let cekData = cek.keyValue?.data else {
@@ -204,7 +211,13 @@ public struct JSONWebEncryption: Hashable, Sendable {
         try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &encryptedKey)
         let cek = try SymmetricKey(data: decryptingKey.decrypt(encryptedKey, using: algorithm))
         let authenticating = header.protected.encoded.urlBase64EncodedData() + (additionalAuthenticatedData ?? .init())
-        return try cek.open(sealed, authenticating: authenticating, using: contentEncAlgorithm)
+        let content = try cek.open(sealed, authenticating: authenticating, using: contentEncAlgorithm)
+        
+        if let compressor = combinedHeader.compressionAlgorithm?.compressor {
+            return try compressor.decompress(content)
+        } else {
+            return content
+        }
     }
 }
 

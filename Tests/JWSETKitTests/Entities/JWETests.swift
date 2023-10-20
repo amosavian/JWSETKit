@@ -72,7 +72,7 @@ final class JWETests: XCTestCase {
     
     func testEncrypt_RSA_OAEP_AES_GCM() throws {
         let jwe = try JSONWebEncryption(
-            plainData: RSA_OAEP_GCM.plainData,
+            content: RSA_OAEP_GCM.plainData,
             keyEncryptingAlgorithm: .rsaEncryptionOAEPSHA256,
             keyEncryptionKey: RSA_OAEP_GCM.kek.publicKey,
             contentEncryptionAlgorithm: .aesEncryptionGCM128
@@ -84,7 +84,7 @@ final class JWETests: XCTestCase {
 
     func testEncryptWithCEK_RSA_OAEP_AES_GCM() throws {
         let jwe = try JSONWebEncryption(
-            plainData: RSA_OAEP_GCM.plainData,
+            content: RSA_OAEP_GCM.plainData,
             keyEncryptingAlgorithm: .rsaEncryptionOAEP,
             keyEncryptionKey: RSA_OAEP_GCM.kek.publicKey,
             contentEncryptionAlgorithm: .aesEncryptionGCM128,
@@ -97,7 +97,7 @@ final class JWETests: XCTestCase {
     
     func testEncrypt_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(
-            plainData: RSA_PKCS1_5_CBC.plainData,
+            content: RSA_PKCS1_5_CBC.plainData,
             keyEncryptingAlgorithm: .rsaEncryptionPKCS1,
             keyEncryptionKey: RSA_PKCS1_5_CBC.kek.publicKey,
             contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512
@@ -109,7 +109,7 @@ final class JWETests: XCTestCase {
 
     func testEncryptWithCEK_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(
-            plainData: RSA_PKCS1_5_CBC.plainData,
+            content: RSA_PKCS1_5_CBC.plainData,
             keyEncryptingAlgorithm: .rsaEncryptionPKCS1,
             keyEncryptionKey: RSA_PKCS1_5_CBC.kek.publicKey,
             contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512,
@@ -122,7 +122,7 @@ final class JWETests: XCTestCase {
     
     func testEncrypt_AESKW_CBC() throws {
         let jwe = try JSONWebEncryption(
-            plainData: AESKW_CBC.plainData,
+            content: AESKW_CBC.plainData,
             keyEncryptingAlgorithm: .aesKeyWrap256,
             keyEncryptionKey: AESKW_CBC.kek.publicKey,
             contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512
@@ -134,7 +134,7 @@ final class JWETests: XCTestCase {
 
     func testEncryptWithCEK_AESKW_CBC() throws {
         let jwe = try JSONWebEncryption(
-            plainData: AESKW_CBC.plainData,
+            content: AESKW_CBC.plainData,
             keyEncryptingAlgorithm: .aesKeyWrap256,
             keyEncryptionKey: AESKW_CBC.kek.publicKey,
             contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512,
