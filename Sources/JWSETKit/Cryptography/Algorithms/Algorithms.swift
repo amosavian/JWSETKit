@@ -172,6 +172,22 @@ public struct JSONWebKeyCurve: RawRepresentable, Hashable, Codable, ExpressibleB
 }
 
 extension JSONWebKeyCurve {
+    private static var keySizes: [Self: Int] = [
+        .p256: 32, .ed25519: 32, .x25519: 32,
+        .p384: 48,
+        .p521: 66,
+    ]
+    
+    public var keySize: Int? {
+        Self.keySizes[self]
+    }
+    
+    public static func register(_ curve: Self, keySize: Int) {
+        keySizes[curve] = keySize
+    }
+}
+
+extension JSONWebKeyCurve {
     static let empty: Self = ""
     
     /// NIST P-256 (secp256r1) curve.
@@ -188,27 +204,4 @@ extension JSONWebKeyCurve {
     
     /// Ed-25519 for Diffie-Hellman curve.
     public static let x25519: Self = "X25519"
-    
-    /// Ed-448 for signing curve.
-    static let ed448: Self = "Ed448"
-    
-    /// Ed-449 for Diffie-Hellman curve.
-    static let x448: Self = "X448"
-}
-
-extension JSONWebKeyCurve {
-    var keyLengthInBytes: Int {
-        switch self {
-        case .p256, .ed25519, .x25519:
-            return 32
-        case .p384:
-            return 48
-        case .p521:
-            return 66
-        case .ed448, .x448:
-            return 57
-        default:
-            preconditionFailure()
-        }
-    }
 }

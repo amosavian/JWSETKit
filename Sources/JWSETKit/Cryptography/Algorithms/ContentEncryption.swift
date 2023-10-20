@@ -53,7 +53,7 @@ extension JSONWebContentEncryptionAlgorithm {
     }
     
     /// Registers a new symmeric key for JWE content encryption.
-    /// 
+    ///
     /// - Parameters:
     ///   - algorithm: New algorithm name.
     ///   - keyClass: Key class of symmetric key.

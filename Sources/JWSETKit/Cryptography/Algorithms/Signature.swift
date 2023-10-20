@@ -70,10 +70,10 @@ extension JSONWebSignatureAlgorithm {
         .ecdsaSignatureP521SHA512: SHA512.self,
         .eddsaSignature: SHA256.self,
         .rsaSignaturePSSSHA256: SHA256.self,
-        .rsaSignaturePSSSHA384:SHA384.self,
+        .rsaSignaturePSSSHA384: SHA384.self,
         .rsaSignaturePSSSHA512: SHA512.self,
         .rsaSignaturePKCS1v15SHA256: SHA256.self,
-        .rsaSignaturePKCS1v15SHA384:SHA384.self,
+        .rsaSignaturePKCS1v15SHA384: SHA384.self,
         .rsaSignaturePKCS1v15SHA512: SHA512.self,
     ]
     
@@ -96,7 +96,7 @@ extension JSONWebSignatureAlgorithm {
     }
     
     /// Registers a new algorithm for signature.
-    /// 
+    ///
     /// - Parameters:
     ///   - algorithm: New algorithm name.
     ///   - type: Type of key. Can be symmetric, RSA or Elliptic curve.

@@ -13,7 +13,7 @@ with this specification are described in the separate JSON Web
 Algorithms (JWA) specification and an IANA registry defined by that
 specification. 
 
-See [Keys documentation](4-keys) to find supported keys for verification and singing.
+See <doc:4-Keys> to find supported keys for verification and singing.
 
 Supports `HS256`, `HS384` and `HS512` algorithms for signature.
 
@@ -24,7 +24,7 @@ Supports `HS256`, `HS384` and `HS512` algorithms for signature.
 
 There are two implementations of ``ProtectedWebContainer`` in the library:
 - ``ProtectedJSONWebContainer`` which the payload is a JSON and would be
-    accessible using [value](protectedjsonwebcontainer/value).
+    accessible using ``ProtectedJSONWebContainer/value``.
 - ``ProtectedDataWebContainer`` which the data can be any binary format,
     e.g. a nested/encrypted JWT.
 

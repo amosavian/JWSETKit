@@ -208,7 +208,7 @@ extension SecKey: JSONWebSigningKey {
 extension SecKey: JSONWebDecryptingKey {
     fileprivate static let encAlgorithms: [JSONWebKeyEncryptionAlgorithm: SecKeyAlgorithm] = [
         .rsaEncryptionPKCS1: .rsaEncryptionPKCS1,
-        .rsaEncryptionOAEP: .rsaEncryptionOAEPSHA256,
+        .rsaEncryptionOAEP: .rsaEncryptionOAEPSHA1,
         .rsaEncryptionOAEPSHA256: .rsaEncryptionOAEPSHA256,
         .rsaEncryptionOAEPSHA384: .rsaEncryptionOAEPSHA384,
         .rsaEncryptionOAEPSHA512: .rsaEncryptionOAEPSHA512,

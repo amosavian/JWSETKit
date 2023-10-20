@@ -145,5 +145,4 @@ enum ECHelper {
             throw JSONWebKeyError.unknownKeyType
         }
     }
-    
 }

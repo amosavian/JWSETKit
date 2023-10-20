@@ -31,7 +31,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
     public var ivLength: Int { 16 }
     
     public var tagLength: Int {
-        (try? symmetricKey.bitCount) ?? 0 / 16
+        ((try? symmetricKey.bitCount) ?? 0) / 16
     }
     
     /// AES-CBC symmetric key using for encryption.
@@ -93,13 +93,13 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
         }
         let ciphertext = try AES._CBC.encrypt(data, using: aesSymmetricKey, iv: .init(ivBytes: iv))
         let authenticated = authenticating.map { Data($0) } ?? .init()
-        let tag = try hmac(authenticated + Data(iv) + ciphertext + Data(authenticated.count.bigEndian))
+        let tag = try hmac(authenticated + Data(iv) + ciphertext + authenticated.cbcTagLengthOctetHexData())
         return .init(iv: Data(iv), ciphertext: ciphertext, tag: tag.prefix(tagLength))
     }
     
     public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using _: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {
         let authenticated = authenticating.map { Data($0) } ?? .init()
-        let tagData = authenticated + Data(data.iv) + data.ciphertext + Data(authenticated.count.bigEndian)
+        let tagData = authenticated + Data(data.iv) + data.ciphertext + authenticated.cbcTagLengthOctetHexData()
         guard try data.tag == hmac(tagData).prefix(tagLength) else {
             throw CryptoKitError.authenticationFailure
         }
@@ -115,7 +115,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
     }
     
     private func hmac(_ data: Data) throws -> Data {
-        switch tagLength {
+        switch tagLength * 2 {
         case SHA256.byteCount:
             var hmac = try HMAC<SHA256>(key: hmacSymmetricKey)
             hmac.update(data: data)
@@ -135,14 +135,33 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
 }
 
 extension Data {
-    init<T: FixedWidthInteger>(_ value: T) {
-        let count = T.bitWidth / 8
-        var value = value
-        let bytePtr = withUnsafePointer(to: &value) {
-            $0.withMemoryRebound(to: UInt8.self, capacity: count) {
-                UnsafeBufferPointer(start: $0, count: count)
+    func cbcTagLengthOctetHexData() -> Data {
+        let dataLength = UInt64(count * 8)
+        let dataLengthInHex = String(dataLength, radix: 16, uppercase: false)
+        
+        var dataLengthBytes = [UInt8](repeatElement(0x00, count: 8))
+        
+        var dataIndex = dataLengthBytes.count - 1
+        for index in stride(from: 0, to: dataLengthInHex.count, by: 2) {
+            var offset = 2
+            var hexStringChunk = ""
+            
+            if dataLengthInHex.count - index == 1 {
+                offset = 1
             }
+            
+            let endIndex = dataLengthInHex.index(dataLengthInHex.endIndex, offsetBy: -index)
+            let startIndex = dataLengthInHex.index(endIndex, offsetBy: -offset)
+            let range = Range(uncheckedBounds: (lower: startIndex, upper: endIndex))
+            hexStringChunk = String(dataLengthInHex[range])
+            
+            if let hexByte = UInt8(hexStringChunk, radix: 16) {
+                dataLengthBytes[dataIndex] = hexByte
+            }
+            
+            dataIndex -= 1
         }
-        self = Data(bytePtr)
+        
+        return Data(dataLengthBytes)
     }
 }

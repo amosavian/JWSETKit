@@ -109,7 +109,9 @@ public struct JSONWebEncryption: Hashable, Sendable {
         header.encryptionAlgorithm = contentEncryptionAlgorithm
         
         let cek = try contentEncryptionKey ?? contentEncryptionAlgorithm.generateRandomKey()
-        let cekData = try JSONEncoder().encode(cek)
+        guard let cekData = cek.keyValue?.data else {
+            throw JSONWebKeyError.keyNotFound
+        }
         switch keyEncryptingAlgorithm {
         case .direct:
             self.recipients = []
@@ -192,7 +194,6 @@ public struct JSONWebEncryption: Hashable, Sendable {
             throw JSONWebKeyError.unknownAlgorithm
         }
         
-        
         var encryptedKey = recipient.encrypedKey
         let algorithmValue = combinedHeader.algorithm.rawValue
         guard let algorithm = AnyJSONWebAlgorithm.specialized(algorithmValue) as? JSONWebKeyEncryptionAlgorithm else {
@@ -200,7 +201,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         }
         
         var decryptingKey = key
-        try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &encryptedKey)        
+        try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &encryptedKey)
         let cek = try SymmetricKey(data: decryptingKey.decrypt(encryptedKey, using: algorithm))
         let authenticating = header.protected.encoded.urlBase64EncodedData() + (additionalAuthenticatedData ?? .init())
         return try cek.open(sealed, authenticating: authenticating, using: contentEncAlgorithm)

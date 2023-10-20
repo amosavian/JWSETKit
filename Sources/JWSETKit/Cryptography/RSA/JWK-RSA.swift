@@ -187,5 +187,4 @@ enum RSAHelper {
             throw JSONWebKeyError.unknownKeyType
         }
     }
-    
 }

@@ -69,7 +69,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .aesGCM192KeyWrap: SHA384.self,
         .aesGCM256KeyWrap: SHA512.self,
         .pbes2hmac256: SHA256.self,
-        .pbes2hmac384:SHA384.self,
+        .pbes2hmac384: SHA384.self,
         .pbes2hmac512: SHA512.self,
     ]
     
@@ -137,7 +137,7 @@ extension JSONWebKeyEncryptionAlgorithm {
 }
 
 extension JSONWebKeyEncryptionAlgorithm {
-    fileprivate static func directDecryptionMutator(_ header: JOSEHeader, _ kek: inout any JSONWebDecryptingKey, _ cek: inout Data) throws -> Void {
+    fileprivate static func directDecryptionMutator(_: JOSEHeader, _ kek: inout any JSONWebDecryptingKey, _ cek: inout Data) throws {
         guard let encryptedKeyData = kek.keyValue?.data else {
             throw JSONWebKeyError.unknownKeyType
         }
@@ -146,7 +146,7 @@ extension JSONWebKeyEncryptionAlgorithm {
     }
     
     fileprivate static func pbesDecryptionMutator<H: HashFunction>(hashFunction: H.Type) -> DecryptionMutatorHandler {
-        return { header, kek, cek in
+        { header, kek, _ in
             guard let password = kek.keyValue?.data else {
                 throw JSONWebKeyError.keyNotFound
             }
@@ -163,7 +163,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         }
     }
     
-    fileprivate static func aesgcmDecryptionMutator(_ header: JOSEHeader, _ kek: inout any JSONWebDecryptingKey, _ cek: inout Data) throws -> Void {
+    fileprivate static func aesgcmDecryptionMutator(_ header: JOSEHeader, _: inout any JSONWebDecryptingKey, _ cek: inout Data) throws {
         guard let iv = header.initialVector, iv.count == 12,
               let tag = header.authenticationTag, tag.count == 16
         else {
