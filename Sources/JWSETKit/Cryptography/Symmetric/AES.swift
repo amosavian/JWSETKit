@@ -16,11 +16,7 @@ import CommonCrypto
 #endif
 
 /// JSON Web Key (JWK) container for AES-GCM keys for encryption/decryption.
-public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, JSONWebDecryptingKey, Sendable {
-    public typealias PublicKey = Self
-    
-    public var publicKey: JSONWebKeyAESGCM { self }
-    
+public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
     /// Symmetric key using for encryption.
@@ -34,10 +30,6 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, JSONWebDec
         }
     }
     
-    public init() throws {
-        self.init(size: .bits128)
-    }
-
     public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyAESGCM {
         .init(storage: storage)
     }
@@ -47,15 +39,6 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, JSONWebDec
     /// - Parameter storage: Storage of key-values.
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
-    }
-    
-    /// Returns a new AES-GCM with random key.
-    ///
-    /// - Parameter keySize: Size of random key in bits.
-    public init(size: SymmetricKeySize) {
-        self.storage = .init()
-        self.algorithm = .aesEncryptionGCM(bitCount: size.bitCount)
-        self.keyValue = SymmetricKey(size: size)
     }
     
     /// Initializes a AES-GCM key for encryption.
@@ -95,10 +78,6 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, JSONWebDec
 
 /// JSON Web Key (JWK) container for AES Key Wrap for encryption/decryption.
 public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey, Sendable {
-    public typealias PublicKey = Self
-    
-    public var publicKey: JSONWebKeyAESKW { self }
-    
     public var storage: JSONWebValueStorage
     
     /// Symmetric key using for encryption.

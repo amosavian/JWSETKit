@@ -104,7 +104,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         contentEncryptionAlgorithm: JSONWebContentEncryptionAlgorithm,
         contentEncryptionKey: (any JSONWebSealingKey)? = nil
     ) throws {
-        var header = protected ?? JOSEHeader(algorithm: keyEncryptingAlgorithm, type: "JWE")
+        var header = protected ?? JOSEHeader(algorithm: keyEncryptingAlgorithm, type: .jwe)
         header.algorithm = keyEncryptingAlgorithm
         header.encryptionAlgorithm = contentEncryptionAlgorithm
         

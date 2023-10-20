@@ -14,11 +14,7 @@ import Crypto
 import _CryptoExtras
 
 /// JSON Web Key (JWK) container for AES-CBC keys for encryption/decryption with HMAC authentication.
-public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWebDecryptingKey, Sendable {
-    public typealias PublicKey = Self
-    
-    public var publicKey: JSONWebKeyAESCBCHMAC { self }
-    
+public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
     /// Symmetric key using for encryption.
@@ -55,7 +51,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
     }
     
     public init() throws {
-        self.init(size: .bits128)
+        self.init(size: .bits256)
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyAESCBCHMAC {
@@ -82,6 +78,9 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
     ///
     /// - Parameter key: A symmetric cryptographic key.
     public init(_ key: SymmetricKey) throws {
+        guard [256, 384, 512].contains(key.bitCount) else {
+            throw CryptoKitError.incorrectKeySize
+        }
         self.storage = .init()
         self.algorithm = .aesEncryptionCBCSHA(bitCount: key.bitCount / 2)
         self.keyValue = key

@@ -85,4 +85,7 @@ public struct JSONWebContentType: RawRepresentable, Hashable, Codable, Expressib
 extension JSONWebContentType {
     /// Payload contains a JSON with JSON Web Token (JWT) claims.
     public static let jwt: Self = "JWT"
+    
+    /// Payload contains encrypted data with JSON Web Encryption (JWE) serialization.
+    public static let jwe: Self = "JWE"
 }

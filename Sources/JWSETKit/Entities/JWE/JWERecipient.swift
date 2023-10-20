@@ -52,7 +52,9 @@ public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        try container.encodeIfPresent(header, forKey: .header)
+        if let header, !header.storage.storageKeys.isEmpty {
+            try container.encode(header, forKey: .header)
+        }
         try container.encode(encrypedKey.urlBase64EncodedString(), forKey: .encrypedKey)
     }
 }

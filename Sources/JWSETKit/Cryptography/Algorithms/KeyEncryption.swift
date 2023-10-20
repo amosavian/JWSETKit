@@ -25,9 +25,7 @@ public struct JSONWebKeyEncryptionAlgorithm: JSONWebAlgorithm {
 extension JSONWebKeyEncryptionAlgorithm {
     public typealias DecryptionMutatorHandler = (_ header: JOSEHeader, _ kek: inout any JSONWebDecryptingKey, _ cek: inout Data) throws -> Void
     
-    public typealias EncryptionMutatorHandler = (_ header: JOSEHeader, _ kek: inout any JSONWebDecryptingKey) throws -> JOSEHeader
-    
-    private static var keyRegistryClass: [Self: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)] = [
+    private static var keyRegistryClasses: [Self: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)] = [
         .direct: (JSONWebDirectKey.self, JSONWebDirectKey.self),
         .aesKeyWrap128: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
         .aesKeyWrap192: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
@@ -45,7 +43,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .pbes2hmac512: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
     ]
     
-    private static var keyType: [Self: JSONWebKeyType] = [
+    private static var keyTypes: [Self: JSONWebKeyType] = [
         .direct: .symmetric,
         .aesKeyWrap128: .symmetric,
         .aesKeyWrap192: .symmetric,
@@ -63,10 +61,10 @@ extension JSONWebKeyEncryptionAlgorithm {
         .pbes2hmac512: .symmetric,
     ]
     
-    private static var hashFunction: [Self: any HashFunction.Type] = [
-        .aesGCM128KeyWrap: SHA256.self,
-        .aesGCM192KeyWrap: SHA384.self,
-        .aesGCM256KeyWrap: SHA512.self,
+    private static var hashFunctions: [Self: any HashFunction.Type] = [
+        .aesKeyWrap128: SHA256.self,
+        .aesKeyWrap192: SHA384.self,
+        .aesKeyWrap256: SHA512.self,
         .aesGCM128KeyWrap: SHA256.self,
         .aesGCM192KeyWrap: SHA384.self,
         .aesGCM256KeyWrap: SHA512.self,
@@ -75,7 +73,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .pbes2hmac512: SHA512.self,
     ]
     
-    private static var decryptionMutator: [Self: DecryptionMutatorHandler] = [
+    private static var decryptionMutators: [Self: DecryptionMutatorHandler] = [
         .direct: directDecryptionMutator,
         .aesGCM128KeyWrap: aesgcmDecryptionMutator,
         .aesGCM192KeyWrap: aesgcmDecryptionMutator,
@@ -86,22 +84,22 @@ extension JSONWebKeyEncryptionAlgorithm {
     ]
     
     public var keyType: JSONWebKeyType? {
-        Self.keyType[self]
+        Self.keyTypes[self]
     }
     
     /// Returns private and public class appropriate for algorithm.
     public var keyClass: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)? {
-        Self.keyRegistryClass[self]
+        Self.keyRegistryClasses[self]
     }
     
     /// Hash function for symmetric algorithms.
     public var hashFunction: (any HashFunction.Type)? {
-        Self.hashFunction[self]
+        Self.hashFunctions[self]
     }
     
     /// Prepares key encryption key and content encryption before applying in decryption.
     public var decryptionMutator: DecryptionMutatorHandler? {
-        Self.decryptionMutator[self]
+        Self.decryptionMutators[self]
     }
     
     /// Registers a new algorithm for key encryption.
@@ -121,10 +119,10 @@ extension JSONWebKeyEncryptionAlgorithm {
         hashFunction: (any HashFunction.Type)? = nil,
         decryptionMutating: DecryptionMutatorHandler?
     ) where Public: JSONWebEncryptingKey, Private: JSONWebDecryptingKey {
-        keyRegistryClass[algorithm] = (publicKeyClass, privateKeyClass)
-        keyType[algorithm] = type
-        Self.hashFunction[algorithm] = hashFunction
-        decryptionMutator[algorithm] = decryptionMutating
+        keyRegistryClasses[algorithm] = (publicKeyClass, privateKeyClass)
+        keyTypes[algorithm] = type
+        hashFunctions[algorithm] = hashFunction
+        decryptionMutators[algorithm] = decryptionMutating
     }
     
     /// Generates new random key with minimum key length.

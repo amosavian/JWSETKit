@@ -107,3 +107,43 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
         }
     }
 }
+
+enum ECHelper {
+    static func ecComponents(_ data: Data, isPrivateKey: Bool) throws -> [Data] {
+        let data = data.dropFirst()
+        let length = data.count
+        if isPrivateKey {
+            return [
+                data[0 ..< (length / 3)],
+                data[(length / 3) ..< (2 * length / 3)],
+                data[(2 * length / 3)...],
+            ]
+        } else {
+            return [
+                data[0 ..< (length / 2)],
+                data[(length / 2)...],
+            ]
+        }
+    }
+    
+    static func ecWebKey(data: Data, isPrivateKey: Bool) throws -> any JSONWebKey {
+        let components = try ecComponents(data, isPrivateKey: isPrivateKey)
+        var key = AnyJSONWebKey()
+        switch components.count {
+        case 2:
+            key.keyType = .ellipticCurve
+            key.xCoordinate = components[0]
+            key.yCoordinate = components[1]
+            return JSONWebECPublicKey(storage: key.storage)
+        case 3:
+            key.keyType = .ellipticCurve
+            key.xCoordinate = components[0]
+            key.yCoordinate = components[1]
+            key.privateKey = components[2]
+            return JSONWebECPrivateKey(storage: key.storage)
+        default:
+            throw JSONWebKeyError.unknownKeyType
+        }
+    }
+    
+}

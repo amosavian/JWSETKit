@@ -118,8 +118,16 @@ extension JSONWebDecryptingKey {
 }
 
 /// A JSON Web Key (JWK) able to decrypt cipher-texts using a symmetric key.
-public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey {
+public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey where PublicKey == Self {
     init(_ key: SymmetricKey) throws
+}
+
+extension JSONWebSymmetricDecryptingKey {
+    public var publicKey: Self { self }
+    
+    public init() throws {
+        try self.init(.init(size: .bits128))
+    }
 }
 
 /// A JSON Web Key (JWK) able to encrypt/decrypt plain-texts with authentication-tag.
@@ -128,11 +136,6 @@ public protocol JSONWebSealingKey: JSONWebKey {
     ///
     /// - Parameter key: A symmetric cryptographic key.
     init(_ key: SymmetricKey) throws
-    
-    /// Returns a new random key.
-    ///
-    /// - Parameter keySize: Size of random key in bits.
-    init(size: SymmetricKeySize)
     
     /// Encrypts plain-text data using current key.
     ///

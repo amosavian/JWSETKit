@@ -59,48 +59,6 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
         try _RSA.Encryption.PublicKey.create(storage: storage).encrypt(data, using: algorithm)
 #endif
     }
-    
-    static func rsaComponents(_ data: Data) throws -> [Data] {
-        let der = try DER.parse([UInt8](data))
-        guard let nodes = der.content.sequence else {
-            throw CryptoKitASN1Error.unexpectedFieldType
-        }
-        guard nodes.count >= 2 else {
-            throw CryptoKitASN1Error.invalidASN1Object
-        }
-        return try nodes.compactMap {
-            guard let data = $0.content.primitive else {
-                throw CryptoKitASN1Error.unexpectedFieldType
-            }
-            return data
-        }
-    }
-    
-    static func pkcs1Representation(_ key: AnyJSONWebKey) throws -> Data {
-        guard let modulus = key.modulus, let publicExponent = key.exponent else {
-            throw CryptoKitError.incorrectKeySize
-        }
-        let components: [Data]
-        if let privateExponent = key.privateExponent,
-           let prime1 = key.firstPrimeFactor,
-           let prime2 = key.secondPrimeFactor,
-           let exponent1 = key.firstFactorCRTExponent,
-           let exponent2 = key.secondFactorCRTExponent,
-           let coefficient = key.firstCRTCoefficient
-        {
-            components = [
-                Data([0x00]),
-                modulus, publicExponent,
-                privateExponent, prime1, prime2,
-                exponent1, exponent2, coefficient,
-            ]
-        } else {
-            components = [modulus, publicExponent]
-        }
-        var result = DER.Serializer()
-        try result.appendIntegers(components)
-        return Data(result.serializedBytes)
-    }
 }
 
 /// JWK container for RSA private keys.
@@ -160,4 +118,74 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
         try _RSA.Encryption.PrivateKey.create(storage: storage).decrypt(data, using: algorithm)
 #endif
     }
+}
+
+enum RSAHelper {
+    static func rsaComponents(_ data: Data) throws -> [Data] {
+        let der = try DER.parse([UInt8](data))
+        guard let nodes = der.content.sequence else {
+            throw CryptoKitASN1Error.unexpectedFieldType
+        }
+        guard nodes.count >= 2 else {
+            throw CryptoKitASN1Error.invalidASN1Object
+        }
+        return try nodes.compactMap {
+            guard let data = $0.content.primitive else {
+                throw CryptoKitASN1Error.unexpectedFieldType
+            }
+            return data
+        }
+    }
+    
+    static func pkcs1Representation(_ key: AnyJSONWebKey) throws -> Data {
+        guard let modulus = key.modulus, let publicExponent = key.exponent else {
+            throw CryptoKitError.incorrectKeySize
+        }
+        let components: [Data]
+        if let privateExponent = key.privateExponent,
+           let prime1 = key.firstPrimeFactor,
+           let prime2 = key.secondPrimeFactor,
+           let exponent1 = key.firstFactorCRTExponent,
+           let exponent2 = key.secondFactorCRTExponent,
+           let coefficient = key.firstCRTCoefficient
+        {
+            components = [
+                Data([0x00]),
+                modulus, publicExponent,
+                privateExponent, prime1, prime2,
+                exponent1, exponent2, coefficient,
+            ]
+        } else {
+            components = [modulus, publicExponent]
+        }
+        var result = DER.Serializer()
+        try result.appendIntegers(components)
+        return Data(result.serializedBytes)
+    }
+    
+    static func rsaWebKey(data: Data) throws -> any JSONWebKey {
+        let components = try rsaComponents(data)
+        var key = AnyJSONWebKey()
+        switch components.count {
+        case 2:
+            key.keyType = .rsa
+            key.modulus = components[0]
+            key.exponent = components[1]
+            return JSONWebRSAPublicKey(storage: key.storage)
+        case 9:
+            key.keyType = .rsa
+            key.modulus = components[1]
+            key.exponent = components[2]
+            key.privateExponent = components[3]
+            key.firstPrimeFactor = components[4]
+            key.secondPrimeFactor = components[5]
+            key.firstFactorCRTExponent = components[6]
+            key.secondFactorCRTExponent = components[7]
+            key.firstCRTCoefficient = components[8]
+            return JSONWebRSAPrivateKey(storage: key.storage)
+        default:
+            throw JSONWebKeyError.unknownKeyType
+        }
+    }
+    
 }

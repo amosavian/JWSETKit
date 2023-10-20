@@ -22,7 +22,7 @@ public struct JSONWebSignatureAlgorithm: JSONWebAlgorithm {
 }
 
 extension JSONWebSignatureAlgorithm {
-    private static var keyRegistryClass: [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)] = [
+    private static var keyRegistryClasses: [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)] = [
         .none: (JSONWebDirectKey.self, JSONWebDirectKey.self),
         .hmacSHA256: (JSONWebKeyHMAC<SHA256>.self, JSONWebKeyHMAC<SHA256>.self),
         .hmacSHA384: (JSONWebKeyHMAC<SHA384>.self, JSONWebKeyHMAC<SHA384>.self),
@@ -39,7 +39,7 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA512: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
     ]
     
-    private static var keyType: [Self: JSONWebKeyType] = [
+    private static var keyTypes: [Self: JSONWebKeyType] = [
         .none: .symmetric,
         .hmacSHA256: .symmetric,
         .hmacSHA384: .symmetric,
@@ -56,22 +56,43 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA512: .rsa,
     ]
     
-    private static var curveTable: [Self: JSONWebKeyCurve] = [
+    private static var curves: [Self: JSONWebKeyCurve] = [
         .ecdsaSignatureP256SHA256: .p256, .ecdsaSignatureP384SHA384: .p384,
         .ecdsaSignatureP521SHA512: .p521, .eddsaSignature: .ed25519,
     ]
     
+    private static var hashFunctions: [Self: any HashFunction.Type] = [
+        .hmacSHA256: SHA256.self,
+        .hmacSHA384: SHA384.self,
+        .hmacSHA512: SHA512.self,
+        .ecdsaSignatureP256SHA256: SHA256.self,
+        .ecdsaSignatureP384SHA384: SHA384.self,
+        .ecdsaSignatureP521SHA512: SHA512.self,
+        .eddsaSignature: SHA256.self,
+        .rsaSignaturePSSSHA256: SHA256.self,
+        .rsaSignaturePSSSHA384:SHA384.self,
+        .rsaSignaturePSSSHA512: SHA512.self,
+        .rsaSignaturePKCS1v15SHA256: SHA256.self,
+        .rsaSignaturePKCS1v15SHA384:SHA384.self,
+        .rsaSignaturePKCS1v15SHA512: SHA512.self,
+    ]
+    
     public var keyType: JSONWebKeyType? {
-        Self.keyType[self]
+        Self.keyTypes[self]
     }
     
     public var curve: JSONWebKeyCurve? {
-        Self.curveTable[self]
+        Self.curves[self]
     }
     
     /// Returns private and public class appropriate for algorithm.
     public var keyClass: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)? {
-        Self.keyRegistryClass[self]
+        Self.keyRegistryClasses[self]
+    }
+    
+    /// Hash function for signing algorithms.
+    public var hashFunction: (any HashFunction.Type)? {
+        Self.hashFunctions[self]
     }
     
     /// Registers a new algorithm for signature.
@@ -86,12 +107,14 @@ extension JSONWebSignatureAlgorithm {
         _ algorithm: Self,
         type: JSONWebKeyType,
         curve: JSONWebKeyCurve? = nil,
+        hashFunction: any HashFunction.Type,
         publicKeyClass: Public.Type,
         privateKeyClass: Private.Type
     ) where Public: JSONWebValidatingKey, Private: JSONWebSigningKey {
-        keyRegistryClass[algorithm] = (publicKeyClass, privateKeyClass)
-        keyType[algorithm] = type
-        curveTable[algorithm] = curve
+        keyRegistryClasses[algorithm] = (publicKeyClass, privateKeyClass)
+        keyTypes[algorithm] = type
+        curves[algorithm] = curve
+        hashFunctions[algorithm] = hashFunction
     }
 }
 

@@ -164,9 +164,12 @@ extension JSONWebSignature: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
         var headerContainer = encoder.container(keyedBy: JSONWebSignatureHeader.CodingKeys.self)
-        try headerContainer.encodeIfPresent(signatures.first?.protected, forKey: .protected)
-        try headerContainer.encodeIfPresent(signatures.first?.unprotected, forKey: .header)
-        try headerContainer.encodeIfPresent(signatures.first?.signature, forKey: .signature)
+        guard let signature = signatures.first else {
+            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: "Invalid JWS header."))
+        }
+        try headerContainer.encodeIfPresent(signature.protected, forKey: .protected)
+        try headerContainer.encodeIfPresent(signature.unprotected, forKey: .header)
+        try headerContainer.encodeIfPresent(signature.signature, forKey: .signature)
     }
     
     fileprivate func bestRepresentation() -> JSONWebSignatureRepresentation {

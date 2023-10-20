@@ -22,7 +22,7 @@ public struct JSONWebContentEncryptionAlgorithm: JSONWebAlgorithm {
 }
 
 extension JSONWebContentEncryptionAlgorithm {
-    private static var keyRegistryClass: [Self: any JSONWebSealingKey.Type] = [
+    private static var keyRegistryClasses: [Self: any JSONWebSealingKey.Type] = [
         .aesEncryptionGCM128: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM192: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM256: JSONWebKeyAESGCM.self,
@@ -31,7 +31,7 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionCBC256SHA512: JSONWebKeyAESCBCHMAC.self,
     ]
     
-    private static var keyLength: [Self: SymmetricKeySize] = [
+    private static var keyLengths: [Self: SymmetricKeySize] = [
         .aesEncryptionGCM128: .bits128,
         .aesEncryptionGCM192: .bits192,
         .aesEncryptionGCM256: .bits256,
@@ -45,11 +45,11 @@ extension JSONWebContentEncryptionAlgorithm {
     }
     
     public var keyClass: (any JSONWebSealingKey.Type)? {
-        Self.keyRegistryClass[self]
+        Self.keyRegistryClasses[self]
     }
     
     public var keyLength: SymmetricKeySize? {
-        Self.keyLength[self]
+        Self.keyLengths[self]
     }
     
     /// Registers a new symmeric key for JWE content encryption.
@@ -63,8 +63,8 @@ extension JSONWebContentEncryptionAlgorithm {
         keyClass: KT.Type,
         keyLength: SymmetricKeySize
     ) where KT: JSONWebSealingKey {
-        keyRegistryClass[algorithm] = keyClass
-        Self.keyLength[algorithm] = keyLength
+        keyRegistryClasses[algorithm] = keyClass
+        keyLengths[algorithm] = keyLength
     }
 }
 
@@ -76,7 +76,7 @@ extension JSONWebContentEncryptionAlgorithm {
         guard let keyClass = keyClass, let keyLength = keyLength else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        return keyClass.init(size: keyLength)
+        return try keyClass.init(SymmetricKey(size: keyLength))
     }
 }
 

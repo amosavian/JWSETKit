@@ -61,10 +61,10 @@ extension SecKey: JSONWebKey {
             guard let xCoordinate = key.xCoordinate, let yCoordinate = key.yCoordinate else {
                 throw CryptoKitError.incorrectKeySize
             }
-            return try createECFromComponents(
+            return try Self.createECFromComponents(
                 [xCoordinate, yCoordinate, key.privateKey].compactMap { $0 })
         case .rsa:
-            let pkcs1 = try JSONWebRSAPublicKey.pkcs1Representation(key)
+            let pkcs1 = try RSAHelper.pkcs1Representation(key)
             
             let keyClass = key.privateExponent != nil ? kSecAttrKeyClassPrivate : kSecAttrKeyClassPublic
             let length = key.modulus!.count * 8
@@ -78,30 +78,6 @@ extension SecKey: JSONWebKey {
             }
         default:
             throw JSONWebKeyError.unknownKeyType
-        }
-    }
-    
-    private static func createECFromComponents(_ components: [Data]) throws -> SecKey {
-        let keyClass: CFString
-        let length: Int
-        switch components.count {
-        case 2:
-            keyClass = kSecAttrKeyClassPublic
-            length = components[0].count * 8
-        case 3:
-            keyClass = kSecAttrKeyClassPrivate
-            length = components[0].count * 8
-        default:
-            throw JSONWebKeyError.unknownKeyType
-        }
-        
-        let attributes: [CFString: Any] = [
-            kSecAttrKeyType: kSecAttrKeyTypeEC,
-            kSecAttrKeyClass: keyClass,
-            kSecAttrKeySizeInBits: length,
-        ]
-        return try handle { error in
-            SecKeyCreateWithData((Data([0x04]) + components.joined()) as CFData, attributes as CFDictionary, &error)
         }
     }
     
@@ -143,79 +119,41 @@ extension SecKey: JSONWebKey {
         }
     }
     
-    private static func rsaWebKey(data: Data) throws -> any JSONWebKey {
-        let components = try JSONWebRSAPublicKey.rsaComponents(data)
-        var key = AnyJSONWebKey()
-        switch components.count {
-        case 2:
-            key.keyType = .rsa
-            key.modulus = components[0]
-            key.exponent = components[1]
-            return JSONWebRSAPublicKey(storage: key.storage)
-        case 9:
-            key.keyType = .rsa
-            key.modulus = components[1]
-            key.exponent = components[2]
-            key.privateExponent = components[3]
-            key.firstPrimeFactor = components[4]
-            key.secondPrimeFactor = components[5]
-            key.firstFactorCRTExponent = components[6]
-            key.secondFactorCRTExponent = components[7]
-            key.firstCRTCoefficient = components[8]
-            return JSONWebRSAPrivateKey(storage: key.storage)
-        default:
-            throw JSONWebKeyError.unknownKeyType
-        }
-    }
-    
-    private static func ecComponents(_ data: Data, isPrivateKey: Bool) throws -> [Data] {
-        let data = data.dropFirst()
-        let length = data.count
-        if isPrivateKey {
-            return [
-                data[0 ..< (length / 3)],
-                data[(length / 3) ..< (2 * length / 3)],
-                data[(2 * length / 3)...],
-            ]
-        } else {
-            return [
-                data[0 ..< (length / 2)],
-                data[(length / 2)...],
-            ]
-        }
-    }
-    
-    private static func ecWebKey(data: Data, isPrivateKey: Bool) throws -> any JSONWebKey {
-        let components = try ecComponents(data, isPrivateKey: isPrivateKey)
-        var key = AnyJSONWebKey()
-        switch components.count {
-        case 2:
-            key.keyType = .ellipticCurve
-            key.xCoordinate = components[0]
-            key.yCoordinate = components[1]
-            return JSONWebECPublicKey(storage: key.storage)
-        case 3:
-            key.keyType = .ellipticCurve
-            key.xCoordinate = components[0]
-            key.yCoordinate = components[1]
-            key.privateKey = components[2]
-            return JSONWebECPrivateKey(storage: key.storage)
-        default:
-            throw JSONWebKeyError.unknownKeyType
-        }
-    }
-    
     private func jsonWebKey() throws -> any JSONWebKey {
         let keyData = try handle { error in
             SecKeyCopyExternalRepresentation(self, &error)
         } as Data
         switch try keyType {
         case .ellipticCurve:
-            return try Self.ecWebKey(data: keyData, isPrivateKey: isPrivateKey)
+            return try ECHelper.ecWebKey(data: keyData, isPrivateKey: isPrivateKey)
         case .rsa:
-            return try Self.rsaWebKey(data: keyData)
+            return try RSAHelper.rsaWebKey(data: keyData)
         default:
             throw JSONWebKeyError.unknownKeyType
+        }
+    }
+    
+    private static func createECFromComponents(_ components: [Data]) throws -> SecKey {
+        let keyClass: CFString
+        let length: Int
+        switch components.count {
+        case 2:
+            keyClass = kSecAttrKeyClassPublic
+            length = components[0].count * 8
+        case 3:
+            keyClass = kSecAttrKeyClassPrivate
+            length = components[0].count * 8
+        default:
+            throw JSONWebKeyError.unknownKeyType
+        }
+        
+        let attributes: [CFString: Any] = [
+            kSecAttrKeyType: kSecAttrKeyTypeEC,
+            kSecAttrKeyClass: keyClass,
+            kSecAttrKeySizeInBits: length,
+        ]
+        return try handle { error in
+            SecKeyCreateWithData((Data([0x04]) + components.joined()) as CFData, attributes as CFDictionary, &error)
         }
     }
 }
