@@ -100,17 +100,18 @@ extension JSONWebTokenClaims {
 ```
 
 Intrinsic supported types to be parsed by generic accessor are:
+
 - `UnsignedInteger` conforming types, e.g. `UInt`, `UInt32`, etc.
 - `SignedInteger` conforming types, e.g. `Int`, `Int32`, etc.
 - `BinaryFloatingPoint` conforming types, e.g. `Double`, `Float`, etc.
-- `Foundation.  Decimal`
+- `Foundation.Decimal`
 - `Foundation.Date`, serialized as unix timestamp.
 - `Array<UInt8>`, `Foundation.Data`, `Foundation.NSData`, seriailzed as `Base64URL`.
 - `Foundation.URL`
 - `Foundation.Locale`, `Foundation.NSLocale`
 - `Foundation.TimeZone`, `Foundation.NSTimeZone`
 - Types conformed to ``JSONWebKey``.
-- Types conformed to``JSONWebAlgorithm``.
+- Types conformed to ``JSONWebAlgorithm``.
 - Types conformed to `Foundation.Decodable`.
 
 

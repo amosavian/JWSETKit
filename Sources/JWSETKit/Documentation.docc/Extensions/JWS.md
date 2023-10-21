@@ -141,3 +141,8 @@ try jws.updateSignature(using: hmacKey)
 - ``JOSEHeader``
 - ``JoseHeaderJWSRegisteredParameters``
 - ``JoseHeaderJWERegisteredParameters``
+
+### Encoding
+
+- ``JSONWebSignatureRepresentation``
+- ``JSONWebSignatureCodableConfiguration``

@@ -50,13 +50,42 @@ extension JSONWebToken {
         self.payload = try .init(value: payload)
         try updateSignature(using: signingKey)
     }
-    
+}
+
+extension JSONWebTokenClaims {
     /// Verify that the given audience is included as one of the claim's intended audiences.
     ///
     /// - Parameter audience: The exact intended audience.
     public func verifyAudience(includes audience: String) throws {
-        guard payload.value.audience.contains(audience) else {
-            throw JSONWebValidationError.tokenExpired(expiry: .init())
+        // swiftformat:disable:next redundantSelf
+        guard self.audience.contains(audience) else {
+            throw JSONWebValidationError.audienceNotIntended(audience)
+        }
+    }
+}
+
+extension JSONWebToken {
+    /// Verify that the given audience is included as one of the claim's intended audiences.
+    ///
+    /// - Parameter audience: The exact intended audience.
+    public func verifyAudience(includes audience: String) throws {
+        try payload.value.verifyAudience(includes: audience)
+    }
+}
+
+extension JSONWebTokenClaims: Expirable {
+    /// Verifies the `exp` and `nbf` headers using current date.
+    ///
+    /// - Parameters:
+    ///   - currentDate: The date that headers will be check against. Default is current system date.
+    public func verifyDate(_ currentDate: Date) throws {
+        // swiftformat:disable:next redundantSelf
+        if let expiry = self.expiry, currentDate > expiry {
+            throw JSONWebValidationError.tokenExpired(expiry: expiry)
+        }
+        // swiftformat:disable:next redundantSelf
+        if let notBefore = self.notBefore, currentDate < notBefore {
+            throw JSONWebValidationError.tokenInvalidBefore(notBefore: notBefore)
         }
     }
 }
@@ -67,13 +96,7 @@ extension JSONWebToken: Expirable {
     /// - Parameters:
     ///   - currentDate: The date that headers will be check against. Default is current system date.
     public func verifyDate(_ currentDate: Date) throws {
-        let claims = payload.value
-        if let expiry = claims.expiry, currentDate > expiry {
-            throw JSONWebValidationError.tokenExpired(expiry: expiry)
-        }
-        if let notBefore = claims.notBefore, currentDate < notBefore {
-            throw JSONWebValidationError.tokenInvalidBefore(notBefore: notBefore)
-        }
+        try payload.value.verifyDate(currentDate)
     }
 }
 

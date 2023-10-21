@@ -74,3 +74,16 @@ extension Data {
         self = value
     }
 }
+
+extension Data {
+    init<T: FixedWidthInteger>(bigEndian value: T) {
+        let count = T.bitWidth / 8
+        var value = value.bigEndian
+        let bytePtr = withUnsafePointer(to: &value) {
+            $0.withMemoryRebound(to: UInt8.self, capacity: count) {
+                UnsafeBufferPointer(start: $0, count: count)
+            }
+        }
+        self = Data(bytePtr)
+    }
+}

@@ -12,9 +12,17 @@ import CryptoKit
 import Crypto
 #endif
 
+/// JSON Web Signature Algorithms.
 public protocol JSONWebAlgorithm: RawRepresentable<String>, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
+    /// Key type, which is either `RSA`, `EC` for elliptic curve or `oct` for symmetric keys.
     var keyType: JSONWebKeyType? { get }
+    
+    /// Elliptic key curve, if key type is `EC`.
     var curve: JSONWebKeyCurve? { get }
+    
+    /// Initialize algorithm from name.
+    ///
+    /// - Parameter rawValue: JWA registered name.
     init<S: StringProtocol>(_ rawValue: S)
 }
 
@@ -88,7 +96,7 @@ extension JSONWebAlgorithm {
     }
 }
 
-/// JSON Web Signature Algorithms
+/// JSON Web Signature Algorithms.
 public struct AnyJSONWebAlgorithm: JSONWebAlgorithm {
     public let rawValue: String
     
