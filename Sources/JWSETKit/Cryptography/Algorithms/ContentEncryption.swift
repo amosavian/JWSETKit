@@ -22,6 +22,7 @@ public struct JSONWebContentEncryptionAlgorithm: JSONWebAlgorithm {
 }
 
 extension JSONWebContentEncryptionAlgorithm {
+    @ReadWriteLocked
     private static var keyRegistryClasses: [Self: any JSONWebSealingKey.Type] = [
         .aesEncryptionGCM128: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM192: JSONWebKeyAESGCM.self,
@@ -31,6 +32,7 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionCBC256SHA512: JSONWebKeyAESCBCHMAC.self,
     ]
     
+    @ReadWriteLocked
     private static var keyLengths: [Self: SymmetricKeySize] = [
         .aesEncryptionGCM128: .bits128,
         .aesEncryptionGCM192: .bits192,
@@ -50,6 +52,11 @@ extension JSONWebContentEncryptionAlgorithm {
     
     public var keyLength: SymmetricKeySize? {
         Self.keyLengths[self]
+    }
+    
+    /// Currently registered algorithms.
+    public static var registeredAlgorithms: [Self] {
+        .init(keyRegistryClasses.keys)
     }
     
     /// Registers a new symmeric key for JWE content encryption.

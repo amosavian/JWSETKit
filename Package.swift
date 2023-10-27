@@ -41,9 +41,15 @@ let package = Package(
                 "AnyCodable",
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
-                .product(name: "CryptoSwift", package: "CryptoSwift"),
+                .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
                 .product(name: "_CryptoExtras", package: "swift-crypto"),
                 .product(name: "X509", package: "swift-certificates"),
+            ],
+            swiftSettings: [
+                .unsafeFlags([
+                    "-Xfrontend", "-warn-concurrency",
+                    "-Xfrontend", "-enable-actor-data-race-checks",
+                ])
             ]),
         .testTarget(
             name: "JWSETKitTests",

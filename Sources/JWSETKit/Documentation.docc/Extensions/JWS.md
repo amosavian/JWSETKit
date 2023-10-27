@@ -49,9 +49,9 @@ let json = try encoder.encode(jws)
 ## Verify Signature
 
 To verify the signature(s), first [create public key(s)](4-keys) then use
-`verifySignature(using:)` to verify signature(s).
+``JSONWebSignature/verifySignature(using:)-516ea`` to verify signature(s).
 
-If an array of keys is passed to `verifySignature(using:)` the most appropriate
+If an array of keys is passed to ``JSONWebSignature/verifySignature(using:)-7n5xi`` the most appropriate
 key will be selected according `alg` value and then `kid` value if multiple keys
 are candidates regarding ``JOSEHeader`` counterpart of signature.
 

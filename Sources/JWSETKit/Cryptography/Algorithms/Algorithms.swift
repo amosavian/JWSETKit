@@ -180,6 +180,7 @@ public struct JSONWebKeyCurve: RawRepresentable, Hashable, Codable, ExpressibleB
 }
 
 extension JSONWebKeyCurve {
+    @ReadWriteLocked
     private static var keySizes: [Self: Int] = [
         .p256: 32, .ed25519: 32, .x25519: 32,
         .p384: 48,
@@ -191,12 +192,17 @@ extension JSONWebKeyCurve {
         Self.keySizes[self]
     }
     
+    /// Currently registered algorithms.
+    public static var registeredCurves: [Self] {
+        .init(keySizes.keys)
+    }
+    
     /// Registers a new curve for ECDSA/EdDSA.
     ///
     /// - Parameters:
     ///   - curve: Curve name.
     ///   - keySize: Uncompressed key size in bytes.
-    public static func register(_ curve: Self, keySize: Int) {
+    public static func register(_ curve: Self, keySize: Int) async {
         keySizes[curve] = keySize
     }
 }

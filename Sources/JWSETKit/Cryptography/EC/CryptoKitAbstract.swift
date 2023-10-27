@@ -31,11 +31,10 @@ extension CryptoECPublicKey {
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
         let keyData = AnyJSONWebKey(storage: storage)
-        guard let x = keyData.xCoordinate, x.count == curve.keySize,
-              let y = keyData.yCoordinate
-        else {
+        guard let x = keyData.xCoordinate, !x.isEmpty else {
             throw CryptoKitError.incorrectKeySize
         }
+        let y = keyData.yCoordinate ?? .init()
         let rawKey = x + y
         return try .init(rawRepresentation: rawKey)
     }
@@ -68,7 +67,7 @@ extension CryptoECPrivateKey {
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
         let keyData = AnyJSONWebKey(storage: storage)
-        guard let privateKey = keyData.privateKey, privateKey.count == PublicKey.curve.keySize else {
+        guard let privateKey = keyData.privateKey, !privateKey.isEmpty else {
             throw CryptoKitError.incorrectKeySize
         }
         return try .init(rawRepresentation: privateKey)

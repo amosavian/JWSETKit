@@ -25,6 +25,7 @@ public struct JSONWebKeyEncryptionAlgorithm: JSONWebAlgorithm {
 extension JSONWebKeyEncryptionAlgorithm {
     public typealias DecryptionMutatorHandler = (_ header: JOSEHeader, _ kek: inout any JSONWebDecryptingKey, _ cek: inout Data) throws -> Void
     
+    @ReadWriteLocked
     private static var keyRegistryClasses: [Self: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)] = [
         .direct: (JSONWebDirectKey.self, JSONWebDirectKey.self),
         .aesKeyWrap128: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
@@ -43,6 +44,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .pbes2hmac512: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
     ]
     
+    @ReadWriteLocked
     private static var keyTypes: [Self: JSONWebKeyType] = [
         .direct: .symmetric,
         .aesKeyWrap128: .symmetric,
@@ -61,6 +63,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .pbes2hmac512: .symmetric,
     ]
     
+    @ReadWriteLocked
     private static var hashFunctions: [Self: any HashFunction.Type] = [
         .aesKeyWrap128: SHA256.self,
         .aesKeyWrap192: SHA384.self,
@@ -73,6 +76,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .pbes2hmac512: SHA512.self,
     ]
     
+    @ReadWriteLocked
     private static var decryptionMutators: [Self: DecryptionMutatorHandler] = [
         .direct: directDecryptionMutator,
         .aesGCM128KeyWrap: aesgcmDecryptionMutator,
@@ -83,6 +87,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .pbes2hmac512: pbesDecryptionMutator(hashFunction: SHA512.self),
     ]
     
+    /// Key type, either RSA, Elliptic curve, Symmetric, etc.
     public var keyType: JSONWebKeyType? {
         Self.keyTypes[self]
     }
@@ -100,6 +105,11 @@ extension JSONWebKeyEncryptionAlgorithm {
     /// Prepares key encryption key and content encryption before applying in decryption.
     public var decryptionMutator: DecryptionMutatorHandler? {
         Self.decryptionMutators[self]
+    }
+    
+    /// Currently registered algorithms.
+    public static var registeredAlgorithms: [Self] {
+        .init(keyRegistryClasses.keys)
     }
     
     /// Registers a new algorithm for key encryption.

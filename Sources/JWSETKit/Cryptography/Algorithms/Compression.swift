@@ -6,9 +6,12 @@
 //
 
 import Foundation
+#if canImport(Compression)
+import Compression
+#endif
 
 /// A protocol to provide compress/decompress data to support JWE content compression.
-public protocol JSONWebCompressor {
+public protocol JSONWebCompressor: Sendable {
     /// Compresses data using defined algorithm.
     ///
     /// - Parameter data: Data to be compressed.
@@ -20,6 +23,15 @@ public protocol JSONWebCompressor {
     /// - Parameter data: Data to be decompressed.
     /// - Returns: Decompressed data.
     static func decompress<D>(_ data: D) throws -> Data where D: DataProtocol
+}
+
+/// Contains compression algorithm.
+public protocol CompressionCodec: Sendable {
+    /// Compression algorithm.
+    static var algorithm: JSONWebCompressionAlgorithm { get }
+    
+    /// Default buffer size.
+    static var pageSize: Int { get }
 }
 
 /// JSON Web Compression Algorithms.
@@ -46,11 +58,24 @@ public struct JSONWebCompressionAlgorithm: RawRepresentable, Hashable, Codable, 
 }
 
 extension JSONWebCompressionAlgorithm {
+#if canImport(Compression)
+    @ReadWriteLocked
+    private static var compressors: [Self: any JSONWebCompressor.Type] = [
+        .deflate: AppleCompressor<DeflateCompressionCodec>.self,
+    ]
+#else
+    @ReadWriteLocked
     private static var compressors: [Self: any JSONWebCompressor.Type] = [:]
+#endif
     
     /// Returns provided compressor for this algorithm.
     public var compressor: (any JSONWebCompressor.Type)? {
         Self.compressors[self]
+    }
+    
+    /// Currently registered algorithms.
+    public static var registeredAlgorithms: [Self] {
+        .init(compressors.keys)
     }
     
     /// Registers new compressor for given algorithm.
@@ -66,4 +91,10 @@ extension JSONWebCompressionAlgorithm {
 extension JSONWebCompressionAlgorithm {
     /// Compression with the DEFLATE [RFC1951](https://www.rfc-editor.org/rfc/rfc1951) algorithm.
     public static let deflate: Self = "DEF"
+}
+
+/// Deflate (conforming to RFC 1951)
+public enum DeflateCompressionCodec: CompressionCodec {
+    public static var algorithm: JSONWebCompressionAlgorithm { .deflate }
+    public static var pageSize: Int { 65536 }
 }
