@@ -77,48 +77,44 @@ extension JSONWebEncryption: Codable {
         case tag
     }
     
-    public init(from decoder: Decoder) throws {
-        let header: JSONWebEncryptionHeader
-        let recipients: [JSONWebEncryptionRecipient]
-        let aad: Data?
-        let iv: Data?
-        let ciphertext: Data?
-        let tag: Data?
-        if let stringContainer = try? decoder.singleValueContainer(), let value = try? stringContainer.decode(String.self) {
-            let sections = value
-                .components(separatedBy: ".")
-                .map { Data(urlBase64Encoded: $0) }
-            guard sections.count == 5 else {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "JWE String is not a five part data."))
-            }
-            header = try .init(protected: .init(encoded: sections[0] ?? .init()))
-            recipients = sections[1].map { [.init(encrypedKey: $0)] } ?? []
-            aad = nil
-            iv = sections[2]
-            ciphertext = sections[3]
-            tag = sections[4]
-        } else {
-            let container = try decoder.container(keyedBy: CodingKeys.self)
-            header = try JSONWebEncryptionHeader(from: decoder)
-            if let recipientsValue = try? container.decode([JSONWebEncryptionRecipient].self, forKey: .recipients) {
-                recipients = recipientsValue
-            } else {
-                let recipient = try JSONWebEncryptionRecipient(from: decoder)
-                recipients = [recipient]
-            }
-            aad = try container.decodeIfPresent(String.self, forKey: .aad)
-                .flatMap(Data.init(urlBase64Encoded:))
-            iv = try Data(urlBase64Encoded: container.decode(String.self, forKey: .iv))
-            ciphertext = try Data(urlBase64Encoded: container.decode(String.self, forKey: .ciphertext))
-            tag = try Data(urlBase64Encoded: container.decode(String.self, forKey: .tag))
+    private init(string: String, codingPath: [CodingKey]) throws {
+        let sections = string
+            .components(separatedBy: ".")
+            .map { Data(urlBase64Encoded: $0) }
+        guard sections.count == 5 else {
+            throw DecodingError.dataCorrupted(.init(codingPath: codingPath, debugDescription: "JWE String is not a five part data."))
         }
-        
-        try self.init(
-            header: header,
-            recipients: recipients,
-            sealed: .init(iv: iv ?? .init(), ciphertext: ciphertext ?? .init(), tag: tag ?? .init()),
-            additionalAuthenticatedData: aad
-        )
+        self.header = try JSONWebEncryptionHeader(protected: .init(encoded: sections[0] ?? .init()))
+        self.recipients = sections[1].map { [JSONWebEncryptionRecipient(encrypedKey: $0)] } ?? []
+        let iv = sections[2]
+        let ciphertext = sections[3]
+        let tag = sections[4]
+        self.sealed = .init(iv: iv ?? .init(), ciphertext: ciphertext ?? .init(), tag: tag ?? .init())
+    }
+    
+    private init(object decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.header = try JSONWebEncryptionHeader(from: decoder)
+        if let recipientsValue = try? container.decode([JSONWebEncryptionRecipient].self, forKey: .recipients) {
+            self.recipients = recipientsValue
+        } else {
+            let recipient = try JSONWebEncryptionRecipient(from: decoder)
+            self.recipients = [recipient]
+        }
+        self.additionalAuthenticatedData = try container.decodeIfPresent(String.self, forKey: .aad)
+            .flatMap(Data.init(urlBase64Encoded:))
+        let iv = try Data(urlBase64Encoded: container.decode(String.self, forKey: .iv))
+        let ciphertext = try Data(urlBase64Encoded: container.decode(String.self, forKey: .ciphertext))
+        let tag = try Data(urlBase64Encoded: container.decode(String.self, forKey: .tag))
+        self.sealed = .init(iv: iv ?? .init(), ciphertext: ciphertext ?? .init(), tag: tag ?? .init())
+    }
+    
+    public init(from decoder: Decoder) throws {
+        if let stringContainer = try? decoder.singleValueContainer(), let value = try? stringContainer.decode(String.self) {
+            try self.init(string: value, codingPath: decoder.codingPath)
+        } else {
+            try self.init(object: decoder)
+        }
     }
     
     fileprivate func encodeAsString(_ encoder: Encoder) throws {

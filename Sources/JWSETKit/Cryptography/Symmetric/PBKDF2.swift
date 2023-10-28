@@ -10,13 +10,53 @@ import Foundation
 import CryptoKit
 #else
 import Crypto
-import CryptoSwift
 #endif
 #if canImport(CommonCrypto)
 import CommonCrypto
+#else
+import CryptoSwift
 #endif
 
 extension SymmetricKey {
+#if canImport(CommonCrypto)
+    private static func ccpbkdf2<PD, SD, H>(
+        pbkdf2Password password: PD, salt: SD, hashFunction: H.Type, iterations: Int
+    ) throws -> SymmetricKey where PD: DataProtocol, SD: DataProtocol, H: HashFunction {
+        let hash = try CCPseudoRandomAlgorithm(hashFunction)
+        var derivedKeyData = Data(repeating: 0, count: hashFunction.Digest.byteCount)
+        let derivedCount = derivedKeyData.count
+        
+        let derivationStatus: OSStatus = derivedKeyData.withUnsafeMutableBytes { derivedKeyBytes in
+            Data(salt).withUnsafeBytes { saltBytes in
+                Data(password).withUnsafeBytes {
+                    let saltBytes = saltBytes.bindMemory(to: UInt8.self).baseAddress
+                    let derivedKeyRawBytes = derivedKeyBytes.bindMemory(to: UInt8.self).baseAddress
+                    let passwordBytes = $0.bindMemory(to: UInt8.self).baseAddress
+                    return CCKeyDerivationPBKDF(
+                        CCPBKDFAlgorithm(kCCPBKDF2),
+                        passwordBytes, password.count,
+                        saltBytes, salt.count,
+                        hash,
+                        UInt32(iterations),
+                        derivedKeyRawBytes, derivedCount
+                    )
+                }
+            }
+        }
+        
+        switch Int(derivationStatus) {
+        case kCCSuccess:
+            return .init(data: derivedKeyData)
+        case kCCParamError:
+            throw CryptoKitError.incorrectParameterSize
+        case kCCKeySizeError, kCCInvalidKey:
+            throw CryptoKitError.incorrectKeySize
+        default:
+            throw CryptoKitError.underlyingCoreCryptoError(error: Int32(derivationStatus))
+        }
+    }
+    #endif
+    
     /// Generates a symmetric key using `PBKDF2` algorithm.
     ///
     /// - Parameters:
@@ -30,74 +70,47 @@ extension SymmetricKey {
         pbkdf2Password password: PD, salt: SD, hashFunction: H.Type, iterations: Int
     ) throws -> SymmetricKey where PD: DataProtocol, SD: DataProtocol, H: HashFunction {
 #if canImport(CommonCrypto)
-        let hash: CCPseudoRandomAlgorithm
-        switch hashFunction.Digest.byteCount {
-        case SHA256.byteCount:
-            hash = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256)
-        case SHA384.byteCount:
-            hash = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA384)
-        case SHA512.byteCount:
-            hash = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA512)
-        case Insecure.SHA1.byteCount:
-            hash = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA1)
-        default:
-            throw CryptoKitError.incorrectKeySize
-        }
-        
-        var derivedKeyData = Data(repeating: 0, count: hashFunction.Digest.byteCount)
-        let derivedCount = derivedKeyData.count
-        
-        let derivationStatus: OSStatus = derivedKeyData.withUnsafeMutableBytes { derivedKeyBytes in
-            Data(salt).withUnsafeBytes { saltBytes in
-                Data(password).withUnsafeBytes {
-                    let saltBytes = saltBytes.bindMemory(to: UInt8.self).baseAddress
-                    let derivedKeyRawBytes = derivedKeyBytes.bindMemory(to: UInt8.self).baseAddress
-                    let passwordBytes = $0.bindMemory(to: UInt8.self).baseAddress
-                    return CCKeyDerivationPBKDF(
-                        CCPBKDFAlgorithm(kCCPBKDF2),
-                        passwordBytes,
-                        password.count,
-                        saltBytes,
-                        salt.count,
-                        hash,
-                        UInt32(iterations),
-                        derivedKeyRawBytes,
-                        derivedCount
-                    )
-                }
-            }
-        }
-        
-        switch Int(derivationStatus) {
-        case kCCSuccess:
-            return .init(data: derivedKeyData)
-        case kCCParamError:
-            throw CryptoKitError.incorrectParameterSize
-        case kCCBufferTooSmall, kCCMemoryFailure, kCCAlignmentError,
-             kCCDecodeError, kCCUnimplemented, kCCOverflow,
-             kCCRNGFailure, kCCUnspecifiedError, kCCCallSequenceError:
-            throw CryptoKitError.underlyingCoreCryptoError(error: Int32(derivationStatus))
-        case kCCKeySizeError, kCCInvalidKey:
-            throw CryptoKitError.incorrectKeySize
-        default:
-            throw CryptoKitError.incorrectKeySize
-        }
+        return try ccpbkdf2(pbkdf2Password: password, salt: salt, hashFunction: hashFunction, iterations: iterations)
 #else
-        let variant: CryptoSwift.HMAC.Variant
-        switch hashFunction.Digest.byteCount {
-        case SHA256.byteCount:
-            variant = .sha2(.sha256)
-        case SHA384.byteCount:
-            variant = .sha2(.sha384)
-        case SHA512.byteCount:
-            variant = .sha2(.sha512)
-        case Insecure.SHA1.byteCount:
-            variant = .sha1
-        default:
-            throw CryptoKitError.incorrectKeySize
-        }
+        let variant = try CryptoSwift.HMAC.Variant(hashFunction)
         let key = try PKCS5.PBKDF2(password: [UInt8](password), salt: [UInt8](salt), iterations: iterations, variant: variant).calculate()
         return .init(data: key)
 #endif
     }
 }
+
+#if canImport(CommonCrypto)
+extension CCPseudoRandomAlgorithm {
+    init<H>(_ hashFunction: H.Type) throws where H: HashFunction {
+        switch H.Digest.byteCount {
+        case SHA256.byteCount:
+            self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256)
+        case SHA384.byteCount:
+            self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA384)
+        case SHA512.byteCount:
+            self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA512)
+        case Insecure.SHA1.byteCount:
+            self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA1)
+        default:
+            throw CryptoKitError.incorrectKeySize
+        }
+    }
+}
+#else
+extension CryptoSwift.HMAC.Variant {
+    init<H>(_ hashFunction: H.Type) throws where H: HashFunction {
+        switch hashFunction.Digest.byteCount {
+        case SHA256.byteCount:
+            self = .sha2(.sha256)
+        case SHA384.byteCount:
+            self = .sha2(.sha384)
+        case SHA512.byteCount:
+            self = .sha2(.sha512)
+        case Insecure.SHA1.byteCount:
+            self = .sha1
+        default:
+            throw CryptoKitError.incorrectKeySize
+        }
+    }
+}
+#endif

@@ -61,7 +61,6 @@ extension JSONWebContainer {
         String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
     }
     
-    /// Returns value of given key.
     @_documentation(visibility: private)
     public subscript<T>(dynamicMember member: KeyPath<JSONWebContainerCustomParameters, T?>) -> T? {
         get {
@@ -71,4 +70,16 @@ extension JSONWebContainer {
             storage[stringKey(member)] = newValue
         }
     }
+    
+    @_documentation(visibility: private)
+    @_disfavoredOverload
+    public subscript<T>(dynamicMember member: String) -> T? {
+        get {
+            storage[member.jsonWebKey]
+        }
+        set {
+            storage[member.jsonWebKey] = newValue
+        }
+    }
+    
 }

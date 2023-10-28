@@ -7,8 +7,8 @@
 
 import Foundation
 
-final class ReadWriteLock: @unchecked Sendable {
-    private var lock: UnsafeMutablePointer<pthread_rwlock_t>
+final class ReadWriteLock: Sendable {
+    private let lock: UnsafeMutablePointer<pthread_rwlock_t>
     
     init() {
         self.lock = .allocate(capacity: 1)
@@ -39,7 +39,7 @@ final class ReadWriteLock: @unchecked Sendable {
 
 /// Synchronizing read and writes on a shared mutable property.
 @propertyWrapper
-public struct ReadWriteLocked<T>: @unchecked Sendable {
+public struct ReadWriteLocked<T> {
     private let lock = ReadWriteLock()
     private var _value: T
     
@@ -56,3 +56,5 @@ public struct ReadWriteLocked<T>: @unchecked Sendable {
         self._value = wrappedValue
     }
 }
+
+extension ReadWriteLocked: Sendable where T: Sendable { }

@@ -4,6 +4,7 @@
 import PackageDescription
 
 extension [Platform] {
+    static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS]
     static let nonDarwin: [Platform] = [.linux, .android, .openbsd, .wasi, .windows]
 }
 
@@ -41,15 +42,15 @@ let package = Package(
                 "AnyCodable",
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
-                .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
                 .product(name: "_CryptoExtras", package: "swift-crypto"),
                 .product(name: "X509", package: "swift-certificates"),
+                .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
             ],
             swiftSettings: [
                 .unsafeFlags([
                     "-Xfrontend", "-warn-concurrency",
                     "-Xfrontend", "-enable-actor-data-race-checks",
-                ])
+                ], .when(platforms: .darwin))
             ]),
         .testTarget(
             name: "JWSETKitTests",

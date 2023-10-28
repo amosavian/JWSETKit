@@ -8,12 +8,6 @@
 import XCTest
 @testable import JWSETKit
 
-extension JSONWebContainerCustomParameters {
-    fileprivate var exp: Date? { fatalError() }
-    fileprivate var iat: Date? { fatalError() }
-    fileprivate var nbf: Int? { fatalError() }
-}
-
 final class JWTRegisteredClaimsTests: XCTestCase {
     let testClaims = """
     {

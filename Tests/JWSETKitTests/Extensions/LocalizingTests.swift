@@ -10,6 +10,7 @@ import XCTest
 
 final class LocalizingTests: XCTestCase {
     func testErrorLocalizing() throws {
+        #if canImport(Darwin)
         let date = Date(timeIntervalSince1970: 0)
         
         JSONWebKit.locale = Locale(identifier: "en-US")
@@ -22,6 +23,7 @@ final class LocalizingTests: XCTestCase {
         
         JSONWebKit.locale = .autoupdatingCurrent
         XCTAssertNotNil(JSONWebKeyError.unknownAlgorithm.errorDescription)
+        #endif
     }
     
     func testBestMatch() throws {

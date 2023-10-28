@@ -186,6 +186,8 @@ extension JSONWebKeyEncryptionAlgorithm {
 // Key Management
 extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     /// **Key Management**: RSAES-PKCS1-v1.5
+    ///
+    /// - Important: This algorithm is not supported on non-Apple platform.
     public static var rsaEncryptionPKCS1: Self { "RSA1_5" }
     
     /// **Key Management**: RSAES OAEP using default parameters.
