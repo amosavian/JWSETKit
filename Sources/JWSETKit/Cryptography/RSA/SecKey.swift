@@ -160,9 +160,6 @@ extension SecKey: JSONWebKey {
 
 extension SecKey: JSONWebValidatingKey {
     fileprivate static let signingAlgorithms: [JSONWebSignatureAlgorithm: SecKeyAlgorithm] = [
-        .ecdsaSignatureP256SHA256: .ecdsaSignatureMessageX962SHA256,
-        .ecdsaSignatureP384SHA384: .ecdsaSignatureMessageX962SHA384,
-        .ecdsaSignatureP521SHA512: .ecdsaSignatureMessageX962SHA512,
         .rsaSignaturePKCS1v15SHA256: .rsaSignatureMessagePKCS1v15SHA256,
         .rsaSignaturePKCS1v15SHA384: .rsaSignatureMessagePKCS1v15SHA384,
         .rsaSignaturePKCS1v15SHA512: .rsaSignatureMessagePKCS1v15SHA512,
@@ -189,8 +186,46 @@ extension SecKey: JSONWebValidatingKey {
 }
 
 extension JSONWebSigningKey where Self: SecKey {
-    public init() throws {
-        throw JSONWebKeyError.operationNotAllowed
+    public init(algorithm: any JSONWebAlgorithm) throws {
+        let attributes: CFDictionary
+        switch algorithm {
+        case .rsaEncryptionPKCS1,
+                .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256,
+                .rsaEncryptionOAEPSHA384, .rsaEncryptionOAEPSHA384,
+                .rsaEncryptionOAEPSHA512, .rsaSignaturePKCS1v15SHA256,
+                .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512,
+                .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384,
+                .rsaSignaturePSSSHA512:
+            attributes = [
+                kSecAttrKeyType: kSecAttrKeyTypeRSA,
+                kSecAttrKeyClass: kSecAttrKeyClassPrivate,
+                kSecAttrKeySizeInBits: 2048,
+            ] as CFDictionary
+        case .ecdsaSignatureP256SHA256:
+            attributes = [
+                kSecAttrKeyType: kSecAttrKeyTypeEC,
+                kSecAttrKeyClass: kSecAttrKeyClassPrivate,
+                kSecAttrKeySizeInBits: 256,
+            ] as CFDictionary
+        case .ecdsaSignatureP384SHA384:
+            attributes = [
+                kSecAttrKeyType: kSecAttrKeyTypeEC,
+                kSecAttrKeyClass: kSecAttrKeyClassPrivate,
+                kSecAttrKeySizeInBits: 384,
+            ] as CFDictionary
+        case .ecdsaSignatureP521SHA512:
+            attributes = [
+                kSecAttrKeyType: kSecAttrKeyTypeEC,
+                kSecAttrKeyClass: kSecAttrKeyClassPrivate,
+                kSecAttrKeySizeInBits: 521,
+            ] as CFDictionary
+        default:
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        
+        self = try handle { error in
+            return SecKeyCreateRandomKey(attributes, &error) as? Self
+        }
     }
 }
 

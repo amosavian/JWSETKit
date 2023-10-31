@@ -25,6 +25,10 @@ extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension Curve25519.Signing.PrivateKey: CryptoECPrivateKey {
+    public init(algorithm: any JSONWebAlgorithm) throws {
+        self.init()
+    }
+    
     public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         try signature(for: data)
     }

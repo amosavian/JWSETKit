@@ -97,6 +97,19 @@ final class JWETests: XCTestCase {
         XCTAssertEqual(RSA_OAEP_GCM.plainData, data)
     }
     
+    func testEncryptWithCEK_RSA_OAEP_SHA256_AES_GCM() throws {
+        let jwe = try JSONWebEncryption(
+            content: RSA_OAEP_GCM.plainData,
+            keyEncryptingAlgorithm: .rsaEncryptionOAEPSHA256,
+            keyEncryptionKey: RSA_OAEP_GCM.kek.publicKey,
+            contentEncryptionAlgorithm: .aesEncryptionGCM128,
+            contentEncryptionKey: RSA_OAEP_GCM.cek
+        )
+        
+        let data = try jwe.decrypt(using: RSA_OAEP_GCM.kek)
+        XCTAssertEqual(RSA_OAEP_GCM.plainData, data)
+    }
+    
 #if canImport(CommonCrypto)
     func testEncrypt_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(

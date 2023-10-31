@@ -76,7 +76,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
         return result
     }
     
-    public init() throws {
+    public init(algorithm: any JSONWebAlgorithm) throws {
         self.storage = try _RSA.Signing.PrivateKey(keySize: .bits2048).storage
     }
     

@@ -56,7 +56,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
         }
     }
     
-    public init() throws {
+    public init(algorithm: any JSONWebAlgorithm) throws {
         try self.init(keySize: .bits2048)
     }
     
@@ -125,7 +125,7 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
         }
     }
     
-    public init() throws {
+    public init(algorithm: any JSONWebAlgorithm) throws {
         try self.init(keySize: .bits2048)
     }
     

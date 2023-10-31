@@ -59,8 +59,17 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
         self.storage = storage
     }
     
-    public init() throws {
-        self.storage = try P256.Signing.PrivateKey().storage
+    public init(algorithm: any JSONWebAlgorithm) throws {
+        switch algorithm {
+        case .ecdsaSignatureP256SHA256:
+            self.storage = P256.Signing.PrivateKey().storage
+        case .ecdsaSignatureP384SHA384:
+            self.storage = P384.Signing.PrivateKey().storage
+        case .ecdsaSignatureP521SHA512:
+            self.storage = P521.Signing.PrivateKey().storage
+        default:
+            fatalError()
+        }
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> JSONWebECPrivateKey {

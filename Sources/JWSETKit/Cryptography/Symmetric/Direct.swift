@@ -14,6 +14,13 @@ struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey {
         self
     }
     
+    init(algorithm: any JSONWebAlgorithm) throws {
+        guard algorithm == .direct else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        self.storage = .init()
+    }
+    
     init() throws {
         self.storage = .init()
     }

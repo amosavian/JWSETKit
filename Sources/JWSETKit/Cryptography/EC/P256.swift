@@ -28,7 +28,7 @@ extension P256.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension P256.Signing.PrivateKey: CryptoECPrivateKey {
-    public init() throws {
+    public init(algorithm: any JSONWebAlgorithm) throws {
         self.init(compactRepresentable: true)
     }
     
@@ -45,7 +45,7 @@ extension SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
         fatalError("Private Keys in Secure Enclave are not encodable.")
     }
     
-    public init() throws {
+    public init(algorithm: any JSONWebAlgorithm) throws {
         try self.init(compactRepresentable: true)
     }
     

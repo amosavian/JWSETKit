@@ -63,6 +63,25 @@ extension JSONWebKeyEncryptionAlgorithm {
         .pbes2hmac512: .symmetric,
     ]
     
+    
+    @ReadWriteLocked
+    private static var keyLengths: [Self: Int] = [
+        .aesKeyWrap128: SymmetricKeySize.bits128.bitCount,
+        .aesKeyWrap192: SymmetricKeySize.bits192.bitCount,
+        .aesKeyWrap256: SymmetricKeySize.bits256.bitCount,
+        .aesGCM128KeyWrap: SymmetricKeySize.bits128.bitCount,
+        .aesGCM192KeyWrap: SymmetricKeySize.bits192.bitCount,
+        .aesGCM256KeyWrap: SymmetricKeySize.bits256.bitCount,
+        .rsaEncryptionPKCS1: 2048,
+        .rsaEncryptionOAEP: 2048,
+        .rsaEncryptionOAEPSHA256: 2048,
+        .rsaEncryptionOAEPSHA384: 2048,
+        .rsaEncryptionOAEPSHA512: 2048,
+        .pbes2hmac256: 256,
+        .pbes2hmac384: 384,
+        .pbes2hmac512: 512,
+    ]
+    
     @ReadWriteLocked
     private static var hashFunctions: [Self: any HashFunction.Type] = [
         .aesKeyWrap128: SHA256.self,
@@ -97,6 +116,11 @@ extension JSONWebKeyEncryptionAlgorithm {
         Self.keyRegistryClasses[self]
     }
     
+    // Length of key in bits, if applicable.
+    public var keyLength: Int? {
+        Self.keyLengths[self]
+    }
+    
     /// Hash function for symmetric algorithms.
     public var hashFunction: (any HashFunction.Type)? {
         Self.hashFunctions[self]
@@ -119,6 +143,7 @@ extension JSONWebKeyEncryptionAlgorithm {
     ///   - type: Type of key. Can be symmetric, RSA or Elliptic curve.
     ///   - publicKeyClass: Public key class.
     ///   - privateKeyClass: Private key class. In case the key is symmetric, it equals to `publicKeyClass`.
+    ///   - keyLengthInBits:Key length in bits, if applicable.
     ///   - hashFunction: Hash function of symmetric keys.
     ///   - decryptionMutating: Prepares key encryption key and content encryption before applying in decryption.
     public static func register<Public, Private>(
@@ -126,11 +151,13 @@ extension JSONWebKeyEncryptionAlgorithm {
         type: JSONWebKeyType,
         publicKeyClass: Public.Type,
         privateKeyClass: Private.Type,
+        keyLengthInBits: Int?,
         hashFunction: (any HashFunction.Type)? = nil,
         decryptionMutating: DecryptionMutatorHandler?
     ) where Public: JSONWebEncryptingKey, Private: JSONWebDecryptingKey {
         keyRegistryClasses[algorithm] = (publicKeyClass, privateKeyClass)
         keyTypes[algorithm] = type
+        keyLengths[algorithm] = keyLengthInBits
         hashFunctions[algorithm] = hashFunction
         decryptionMutators[algorithm] = decryptionMutating
     }
@@ -142,7 +169,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         guard let keyClass = keyClass?.private else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        return try keyClass.init()
+        return try keyClass.init(algorithm: self)
     }
 }
 

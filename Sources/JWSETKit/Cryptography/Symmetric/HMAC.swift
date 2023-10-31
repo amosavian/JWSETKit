@@ -50,7 +50,7 @@ public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetr
         self.keyValue = key.keyValue
     }
     
-    public init() throws {
+    public init(algorithm: any JSONWebAlgorithm) throws {
         try self.init(SymmetricKey(size: .init(bitCount: H.Digest.byteCount * 8)))
     }
     

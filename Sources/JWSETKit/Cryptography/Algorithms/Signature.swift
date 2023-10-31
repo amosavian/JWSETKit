@@ -135,7 +135,7 @@ extension JSONWebSignatureAlgorithm {
         guard let keyClass = keyClass?.private else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        return try keyClass.init()
+        return try keyClass.init(algorithm: self)
     }
 }
 

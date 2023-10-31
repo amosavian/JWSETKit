@@ -42,14 +42,17 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionCBC256SHA512: .bits256,
     ]
     
+    /// Key type, either RSA, Elliptic curve, Symmetric, etc.
     public var keyType: JSONWebKeyType? {
         .symmetric
     }
     
+    /// Returns sealing class appropriate for algorithm.
     public var keyClass: (any JSONWebSealingKey.Type)? {
         Self.keyRegistryClasses[self]
     }
     
+    // Length of key in bits.
     public var keyLength: SymmetricKeySize? {
         Self.keyLengths[self]
     }
