@@ -166,22 +166,27 @@ extension SecKey: JSONWebKey {
 
 extension SecKey: JSONWebValidatingKey {
     fileprivate static let signingAlgorithms: [JSONWebSignatureAlgorithm: SecKeyAlgorithm] = [
-        .rsaSignaturePKCS1v15SHA256: .rsaSignatureMessagePKCS1v15SHA256,
-        .rsaSignaturePKCS1v15SHA384: .rsaSignatureMessagePKCS1v15SHA384,
-        .rsaSignaturePKCS1v15SHA512: .rsaSignatureMessagePKCS1v15SHA512,
-        .rsaSignaturePSSSHA256: .rsaSignatureMessagePSSSHA256,
-        .rsaSignaturePSSSHA384: .rsaSignatureMessagePSSSHA384,
-        .rsaSignaturePSSSHA512: .rsaSignatureMessagePSSSHA512,
+        .ecdsaSignatureP256SHA256: .ecdsaSignatureRFC4754,
+        .ecdsaSignatureP384SHA384: .ecdsaSignatureRFC4754,
+        .ecdsaSignatureP521SHA512: .ecdsaSignatureRFC4754,
+        .rsaSignaturePKCS1v15SHA256: .rsaSignatureDigestPKCS1v15SHA256,
+        .rsaSignaturePKCS1v15SHA384: .rsaSignatureDigestPKCS1v15SHA384,
+        .rsaSignaturePKCS1v15SHA512: .rsaSignatureDigestPKCS1v15SHA512,
+        .rsaSignaturePSSSHA256: .rsaSignatureDigestPSSSHA256,
+        .rsaSignaturePSSSHA384: .rsaSignatureDigestPSSSHA384,
+        .rsaSignaturePSSSHA512: .rsaSignatureDigestPSSSHA512,
     ]
-    
+
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
+        guard let secAlgorithm = Self.signingAlgorithms[algorithm], let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.operationNotAllowed
         }
+
+        let digest = hashFunction.hash(data: data).withUnsafeBytes { Data($0) }
         let result = try handle { error in
             SecKeyVerifySignature(
-                self, secAlgorithm,
-                Data(data) as CFData, Data(signature) as CFData,
+                self.publicKey, secAlgorithm,
+                digest as CFData, Data(signature) as CFData,
                 &error
             )
         }
@@ -237,11 +242,14 @@ extension JSONWebSigningKey where Self: SecKey {
 
 extension SecKey: JSONWebSigningKey {
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
-        guard let secAlgorithm = Self.signingAlgorithms[algorithm] else {
+        guard let secAlgorithm = Self.signingAlgorithms[algorithm], let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.operationNotAllowed
         }
+
+        let digest = hashFunction.hash(data: data).withUnsafeBytes { Data($0) }
+
         return try handle { error in
-            SecKeyCreateSignature(self, secAlgorithm, Data(data) as CFData, &error)
+            SecKeyCreateSignature(self, secAlgorithm, digest as CFData, &error)
         } as Data
     }
 }
