@@ -123,14 +123,14 @@ enum ECHelper {
         let length = data.count
         if isPrivateKey {
             return [
-                data[0 ..< (length / 3)],
-                data[(length / 3) ..< (2 * length / 3)],
-                data[(2 * length / 3)...],
+                data.prefix(length / 3),
+                data.dropFirst(length / 3).prefix(length / 3),
+                data.suffix(from: length / 3),
             ]
         } else {
             return [
-                data[0 ..< (length / 2)],
-                data[(length / 2)...],
+                data.prefix(length / 2),
+                data.suffix(from: length / 2),
             ]
         }
     }
@@ -138,14 +138,20 @@ enum ECHelper {
     static func ecWebKey(data: Data, isPrivateKey: Bool) throws -> any JSONWebKey {
         let components = try ecComponents(data, isPrivateKey: isPrivateKey)
         var key = AnyJSONWebKey()
+
+        guard !components.isEmpty else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+
+        key.keyType = .ellipticCurve
+        key.curve = .init(rawValue: "P-\(components[0].count * 8)")
+        
         switch components.count {
         case 2:
-            key.keyType = .ellipticCurve
             key.xCoordinate = components[0]
             key.yCoordinate = components[1]
             return JSONWebECPublicKey(storage: key.storage)
         case 3:
-            key.keyType = .ellipticCurve
             key.xCoordinate = components[0]
             key.yCoordinate = components[1]
             key.privateKey = components[2]
