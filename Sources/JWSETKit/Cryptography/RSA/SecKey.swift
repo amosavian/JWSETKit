@@ -13,7 +13,13 @@ import SwiftASN1
 
 extension SecKey: JSONWebKey {
     public var storage: JSONWebValueStorage {
-        try! jsonWebKey().storage
+        if let storage = try? jsonWebKey().storage {
+            return storage
+        } else {
+            // Key is not accessible directly, e.g. stored in Secure Enclave.
+            // We shall provide key type only then.
+            return try! publicKey.jsonWebKey().storage
+        }
     }
     
     public var publicKey: SecKey {

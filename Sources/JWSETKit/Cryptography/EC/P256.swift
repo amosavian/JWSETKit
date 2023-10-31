@@ -41,6 +41,15 @@ extension P256.Signing.PrivateKey: CryptoECPrivateKey {
 
 #if canImport(Darwin)
 extension SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
+    public var storage: JSONWebValueStorage {
+        var result = AnyJSONWebKey()
+        result.keyType = .ellipticCurve
+        result.curve = PublicKey.curve
+        result.xCoordinate = publicKey.rawRepresentation.prefix(rawRepresentation.count / 2)
+        result.yCoordinate = publicKey.rawRepresentation.suffix(rawRepresentation.count / 2)
+        return result.storage
+    }
+    
     var rawRepresentation: Data {
         fatalError("Private Keys in Secure Enclave are not encodable.")
     }
