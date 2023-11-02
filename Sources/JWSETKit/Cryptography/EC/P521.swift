@@ -19,22 +19,18 @@ extension P521.Signing.PublicKey: CryptoECPublicKey {
 extension P521.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let signature = try P521.Signing.ECDSASignature(rawRepresentation: signature)
-        var digest = SHA512()
-        digest.update(data: data)
-        if !isValidSignature(signature, for: digest.finalize()) {
+        if !isValidSignature(signature, for: SHA512.hash(data: data)) {
             throw CryptoKitError.authenticationFailure
         }
     }
 }
 
 extension P521.Signing.PrivateKey: CryptoECPrivateKey {
-    public init(algorithm: any JSONWebAlgorithm) throws {
+    public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init(compactRepresentable: true)
     }
     
     public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
-        var digest = SHA512()
-        digest.update(data: data)
-        return try signature(for: digest.finalize()).rawRepresentation
+        try signature(for: SHA512.hash(data: data)).rawRepresentation
     }
 }

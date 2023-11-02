@@ -20,7 +20,7 @@ extension Bundle {
 
 extension String {
     init(localizingKey key: String) {
-        #if canImport(Darwin)
+#if canImport(Darwin)
         let bundle: Bundle
         if JSONWebKit.locale != .autoupdatingCurrent, JSONWebKit.locale != .current {
             bundle = Bundle.module.forLocale(JSONWebKit.locale)
@@ -28,11 +28,11 @@ extension String {
             bundle = Bundle.module
         }
         self = bundle.localizedString(forKey: key, value: "", table: nil)
-        #else
+#else
         // localizedString in swift-corelib-foundations crashes.
         // This is a workaround until Foundation got fixed.
         self = key
-        #endif
+#endif
     }
     
     init(localizingKey key: String, _ arguments: CVarArg...) {

@@ -68,7 +68,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
         case .ecdsaSignatureP521SHA512:
             self.storage = P521.Signing.PrivateKey().storage
         default:
-            fatalError()
+            throw JSONWebKeyError.unknownAlgorithm
         }
     }
     

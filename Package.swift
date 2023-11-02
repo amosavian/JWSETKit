@@ -4,8 +4,8 @@
 import PackageDescription
 
 extension [Platform] {
-    static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS]
-    static let nonDarwin: [Platform] = [.linux, .android, .openbsd, .wasi, .windows]
+    static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS, .custom("visionos")]
+    static let nonDarwin: [Platform] = [.linux, .android, .windows, .wasi, .openbsd]
 }
 
 let package = Package(
@@ -30,7 +30,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.8.0")),
         // Plugins
-        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.50.4"),
+        .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.52.8"),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
     ],
     targets: [
@@ -42,7 +42,7 @@ let package = Package(
                 "AnyCodable",
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
-                .product(name: "_CryptoExtras", package: "swift-crypto"),
+                .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
             ],

@@ -13,13 +13,28 @@ import CryptoKit
 #else
 import Crypto
 #endif
+#if canImport(_CryptoExtras)
 import _CryptoExtras
+#endif
 
 extension Certificate.PublicKey {
     /// Generates a key object from the public key inside certificate.
     ///
     /// - Returns: A public key to validate signatures.
     public func jsonWebKey() throws -> any JSONWebValidatingKey {
+        #if canImport(CommonCrypto)
+        if let key = P256.Signing.PublicKey(self) {
+            return key
+        } else if let key = P384.Signing.PublicKey(self) {
+            return key
+        } else if let key = P521.Signing.PublicKey(self) {
+            return key
+        } else if let key = try SecCertificateCreateWithData(kCFAllocatorDefault, derRepresentation as CFData)?.publicKey {
+            return key
+        } else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+        #else
         if let key = P256.Signing.PublicKey(self) {
             return key
         } else if let key = P384.Signing.PublicKey(self) {
@@ -31,6 +46,7 @@ extension Certificate.PublicKey {
         } else {
             throw JSONWebKeyError.unknownKeyType
         }
+        #endif
     }
 }
 
@@ -54,7 +70,7 @@ extension DERImplicitlyTaggable {
 
 extension Certificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
-        var key = try! AnyJSONWebKey(storage: publicKey.jsonWebKey().storage)
+        var key = AnyJSONWebKey(storage: (try? publicKey.jsonWebKey().storage) ?? .init())
         key.certificateChain = [self]
         return key.storage
     }

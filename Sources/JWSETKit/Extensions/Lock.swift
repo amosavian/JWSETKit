@@ -57,4 +57,4 @@ public struct ReadWriteLocked<T> {
     }
 }
 
-extension ReadWriteLocked: Sendable where T: Sendable { }
+extension ReadWriteLocked: Sendable where T: Sendable {}

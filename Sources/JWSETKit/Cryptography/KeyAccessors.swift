@@ -172,7 +172,7 @@ extension JSONWebKey {
         if let key = JSONWebKeyRegisteredParameters.keys[keyPath] {
             return key
         }
-        return String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
+        return keyPath.name.jsonWebKey
     }
     
     @_documentation(visibility: private)

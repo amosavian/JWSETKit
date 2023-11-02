@@ -12,10 +12,12 @@ import CryptoKit
 #else
 import Crypto
 #endif
+#if canImport(_CryptoExtras)
 import _CryptoExtras
 
 extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
+        // `pkcs1DERRepresentation` is always a valid ASN1 object and it should not fail.
         try! RSAHelper.rsaWebKey(data: pkcs1DERRepresentation).storage
     }
     
@@ -28,9 +30,7 @@ extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
         guard let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        var hash = hashFunction.init()
-        hash.update(data: data)
-        if try !isValidSignature(.init(rawRepresentation: signature), for: hash.finalize(), padding: algorithm.rsaPadding) {
+        if try !isValidSignature(.init(rawRepresentation: signature), for: hashFunction.hash(data: data), padding: algorithm.rsaPadding) {
             throw CryptoKitError.authenticationFailure
         }
     }
@@ -47,6 +47,7 @@ extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
 extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     public var storage: JSONWebValueStorage {
         get {
+            // `derRepresentation` is always a valid ASN1 object and it should not fail.
             try! RSAHelper.rsaWebKey(data: derRepresentation).storage
         }
         set {
@@ -56,7 +57,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
         }
     }
     
-    public init(algorithm: any JSONWebAlgorithm) throws {
+    public init(algorithm _: any JSONWebAlgorithm) throws {
         try self.init(keySize: .bits2048)
     }
     
@@ -69,9 +70,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
         guard let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        var hash = hashFunction.init()
-        hash.update(data: data)
-        return try signature(for: hash.finalize(), padding: algorithm.rsaPadding).rawRepresentation
+        return try signature(for: hashFunction.hash(data: data), padding: algorithm.rsaPadding).rawRepresentation
     }
     
     public static func == (lhs: _RSA.Signing.PrivateKey, rhs: _RSA.Signing.PrivateKey) -> Bool {
@@ -86,6 +85,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
 extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
     public var storage: JSONWebValueStorage {
         get {
+            // `pkcs1DERRepresentation` is always a valid ASN1 object and it should not fail.
             try! RSAHelper.rsaWebKey(data: pkcs1DERRepresentation).storage
         }
         set {
@@ -116,6 +116,7 @@ extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
 extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
     public var storage: JSONWebValueStorage {
         get {
+            // `derRepresentation` is always a valid ASN1 object and it should not fail.
             try! RSAHelper.rsaWebKey(data: derRepresentation).storage
         }
         set {
@@ -125,7 +126,7 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
         }
     }
     
-    public init(algorithm: any JSONWebAlgorithm) throws {
+    public init(algorithm _: any JSONWebAlgorithm) throws {
         try self.init(keySize: .bits2048)
     }
     
@@ -174,3 +175,4 @@ extension JSONWebAlgorithm {
         }
     }
 }
+#endif

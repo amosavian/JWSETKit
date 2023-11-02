@@ -25,7 +25,7 @@ extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension Curve25519.Signing.PrivateKey: CryptoECPrivateKey {
-    public init(algorithm: any JSONWebAlgorithm) throws {
+    public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init()
     }
     

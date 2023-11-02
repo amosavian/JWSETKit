@@ -159,39 +159,11 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
             return try AES.KeyWrap.unwrap(data, using: symmetricKey)
         } else {
 #if canImport(CommonCrypto)
-            let wrappedKey = Data(data)
-            var rawKey = Data(repeating: 0, count: CCSymmetricUnwrappedSize(CCWrappingAlgorithm(kCCWRAPAES), wrappedKey.count))
-            let (result, unwrappedKeyCount) = try symmetricKey.data.withUnsafeBytes { kek in
-                wrappedKey.withUnsafeBytes { wrappedKey in
-                    rawKey.withUnsafeMutableBytes { rawKey in
-                        var unwrappedKeyCount = 0
-                        let result = CCSymmetricKeyUnwrap(
-                            CCWrappingAlgorithm(kCCWRAPAES),
-                            CCrfc3394_iv,
-                            CCrfc3394_ivLen,
-                            kek.baseAddress,
-                            kek.count,
-                            wrappedKey.baseAddress!,
-                            wrappedKey.count,
-                            rawKey.baseAddress,
-                            &unwrappedKeyCount
-                        )
-                        return (result, unwrappedKeyCount)
-                    }
-                }
-            }
-            switch Int(result) {
-            case kCCSuccess:
-                return .init(data: rawKey.prefix(unwrappedKeyCount))
-            case kCCParamError:
-                throw CryptoKitError.incorrectParameterSize
-            case kCCBufferTooSmall:
-                throw CryptoKitError.incorrectKeySize
-            default:
-                throw CryptoKitError.underlyingCoreCryptoError(error: result)
-            }
+            return try symmetricKey.ccUnwrapKey(data)
 #else
-            fatalError()
+            // This should never happen as CommonCrypto is available on Darwin platforms
+            // and Crypto is used on non-Darwin platform.
+            fatalError("Unimplemented")
 #endif
         }
     }
@@ -201,39 +173,11 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
             return try AES.KeyWrap.wrap(key, using: symmetricKey)
         } else {
 #if canImport(CommonCrypto)
-            let rawKey = key.data
-            var wrappedKey = Data(repeating: 0, count: CCSymmetricWrappedSize(CCWrappingAlgorithm(kCCWRAPAES), rawKey.count))
-            let (result, wrappedKeyCount) = try symmetricKey.data.withUnsafeBytes { kek in
-                rawKey.withUnsafeBytes { rawKey in
-                    wrappedKey.withUnsafeMutableBytes { wrappedKey in
-                        var wrappedKeyCount = 0
-                        let result = CCSymmetricKeyWrap(
-                            CCWrappingAlgorithm(kCCWRAPAES),
-                            CCrfc3394_iv,
-                            CCrfc3394_ivLen,
-                            kek.baseAddress,
-                            kek.count,
-                            rawKey.baseAddress,
-                            rawKey.count,
-                            wrappedKey.baseAddress,
-                            &wrappedKeyCount
-                        )
-                        return (result, wrappedKeyCount)
-                    }
-                }
-            }
-            switch Int(result) {
-            case kCCSuccess:
-                return wrappedKey.prefix(wrappedKeyCount)
-            case kCCParamError:
-                throw CryptoKitError.incorrectParameterSize
-            case kCCBufferTooSmall:
-                throw CryptoKitError.incorrectKeySize
-            default:
-                throw CryptoKitError.underlyingCoreCryptoError(error: result)
-            }
+            return try symmetricKey.ccWrapKey(key)
 #else
-            fatalError()
+            // This should never happen as CommonCrypto is available on Darwin platforms
+            // and Crypto is used on non-Darwin platform.
+            fatalError("Unimplemented")
 #endif
         }
     }

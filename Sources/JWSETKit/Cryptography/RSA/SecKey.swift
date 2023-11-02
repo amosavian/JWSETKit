@@ -17,17 +17,22 @@ extension SecKey: JSONWebKey {
             return storage
         } else {
             // Key is not accessible directly, e.g. stored in Secure Enclave.
-            // We shall provide key type only then.
-            return try! publicKey.jsonWebKey().storage
+            //
+            // In order to get key type and other necessary information in signing
+            // process, public key is returned which contains these values.
+            return publicKey.storage
         }
     }
     
     public var publicKey: SecKey {
-        SecKeyCopyPublicKey(self)!
+        SecKeyCopyPublicKey(self) ?? self
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
-        try createKeyFromComponents(.init(storage: storage)) as! Self
+        guard let result = try createKeyFromComponents(.init(storage: storage)) as? Self else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+        return result
     }
     
     private static func createPairKey(type: JSONWebKeyType, bits length: Int) throws -> SecKey {
@@ -70,10 +75,13 @@ extension SecKey: JSONWebKey {
             return try Self.createECFromComponents(
                 [xCoordinate, yCoordinate, key.privateKey].compactMap { $0 })
         case .rsa:
+            guard let modulus = key.modulus else {
+                throw CryptoKitError.incorrectKeySize
+            }
             let pkcs1 = try RSAHelper.pkcs1Representation(key)
             
             let keyClass = key.privateExponent != nil ? kSecAttrKeyClassPrivate : kSecAttrKeyClassPublic
-            let length = key.modulus!.count * 8
+            let length = modulus.count * 8
             let attributes: [CFString: Any] = [
                 kSecAttrKeyType: kSecAttrKeyTypeRSA,
                 kSecAttrKeyClass: keyClass,
@@ -182,7 +190,7 @@ extension SecKey: JSONWebValidatingKey {
             throw JSONWebKeyError.operationNotAllowed
         }
 
-        let digest = hashFunction.hash(data: data).withUnsafeBytes { Data($0) }
+        let digest = hashFunction.hash(data: data).data
         let result = try handle { error in
             SecKeyVerifySignature(
                 self.publicKey, secAlgorithm,
@@ -201,12 +209,12 @@ extension JSONWebSigningKey where Self: SecKey {
         let attributes: CFDictionary
         switch algorithm {
         case .rsaEncryptionPKCS1,
-                .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256,
-                .rsaEncryptionOAEPSHA384, .rsaEncryptionOAEPSHA384,
-                .rsaEncryptionOAEPSHA512, .rsaSignaturePKCS1v15SHA256,
-                .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512,
-                .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384,
-                .rsaSignaturePSSSHA512:
+             .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256,
+             .rsaEncryptionOAEPSHA384, .rsaEncryptionOAEPSHA384,
+             .rsaEncryptionOAEPSHA512, .rsaSignaturePKCS1v15SHA256,
+             .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512,
+             .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384,
+             .rsaSignaturePSSSHA512:
             attributes = [
                 kSecAttrKeyType: kSecAttrKeyTypeRSA,
                 kSecAttrKeyClass: kSecAttrKeyClassPrivate,
@@ -235,7 +243,7 @@ extension JSONWebSigningKey where Self: SecKey {
         }
         
         self = try handle { error in
-            return SecKeyCreateRandomKey(attributes, &error) as? Self
+            SecKeyCreateRandomKey(attributes, &error) as? Self
         }
     }
 }
@@ -246,7 +254,7 @@ extension SecKey: JSONWebSigningKey {
             throw JSONWebKeyError.operationNotAllowed
         }
 
-        let digest = hashFunction.hash(data: data).withUnsafeBytes { Data($0) }
+        let digest = hashFunction.hash(data: data).data
 
         return try handle { error in
             SecKeyCreateSignature(self, secAlgorithm, digest as CFData, &error)

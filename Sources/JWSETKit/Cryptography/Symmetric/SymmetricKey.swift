@@ -45,7 +45,9 @@ extension SymmetricKey: JSONWebKey {
             hasher.combine(bytes: $0)
         }
     }
-    
+}
+
+extension ContiguousBytes {
     var data: Data {
         withUnsafeBytes { Data($0) }
     }

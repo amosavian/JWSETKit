@@ -11,11 +11,13 @@ import Foundation
 
 extension JSONWebCompressionAlgorithm {
     var appleAlgorithm: Algorithm {
-        switch self {
-        case .deflate:
-            return .zlib
-        default:
-            fatalError("Unimplemented")
+        get throws {
+            switch self {
+            case .deflate:
+                return .zlib
+            default:
+                throw JSONWebKeyError.unknownAlgorithm
+            }
         }
     }
 }

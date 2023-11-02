@@ -8,6 +8,12 @@
 import XCTest
 @testable import JWSETKit
 
+#if canImport(Darwin)
+extension JSONWebContainerCustomParameters {
+    var iat: Date? { fatalError() }
+}
+#endif
+
 final class JWTRegisteredClaimsTests: XCTestCase {
     let testClaims = """
     {

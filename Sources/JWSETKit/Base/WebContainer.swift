@@ -58,7 +58,7 @@ extension JSONWebContainer {
     }
     
     private func stringKey<T>(_ keyPath: KeyPath<JSONWebContainerCustomParameters, T>) -> String {
-        String(reflecting: keyPath).components(separatedBy: ".").last!.jsonWebKey
+        keyPath.name.jsonWebKey
     }
     
     @_documentation(visibility: private)
@@ -81,5 +81,4 @@ extension JSONWebContainer {
             storage[member.jsonWebKey] = newValue
         }
     }
-    
 }

@@ -13,8 +13,8 @@ import X509
 
 extension SecCertificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
-        var key = try! AnyJSONWebKey(storage: publicKey.storage)
-        key.certificateChain = try! [.init(self)]
+        var key = AnyJSONWebKey(storage: (try? publicKey.storage) ?? .init())
+        key.certificateChain = [.init(self)]
         return key.storage
     }
     
@@ -24,13 +24,13 @@ extension SecCertificate: JSONWebValidatingKey {
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
         let key = AnyJSONWebKey(storage: storage)
-        guard let certificate = key.certificateChain.first else {
+        guard let certificate = key.certificateChain.first, let result = try certificate.secCertificate() as? Self else {
             throw JSONWebKeyError.keyNotFound
         }
-        return try certificate.secCertificate() as! Self
+        return result
     }
     
-    private var publicKey: SecKey {
+    public var publicKey: SecKey {
         get throws {
             guard let key = SecCertificateCopyKey(self) else {
                 throw JSONWebKeyError.keyNotFound
@@ -48,8 +48,8 @@ extension SecCertificate: Expirable {
 
 extension SecTrust: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
-        var key = AnyJSONWebKey(storage: .init())
-        key.certificateChain = try! certificateChain.map(Certificate.init)
+        var key = AnyJSONWebKey(storage: (try? certificateChain.first?.publicKey.storage) ?? .init())
+        key.certificateChain = (try? certificateChain)?.compactMap(Certificate.init) ?? []
         return key.storage
     }
     
@@ -75,10 +75,10 @@ extension SecTrust: JSONWebValidatingKey {
         let certificates = try key.certificateChain.map { try $0.secCertificate() }
         var result: SecTrust?
         SecTrustCreateWithCertificates(certificates as CFArray, SecPolicyCreateBasicX509(), &result)
-        guard result != nil else {
+        guard let result = result as? Self else {
             throw JSONWebKeyError.keyNotFound
         }
-        return result.unsafelyUnwrapped as! Self
+        return result
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
@@ -97,18 +97,18 @@ extension Certificate {
     ///
     /// - Returns: A new `SecCertificate` instance.
     public func secCertificate() throws -> SecCertificate {
-        guard let certificate = try SecCertificateCreateWithData(kCFAllocatorDefault, derRepresentation as CFData) else {
-            throw CryptoKitASN1Error.invalidASN1Object
-        }
-        return certificate
+        // derRepresentation's output is always a valid ASN1 object and this should not fail.
+        try! SecCertificateCreateWithData(kCFAllocatorDefault, derRepresentation as CFData)!
     }
     
     /// Casts `SecCertificate` into `X509.Certificate`.
     ///
     /// - Parameter secCertificate: `SecCertificate` instance to be casted.
-    public init(_ secCertificate: SecCertificate) throws {
+    public init(_ secCertificate: SecCertificate) {
         let der = SecCertificateCopyData(secCertificate) as Data
-        try self.init(derEncoded: der)
+        
+        // SecCertificateCopyData's output is always a valid ASN1 object and this should not fail.
+        try! self.init(derEncoded: der)
     }
 }
 #endif

@@ -11,7 +11,6 @@ import CryptoKit
 #else
 import Crypto
 #endif
-import _CryptoExtras
 
 /// JSON Web Key Encryption Algorithms
 public struct JSONWebKeyEncryptionAlgorithm: JSONWebAlgorithm {
@@ -62,7 +61,6 @@ extension JSONWebKeyEncryptionAlgorithm {
         .pbes2hmac384: .symmetric,
         .pbes2hmac512: .symmetric,
     ]
-    
     
     @ReadWriteLocked
     private static var keyLengths: [Self: Int] = [

@@ -108,7 +108,11 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
             do {
                 _protected = try JSONEncoder().encode(newValue)
             } catch {
-                _value = try! .init(storage: .init())
+                if let emptyValue = try? Container(storage: .init()) {
+                    _value = emptyValue
+                } else {
+                    assertionFailure("Invalid value provided")
+                }
             }
         }
     }

@@ -11,7 +11,9 @@ import CryptoKit
 #else
 import Crypto
 #endif
+#if canImport(_CryptoExtras)
 import _CryptoExtras
+#endif
 
 /// JSON Web Key (JWK) container for AES-CBC keys for encryption/decryption with HMAC authentication.
 public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
@@ -98,7 +100,11 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
         guard iv.count == ivLength else {
             throw CryptoKitError.incorrectParameterSize
         }
+#if canImport(CommonCrypto)
+        let ciphertext = try aesSymmetricKey.ccCrypt(operation: .aesCBC(decrypt: false), iv: iv, data: Data(data))
+#else
         let ciphertext = try AES._CBC.encrypt(data, using: aesSymmetricKey, iv: .init(ivBytes: iv))
+#endif
         let authenticated = authenticating.map { Data($0) } ?? .init()
         let tag = try hmac(authenticated + Data(iv) + ciphertext + authenticated.cbcTagLengthOctetHexData())
         return .init(iv: Data(iv), ciphertext: ciphertext, tag: tag.prefix(tagLength))
@@ -110,7 +116,12 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
         guard try data.tag == hmac(tagData).prefix(tagLength) else {
             throw CryptoKitError.authenticationFailure
         }
+        
+#if canImport(CommonCrypto)
+        return try aesSymmetricKey.ccCrypt(operation: .aesCBC(decrypt: true), iv: data.iv, data: data.ciphertext)
+#else
         return try AES._CBC.decrypt(data.ciphertext, using: aesSymmetricKey, iv: .init(ivBytes: data.iv))
+#endif
     }
     
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
