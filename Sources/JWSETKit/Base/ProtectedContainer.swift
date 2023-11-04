@@ -30,7 +30,9 @@ extension ProtectedWebContainer {
         hasher.combine(encoded)
     }
     
-    public func validate() throws {}
+    public func validate() throws {
+        // No required field by default thus no validation is needed.
+    }
     
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()

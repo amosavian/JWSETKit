@@ -6,6 +6,11 @@
 //
 
 import Foundation
+#if canImport(CryptoKit)
+import CryptoKit
+#else
+import Crypto
+#endif
 
 struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey {
     var storage: JSONWebValueStorage
@@ -41,7 +46,11 @@ struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey {
         Data(data)
     }
     
-    func verifySignature<S, D>(_: S, for _: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {}
+    func verifySignature<S, D>(_ signature: S, for _: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        guard signature.isEmpty else {
+            throw CryptoKitError.authenticationFailure
+        }
+    }
     
     func signature<D>(_: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         .init()

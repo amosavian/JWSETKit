@@ -35,7 +35,7 @@ extension SecKey: JSONWebKey {
         return result
     }
     
-    private static func createPairKey(type: JSONWebKeyType, bits length: Int) throws -> SecKey {
+    fileprivate static func createPairKey(type: JSONWebKeyType, bits length: Int) throws -> SecKey {
         let keyType: CFString
         switch type {
         case .ellipticCurve:
@@ -206,45 +206,26 @@ extension SecKey: JSONWebValidatingKey {
 
 extension JSONWebSigningKey where Self: SecKey {
     public init(algorithm: any JSONWebAlgorithm) throws {
-        let attributes: CFDictionary
-        switch algorithm {
-        case .rsaEncryptionPKCS1,
-             .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256,
-             .rsaEncryptionOAEPSHA384, .rsaEncryptionOAEPSHA384,
-             .rsaEncryptionOAEPSHA512, .rsaSignaturePKCS1v15SHA256,
-             .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512,
-             .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384,
-             .rsaSignaturePSSSHA512:
-            attributes = [
-                kSecAttrKeyType: kSecAttrKeyTypeRSA,
-                kSecAttrKeyClass: kSecAttrKeyClassPrivate,
-                kSecAttrKeySizeInBits: 2048,
-            ] as CFDictionary
-        case .ecdsaSignatureP256SHA256:
-            attributes = [
-                kSecAttrKeyType: kSecAttrKeyTypeEC,
-                kSecAttrKeyClass: kSecAttrKeyClassPrivate,
-                kSecAttrKeySizeInBits: 256,
-            ] as CFDictionary
-        case .ecdsaSignatureP384SHA384:
-            attributes = [
-                kSecAttrKeyType: kSecAttrKeyTypeEC,
-                kSecAttrKeyClass: kSecAttrKeyClassPrivate,
-                kSecAttrKeySizeInBits: 384,
-            ] as CFDictionary
-        case .ecdsaSignatureP521SHA512:
-            attributes = [
-                kSecAttrKeyType: kSecAttrKeyTypeEC,
-                kSecAttrKeyClass: kSecAttrKeyClassPrivate,
-                kSecAttrKeySizeInBits: 521,
-            ] as CFDictionary
+        guard let keyType = algorithm.keyType else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+        let bits: Int
+        switch (keyType, algorithm) {
+        case (.rsa, _):
+            bits = 2048
+        case (_, .ecdsaSignatureP256SHA256):
+            bits = 256
+        case (_, .ecdsaSignatureP384SHA384):
+            bits = 384
+        case (_, .ecdsaSignatureP521SHA512):
+            bits = 521
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }
-        
-        self = try handle { error in
-            SecKeyCreateRandomKey(attributes, &error) as? Self
+        guard let result = try Self.createPairKey(type: keyType, bits: bits) as? Self else {
+            throw JSONWebKeyError.operationNotAllowed
         }
+        self = result
     }
 }
 

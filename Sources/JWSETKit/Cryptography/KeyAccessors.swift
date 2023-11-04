@@ -167,6 +167,10 @@ public struct JSONWebKeyRegisteredParameters {
     ]
 }
 
+extension String {
+    static let x5tS256 = "x5t#S256"
+}
+
 extension JSONWebKey {
     fileprivate func stringKey<T>(_ keyPath: KeyPath<JSONWebKeyRegisteredParameters, T>) -> String {
         if let key = JSONWebKeyRegisteredParameters.keys[keyPath] {
@@ -206,8 +210,8 @@ extension JSONWebKey {
     @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, Data?>) -> Data? {
         switch keyPath {
-        case \.certificateThumbprint where storage.contains(key: "x5t#S256"):
-            return storage["x5t#S256", true]
+        case \.certificateThumbprint where storage.contains(key: .x5tS256):
+            return storage[.x5tS256, true]
         default:
             return storage[stringKey(keyPath), true]
         }
@@ -274,8 +278,8 @@ extension MutableJSONWebKey {
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, Data?>) -> Data? {
         get {
             switch keyPath {
-            case \.certificateThumbprint where storage.contains(key: "x5t#S256"):
-                return storage["x5t#S256", true]
+            case \.certificateThumbprint where storage.contains(key: .x5tS256):
+                return storage[.x5tS256, true]
             default:
                 return storage[stringKey(keyPath), true]
             }
@@ -283,7 +287,7 @@ extension MutableJSONWebKey {
         set {
             switch keyPath {
             case \.certificateThumbprint where newValue?.count == SHA256.byteCount:
-                storage["x5t#S256", true] = newValue
+                storage[.x5tS256, true] = newValue
             default:
                 storage[stringKey(keyPath), true] = newValue
             }

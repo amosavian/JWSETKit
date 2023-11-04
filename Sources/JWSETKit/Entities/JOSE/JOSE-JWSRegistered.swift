@@ -219,8 +219,8 @@ extension JOSEHeader {
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, Data?>) -> Data? {
         get {
             switch keyPath {
-            case \.certificateThumbprint where storage.contains(key: "x5t#S256"):
-                return storage["x5t#S256"]
+            case \.certificateThumbprint where storage.contains(key: .x5tS256):
+                return storage[.x5tS256]
             default:
                 return storage[stringKey(keyPath)]
             }
@@ -228,7 +228,7 @@ extension JOSEHeader {
         set {
             switch keyPath {
             case \.certificateThumbprint where newValue?.count == SHA256.byteCount:
-                storage["x5t#S256"] = newValue
+                storage[.x5tS256] = newValue
             default:
                 storage[stringKey(keyPath)] = newValue
             }
