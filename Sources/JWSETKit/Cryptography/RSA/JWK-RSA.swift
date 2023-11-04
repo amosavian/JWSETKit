@@ -14,9 +14,13 @@ import Crypto
 #endif
 #if canImport(CommonCrypto)
 import CommonCrypto
+#else
 #endif
 #if canImport(_CryptoExtras)
 import _CryptoExtras
+#endif
+#if canImport(CryptoSwift)
+import CryptoSwift
 #endif
 
 /// JSON Web Key (JWK) container for RSA public keys.
@@ -37,8 +41,12 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
             return SecKeyCreateWithData(derRepresentation as CFData, attributes, &error)
         }
         self.storage = key.storage
-#else
+#elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PublicKey(derRepresentation: derRepresentation).storage
+#else
+        // This should never happen as CommonCrypto is available on Darwin platforms
+        // and CryptoExtras is used on non-Darwin platform.
+        fatalError("Unimplemented")
 #endif
     }
     
@@ -48,17 +56,31 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
 #if canImport(CommonCrypto)
-        try SecKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
+        return try SecKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
+#elseif canImport(_CryptoExtras)
+        return try _RSA.Signing.PublicKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
 #else
-        try _RSA.Signing.PublicKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
+        // This should never happen as CommonCrypto is available on Darwin platforms
+        // and CryptoExtras is used on non-Darwin platform.
+        fatalError("Unimplemented")
 #endif
     }
     
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
 #if canImport(CommonCrypto)
-        try SecKey.create(storage: storage).encrypt(data, using: algorithm)
+        return try SecKey.create(storage: storage).encrypt(data, using: algorithm)
+#elseif canImport(CryptoSwift) && canImport(_CryptoExtras)
+        let key = try _RSA.Encryption.PublicKey.create(storage: storage)
+        if algorithm == .rsaEncryptionPKCS1 {
+            let rsaKey = try RSA(rawRepresentation: key.pkcs1DERRepresentation)
+            return try .init(rsaKey.encrypt([UInt8](data), variant: .pksc1v15))
+        } else {
+            return try key.encrypt(data, using: algorithm)
+        }
 #else
-        try _RSA.Encryption.PublicKey.create(storage: storage).encrypt(data, using: algorithm)
+        // This should never happen as CommonCrypto is available on Darwin platforms
+        // and CryptoSwift is used on non-Darwin platform.
+        fatalError("Unimplemented")
 #endif
     }
 }
@@ -96,8 +118,12 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
             return SecKeyCreateWithData(derRepresentation as CFData, attributes, &error)
         }
         self.storage = key.storage
-#else
+#elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PrivateKey(derRepresentation: derRepresentation).storage
+#else
+        // This should never happen as CommonCrypto is available on Darwin platforms
+        // and CryptoExtras is used on non-Darwin platform.
+        fatalError("Unimplemented")
 #endif
     }
     
@@ -108,16 +134,30 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
 #if canImport(CommonCrypto)
         return try SecKey.create(storage: storage).signature(data, using: algorithm)
+#elseif canImport(_CryptoExtras)
+        return try _RSA.Signing.PrivateKey.create(storage: storage).signature(data, using: algorithm)
 #else
-        try _RSA.Signing.PrivateKey.create(storage: storage).signature(data, using: algorithm)
+        // This should never happen as CommonCrypto is available on Darwin platforms
+        // and CryptoExtras is used on non-Darwin platform.
+        fatalError("Unimplemented")
 #endif
     }
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
 #if canImport(CommonCrypto)
-        try SecKey.create(storage: storage).decrypt(data, using: algorithm)
+        return try SecKey.create(storage: storage).decrypt(data, using: algorithm)
+#elseif canImport(CryptoSwift) && canImport(_CryptoExtras)
+        let key = try _RSA.Encryption.PrivateKey.create(storage: storage)
+        if algorithm == .rsaEncryptionPKCS1 {
+            let rsaKey = try RSA(rawRepresentation: key.derRepresentation)
+            return try .init(rsaKey.decrypt([UInt8](data), variant: .pksc1v15))
+        } else {
+            return try key.decrypt(data, using: algorithm)
+        }
 #else
-        try _RSA.Encryption.PrivateKey.create(storage: storage).decrypt(data, using: algorithm)
+        // This should never happen as CommonCrypto is available on Darwin platforms
+        // and CryptoSwift is used on non-Darwin platform.
+        fatalError("Unimplemented")
 #endif
     }
 }

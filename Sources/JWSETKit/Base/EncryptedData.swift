@@ -84,10 +84,9 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
         guard ivLength > 0, tagLength > 0, data.count >= ivLength + tagLength else {
             throw CryptoKitError.incorrectParameterSize
         }
-        let data = Data(data)
-        self.iv = data.prefix(ivLength)
-        self.ciphertext = data.dropFirst(ivLength).dropLast(tagLength)
-        self.tag = data.suffix(tagLength)
+        self.iv = Data(data.prefix(ivLength))
+        self.ciphertext = Data(data.dropFirst(ivLength).dropLast(tagLength))
+        self.tag = Data(data.suffix(tagLength))
     }
     
     public static func == (lhs: SealedData, rhs: SealedData) -> Bool {

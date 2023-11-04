@@ -38,15 +38,15 @@ struct CryptOperation {
 }
 
 extension SymmetricKey {
-    func ccCrypt(operation: CryptOperation, iv: Data, data: Data) throws -> Data {
+    func ccCrypt<IV, D>(operation: CryptOperation, iv: IV, data: D) throws -> Data where IV: DataProtocol, D: DataProtocol {
         let bufferSize: Int = iv.count + data.count + operation.blockSize
         var result = Data(repeating: 0, count: bufferSize)
         var resultLength = 0
         
         let status: CCCryptorStatus = result.withUnsafeMutableBytes { resultBytes in
-            self.data.withUnsafeBytes { keyBytes in
-                Data(data).withUnsafeBytes { dataBytes in
-                    iv.withUnsafeBytes { ivBytes in
+            self.withUnsafeBytes { keyBytes in
+                data.withUnsafeBuffer { dataBytes in
+                    iv.withUnsafeBuffer { ivBytes in
                         CCCrypt(
                             operation.operation,
                             operation.algorithm,
@@ -75,10 +75,10 @@ extension SymmetricKey {
     }
     
     public func ccWrapKey(_ key: SymmetricKey) throws -> Data {
-        let rawKey = key.data
-        var wrappedKey = Data(repeating: 0, count: CCSymmetricWrappedSize(CCWrappingAlgorithm(kCCWRAPAES), rawKey.count))
-        let (result, wrappedKeyCount) = data.withUnsafeBytes { kek in
-            rawKey.withUnsafeBytes { rawKey in
+        let keyLength = key.bitCount / 8
+        var wrappedKey = Data(repeating: 0, count: CCSymmetricWrappedSize(CCWrappingAlgorithm(kCCWRAPAES), keyLength))
+        let (result, wrappedKeyCount) = withUnsafeBytes { kek in
+            key.withUnsafeBytes { rawKey in
                 wrappedKey.withUnsafeMutableBytes { wrappedKey in
                     var wrappedKeyCount = 0
                     let result = CCSymmetricKeyWrap(
@@ -108,11 +108,10 @@ extension SymmetricKey {
         }
     }
     
-    func ccUnwrapKey<D>(_ data: D) throws -> SymmetricKey where D: DataProtocol {
-        let wrappedKey = Data(data)
+    func ccUnwrapKey<D>(_ wrappedKey: D) throws -> SymmetricKey where D: DataProtocol {
         var rawKey = Data(repeating: 0, count: CCSymmetricUnwrappedSize(CCWrappingAlgorithm(kCCWRAPAES), wrappedKey.count))
-        let (result, unwrappedKeyCount) = self.data.withUnsafeBytes { kek in
-            wrappedKey.withUnsafeBytes { wrappedKey in
+        let (result, unwrappedKeyCount) = withUnsafeBytes { kek in
+            wrappedKey.withUnsafeBuffer { wrappedKey in
                 rawKey.withUnsafeMutableBytes { rawKey in
                     var unwrappedKeyCount = 0
                     let result = CCSymmetricKeyUnwrap(
@@ -150,8 +149,8 @@ extension SymmetricKey {
         let derivedCount = derivedKeyData.count
         
         let derivationStatus: OSStatus = derivedKeyData.withUnsafeMutableBytes { derivedKeyBytes in
-            Data(salt).withUnsafeBytes { saltBytes in
-                Data(password).withUnsafeBytes {
+            salt.withUnsafeBuffer { saltBytes in
+                password.withUnsafeBuffer {
                     let saltBytes = saltBytes.bindMemory(to: UInt8.self).baseAddress
                     let derivedKeyRawBytes = derivedKeyBytes.bindMemory(to: UInt8.self).baseAddress
                     let passwordBytes = $0.bindMemory(to: UInt8.self).baseAddress

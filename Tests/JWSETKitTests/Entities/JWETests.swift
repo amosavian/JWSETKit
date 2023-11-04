@@ -48,7 +48,6 @@ final class JWETests: XCTestCase {
         XCTAssertEqual(RSA_OAEP_GCM.plainData, data)
     }
     
-#if canImport(CommonCrypto)
     func testDecrypt_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(from: RSA_PKCS1_5_CBC.jweString)
         
@@ -59,7 +58,6 @@ final class JWETests: XCTestCase {
         let data = try jwe.decrypt(using: RSA_PKCS1_5_CBC.kek)
         XCTAssertEqual(RSA_PKCS1_5_CBC.plainData, data)
     }
-#endif
     
     func testDecrypt_AESKW_CBC() throws {
         let jwe = try JSONWebEncryption(from: AESKW_CBC.jweString)
@@ -110,7 +108,6 @@ final class JWETests: XCTestCase {
         XCTAssertEqual(RSA_OAEP_GCM.plainData, data)
     }
     
-#if canImport(CommonCrypto)
     func testEncrypt_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_PKCS1_5_CBC.plainData,
@@ -135,7 +132,6 @@ final class JWETests: XCTestCase {
         let data = try jwe.decrypt(using: RSA_PKCS1_5_CBC.kek)
         XCTAssertEqual(RSA_PKCS1_5_CBC.plainData, data)
     }
-#endif
     
     func testEncrypt_AESKW_CBC() throws {
         let jwe = try JSONWebEncryption(

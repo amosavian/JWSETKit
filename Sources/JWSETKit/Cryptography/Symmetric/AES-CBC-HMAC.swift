@@ -101,13 +101,13 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
             throw CryptoKitError.incorrectParameterSize
         }
 #if canImport(CommonCrypto)
-        let ciphertext = try aesSymmetricKey.ccCrypt(operation: .aesCBC(decrypt: false), iv: iv, data: Data(data))
+        let ciphertext = try aesSymmetricKey.ccCrypt(operation: .aesCBC(decrypt: false), iv: iv, data: data)
 #else
         let ciphertext = try AES._CBC.encrypt(data, using: aesSymmetricKey, iv: .init(ivBytes: iv))
 #endif
         let authenticated = authenticating.map { Data($0) } ?? .init()
-        let tag = try hmac(authenticated + Data(iv) + ciphertext + authenticated.cbcTagLengthOctetHexData())
-        return .init(iv: Data(iv), ciphertext: ciphertext, tag: tag.prefix(tagLength))
+        let tag = try hmac(authenticated + iv + ciphertext + authenticated.cbcTagLengthOctetHexData())
+        return .init(iv: iv, ciphertext: ciphertext, tag: tag.prefix(tagLength))
     }
     
     public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using _: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {

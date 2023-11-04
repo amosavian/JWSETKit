@@ -13,7 +13,8 @@ import Crypto
 #endif
 #if canImport(CommonCrypto)
 import CommonCrypto
-#else
+#endif
+#if canImport(CryptoSwift)
 import CryptoSwift
 #endif
 

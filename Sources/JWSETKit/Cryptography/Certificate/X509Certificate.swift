@@ -22,7 +22,7 @@ extension Certificate.PublicKey {
     ///
     /// - Returns: A public key to validate signatures.
     public func jsonWebKey() throws -> any JSONWebValidatingKey {
-        #if canImport(CommonCrypto)
+#if canImport(CommonCrypto)
         if let key = P256.Signing.PublicKey(self) {
             return key
         } else if let key = P384.Signing.PublicKey(self) {
@@ -34,7 +34,7 @@ extension Certificate.PublicKey {
         } else {
             throw JSONWebKeyError.unknownKeyType
         }
-        #else
+#else
         if let key = P256.Signing.PublicKey(self) {
             return key
         } else if let key = P384.Signing.PublicKey(self) {
@@ -46,7 +46,7 @@ extension Certificate.PublicKey {
         } else {
             throw JSONWebKeyError.unknownKeyType
         }
-        #endif
+#endif
     }
 }
 

@@ -87,3 +87,12 @@ extension Data {
         self = Data(bytePtr)
     }
 }
+
+extension DataProtocol {
+    @inlinable
+    func withUnsafeBuffer<R>(_ body: (_ buffer: UnsafeRawBufferPointer) throws -> R) rethrows -> R {
+        try withContiguousStorageIfAvailable {
+            try body(UnsafeRawBufferPointer($0))
+        } ?? Data(self).withUnsafeBytes(body)
+    }
+}

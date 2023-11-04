@@ -18,7 +18,6 @@ let package = Package(
         .macCatalyst(.v14),
     ],
     products: [
-        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "JWSETKit",
             targets: ["JWSETKit"]),
@@ -34,16 +33,15 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
     ],
     targets: [
-        // Targets are the basic building blocks of a package, defining a module or a test suite.
-        // Targets can depend on other targets in this package and products from dependencies.
         .target(
             name: "JWSETKit",
             dependencies: [
                 "AnyCodable",
                 .product(name: "SwiftASN1", package: "swift-asn1"),
+                .product(name: "X509", package: "swift-certificates"),
+                // Linux support
                 .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
-                .product(name: "X509", package: "swift-certificates"),
                 .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
             ],
             swiftSettings: [
