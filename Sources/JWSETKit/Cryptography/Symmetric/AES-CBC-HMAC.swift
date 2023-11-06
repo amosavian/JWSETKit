@@ -133,7 +133,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
     }
     
     private func hmac(_ data: Data) throws -> Data {
-        switch tagLength * 2 {
+        switch try symmetricKey.bitCount / 8 {
         case SHA256.byteCount:
             var hmac = try HMAC<SHA256>(key: hmacSymmetricKey)
             hmac.update(data: data)
