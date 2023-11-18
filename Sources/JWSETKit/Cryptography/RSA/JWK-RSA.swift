@@ -33,14 +33,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
     
     public init(derRepresentation: Data) throws {
 #if canImport(CommonCrypto)
-        let key: SecKey = try handle { error in
-            let attributes = [
-                kSecAttrKeyType: kSecAttrKeyTypeRSA,
-                kSecAttrKeyClass: kSecAttrKeyClassPublic,
-            ] as CFDictionary
-            return SecKeyCreateWithData(derRepresentation as CFData, attributes, &error)
-        }
-        self.storage = key.storage
+        self.storage = try SecKey(derRepresentation: derRepresentation, keyType: .rsa).storage
 #elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PublicKey(derRepresentation: derRepresentation).storage
 #else
@@ -110,14 +103,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
     
     public init(derRepresentation: Data) throws {
 #if canImport(CommonCrypto)
-        let key: SecKey = try handle { error in
-            let attributes = [
-                kSecAttrKeyType: kSecAttrKeyTypeRSA,
-                kSecAttrKeyClass: kSecAttrKeyClassPrivate,
-            ] as CFDictionary
-            return SecKeyCreateWithData(derRepresentation as CFData, attributes, &error)
-        }
-        self.storage = key.storage
+        self.storage = try SecKey(derRepresentation: derRepresentation, keyType: .rsa).storage
 #elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PrivateKey(derRepresentation: derRepresentation).storage
 #else

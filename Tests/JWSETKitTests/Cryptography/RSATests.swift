@@ -7,6 +7,9 @@
 
 import XCTest
 @testable import JWSETKit
+#if canImport(CommonCrypto)
+import CommonCrypto
+#endif
 
 final class RSATests: XCTestCase {
     let privateKeyDER = Data(base64Encoded: """
@@ -51,4 +54,11 @@ final class RSATests: XCTestCase {
         XCTAssertNoThrow(try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER))
         XCTAssertNoThrow(try JSONWebRSAPublicKey(derRepresentation: publicKeyDER))
     }
+    
+#if canImport(CommonCrypto)
+    func testSecKey() throws {
+        XCTAssertNoThrow(try SecKey(derRepresentation: publicKeyDER, keyType: .rsa))
+        XCTAssertNoThrow(try SecKey(derRepresentation: privateKeyDER, keyType: .rsa))
+    }
+#endif
 }

@@ -28,6 +28,14 @@ extension SecKey: JSONWebKey {
         SecKeyCopyPublicKey(self) ?? self
     }
     
+    public var rawRepresentation: Data {
+        get throws {
+            try handle { error in
+                SecKeyCopyExternalRepresentation(self, &error) as? Data
+            }
+        }
+    }
+    
     public static func create(storage: JSONWebValueStorage) throws -> Self {
         guard let result = try createKeyFromComponents(.init(storage: storage)) as? Self else {
             throw JSONWebKeyError.unknownKeyType
@@ -75,21 +83,8 @@ extension SecKey: JSONWebKey {
             return try Self.createECFromComponents(
                 [xCoordinate, yCoordinate, key.privateKey].compactMap { $0 })
         case .rsa:
-            guard let modulus = key.modulus else {
-                throw CryptoKitError.incorrectKeySize
-            }
             let pkcs1 = try RSAHelper.pkcs1Representation(key)
-            
-            let keyClass = key.privateExponent != nil ? kSecAttrKeyClassPrivate : kSecAttrKeyClassPublic
-            let length = modulus.count * 8
-            let attributes: [CFString: Any] = [
-                kSecAttrKeyType: kSecAttrKeyTypeRSA,
-                kSecAttrKeyClass: keyClass,
-                kSecAttrKeySizeInBits: length,
-            ]
-            return try handle { error in
-                SecKeyCreateWithData(pkcs1 as CFData, attributes as CFDictionary, &error)
-            }
+            return try SecKey(derRepresentation: pkcs1, keyType: .rsa)
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -134,41 +129,18 @@ extension SecKey: JSONWebKey {
     }
     
     private func jsonWebKey() throws -> any JSONWebKey {
-        let keyData = try handle { error in
-            SecKeyCopyExternalRepresentation(self, &error)
-        } as Data
         switch try keyType {
         case .ellipticCurve:
-            return try ECHelper.ecWebKey(data: keyData, isPrivateKey: isPrivateKey)
+            return try ECHelper.ecWebKey(data: rawRepresentation, isPrivateKey: isPrivateKey)
         case .rsa:
-            return try RSAHelper.rsaWebKey(data: keyData)
+            return try RSAHelper.rsaWebKey(data: rawRepresentation)
         default:
             throw JSONWebKeyError.unknownKeyType
         }
     }
     
     private static func createECFromComponents(_ components: [Data]) throws -> SecKey {
-        let keyClass: CFString
-        let length: Int
-        switch components.count {
-        case 2:
-            keyClass = kSecAttrKeyClassPublic
-            length = components[0].count * 8
-        case 3:
-            keyClass = kSecAttrKeyClassPrivate
-            length = components[0].count * 8
-        default:
-            throw JSONWebKeyError.unknownKeyType
-        }
-        
-        let attributes: [CFString: Any] = [
-            kSecAttrKeyType: kSecAttrKeyTypeEC,
-            kSecAttrKeyClass: keyClass,
-            kSecAttrKeySizeInBits: length,
-        ]
-        return try handle { error in
-            SecKeyCreateWithData((Data([0x04]) + components.joined()) as CFData, attributes as CFDictionary, &error)
-        }
+        try SecKey(derRepresentation: Data([0x04]) + components.joined(), keyType: .ellipticCurve)
     }
 }
 
@@ -226,6 +198,42 @@ extension JSONWebSigningKey where Self: SecKey {
             throw JSONWebKeyError.operationNotAllowed
         }
         self = result
+    }
+    
+    public init(derRepresentation: Data, keyType: JSONWebKeyType) throws {
+        var rawRepresentation = derRepresentation
+        let secKeyType: CFString
+        switch keyType {
+        case .rsa:
+            secKeyType = kSecAttrKeyTypeRSA
+        case .ellipticCurve:
+            secKeyType = kSecAttrKeyTypeECSECPrimeRandom
+            if rawRepresentation.count.isMultiple(of: 2) {
+                rawRepresentation.insert(0x04, at: 0)
+            }
+        default:
+            throw JSONWebKeyError.unknownKeyType
+        }
+        var attributes: [CFString: Any] = [
+            kSecAttrKeyType: secKeyType,
+            kSecAttrKeyClass: kSecAttrKeyClassPrivate,
+        ]
+        let privateKey = try? handle { error in
+            SecKeyCreateWithData(rawRepresentation as CFData, attributes as CFDictionary, &error)
+        }
+        if let privateKey = privateKey as? Self { 
+            self = privateKey
+            return
+        }
+        attributes[kSecAttrKeyClass] = kSecAttrKeyClassPublic
+        let publicKey = try handle { error in
+            SecKeyCreateWithData(rawRepresentation as CFData, attributes as CFDictionary, &error)
+        }
+        if let publicKey = publicKey as? Self {
+            self = publicKey
+            return
+        }
+        throw JSONWebKeyError.unknownKeyType
     }
 }
 

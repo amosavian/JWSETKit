@@ -31,11 +31,8 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
             return .init(key)
         }
 #if canImport(CommonCrypto)
-        if let key = try? SecKey.create(storage: storage).publicKey {
-            let der = try handle { error in
-                SecKeyCopyExternalRepresentation(key, &error)
-            }
-            return try .init(derEncoded: der as Data)
+        if let der = try? SecKey.create(storage: storage).publicKey.rawRepresentation {
+            return try .init(derEncoded: der)
         }
 #elseif canImport(_CryptoExtras)
         if let key = try? _RSA.Signing.PublicKey.create(storage: storage) {
@@ -43,7 +40,7 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
         }
 #else
         // This should never happen as CommonCrypto is available on Darwin platforms
-        // and CryptoSwift is used on non-Darwin platform.
+        // and _CryptoExtras is used on non-Darwin platform.
         fatalError("Unimplemented")
 #endif
         throw JSONWebKeyError.unknownKeyType
@@ -65,15 +62,8 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
             return key
         }
 #if canImport(CommonCrypto)
-        let rsaKey = try? handle { error in
-            let attributes = [
-                kSecAttrKeyType: kSecAttrKeyTypeRSA,
-                kSecAttrKeyClass: kSecAttrKeyClassPublic,
-            ] as CFDictionary
-            return try? SecKeyCreateWithData(derRepresentation as CFData, attributes, &error)
-        }
-        if let rsaKey {
-            return rsaKey
+        if let key = try? SecKey(derRepresentation: derRepresentation, keyType: .rsa) {
+            return key
         }
 #elseif canImport(_CryptoExtras)
         if let key = _RSA.Signing.PublicKey(self) {
@@ -81,7 +71,7 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
         }
 #else
         // This should never happen as CommonCrypto is available on Darwin platforms
-        // and CryptoSwift is used on non-Darwin platform.
+        // and _CryptoExtras is used on non-Darwin platform.
         fatalError("Unimplemented")
 #endif
         throw JSONWebKeyError.unknownKeyType
@@ -89,7 +79,7 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
 }
 
 extension DERImplicitlyTaggable {
-    /// Initializes a DER serializable object from give data.
+    /// Initializes a DER serializable object from given data.
     ///
     /// - Parameter derEncoded: DER encoded object.
     public init(derEncoded: Data) throws {
