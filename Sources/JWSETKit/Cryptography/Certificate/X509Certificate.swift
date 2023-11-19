@@ -31,7 +31,7 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
             return .init(key)
         }
 #if canImport(CommonCrypto)
-        if let der = try? SecKey.create(storage: storage).publicKey.rawRepresentation {
+        if let der = try? SecKey.create(storage: storage).publicKey.externalRepresentation {
             return try .init(derEncoded: der)
         }
 #elseif canImport(_CryptoExtras)

@@ -28,7 +28,7 @@ extension SecKey: JSONWebKey {
         SecKeyCopyPublicKey(self) ?? self
     }
     
-    public var rawRepresentation: Data {
+    public var externalRepresentation: Data {
         get throws {
             try handle { error in
                 SecKeyCopyExternalRepresentation(self, &error) as? Data
@@ -131,9 +131,9 @@ extension SecKey: JSONWebKey {
     private func jsonWebKey() throws -> any JSONWebKey {
         switch try keyType {
         case .ellipticCurve:
-            return try ECHelper.ecWebKey(data: rawRepresentation, isPrivateKey: isPrivateKey)
+            return try ECHelper.ecWebKey(data: externalRepresentation, isPrivateKey: isPrivateKey)
         case .rsa:
-            return try RSAHelper.rsaWebKey(data: rawRepresentation)
+            return try RSAHelper.rsaWebKey(data: externalRepresentation)
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -201,15 +201,15 @@ extension JSONWebSigningKey where Self: SecKey {
     }
     
     public init(derRepresentation: Data, keyType: JSONWebKeyType) throws {
-        var rawRepresentation = derRepresentation
+        var derRepresentation = derRepresentation
         let secKeyType: CFString
         switch keyType {
         case .rsa:
             secKeyType = kSecAttrKeyTypeRSA
         case .ellipticCurve:
             secKeyType = kSecAttrKeyTypeECSECPrimeRandom
-            if rawRepresentation.count.isMultiple(of: 2) {
-                rawRepresentation.insert(0x04, at: 0)
+            if derRepresentation.count.isMultiple(of: 2) {
+                derRepresentation.insert(0x04, at: 0)
             }
         default:
             throw JSONWebKeyError.unknownKeyType
@@ -219,7 +219,7 @@ extension JSONWebSigningKey where Self: SecKey {
             kSecAttrKeyClass: kSecAttrKeyClassPrivate,
         ]
         let privateKey = try? handle { error in
-            SecKeyCreateWithData(rawRepresentation as CFData, attributes as CFDictionary, &error)
+            SecKeyCreateWithData(derRepresentation as CFData, attributes as CFDictionary, &error)
         }
         if let privateKey = privateKey as? Self { 
             self = privateKey
@@ -227,7 +227,7 @@ extension JSONWebSigningKey where Self: SecKey {
         }
         attributes[kSecAttrKeyClass] = kSecAttrKeyClassPublic
         let publicKey = try handle { error in
-            SecKeyCreateWithData(rawRepresentation as CFData, attributes as CFDictionary, &error)
+            SecKeyCreateWithData(derRepresentation as CFData, attributes as CFDictionary, &error)
         }
         if let publicKey = publicKey as? Self {
             self = publicKey
