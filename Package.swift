@@ -45,7 +45,7 @@ let package = Package(
                 .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
             ],
             swiftSettings: [
-                .enableUpcomingFeature("ExistentialAny")
+                .enableUpcomingFeature("ExistentialAny"),
             ]),
         .testTarget(
             name: "JWSETKitTests",
