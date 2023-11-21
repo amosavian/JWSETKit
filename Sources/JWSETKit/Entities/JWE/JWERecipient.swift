@@ -38,7 +38,7 @@ public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
         self.encrypedKey = encrypedKey
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         self.header = try container.decodeIfPresent(JOSEHeader.self, forKey: JSONWebEncryptionRecipient.CodingKeys.header)
@@ -49,7 +49,7 @@ public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
         self.encrypedKey = key
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
         if let header, !header.storage.storageKeys.isEmpty {

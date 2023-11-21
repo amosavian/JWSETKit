@@ -85,7 +85,7 @@ extension CodingUserInfoKey {
 }
 
 extension JSONWebSignature: Codable {
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         if let stringContainer = try? decoder.singleValueContainer(), let value = try? stringContainer.decode(String.self) {
             let sections = value
                 .components(separatedBy: ".")
@@ -123,7 +123,7 @@ extension JSONWebSignature: Codable {
         }
     }
     
-    fileprivate func encodeAsString(_ encoder: Encoder) throws {
+    fileprivate func encodeAsString(_ encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         guard let signature = signatures.first else {
             try container.encode("..")
@@ -140,7 +140,7 @@ extension JSONWebSignature: Codable {
         try container.encode(value)
     }
     
-    fileprivate func encodeAsDetachedString(_ encoder: Encoder) throws {
+    fileprivate func encodeAsDetachedString(_ encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         guard let signature = signatures.first else {
             try container.encode("..")
@@ -154,13 +154,13 @@ extension JSONWebSignature: Codable {
         try container.encode(value)
     }
     
-    fileprivate func encodeAsCompleteJSON(_ encoder: Encoder) throws {
+    fileprivate func encodeAsCompleteJSON(_ encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
         try container.encode(signatures, forKey: .signatures)
     }
     
-    fileprivate func encodeAsFlattenedJSON(_ encoder: Encoder) throws {
+    fileprivate func encodeAsFlattenedJSON(_ encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
         var headerContainer = encoder.container(keyedBy: JSONWebSignatureHeader.CodingKeys.self)
@@ -186,7 +186,7 @@ extension JSONWebSignature: Codable {
         }
     }
     
-    fileprivate func encodeFunction(for representation: JSONWebSignatureRepresentation) -> (_ encoder: Encoder) throws -> Void {
+    fileprivate func encodeFunction(for representation: JSONWebSignatureRepresentation) -> (_ encoder: any Encoder) throws -> Void {
         var representation = representation
         if representation == .automatic {
             representation = bestRepresentation()
@@ -212,7 +212,7 @@ extension JSONWebSignature: Codable {
         }
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         try validate()
         let representation = encoder.userInfo[.jwsEncodedRepresentation] as? JSONWebSignatureRepresentation ?? .automatic
         try encodeFunction(for: representation)(encoder)
@@ -232,7 +232,7 @@ public struct JSONWebSignatureCodableConfiguration: Sendable {
 extension JSONWebSignature: EncodableWithConfiguration {
     public typealias EncodingConfiguration = JSONWebSignatureCodableConfiguration
     
-    public func encode(to encoder: Encoder, configuration: JSONWebSignatureCodableConfiguration) throws {
+    public func encode(to encoder: any Encoder, configuration: JSONWebSignatureCodableConfiguration) throws {
         try validate()
         try encodeFunction(for: configuration.representation)(encoder)
     }

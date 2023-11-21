@@ -44,12 +44,12 @@ extension JSONWebKey {
         self = try Self.create(storage: JSONDecoder().decode(JSONWebValueStorage.self, from: data))
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         self = try Self.create(storage: container.decode(JSONWebValueStorage.self))
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(storage)
     }
@@ -306,13 +306,13 @@ public struct JSONWebKeySet: Codable, Hashable {
         self.keys = keys
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let keys = try container.decode([AnyJSONWebKey].self, forKey: .keys)
         self.keys = try keys.map { try $0.specialized() }
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(keys.map(\.storage), forKey: .keys)
     }

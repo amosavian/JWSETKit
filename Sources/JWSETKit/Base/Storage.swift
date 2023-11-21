@@ -123,7 +123,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         self.storage = .init(uniqueKeysWithValues: elements)
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let claims = try? container.decode([String: AnyCodable].self) {
             self.storage = claims
@@ -145,7 +145,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         return result
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(storage)
     }
@@ -219,7 +219,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
                 guard let data = try? JSONEncoder().encode(value) else { return nil }
                 return try? JSONDecoder().decode(type, from: data) as? T
             }
-        case is Encodable.Type:
+        case is any Encodable.Type:
             return value as? T
         default:
             assertionFailure("Unknown storage type")

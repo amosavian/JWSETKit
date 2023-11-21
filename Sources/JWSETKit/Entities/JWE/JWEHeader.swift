@@ -56,14 +56,14 @@ public struct JSONWebEncryptionHeader: Hashable, Sendable, Codable {
         self.unprotected = unprotected
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         self.protected = try container.decode(ProtectedJSONWebContainer<JOSEHeader>.self, forKey: .protected)
         self.unprotected = try container.decodeIfPresent(JOSEHeader.self, forKey: .unprotected)
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         try protected.validate()
         
         var container = encoder.container(keyedBy: CodingKeys.self)

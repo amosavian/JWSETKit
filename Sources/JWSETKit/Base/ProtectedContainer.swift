@@ -34,7 +34,7 @@ extension ProtectedWebContainer {
         // No required field by default thus no validation is needed.
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(encoded.urlBase64EncodedString())
     }
@@ -58,7 +58,7 @@ public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
         self.encoded = encoded
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         
         let encoded = try container.decode(String.self)
@@ -135,7 +135,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
         self._protected = try JSONEncoder().encode(value)
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         
         let encoded = try container.decode(String.self)

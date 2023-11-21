@@ -34,13 +34,13 @@ extension JSONWebContainer {
         initializer(&self)
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         self = try Self(storage: .init())
         let container = try decoder.singleValueContainer()
         self.storage = try container.decode(JSONWebValueStorage.self)
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(storage)
     }

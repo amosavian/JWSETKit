@@ -77,7 +77,7 @@ extension JSONWebEncryption: Codable {
         case tag
     }
     
-    private init(string: String, codingPath: [CodingKey]) throws {
+    private init(string: String, codingPath: [any CodingKey]) throws {
         let sections = string
             .components(separatedBy: ".")
             .map { Data(urlBase64Encoded: $0) }
@@ -92,7 +92,7 @@ extension JSONWebEncryption: Codable {
         self.sealed = .init(iv: iv ?? .init(), ciphertext: ciphertext ?? .init(), tag: tag ?? .init())
     }
     
-    private init(object decoder: Decoder) throws {
+    private init(object decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         self.header = try JSONWebEncryptionHeader(from: decoder)
         if let recipientsValue = try? container.decode([JSONWebEncryptionRecipient].self, forKey: .recipients) {
@@ -109,7 +109,7 @@ extension JSONWebEncryption: Codable {
         self.sealed = .init(iv: iv ?? .init(), ciphertext: ciphertext ?? .init(), tag: tag ?? .init())
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         if let stringContainer = try? decoder.singleValueContainer(), let value = try? stringContainer.decode(String.self) {
             try self.init(string: value, codingPath: decoder.codingPath)
         } else {
@@ -117,7 +117,7 @@ extension JSONWebEncryption: Codable {
         }
     }
     
-    fileprivate func encodeAsString(_ encoder: Encoder) throws {
+    fileprivate func encodeAsString(_ encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         let value = [
             header.protected.encoded,
@@ -131,7 +131,7 @@ extension JSONWebEncryption: Codable {
         try container.encode(value)
     }
     
-    fileprivate func encodeAsCompleteJSON(_ encoder: Encoder) throws {
+    fileprivate func encodeAsCompleteJSON(_ encoder: any Encoder) throws {
         try header.encode(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(recipients, forKey: .recipients)
@@ -141,7 +141,7 @@ extension JSONWebEncryption: Codable {
         try container.encode(sealed.tag, forKey: .tag)
     }
     
-    fileprivate func encodeAsFlattenedJSON(_ encoder: Encoder) throws {
+    fileprivate func encodeAsFlattenedJSON(_ encoder: any Encoder) throws {
         try header.encode(to: encoder)
         try recipients.first?.encode(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
@@ -160,7 +160,7 @@ extension JSONWebEncryption: Codable {
         }
     }
     
-    fileprivate func encodeFunction(for representation: JSONWebEncryptionRepresentation) -> (_ encoder: Encoder) throws -> Void {
+    fileprivate func encodeFunction(for representation: JSONWebEncryptionRepresentation) -> (_ encoder: any Encoder) throws -> Void {
         switch representation {
         case .compact:
             return encodeAsString
@@ -178,7 +178,7 @@ extension JSONWebEncryption: Codable {
         }
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         let representation = encoder.userInfo[.jweEncodedRepresentation] as? JSONWebEncryptionRepresentation ?? .compact
         try encodeFunction(for: representation)(encoder)
     }
@@ -197,7 +197,7 @@ public struct JSONWebEncryptionCodableConfiguration: Sendable {
 extension JSONWebEncryption: EncodableWithConfiguration {
     public typealias EncodingConfiguration = JSONWebEncryptionCodableConfiguration
     
-    public func encode(to encoder: Encoder, configuration: JSONWebEncryptionCodableConfiguration) throws {
+    public func encode(to encoder: any Encoder, configuration: JSONWebEncryptionCodableConfiguration) throws {
         try encodeFunction(for: configuration.representation)(encoder)
     }
 }
