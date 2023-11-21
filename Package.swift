@@ -43,9 +43,6 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
-            ],
-            swiftSettings: [
-                .enableUpcomingFeature("ExistentialAny"),
             ]),
         .testTarget(
             name: "JWSETKitTests",
