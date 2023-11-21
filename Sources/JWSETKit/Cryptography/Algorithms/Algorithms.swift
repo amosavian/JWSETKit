@@ -37,12 +37,12 @@ extension JSONWebAlgorithm {
         self.init(value)
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         try self.init(container.decode(String.self))
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(rawValue)
     }
@@ -132,12 +132,12 @@ public struct JSONWebKeyType: RawRepresentable, Hashable, Codable, ExpressibleBy
         self.rawValue = value.trimmingCharacters(in: .whitespaces)
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         self.rawValue = try container.decode(String.self)
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(rawValue)
     }
@@ -168,12 +168,12 @@ public struct JSONWebKeyCurve: RawRepresentable, Hashable, Codable, ExpressibleB
         self.rawValue = value.trimmingCharacters(in: .whitespaces)
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         self.rawValue = try container.decode(String.self)
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(rawValue)
     }

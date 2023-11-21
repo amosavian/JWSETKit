@@ -71,12 +71,12 @@ public struct JSONWebContentType: RawRepresentable, Hashable, Codable, Expressib
         self.rawValue = value.trimmingCharacters(in: .whitespaces)
     }
     
-    public init(from decoder: Decoder) throws {
+    public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         self.rawValue = try container.decode(String.self)
     }
     
-    public func encode(to encoder: Encoder) throws {
+    public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(rawValue)
     }

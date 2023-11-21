@@ -35,11 +35,11 @@ extension String {
 #endif
     }
     
-    init(localizingKey key: String, _ arguments: CVarArg...) {
+    init(localizingKey key: String, _ arguments: any CVarArg...) {
         self = .init(format: .init(localizingKey: key), arguments: arguments)
     }
     
-    init(localizingKey key: String, arguments: [CVarArg]) {
+    init(localizingKey key: String, arguments: [any CVarArg]) {
         self = .init(format: .init(localizingKey: key), arguments: arguments)
     }
 }

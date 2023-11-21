@@ -1,4 +1,4 @@
-// swift-tools-version: 5.8
+// swift-tools-version: 5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -45,7 +45,8 @@ let package = Package(
                 .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
             ],
             swiftSettings: [
-                .enableUpcomingFeature("ExistentialAny")
+                .enableExperimentalFeature("StrictConcurrency=complete"),
+                .enableUpcomingFeature("ExistentialAny"),
             ]),
         .testTarget(
             name: "JWSETKitTests",
