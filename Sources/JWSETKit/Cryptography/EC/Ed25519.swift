@@ -14,6 +14,15 @@ import Crypto
 
 extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .ed25519 }
+    
+    public var storage: JSONWebValueStorage {
+        var result = AnyJSONWebKey()
+        let rawRepresentation = rawRepresentation
+        result.keyType = .ellipticCurve
+        result.curve = Self.curve
+        result.xCoordinate = rawRepresentation
+        return result.storage
+    }
 }
 
 extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {

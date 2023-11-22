@@ -221,7 +221,7 @@ extension JSONWebSigningKey where Self: SecKey {
         let privateKey = try? handle { error in
             SecKeyCreateWithData(derRepresentation as CFData, attributes as CFDictionary, &error)
         }
-        if let privateKey = privateKey as? Self { 
+        if let privateKey = privateKey as? Self {
             self = privateKey
             return
         }

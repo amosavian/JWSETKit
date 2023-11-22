@@ -16,6 +16,14 @@ import Crypto
 public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Sendable {
     public var storage: JSONWebValueStorage
     
+    var underlyingKey: any JSONWebValidatingKey {
+        get throws {
+            // swiftformat:disable:next redundantSelf
+            try Self.singingType(for: self.keyType ?? .empty, self.curve ?? .empty)
+                .create(storage: storage)
+        }
+    }
+    
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
     }
@@ -24,24 +32,23 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Senda
         .init(storage: storage)
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        // swiftformat:disable:next redundantSelf
-        switch (self.keyType ?? .empty, self.curve ?? .empty) {
+    static func singingType(for keyType: JSONWebKeyType, _ curve: JSONWebKeyCurve) throws -> any JSONWebValidatingKey.Type {
+        switch (keyType, curve) {
         case (JSONWebKeyType.ellipticCurve, .p256):
-            try P256.Signing.PublicKey.create(storage: storage)
-                .verifySignature(signature, for: data, using: algorithm)
+            return P256.Signing.PublicKey.self
         case (JSONWebKeyType.ellipticCurve, .p384):
-            try P384.Signing.PublicKey.create(storage: storage)
-                .verifySignature(signature, for: data, using: algorithm)
+            return P384.Signing.PublicKey.self
         case (JSONWebKeyType.ellipticCurve, .p521):
-            try P521.Signing.PublicKey.create(storage: storage)
-                .verifySignature(signature, for: data, using: algorithm)
+            return P521.Signing.PublicKey.self
         case (JSONWebKeyType.ellipticCurve, .ed25519):
-            try Curve25519.Signing.PublicKey.create(storage: storage)
-                .verifySignature(signature, for: data, using: algorithm)
+            return Curve25519.Signing.PublicKey.self
         default:
             throw JSONWebKeyError.unknownKeyType
         }
+    }
+    
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try underlyingKey.verifySignature(signature, for: data, using: algorithm)
     }
 }
 
@@ -55,20 +62,37 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
         return result
     }
     
+    var underlyingKey: any JSONWebSigningKey {
+        get throws {
+            // swiftformat:disable:next redundantSelf
+            try Self
+                .singingType(for: self.keyType ?? .empty, self.curve ?? .empty)
+                .create(storage: storage)
+        }
+    }
+    
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
     }
     
     public init(algorithm: any JSONWebAlgorithm) throws {
-        switch algorithm {
-        case .ecdsaSignatureP256SHA256:
-            self.storage = P256.Signing.PrivateKey().storage
-        case .ecdsaSignatureP384SHA384:
-            self.storage = P384.Signing.PrivateKey().storage
-        case .ecdsaSignatureP521SHA512:
-            self.storage = P521.Signing.PrivateKey().storage
+        self.storage = try Self
+            .singingType(for: algorithm.keyType ?? .empty, algorithm.curve ?? .empty)
+            .init(algorithm: algorithm).storage
+    }
+    
+    static func singingType(for keyType: JSONWebKeyType, _ curve: JSONWebKeyCurve) throws -> any JSONWebSigningKey.Type {
+        switch (keyType, curve) {
+        case (JSONWebKeyType.ellipticCurve, .p256):
+            return P256.Signing.PrivateKey.self
+        case (JSONWebKeyType.ellipticCurve, .p384):
+            return P384.Signing.PrivateKey.self
+        case (JSONWebKeyType.ellipticCurve, .p521):
+            return P521.Signing.PrivateKey.self
+        case (JSONWebKeyType.ellipticCurve, .ed25519):
+            return Curve25519.Signing.PrivateKey.self
         default:
-            throw JSONWebKeyError.unknownAlgorithm
+            throw JSONWebKeyError.unknownKeyType
         }
     }
     
@@ -77,43 +101,11 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
-        // swiftformat:disable:next redundantSelf
-        switch (self.keyType ?? .empty, self.curve ?? .empty) {
-        case (JSONWebKeyType.ellipticCurve, .p256):
-            return try P256.Signing.PrivateKey.create(storage: storage)
-                .signature(data, using: algorithm)
-        case (JSONWebKeyType.ellipticCurve, .p384):
-            return try P384.Signing.PrivateKey.create(storage: storage)
-                .signature(data, using: algorithm)
-        case (JSONWebKeyType.ellipticCurve, .p521):
-            return try P521.Signing.PrivateKey.create(storage: storage)
-                .signature(data, using: algorithm)
-        case (JSONWebKeyType.ellipticCurve, .ed25519):
-            return try Curve25519.Signing.PrivateKey.create(storage: storage)
-                .signature(data, using: algorithm)
-        default:
-            throw JSONWebKeyError.unknownKeyType
-        }
+        try underlyingKey.signature(data, using: algorithm)
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        // swiftformat:disable:next redundantSelf
-        switch (self.keyType ?? .empty, self.curve ?? .empty) {
-        case (JSONWebKeyType.ellipticCurve, .p256):
-            try P256.Signing.PublicKey.create(storage: storage)
-                .verifySignature(signature, for: data, using: algorithm)
-        case (JSONWebKeyType.ellipticCurve, .p384):
-            try P384.Signing.PublicKey.create(storage: storage)
-                .verifySignature(signature, for: data, using: algorithm)
-        case (JSONWebKeyType.ellipticCurve, .p521):
-            try P521.Signing.PublicKey.create(storage: storage)
-                .verifySignature(signature, for: data, using: algorithm)
-        case (JSONWebKeyType.ellipticCurve, .ed25519):
-            try Curve25519.Signing.PublicKey.create(storage: storage)
-                .verifySignature(signature, for: data, using: algorithm)
-        default:
-            throw JSONWebKeyError.unknownKeyType
-        }
+        try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
 }
 

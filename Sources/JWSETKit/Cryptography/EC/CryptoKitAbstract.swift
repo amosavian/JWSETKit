@@ -55,12 +55,7 @@ protocol CryptoECPrivateKey: JSONWebSigningKey where PublicKey: CryptoECPublicKe
 
 extension CryptoECPrivateKey {
     public var storage: JSONWebValueStorage {
-        var result = AnyJSONWebKey()
-        let rawRepresentation = rawRepresentation
-        result.keyType = .ellipticCurve
-        result.curve = PublicKey.curve
-        result.xCoordinate = publicKey.rawRepresentation.prefix(rawRepresentation.count / 2)
-        result.yCoordinate = publicKey.rawRepresentation.suffix(rawRepresentation.count / 2)
+        var result = AnyJSONWebKey(storage: publicKey.storage)
         result.privateKey = rawRepresentation
         return result.storage
     }
