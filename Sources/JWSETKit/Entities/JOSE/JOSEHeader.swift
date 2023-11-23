@@ -60,25 +60,11 @@ public struct JOSEHeader: JSONWebContainer {
 }
 
 /// Content type of payload in JOSE header..
-public struct JSONWebContentType: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
+public struct JSONWebContentType: StringRepresentable {
     public let rawValue: String
     
     public init(rawValue: String) {
         self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
-    }
-    
-    public init(stringLiteral value: StringLiteralType) {
-        self.rawValue = value.trimmingCharacters(in: .whitespaces)
-    }
-    
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self.rawValue = try container.decode(String.self)
-    }
-    
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
     }
 }
 

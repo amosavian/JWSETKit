@@ -13,7 +13,7 @@ import Crypto
 #endif
 
 /// JSON Web Signature Algorithms.
-public protocol JSONWebAlgorithm: RawRepresentable<String>, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
+public protocol JSONWebAlgorithm: StringRepresentable {
     /// Key type, which is either `RSA`, `EC` for elliptic curve or `oct` for symmetric keys.
     var keyType: JSONWebKeyType? { get }
     
@@ -31,20 +31,6 @@ extension JSONWebAlgorithm {
     
     public init(rawValue: String) {
         self.init(rawValue.trimmingCharacters(in: .whitespacesAndNewlines))
-    }
-    
-    public init(stringLiteral value: String) {
-        self.init(value)
-    }
-    
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        try self.init(container.decode(String.self))
-    }
-    
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
     }
 }
 
@@ -121,25 +107,11 @@ public struct AnyJSONWebAlgorithm: JSONWebAlgorithm {
 }
 
 /// JSON Key Type, e.g. `RSA`, `EC`, etc.
-public struct JSONWebKeyType: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
+public struct JSONWebKeyType: StringRepresentable {
     public let rawValue: String
     
     public init(rawValue: String) {
         self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
-    }
-    
-    public init(stringLiteral value: StringLiteralType) {
-        self.rawValue = value.trimmingCharacters(in: .whitespaces)
-    }
-    
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self.rawValue = try container.decode(String.self)
-    }
-    
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
     }
 }
 
@@ -157,25 +129,11 @@ extension JSONWebKeyType {
 }
 
 /// JSON EC Curves.
-public struct JSONWebKeyCurve: RawRepresentable, Hashable, Codable, ExpressibleByStringLiteral, Sendable {
+public struct JSONWebKeyCurve: StringRepresentable {
     public let rawValue: String
     
     public init(rawValue: String) {
         self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
-    }
-    
-    public init(stringLiteral value: StringLiteralType) {
-        self.rawValue = value.trimmingCharacters(in: .whitespaces)
-    }
-    
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        self.rawValue = try container.decode(String.self)
-    }
-    
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(rawValue)
     }
 }
 

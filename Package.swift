@@ -43,9 +43,21 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
-            ]),
+            ]
+        ),
         .testTarget(
             name: "JWSETKitTests",
-            dependencies: ["JWSETKit"]),
+            dependencies: ["JWSETKit"]
+        ),
     ]
 )
+
+for target in package.targets {
+    var swiftSettings: [SwiftSetting] = [
+        .enableExperimentalFeature("StrictConcurrency=complete"),
+    ]
+#if swift(>=5.9)
+    swiftSettings.append(.enableUpcomingFeature("ExistentialAny"))
+#endif
+    target.swiftSettings = swiftSettings
+}
