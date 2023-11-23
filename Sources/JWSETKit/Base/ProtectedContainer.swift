@@ -34,6 +34,20 @@ extension ProtectedWebContainer {
         // No required field by default thus no validation is needed.
     }
     
+    /// Decode protected data from Base64URL string contained in decoder..
+    ///
+    /// - Parameter decoder: Decoder contains Base64URL string.
+    /// - Returns: Decoded data.
+    public static func decodeProtected(from decoder: any Decoder) throws -> Data {
+        let container = try decoder.singleValueContainer()
+        
+        let encoded = try container.decode(String.self)
+        guard let protected = Data(urlBase64Encoded: encoded) else {
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Protected is not a valid bas64url."))
+        }
+        return protected
+    }
+    
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(encoded.urlBase64EncodedString())
@@ -59,13 +73,7 @@ public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
     }
     
     public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        
-        let encoded = try container.decode(String.self)
-        guard let protected = Data(urlBase64Encoded: encoded) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Protected is not a valid bas64url."))
-        }
-        self.encoded = protected
+        self.encoded = try Self.decodeProtected(from: decoder)
     }
 }
 
@@ -136,12 +144,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
     }
     
     public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        
-        let encoded = try container.decode(String.self)
-        guard let protected = Data(urlBase64Encoded: encoded) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Protected is not a valid bas64url."))
-        }
+        let protected = try Self.decodeProtected(from: decoder)
         self._protected = protected
         self._value = try JSONDecoder().decode(Container.self, from: protected)
     }

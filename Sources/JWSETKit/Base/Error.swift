@@ -14,10 +14,22 @@ enum JSONWebKit {
     public static var locale: Locale = .autoupdatingCurrent
 }
 
+/// Error type thrown by JWSETKit framework.
+public protocol JSONWebError: LocalizedError {
+    /// Localized error description in given locale's language.
+    func localizedError(for locale: Locale) -> String
+}
+
+extension JSONWebError {
+    public var errorDescription: String? {
+        localizedError(for: JSONWebKit.locale)
+    }
+}
+
 /// Errors occurred during key creation or usage.
 ///
 /// - Note: Localization of `errorDescription` can be changes by setting `jsonWebKeyLocale`.
-public enum JSONWebKeyError: LocalizedError, Sendable {
+public enum JSONWebKeyError: JSONWebError, Sendable {
     /// Given algorithm is unsupported in the framework.
     case unknownAlgorithm
     
@@ -36,18 +48,18 @@ public enum JSONWebKeyError: LocalizedError, Sendable {
     case operationNotAllowed
     
     /// A localized message describing what error occurred.
-    public var errorDescription: String? {
+    public func localizedError(for locale: Locale) -> String {
         switch self {
         case .unknownAlgorithm:
-            return .init(localizingKey: "errorUnknownAlgorithm")
+            return .init(localizingKey: "errorUnknownAlgorithm", locale: locale)
         case .unknownKeyType:
-            return .init(localizingKey: "errorUnknownKeyType")
+            return .init(localizingKey: "errorUnknownKeyType", locale: locale)
         case .decryptionFailed:
-            return .init(localizingKey: "errorDecryptionFailed")
+            return .init(localizingKey: "errorDecryptionFailed", locale: locale)
         case .keyNotFound:
-            return .init(localizingKey: "errorKeyNotFound")
+            return .init(localizingKey: "errorKeyNotFound", locale: locale)
         case .operationNotAllowed:
-            return .init(localizingKey: "errorOperationNotAllowed")
+            return .init(localizingKey: "errorOperationNotAllowed", locale: locale)
         }
     }
 }
@@ -55,7 +67,7 @@ public enum JSONWebKeyError: LocalizedError, Sendable {
 /// Validation errors including expired token.
 ///
 /// - Note: Localization of `errorDescription` can be changes by setting `jsonWebKeyLocale`.
-public enum JSONWebValidationError: LocalizedError, Sendable {
+public enum JSONWebValidationError: JSONWebError, Sendable {
     /// Current date is after `"exp"` claim in token.
     case tokenExpired(expiry: Date)
     
@@ -69,20 +81,20 @@ public enum JSONWebValidationError: LocalizedError, Sendable {
     case missingRequiredField(key: String)
     
     /// A localized message describing what error occurred.
-    public var errorDescription: String? {
+    public func localizedError(for locale: Locale) -> String {
         let dateFormatter = DateFormatter()
-        dateFormatter.locale = JSONWebKit.locale
+        dateFormatter.locale = locale
         dateFormatter.dateStyle = .medium
         dateFormatter.timeStyle = .medium
         switch self {
         case .tokenExpired(let date):
-            return .init(localizingKey: "errorExpiredToken", dateFormatter.string(from: date))
+            return .init(localizingKey: "errorExpiredToken", locale: locale, dateFormatter.string(from: date))
         case .tokenInvalidBefore(let date):
-            return .init(localizingKey: "errorNotBeforeToken", dateFormatter.string(from: date))
+            return .init(localizingKey: "errorNotBeforeToken", locale: locale, dateFormatter.string(from: date))
         case .audienceNotIntended(let audience):
-            return .init(localizingKey: "errorInvalidAudience", audience)
+            return .init(localizingKey: "errorInvalidAudience", locale: locale, audience)
         case .missingRequiredField(let key):
-            return .init(localizingKey: "errorMissingField", key)
+            return .init(localizingKey: "errorMissingField", locale: locale, key)
         }
     }
 }

@@ -7,6 +7,8 @@
 
 import Foundation
 
+private class Decoy { }
+
 extension Bundle {
     func forLocale(_ locale: Locale) -> Bundle {
         if let url = urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: locale.identifier)?.first?.baseURL {
@@ -16,31 +18,28 @@ extension Bundle {
         }
         return .module
     }
+    
+    static let current: Bundle = Bundle(for: Decoy.self)
 }
 
 extension String {
-    init(localizingKey key: String) {
-#if canImport(Darwin)
+    init(localizingKey key: String, locale: Locale? = nil) {
+        let locale = locale ?? JSONWebKit.locale
         let bundle: Bundle
-        if JSONWebKit.locale != .autoupdatingCurrent, JSONWebKit.locale != .current {
-            bundle = Bundle.module.forLocale(JSONWebKit.locale)
+        if locale != .autoupdatingCurrent, locale != .current {
+            bundle = Bundle.current.forLocale(locale)
         } else {
-            bundle = Bundle.module
+            bundle = Bundle.current
         }
-        self = bundle.localizedString(forKey: key, value: "", table: nil)
-#else
-        // localizedString in swift-corelib-foundations crashes.
-        // This is a workaround until Foundation got fixed.
-        self = key
-#endif
+        self = bundle.localizedString(forKey: key, value: "", table: "")
     }
     
-    init(localizingKey key: String, _ arguments: any CVarArg...) {
-        self = .init(format: .init(localizingKey: key), arguments: arguments)
+    init(localizingKey key: String, locale: Locale? = nil, _ arguments: any CVarArg...) {
+        self = .init(format: .init(localizingKey: key, locale: locale), arguments: arguments)
     }
     
-    init(localizingKey key: String, arguments: [any CVarArg]) {
-        self = .init(format: .init(localizingKey: key), arguments: arguments)
+    init(localizingKey key: String, locale: Locale? = nil, arguments: [any CVarArg]) {
+        self = .init(format: .init(localizingKey: key, locale: locale), arguments: arguments)
     }
 }
 
