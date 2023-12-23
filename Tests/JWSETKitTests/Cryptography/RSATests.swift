@@ -50,15 +50,153 @@ final class RSATests: XCTestCase {
     AgMBAAE=
     """)!
     
-    func testPKCS8() throws {
+    let plaintext = Data("The quick brown fox jumps over the lazy dog.".utf8)
+    
+    func testPKCS8Init() throws {
         XCTAssertNoThrow(try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER))
         XCTAssertNoThrow(try JSONWebRSAPublicKey(derRepresentation: publicKeyDER))
     }
     
 #if canImport(CommonCrypto)
-    func testSecKey() throws {
+    func testSecKeyInit() throws {
         XCTAssertNoThrow(try SecKey(derRepresentation: publicKeyDER, keyType: .rsa))
         XCTAssertNoThrow(try SecKey(derRepresentation: privateKeyDER, keyType: .rsa))
     }
 #endif
+    
+    func testEncrypt_RSA2048_OAEP_SHA1() throws {
+        let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        
+        let ciphertext = try publicKey.encrypt(plaintext, using: .rsaEncryptionOAEP)
+        let decrypted = try privateKey.decrypt(ciphertext, using: .rsaEncryptionOAEP)
+        
+        XCTAssertEqual(plaintext, decrypted)
+        XCTAssertNotEqual(plaintext, ciphertext)
+        XCTAssertEqual(ciphertext.count, 2048 / 8)
+    }
+    
+    func testEncrypt_RSA2048_OAEP_SHA256() throws {
+        let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        
+        let ciphertext = try publicKey.encrypt(plaintext, using: .rsaEncryptionOAEPSHA256)
+        let decrypted = try privateKey.decrypt(ciphertext, using: .rsaEncryptionOAEPSHA256)
+        
+        XCTAssertEqual(plaintext, decrypted)
+        XCTAssertNotEqual(plaintext, ciphertext)
+        XCTAssertEqual(ciphertext.count, 2048 / 8)
+    }
+    
+    func testEcrypt_RSA2048_OAEP_SHA384() throws {
+        let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        
+        let ciphertext = try publicKey.encrypt(plaintext, using: .rsaEncryptionOAEPSHA384)
+        let decrypted = try privateKey.decrypt(ciphertext, using: .rsaEncryptionOAEPSHA384)
+        
+        XCTAssertEqual(plaintext, decrypted)
+        XCTAssertNotEqual(plaintext, ciphertext)
+        XCTAssertEqual(ciphertext.count, 2048 / 8)
+    }
+    
+    func testEncrypt_RSA2048_OAEP_SHA512() throws {
+        let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        
+        let ciphertext = try publicKey.encrypt(plaintext, using: .rsaEncryptionOAEPSHA512)
+        let decrypted = try privateKey.decrypt(ciphertext, using: .rsaEncryptionOAEPSHA512)
+        
+        XCTAssertEqual(plaintext, decrypted)
+        XCTAssertNotEqual(plaintext, ciphertext)
+        XCTAssertEqual(ciphertext.count, 2048 / 8)
+    }
+    
+    func testSigning_RSA2048_PKCS1_SHA256() throws {
+        let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        
+        let signature = try privateKey.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        XCTAssertNoThrow(try publicKey.verifySignature(signature, for: plaintext, using: .rsaSignaturePKCS1v15SHA256))
+        
+        XCTAssertNotEqual(plaintext, signature)
+        XCTAssertEqual(signature.count, 2048 / 8)
+    }
+    
+    func testSigning_RSA2048_PKCS1_SHA384() throws {
+        let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        
+        let signature = try privateKey.signature(plaintext, using: .rsaSignaturePKCS1v15SHA384)
+        XCTAssertNoThrow(try publicKey.verifySignature(signature, for: plaintext, using: .rsaSignaturePKCS1v15SHA384))
+        
+        XCTAssertNotEqual(plaintext, signature)
+        XCTAssertEqual(signature.count, 2048 / 8)
+    }
+    
+    func testSigning_RSA2048_PKCS1_SHA512() throws {
+        let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        
+        let signature = try privateKey.signature(plaintext, using: .rsaSignaturePKCS1v15SHA512)
+        XCTAssertNoThrow(try publicKey.verifySignature(signature, for: plaintext, using: .rsaSignaturePKCS1v15SHA512))
+        
+        XCTAssertNotEqual(plaintext, signature)
+        XCTAssertEqual(signature.count, 2048 / 8)
+    }
+    
+    func testSigning_RSA2048_PSS_SHA256() throws {
+        let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+
+        let signature = try privateKey.signature(plaintext, using: .rsaSignaturePSSSHA256)
+        XCTAssertNoThrow(try publicKey.verifySignature(signature, for: plaintext, using: .rsaSignaturePSSSHA256))
+        
+        XCTAssertNotEqual(plaintext, signature)
+        XCTAssertEqual(signature.count, 2048 / 8)
+    }
+    
+    func testSigning_RSA2048_PSS_SHA384() throws {
+        let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+
+        let signature = try privateKey.signature(plaintext, using: .rsaSignaturePSSSHA384)
+        XCTAssertNoThrow(try publicKey.verifySignature(signature, for: plaintext, using: .rsaSignaturePSSSHA384))
+        
+        XCTAssertNotEqual(plaintext, signature)
+        XCTAssertEqual(signature.count, 2048 / 8)
+    }
+    
+    func testSigning_RSA2048_PSS_SHA512() throws {
+        let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+
+        let signature = try privateKey.signature(plaintext, using: .rsaSignaturePSSSHA512)
+        XCTAssertNoThrow(try publicKey.verifySignature(signature, for: plaintext, using: .rsaSignaturePSSSHA512))
+        
+        XCTAssertNotEqual(plaintext, signature)
+        XCTAssertEqual(signature.count, 2048 / 8)
+    }
+    
+    func testSigning_RSA3072_PSS_SHA256() throws {
+        let privateKey = try JSONWebRSAPrivateKey(bitCount: .bits3072)
+        let publicKey = privateKey.publicKey
+        
+        let signature = try privateKey.signature(plaintext, using: .rsaSignaturePSSSHA256)
+        XCTAssertNoThrow(try publicKey.verifySignature(signature, for: plaintext, using: .rsaSignaturePSSSHA256))
+        
+        XCTAssertNotEqual(plaintext, signature)
+        XCTAssertEqual(signature.count, 3072 / 8)
+    }
+    
+    func testSigning_RSA4096_PSS_SHA256() throws {
+        let privateKey = try JSONWebRSAPrivateKey(bitCount: .bits4096)
+        let publicKey = privateKey.publicKey
+        
+        let signature = try privateKey.signature(plaintext, using: .rsaSignaturePSSSHA256)
+        XCTAssertNoThrow(try publicKey.verifySignature(signature, for: plaintext, using: .rsaSignaturePSSSHA256))
+        
+        XCTAssertNotEqual(plaintext, signature)
+        XCTAssertEqual(signature.count, 4096 / 8)
+    }
 }

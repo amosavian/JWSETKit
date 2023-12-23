@@ -20,7 +20,8 @@ let package = Package(
     products: [
         .library(
             name: "JWSETKit",
-            targets: ["JWSETKit"]),
+            targets: ["JWSETKit"]
+        ),
     ],
     dependencies: [
         .package(url: "https://github.com/Flight-School/AnyCodable", .upToNextMajor(from: "0.6.7")),

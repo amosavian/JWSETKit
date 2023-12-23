@@ -14,7 +14,7 @@ import Crypto
 #endif
 @testable import JWSETKit
 
-struct ExampleKeys {
+enum ExampleKeys {
     static let publicEC256 = try! JSONWebECPublicKey(jsonWebKeyData: Data(
         """
         {"kty":"EC",

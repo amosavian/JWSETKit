@@ -200,6 +200,13 @@ extension JSONWebSigningKey where Self: SecKey {
         self = result
     }
     
+    public init(rsaBitCounts bits: Int) throws {
+        guard let result = try Self.createPairKey(type: .rsa, bits: bits) as? Self else {
+            throw JSONWebKeyError.operationNotAllowed
+        }
+        self = result
+    }
+    
     public init(derRepresentation: Data, keyType: JSONWebKeyType) throws {
         var derRepresentation = derRepresentation
         let secKeyType: CFString

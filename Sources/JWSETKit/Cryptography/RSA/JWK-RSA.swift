@@ -80,6 +80,28 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
 
 /// JWK container for RSA private keys.
 public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWebDecryptingKey, Sendable {
+    public struct KeySize {
+        public let bitCount: Int
+
+        /// RSA key size of 2048 bits
+        public static let bits2048 = KeySize(bitCount: 2048)
+
+        /// RSA key size of 3072 bits
+        public static let bits3072 = KeySize(bitCount: 3072)
+
+        /// RSA key size of 4096 bits
+        public static let bits4096 = KeySize(bitCount: 4096)
+
+        /// RSA key size with a custom number of bits.
+        ///
+        /// Params:
+        ///     - bitsCount: Positive integer that is a multiple of 8.
+        public init(bitCount: Int) {
+            precondition(bitCount % 8 == 0 && bitCount > 0)
+            self.bitCount = bitCount
+        }
+    }
+    
     public var storage: JSONWebValueStorage
     
     public var publicKey: JSONWebRSAPublicKey {
@@ -94,7 +116,19 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
     }
     
     public init(algorithm _: any JSONWebAlgorithm) throws {
-        self.storage = try _RSA.Signing.PrivateKey(keySize: .bits2048).storage
+        try self.init(bitCount: .bits2048)
+    }
+    
+    public init(bitCount: KeySize) throws {
+#if canImport(CommonCrypto)
+        self.storage = try SecKey(rsaBitCounts: bitCount.bitCount).storage
+#elseif canImport(_CryptoExtras)
+        self.storage = try _RSA.Signing.PrivateKey(keySize: .init(bitCount: size)).storage
+#else
+        // This should never happen as CommonCrypto is available on Darwin platforms
+        // and CryptoExtras is used on non-Darwin platform.
+        fatalError("Unimplemented")
+#endif
     }
     
     public init(storage: JSONWebValueStorage) {

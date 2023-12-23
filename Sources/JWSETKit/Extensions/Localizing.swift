@@ -7,7 +7,7 @@
 
 import Foundation
 
-private class Decoy { }
+private class Decoy {}
 
 extension Bundle {
     func forLocale(_ locale: Locale) -> Bundle {
@@ -19,7 +19,7 @@ extension Bundle {
         return .module
     }
     
-    static let current: Bundle = Bundle(for: Decoy.self)
+    static let current: Bundle = .init(for: Decoy.self)
 }
 
 extension String {
