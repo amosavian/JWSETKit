@@ -116,14 +116,14 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
     }
     
     public init(algorithm _: any JSONWebAlgorithm) throws {
-        try self.init(bitCount: .bits2048)
+        try self.init(keySize: .bits2048)
     }
     
-    public init(bitCount: KeySize) throws {
+    public init(keySize: KeySize) throws {
 #if canImport(CommonCrypto)
-        self.storage = try SecKey(rsaBitCounts: bitCount.bitCount).storage
+        self.storage = try SecKey(rsaBitCounts: keySize.bitCount).storage
 #elseif canImport(_CryptoExtras)
-        self.storage = try _RSA.Signing.PrivateKey(keySize: .init(bitCount: bitCount)).storage
+        self.storage = try _RSA.Signing.PrivateKey(keySize: .init(bitCount: keySize.bitCount)).storage
 #else
         // This should never happen as CommonCrypto is available on Darwin platforms
         // and CryptoExtras is used on non-Darwin platform.

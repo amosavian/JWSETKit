@@ -179,7 +179,7 @@ final class RSATests: XCTestCase {
     }
     
     func testSigning_RSA3072_PSS_SHA256() throws {
-        let privateKey = try JSONWebRSAPrivateKey(bitCount: .bits3072)
+        let privateKey = try JSONWebRSAPrivateKey(keySize: .bits3072)
         let publicKey = privateKey.publicKey
         
         let signature = try privateKey.signature(plaintext, using: .rsaSignaturePSSSHA256)
@@ -190,7 +190,7 @@ final class RSATests: XCTestCase {
     }
     
     func testSigning_RSA4096_PSS_SHA256() throws {
-        let privateKey = try JSONWebRSAPrivateKey(bitCount: .bits4096)
+        let privateKey = try JSONWebRSAPrivateKey(keySize: .bits4096)
         let publicKey = privateKey.publicKey
         
         let signature = try privateKey.signature(plaintext, using: .rsaSignaturePSSSHA256)
