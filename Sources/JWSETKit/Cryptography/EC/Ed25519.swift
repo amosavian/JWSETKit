@@ -18,7 +18,7 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
     public var storage: JSONWebValueStorage {
         var result = AnyJSONWebKey()
         let rawRepresentation = rawRepresentation
-        result.keyType = .ellipticCurve
+        result.keyType = .octetKeyPair // Ed25519 is OKP per RFC8037
         result.curve = Self.curve
         result.xCoordinate = rawRepresentation
         return result.storage
@@ -33,12 +33,31 @@ extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
-extension Curve25519.Signing.PrivateKey: CryptoECPrivateKey {
+extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init()
     }
     
     public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         try signature(for: data)
+    }
+}
+
+extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
+    static var curve: JSONWebKeyCurve { .x25519 }
+    
+    public var storage: JSONWebValueStorage {
+        var result = AnyJSONWebKey()
+        let rawRepresentation = rawRepresentation
+        result.keyType = .octetKeyPair // X25519 is OKP per RFC8037
+        result.curve = Self.curve
+        result.xCoordinate = rawRepresentation
+        return result.storage
+    }
+}
+
+extension Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+    public init(algorithm _: any JSONWebAlgorithm) throws {
+        self.init()
     }
 }

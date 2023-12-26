@@ -139,7 +139,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             }
             let salt = Data(keyEncryptingAlgorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
             let key = try SymmetricKey.pbkdf2(
-                pbkdf2Password: password, salt: salt,
+                password: password, salt: salt,
                 hashFunction: keyEncryptingAlgorithm.hashFunction.unsafelyUnwrapped,
                 iterations: iterations
             )

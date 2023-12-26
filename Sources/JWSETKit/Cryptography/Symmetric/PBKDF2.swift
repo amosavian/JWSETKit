@@ -28,8 +28,24 @@ extension SymmetricKey {
     ///   - iterations: Iteration count, a positive integer.
     ///
     /// - Returns: A symmetric key derived from parameters.
+    @available(*, deprecated, renamed: "pbkdf2(password:salt:hashFunction:iterations:)", message: "Renamed function.")
     public static func pbkdf2<PD, SD, H>(
         pbkdf2Password password: PD, salt: SD, hashFunction: H.Type, iterations: Int
+    ) throws -> SymmetricKey where PD: DataProtocol, SD: DataProtocol, H: HashFunction {
+        try pbkdf2(password: password, salt: salt, hashFunction: hashFunction, iterations: iterations)
+    }
+    
+    /// Generates a symmetric key using `PBKDF2` algorithm.
+    ///
+    /// - Parameters:
+    ///   - password: The master password from which a derived key is generated.
+    ///   - salt: A sequence of bits, known as a cryptographic salt.
+    ///   - hashFunction: Pseudorandom function algorithm.
+    ///   - iterations: Iteration count, a positive integer.
+    ///
+    /// - Returns: A symmetric key derived from parameters.
+    public static func pbkdf2<PD, SD, H>(
+        password: PD, salt: SD, hashFunction: H.Type, iterations: Int
     ) throws -> SymmetricKey where PD: DataProtocol, SD: DataProtocol, H: HashFunction {
 #if canImport(CommonCrypto)
         return try ccPbkdf2(pbkdf2Password: password, salt: salt, hashFunction: hashFunction, iterations: iterations)

@@ -25,7 +25,7 @@ extension P256.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
-extension P256.Signing.PrivateKey: CryptoECPrivateKey {
+extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init(compactRepresentable: true)
     }

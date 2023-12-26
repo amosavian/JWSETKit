@@ -12,7 +12,7 @@ import CryptoKit
 import Crypto
 #endif
 
-protocol CryptoECPublicKey: JSONWebValidatingKey {
+protocol CryptoECPublicKey: Hashable {
     static var curve: JSONWebKeyCurve { get }
     var rawRepresentation: Data { get }
     init(rawRepresentation: Data) throws
@@ -48,7 +48,11 @@ extension CryptoECPublicKey {
     }
 }
 
-protocol CryptoECPrivateKey: JSONWebSigningKey where PublicKey: CryptoECPublicKey {
+protocol CryptoECPrivateKey {
+    associatedtype PublicKey: CryptoECPublicKey
+    
+    /// Public key.
+    var publicKey: PublicKey { get }
     var rawRepresentation: Data { get }
     init(rawRepresentation: Data) throws
 }

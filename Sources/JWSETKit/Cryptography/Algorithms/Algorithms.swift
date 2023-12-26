@@ -126,6 +126,9 @@ extension JSONWebKeyType {
     
     /// Octet sequence
     public static let symmetric: Self = "oct"
+    
+    /// Octet key pair [RFC-8037](https://tools.ietf.org/html/rfc8037)
+    public static let octetKeyPair: Self = "OKP"
 }
 
 /// JSON EC Curves.

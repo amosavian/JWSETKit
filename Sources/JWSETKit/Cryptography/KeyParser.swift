@@ -32,8 +32,10 @@ extension AnyJSONWebKey {
         }
         
         // swiftformat:disable:next redundantSelf
+        let curve = self.curve
+        // swiftformat:disable:next redundantSelf
         switch (keyType, self.algorithm) {
-        case (.ellipticCurve, _):
+        case (.ellipticCurve, _) where curve != nil, (.octetKeyPair, _) where curve != nil:
             // swiftformat:disable:next redundantSelf
             if self.privateKey != nil {
                 return try JSONWebECPrivateKey.create(storage: storage)

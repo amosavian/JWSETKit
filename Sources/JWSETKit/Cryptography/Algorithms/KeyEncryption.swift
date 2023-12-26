@@ -191,7 +191,7 @@ extension JSONWebKeyEncryptionAlgorithm {
             let algorithm = header.algorithm
             let salt = Data(algorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
             kek = try SymmetricKey.pbkdf2(
-                pbkdf2Password: password, salt: salt,
+                password: password, salt: salt,
                 hashFunction: hashFunction,
                 iterations: iterations
             )

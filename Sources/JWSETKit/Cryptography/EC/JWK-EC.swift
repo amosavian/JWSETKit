@@ -40,7 +40,7 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Senda
             return P384.Signing.PublicKey.self
         case (JSONWebKeyType.ellipticCurve, .p521):
             return P521.Signing.PublicKey.self
-        case (JSONWebKeyType.ellipticCurve, .ed25519):
+        case (JSONWebKeyType.ellipticCurve, .ed25519), (JSONWebKeyType.octetKeyPair, .ed25519):
             return Curve25519.Signing.PublicKey.self
         default:
             throw JSONWebKeyError.unknownKeyType
@@ -89,7 +89,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
             return P384.Signing.PrivateKey.self
         case (JSONWebKeyType.ellipticCurve, .p521):
             return P521.Signing.PrivateKey.self
-        case (JSONWebKeyType.ellipticCurve, .ed25519):
+        case (JSONWebKeyType.ellipticCurve, .ed25519), (JSONWebKeyType.octetKeyPair, .ed25519):
             return Curve25519.Signing.PrivateKey.self
         default:
             throw JSONWebKeyError.unknownKeyType
