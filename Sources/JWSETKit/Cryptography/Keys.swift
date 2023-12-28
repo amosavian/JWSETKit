@@ -67,7 +67,7 @@ extension JSONWebKey {
             }
         case .ellipticCurve:
             // swiftformat:disable:next redundantSelf
-            guard self.xCoordinate != nil, self.yCoordinate != nil else {
+            guard self.xCoordinate != nil else {
                 throw JSONWebKeyError.keyNotFound
             }
         case .symmetric:

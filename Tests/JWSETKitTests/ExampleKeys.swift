@@ -78,6 +78,25 @@ enum ExampleKeys {
         """.utf8
     ))
     
+    static let privateEd25519 = try! JSONWebECPrivateKey(jsonWebKeyData: Data(
+        """
+        {"kty":"OKP",
+         "crv":"Ed25519",
+         "x":"11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+         "d":"nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
+         "kid":"1"}
+        """.utf8
+    ))
+    
+    static let publicEd25519 = try! JSONWebECPublicKey(jsonWebKeyData: Data(
+        """
+        {"kty":"OKP",
+         "crv":"Ed25519",
+         "x":"11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
+         "kid":"1"}
+        """.utf8
+    ))
+    
     static let publicRSA2048 = try! JSONWebRSAPublicKey(jsonWebKeyData: Data(
         """
         {"kty":"RSA",

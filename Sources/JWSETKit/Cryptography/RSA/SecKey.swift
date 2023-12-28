@@ -131,7 +131,7 @@ extension SecKey: JSONWebKey {
     private func jsonWebKey() throws -> any JSONWebKey {
         switch try keyType {
         case .ellipticCurve:
-            return try ECHelper.ecWebKey(data: externalRepresentation, isPrivateKey: isPrivateKey)
+            return try ECHelper.ecWebKey(data: externalRepresentation, keyLength: keyLength, isPrivateKey: isPrivateKey)
         case .rsa:
             return try RSAHelper.rsaWebKey(data: externalRepresentation)
         default:

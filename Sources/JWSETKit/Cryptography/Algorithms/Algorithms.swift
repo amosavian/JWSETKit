@@ -186,3 +186,55 @@ extension JSONWebKeyCurve {
     /// Ed-25519 for Diffie-Hellman curve.
     public static let x25519: Self = "X25519"
 }
+
+/// JSON Key Usage, e.g. `sig`, `enc`, etc.
+public struct JSONWebKeyUsage: StringRepresentable {
+    public let rawValue: String
+    
+    public init(rawValue: String) {
+        self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
+    }
+}
+
+extension JSONWebKeyUsage {
+    /// Signature
+    public static let signature: Self = "sig"
+    
+    /// Encryption
+    public static let encryption: Self = "enc"
+}
+
+/// JSON Key Usage, e.g. `sign`, `decrypt`, `deriveKey`, etc.
+public struct JSONWebKeyOperation: StringRepresentable {
+    public let rawValue: String
+    
+    public init(rawValue: String) {
+        self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
+    }
+}
+
+extension JSONWebKeyOperation {
+    /// Compute digital signature or MAC.
+    public static let sign: Self = "sign"
+    
+    /// Verify digital signature or MAC.
+    public static let verify: Self = "verify"
+    
+    /// Encrypt content.
+    public static let encrypt: Self = "encrypt"
+    
+    /// decrypt content and validate decryption, if applicable.
+    public static let decrypt: Self = "decrypt"
+    
+    /// Encrypt key.
+    public static let wrapKey: Self = "wrapKey"
+    
+    /// decrypt key and validate decryption, if applicable.
+    public static let unwrapKey: Self = "unwrapKey"
+    
+    /// Encrypt key.
+    public static let deriveKey: Self = "deriveKey"
+    
+    /// Derive bits not to be used as a key.
+    public static let deriveBits: Self = "deriveBits"
+}

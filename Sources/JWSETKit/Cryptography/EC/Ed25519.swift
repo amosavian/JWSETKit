@@ -17,7 +17,6 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
     
     public var storage: JSONWebValueStorage {
         var result = AnyJSONWebKey()
-        let rawRepresentation = rawRepresentation
         result.keyType = .octetKeyPair // Ed25519 is OKP per RFC8037
         result.curve = Self.curve
         result.xCoordinate = rawRepresentation
@@ -48,7 +47,6 @@ extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
     
     public var storage: JSONWebValueStorage {
         var result = AnyJSONWebKey()
-        let rawRepresentation = rawRepresentation
         result.keyType = .octetKeyPair // X25519 is OKP per RFC8037
         result.curve = Self.curve
         result.xCoordinate = rawRepresentation

@@ -36,7 +36,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// Other values MAY be used.  The "`use`" value is a case-sensitive string.
     ///
     /// Use of the "`use`" member is OPTIONAL, unless the application requires its presence.
-    public var keyUsage: String?
+    public var keyUsage: JSONWebKeyUsage?
     
     /// The "`key_ops`" (key operations) parameter identifies the operation(s)
     /// for which the key is intended to be used.
@@ -52,7 +52,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// - "`unwrapKey`" (decrypt key and validate decryption, if applicable)
     /// - "`deriveKey`" (derive key)
     /// - "`deriveBits`" (derive bits not to be used as a key)
-    public var keyOperations: [String]
+    public var keyOperations: [JSONWebKeyOperation]
     
     /// The "alg" (algorithm) parameter identifies the algorithm intended for use with the key.
     /// The values used should either be registered in
@@ -190,6 +190,11 @@ extension JSONWebKey {
     }
     
     @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [JSONWebKeyOperation]>) -> [JSONWebKeyOperation] {
+        storage[stringKey(keyPath)]
+    }
+    
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, any JSONWebAlgorithm>) -> any JSONWebAlgorithm {
         storage[stringKey(keyPath)].map(AnyJSONWebAlgorithm.specialized) ?? .none
     }
@@ -231,6 +236,16 @@ extension MutableJSONWebKey {
     
     @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [String]>) -> [String] {
+        get {
+            storage[stringKey(keyPath)]
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue
+        }
+    }
+    
+    @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, [JSONWebKeyOperation]>) -> [JSONWebKeyOperation] {
         get {
             storage[stringKey(keyPath)]
         }
