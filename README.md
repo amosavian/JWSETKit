@@ -88,7 +88,7 @@ For detailed usage and API documentation, check [the documentation][docs].
 | PS384 | ✅ | ✅ | ✅ | ❌ |
 | PS512 | ✅ | ✅ | ✅ | ❌ |
 | PS512 | ✅ | ✅ | ✅ | ❌ |
-| EdDSA | ✅ | ✅ | ✅ | ❌ |
+| EdDSA | ✅ | ✅ | ❌ | ❌ |
 
 #### Key Encryption
 

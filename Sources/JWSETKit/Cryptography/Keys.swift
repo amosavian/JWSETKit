@@ -325,3 +325,35 @@ public struct JSONWebKeySet: Codable, Hashable {
         keys.forEach { hasher.combine($0) }
     }
 }
+
+extension JSONWebKeySet: RandomAccessCollection {
+    public var indices: Range<Int> {
+        keys.indices
+    }
+    
+    public var startIndex: Int {
+        keys.startIndex
+    }
+    
+    public var endIndex: Int {
+        keys.endIndex
+    }
+    
+    public var isEmpty: Bool {
+        keys.isEmpty
+    }
+    
+    public var count: Int {
+        keys.count
+    }
+    
+    public subscript(position: Int) -> any JSONWebKey {
+        get {
+            keys[position]
+        }
+    }
+    
+    public subscript(bounds: Range<Int>) -> JSONWebKeySet {
+        .init(keys: Array(keys[bounds]))
+    }
+}
