@@ -309,7 +309,7 @@ public struct JSONWebKeySet: Codable, Hashable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let keys = try container.decode([AnyJSONWebKey].self, forKey: .keys)
-        self.keys = try keys.map { try $0.specialized() }
+        self.keys = keys.map { (try? $0.specialized()) ?? $0 }
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -348,9 +348,7 @@ extension JSONWebKeySet: RandomAccessCollection {
     }
     
     public subscript(position: Int) -> any JSONWebKey {
-        get {
-            keys[position]
-        }
+        keys[position]
     }
     
     public subscript(bounds: Range<Int>) -> JSONWebKeySet {

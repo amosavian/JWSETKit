@@ -78,7 +78,7 @@ final class JOSEHeaderJWSTests: XCTestCase {
         claims.certificateThumbprint = Data(base64Encoded: "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck=")
         claims.certificateChain = [cert1, cert2, cert3]
         claims.type = .jwt
-        claims.contentType = .init(rawValue: "application/json")
+        claims.contentType = .init(rawValue: "json")
         claims.critical = ["b64"]
         
         let decoder = JSONDecoder()

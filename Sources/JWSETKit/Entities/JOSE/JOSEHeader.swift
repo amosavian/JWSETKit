@@ -57,21 +57,109 @@ public struct JOSEHeader: JSONWebContainer {
             throw JSONWebValidationError.missingRequiredField(key: "alg")
         }
     }
+    
+    private var normalizedStorage: JSONWebValueStorage {
+        var result = storage
+        result["typ"] = result["typ"].map(JSONWebContentType.init(rawValue:))?.mimeType
+        result["cty"] = result["cty"].map(JSONWebContentType.init(rawValue:))?.mimeType
+        return result
+    }
+    
+    public static func == (lhs: JOSEHeader, rhs: JOSEHeader) -> Bool {
+        lhs.normalizedStorage == rhs.normalizedStorage
+    }
 }
 
-/// Content type of payload in JOSE header..
+/// Content type of payload in JOSE header.
+///
+/// To keep messages compact in common situations, it is RECOMMENDED that
+/// producers omit an "application/" prefix of a media type value in a
+/// "typ" Header Parameter when no other '/' appears in the media type
+/// value.  A recipient using the media type value MUST treat it as if
+/// "application/" were prepended to any "typ" value not containing a
+/// '/'.  For instance, a "typ" value of "example" SHOULD be used to
+/// represent the "application/example" media type, whereas the media
+/// type "application/example;part="1/2"" cannot be shortened to
+/// "example;part="1/2"".
 public struct JSONWebContentType: StringRepresentable {
     public let rawValue: String
     
+    /// IANA Media type per RFC-2045.
+    ///
+    /// As application prefix is optional in JOSE content type, this property returns a valid lowercased MIME type.
+    public var mimeType: String {
+        var result = rawValue.lowercased()
+        if !result.contains("/") {
+            result = "application/\(result)"
+        }
+        return result
+    }
+    
     public init(rawValue: String) {
-        self.rawValue = rawValue.trimmingCharacters(in: .whitespaces)
+        self.rawValue = rawValue
+            .trimmingCharacters(in: .whitespaces)
+            .replacingOccurrences(of: "application/", with: "", options: [.anchored])
+    }
+    
+    public static func == (lhs: JSONWebContentType, rhs: JSONWebContentType) -> Bool {
+        lhs.mimeType == rhs.mimeType
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(mimeType)
     }
 }
 
 extension JSONWebContentType {
     /// Payload contains a JSON with JSON Web Token (JWT) claims.
+    ///
+    /// JWT values are encoded as a series of` base64url`-encoded values (some of which may be the empty
+    /// string) separated by period ('.') characters.
     public static let jwt: Self = "JWT"
     
     /// Payload contains encrypted data with JSON Web Encryption (JWE) serialization.
     public static let jwe: Self = "JWE"
+    
+    /// JOSE values are encoded as a series of `base64url`-encoded values (some of which may be the empty
+    ///  string), each separated from the next by a single period ('.') character.
+    ///
+    /// This value indicates that the content is a JWS or JWE using the JWS Compact Serialization
+    /// or the JWE Compact Serialization.
+    public static let jose: Self = "JOSE"
+    
+    /// JOSE values are represented as a JSON Object; UTF-8 encoding SHOULD be employed for the JSON object.
+    ///
+    /// This value indicates that the content is a JWS or JWE using the JWS JSON Serialization
+    /// or the JWE JSON Serialization.
+    public static let joseJSON: Self = "JOSE+JSON"
+    
+    /// Payload contains a JSON with JSON Web Key (JWK) parameters.
+    public static let jwk: Self = "jwk+json"
+    
+    /// Payload contains a JSON with JSON Web Key Set (JWKS) items.
+    public static let jwks: Self = "jwk-set+json"
 }
+
+#if canImport(UniformTypeIdentifiers)
+import UniformTypeIdentifiers
+
+extension JSONWebContentType {
+    /// Initializes content type from Uniform Type Identifier.
+    ///
+    /// - Parameter utType: A structure that represents a type of data to load, send, or receive.
+    public init?(_ utType: UTType) {
+        guard let mimeType = utType.preferredMIMEType else {
+            return nil
+        }
+        
+        self.init(rawValue: mimeType)
+    }
+ 
+    /// Returns a Uniform Type Identifer corresponding to MIME type.
+    public var utType: UTType? {
+        let mimeType = mimeType
+        let conformingType: UTType = mimeType.hasSuffix("+json") ? .json : .data
+        return .init(mimeType: mimeType, conformingTo: conformingType)
+    }
+}
+#endif

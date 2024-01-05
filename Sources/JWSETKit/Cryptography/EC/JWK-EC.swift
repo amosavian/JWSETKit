@@ -122,7 +122,7 @@ enum ECHelper {
         }
         
         return stride(from: 0, to: data.count, by: keyLength / 8).map {
-            data[$0..<min($0 + keyLength / 8, data.count)]
+            data[$0 ..< min($0 + keyLength / 8, data.count)]
         }
     }
     
