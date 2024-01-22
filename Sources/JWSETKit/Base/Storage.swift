@@ -176,11 +176,8 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     fileprivate static func cast<T>(value: Any?, as type: T.Type) -> T? {
         guard let value = value else { return nil }
         switch T.self {
-        case is Date.Type:
-            return (value as? NSNumber)
-                .map { Date(timeIntervalSince1970: $0.doubleValue) } as? T
-        case is Decimal.Type:
-            return (value as? NSNumber)?.decimalValue as? T
+        case let type as any JSONWebFieldDecodable.Type:
+            return type.castValue(value) as? T
         case let type as any UnsignedInteger.Type:
             return ((value as? NSNumber)?.uint64Value)
                 .map { type.init($0) } as? T
@@ -190,20 +187,6 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         case let type as any BinaryFloatingPoint.Type:
             return ((value as? NSNumber)?.doubleValue)
                 .map { type.init($0) } as? T
-        case is URL.Type, is NSURL.Type:
-            return (value as? String)
-                .map { URL(string: $0) } as? T
-        case is Data.Type, is NSData.Type, is [UInt8].Type:
-            return (value as? String)
-                .map {
-                    Data(urlBase64Encoded: $0) ?? Data(base64Encoded: $0, options: [.ignoreUnknownCharacters])
-                } as? T
-        case is Locale.Type, is NSLocale.Type:
-            return (value as? String)
-                .map { Locale(bcp47: $0) } as? T
-        case is TimeZone.Type, is NSTimeZone.Type:
-            return (value as? String)
-                .map { TimeZone(identifier: $0) } as? T
         case is (any JSONWebKey).Protocol:
             guard let data = try? JSONEncoder().encode(AnyCodable(value)) else { return nil }
             return try? AnyJSONWebKey.deserialize(data) as? T
@@ -223,7 +206,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
             return value as? T
         default:
             assertionFailure("Unknown storage type")
-            return nil
+            return value as? T
         }
     }
     
@@ -238,24 +221,8 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         }
         
         switch value {
-        case let value as Data:
-            // Default encoding for data is `Base64URL`.
-            storage[key] = .init(value.urlBase64EncodedString())
-        case let value as Date:
-            // Dates in JWT are `NumericDate` which is a JSON numeric value representing
-            // the number of seconds from 1970-01-01T00:00:00Z UTC until
-            // the specified UTC date/time, ignoring leap seconds.
-            storage[key] = .init(Int(value.timeIntervalSince1970))
-        case let value as UUID:
-            // Standards such as ITU-T X.667 and RFC 4122 require them to be formatted
-            // using lower-case letters.
-            // The NSUUID class and UUID struct use upper-case letters when formatting.
-            storage[key] = .init(value.uuidString.lowercased())
-        case let value as Locale:
-            // Locales in OIDC is formatted using BCP-47 while Apple uses CLDR/ICU formatting.
-            storage[key] = .init(value.bcp47)
-        case let value as TimeZone:
-            storage[key] = .init(value.identifier)
+        case let value as any JSONWebFieldEncodable:
+            storage[key] = .init(value.jsonWebValue)
         case let value as any Decodable:
             storage[key] = .init(value)
         default:

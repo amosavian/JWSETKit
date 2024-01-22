@@ -32,11 +32,14 @@ final class CompressionTests: XCTestCase {
     
     func testCompressionDecompression() throws {
         let length = Int.random(in: (1 << 17) ... (1 << 20)) // 128KB to 1MB
-        let decompressed = (0 ..< length).map { _ in UInt8.random(in: 0 ... 255) }
+        let decompressed = (0 ..< length)
+            .map { _ in UInt8.random(in: 0 ... 255) }
+            .urlBase64EncodedData()
         for algorithm in JSONWebCompressionAlgorithm.registeredAlgorithms {
             guard let compressor = algorithm.compressor else { continue }
             let testCompressed = try compressor.compress(decompressed)
             let testDecompressed = try compressor.decompress(testCompressed)
+            XCTAssertLessThan(testCompressed.count, decompressed.count)
             XCTAssertEqual(Data(decompressed), testDecompressed)
         }
     }

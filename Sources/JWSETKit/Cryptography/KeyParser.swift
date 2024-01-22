@@ -78,8 +78,8 @@ extension AnyJSONWebKey {
     ///
     /// - Parameter jsonWebKey: JWK in JSON string.
     /// - Returns: Related specific key object.
-    public static func deserialize(_ jsonWebKey: Data) throws -> any JSONWebKey {
-        let webKey = try JSONDecoder().decode(AnyJSONWebKey.self, from: jsonWebKey)
+    public static func deserialize(_ data: Data) throws -> any JSONWebKey {
+        let webKey = try JSONDecoder().decode(AnyJSONWebKey.self, from: data)
         return try webKey.specialized()
     }
 }
