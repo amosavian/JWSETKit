@@ -23,27 +23,29 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> X509.Certificate.PublicKey {
-        if let key = try? P256.Signing.PublicKey.create(storage: storage) {
-            return .init(key)
-        } else if let key = try? P384.Signing.PublicKey.create(storage: storage) {
-            return .init(key)
-        } else if let key = try? P521.Signing.PublicKey.create(storage: storage) {
-            return .init(key)
-        }
+        let key = AnyJSONWebKey(storage: storage)
+        
+        switch (key.keyType, key.curve) {
+        case (.some(.ellipticCurve), .some(.p256)):
+            return try .init(P256.Signing.PublicKey.create(storage: storage))
+        case (.some(.ellipticCurve), .some(.p384)):
+            return try .init(P384.Signing.PublicKey.create(storage: storage))
+        case (.some(.ellipticCurve), .some(.p521)):
+            return try .init(P384.Signing.PublicKey.create(storage: storage))
+        case (.some(.rsa), _):
 #if canImport(CommonCrypto)
-        if let der = try? SecKey.create(storage: storage).publicKey.externalRepresentation {
+            let der = try SecKey.create(storage: storage).externalRepresentation
             return try .init(derEncoded: der)
-        }
 #elseif canImport(_CryptoExtras)
-        if let key = try? _RSA.Signing.PublicKey.create(storage: storage) {
-            return .init(key)
-        }
+            return try .init(_RSA.Signing.PublicKey.create(storage: storage))
 #else
-        // This should never happen as CommonCrypto is available on Darwin platforms
-        // and _CryptoExtras is used on non-Darwin platform.
-        fatalError("Unimplemented")
+            // This should never happen as CommonCrypto is available on Darwin platforms
+            // and _CryptoExtras is used on non-Darwin platform.
+            fatalError("Unimplemented")
 #endif
-        throw JSONWebKeyError.unknownKeyType
+        default:
+            throw JSONWebKeyError.unknownKeyType
+        }
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {

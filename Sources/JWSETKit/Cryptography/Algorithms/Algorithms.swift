@@ -87,18 +87,22 @@ public struct AnyJSONWebAlgorithm: JSONWebAlgorithm {
     public let rawValue: String
     
     public var keyType: JSONWebKeyType? {
-        if JSONWebSignatureAlgorithm(rawValue: rawValue).keyType != nil {
-            return JSONWebSignatureAlgorithm(rawValue: rawValue).keyType
-        } else if JSONWebKeyEncryptionAlgorithm(rawValue: rawValue).keyType != nil {
-            return JSONWebKeyEncryptionAlgorithm(rawValue: rawValue).keyType
-        } else if JSONWebContentEncryptionAlgorithm(rawValue: rawValue).keyType != nil {
-            return JSONWebContentEncryptionAlgorithm(rawValue: rawValue).keyType
-        }
-        return nil
+        Self.specialized(rawValue).keyType
     }
     
     public var curve: JSONWebKeyCurve? {
-        JSONWebSignatureAlgorithm(rawValue: rawValue).curve
+        Self.specialized(rawValue).curve
+    }
+    
+    var keyLength: Int? {
+        if let result = JSONWebSignatureAlgorithm(rawValue: rawValue).curve?.keySize {
+            return result * 8
+        } else if let result = JSONWebKeyEncryptionAlgorithm(rawValue: rawValue).keyLength {
+            return result
+        } else if let result = JSONWebContentEncryptionAlgorithm(rawValue: rawValue).keyLength {
+            return result.bitCount
+        }
+        return nil
     }
     
     public init<S>(_ rawValue: S) where S: StringProtocol {

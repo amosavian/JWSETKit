@@ -37,9 +37,12 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionGCM128: .bits128,
         .aesEncryptionGCM192: .bits192,
         .aesEncryptionGCM256: .bits256,
-        .aesEncryptionCBC128SHA256: .bits128,
-        .aesEncryptionCBC192SHA384: .bits192,
-        .aesEncryptionCBC256SHA512: .bits256,
+        
+        // AES-CBC-HMAC keys contains two keys, the first half is used
+        // as HMAC key and the second half is as AES cipher key.
+        .aesEncryptionCBC128SHA256: .bits128 * 2,
+        .aesEncryptionCBC192SHA384: .bits192 * 2,
+        .aesEncryptionCBC256SHA512: .bits256 * 2,
     ]
     
     /// Key type, either RSA, Elliptic curve, Symmetric, etc.

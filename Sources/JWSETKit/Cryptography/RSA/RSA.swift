@@ -165,8 +165,12 @@ extension JSONWebAlgorithm {
     fileprivate var rsaEncryptionPadding: _RSA.Encryption.Padding {
         get throws {
             switch self {
-            case .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256, .rsaEncryptionOAEPSHA384, .rsaEncryptionOAEPSHA512:
+            case .rsaEncryptionOAEP:
                 return .PKCS1_OAEP
+            case .rsaEncryptionOAEPSHA256:
+                return .PKCS1_OAEP_SHA256
+            case .rsaEncryptionOAEPSHA384, .rsaEncryptionOAEPSHA512:
+                fallthrough
             case .rsaEncryptionPKCS1:
                 fallthrough
             default:

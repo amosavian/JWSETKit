@@ -53,29 +53,18 @@ extension ContiguousBytes {
     }
 }
 
+extension SymmetricKeySize {
+    static func * (lhs: SymmetricKeySize, rhs: Int) -> SymmetricKeySize {
+        .init(bitCount: lhs.bitCount * rhs)
+    }
+}
+
 extension SymmetricKey: JSONWebSigningKey {
     public init(algorithm: any JSONWebAlgorithm) throws {
-        switch algorithm {
-        case .hmacSHA256:
+        if let size = AnyJSONWebAlgorithm(algorithm.rawValue).keyLength {
+            self.init(size: .init(bitCount: size))
+        } else {
             self.init(size: .bits128)
-        case .hmacSHA384:
-            self.init(size: .bits192)
-        case .hmacSHA512:
-            self.init(size: .bits256)
-        case .aesEncryptionCBC128SHA256:
-            self.init(size: .bits256)
-        case .aesEncryptionCBC192SHA384:
-            self.init(size: .init(bitCount: 384))
-        case .aesEncryptionCBC256SHA512:
-            self.init(size: .init(bitCount: 512))
-        default:
-            if let size = JSONWebContentEncryptionAlgorithm(algorithm.rawValue).keyLength {
-                self.init(size: size)
-            } else if let size = JSONWebKeyEncryptionAlgorithm(algorithm.rawValue).keyLength {
-                self.init(size: .init(bitCount: size))
-            } else {
-                self.init(size: .bits128)
-            }
         }
     }
     

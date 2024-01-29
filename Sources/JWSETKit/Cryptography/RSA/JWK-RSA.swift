@@ -80,6 +80,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
 
 /// JWK container for RSA private keys.
 public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWebDecryptingKey, Sendable {
+    @frozen
     public struct KeySize {
         public let bitCount: Int
 
@@ -91,6 +92,8 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 
         /// RSA key size of 4096 bits
         public static let bits4096 = KeySize(bitCount: 4096)
+        
+        static let defaultKeyLength = bits2048.bitCount
 
         /// RSA key size with a custom number of bits.
         ///
