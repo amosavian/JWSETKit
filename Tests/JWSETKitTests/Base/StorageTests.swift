@@ -50,7 +50,7 @@ final class StorageTests: XCTestCase {
         XCTAssertEqual(storage.exp, Date(timeIntervalSince1970: 1_300_819_380))
         XCTAssertEqual(storage["http://example.com/is_root"], true)
         
-        let keys = storage.keys as [any JSONWebKey]
+        let keys = try (storage.keys as [AnyJSONWebKey]).map { try $0.specialized() }
         XCTAssertEqual(keys[0].keyType, .ellipticCurve)
         XCTAssertEqual(
             try P256.Signing.PublicKey.create(storage: keys[0].storage).rawRepresentation,

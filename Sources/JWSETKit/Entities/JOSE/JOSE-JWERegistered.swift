@@ -120,7 +120,7 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
 
 extension JOSEHeader {
     @_documentation(visibility: private)
-    public subscript<T>(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, T?>) -> T? {
+    public subscript<T: Codable>(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

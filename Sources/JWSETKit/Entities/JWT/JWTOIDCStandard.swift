@@ -232,7 +232,7 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters: JSONWebContainerPa
 
 extension JSONWebTokenClaims {
     @_documentation(visibility: private)
-    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
+    public subscript<T: Codable>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

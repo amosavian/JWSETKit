@@ -30,6 +30,51 @@ public protocol JSONWebKey: Codable, Hashable {
     func validate() throws
 }
 
+@_documentation(visibility: private)
+public func == <RHS: JSONWebKey>(lhs: any JSONWebKey, rhs: RHS) -> Bool {
+    lhs.storage == rhs.storage
+}
+
+@_documentation(visibility: private)
+public func == <RHS: JSONWebKey>(lhs: (any JSONWebKey)?, rhs: RHS) -> Bool {
+    lhs?.storage == rhs.storage
+}
+
+@_documentation(visibility: private)
+public func == <RHS: JSONWebKey>(lhs: any JSONWebKey, rhs: RHS?) -> Bool {
+    lhs.storage == rhs?.storage
+}
+
+@_documentation(visibility: private)
+public func == <RHS: JSONWebKey>(lhs: (any JSONWebKey)?, rhs: RHS?) -> Bool {
+    lhs?.storage == rhs?.storage
+}
+
+@_documentation(visibility: private)
+public func == <LHS: JSONWebKey>(lhs: LHS, rhs: any JSONWebKey) -> Bool {
+    lhs.storage == rhs.storage
+}
+
+@_documentation(visibility: private)
+public func == <LHS: JSONWebKey>(lhs: LHS, rhs: (any JSONWebKey)?) -> Bool {
+    lhs.storage == rhs?.storage
+}
+
+@_documentation(visibility: private)
+public func == <LHS: JSONWebKey>(lhs: LHS?, rhs: any JSONWebKey) -> Bool {
+    lhs?.storage == rhs.storage
+}
+
+@_documentation(visibility: private)
+public func == <LHS: JSONWebKey>(lhs: LHS?, rhs: (any JSONWebKey)?) -> Bool {
+    lhs?.storage == rhs?.storage
+}
+
+@_documentation(visibility: private)
+public func == <LHS: JSONWebKey, RHS: JSONWebKey>(lhs: LHS, rhs: RHS) -> Bool {
+    lhs.storage == rhs.storage
+}
+
 /// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159]
 /// data structure that represents a cryptographic key.
 @dynamicMemberLookup
