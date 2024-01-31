@@ -220,17 +220,17 @@ extension JOSEHeader {
         get {
             switch keyPath {
             case \.certificateThumbprint where storage.contains(key: .x5tS256):
-                return storage[.x5tS256]
+                return storage[.x5tS256, true]
             default:
-                return storage[stringKey(keyPath)]
+                return storage[stringKey(keyPath), true]
             }
         }
         set {
             switch keyPath {
             case \.certificateThumbprint where newValue?.count == SHA256.byteCount:
-                storage[.x5tS256] = newValue
+                storage[.x5tS256, true] = newValue
             default:
-                storage[stringKey(keyPath)] = newValue
+                storage[stringKey(keyPath), true] = newValue
             }
         }
     }

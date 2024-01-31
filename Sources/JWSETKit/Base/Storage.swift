@@ -79,7 +79,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     /// Returns value of given key decoded using base64.
-    public subscript(_ member: String, urlEncoded: Bool = false) -> Data? {
+    public subscript(_ member: String, urlEncoded: Bool = true) -> Data? {
         get {
             guard let value = self[member] as String? else { return nil }
             if urlEncoded {
@@ -97,7 +97,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     /// Returns values of given key decoded using base64.
-    public subscript(_ member: String, urlEncoded: Bool = false) -> [Data] {
+    public subscript(_ member: String, urlEncoded: Bool = true) -> [Data] {
         get {
             let values = self[member] as [String]
             if urlEncoded {
