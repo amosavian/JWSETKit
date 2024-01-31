@@ -28,7 +28,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMajor(from: "1.0.0")),
         .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.2.0")),
         .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.0.0")),
-        .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.8.0")),
         // Plugins
         .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.52.8"),
         .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
@@ -43,7 +42,6 @@ let package = Package(
                 // Linux support
                 .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
-                .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
             ]
         ),
         .testTarget(
