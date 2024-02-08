@@ -114,7 +114,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
         guard !signatures.isEmpty else {
             throw CryptoKitError.authenticationFailure
         }
-        try signatures.forEach { header in
+        for header in signatures {
             let message = header.signedData(payload)
             let algorithm = JSONWebSignatureAlgorithm(header.protected.value.algorithm.rawValue)
             let keyId: String? = header.protected.value.keyId ?? header.unprotected?.keyId

@@ -20,11 +20,12 @@ extension AnyJSONWebKey {
     /// Returning type:
     ///   - `JSONWebRSAPublicKey` if key type is `RSA` and private key is **not** present.
     ///   - `JSONWebRSAPrivateKey` if key type is `RSA` and private key is present.
-    ///   - `JSONWebECPublicKey`  if key type is `EC` and private key is **not** present.
-    ///   - `JSONWebECPrivateKey` if key type is `EC` and private key is present.
+    ///   - `JSONWebECPublicKey`  if key type is `EC`/`OKP` and private key is **not** present.
+    ///   - `JSONWebECPrivateKey` if key type is `EC`/`OKP` and private key is present.
     ///   - `JSONWebKeyHMAC` if key type is `oct` and algorithm is `HS256/384/512`.
     ///   - `JSONWebKeyAESGCM` if key type is `oct` and algorithm is `AEDGCM256/384/512`.
     ///   - `CryptKit.Symmetric` if key type is `oct` and no algorithm is present.
+    ///   - `JSONWebCertificateChain` if no key type is present but `x5c` has certificates.
     public func specialized() throws -> any JSONWebKey {
         // swiftformat:disable:next redundantSelf
         guard let keyType = self.keyType else {
@@ -70,7 +71,12 @@ extension AnyJSONWebKey {
         case (.symmetric, _):
             return try SymmetricKey.create(storage: storage)
         default:
-            throw JSONWebKeyError.unknownKeyType
+            // swiftformat:disable:next redundantSelf
+            if !self.certificateChain.isEmpty {
+                return try JSONWebCertificateChain.create(storage: storage)
+            } else {
+                throw JSONWebKeyError.unknownKeyType
+            }
         }
     }
     

@@ -63,17 +63,16 @@ extension SymmetricKey {
 
 #if canImport(CryptoSwift)
 extension CryptoSwift.HMAC.Variant {
-    init<H>(_ hashFunction: H.Type) throws where H: HashFunction {
-        switch hashFunction.Digest.byteCount {
-        case SHA256.byteCount:
-            self = .sha2(.sha256)
-        case SHA384.byteCount:
-            self = .sha2(.sha384)
-        case SHA512.byteCount:
-            self = .sha2(.sha512)
-        case Insecure.SHA1.byteCount:
+    init<H>(_: H.Type) throws where H: HashFunction {
+        if H.self == Insecure.SHA1.self {
             self = .sha1
-        default:
+        } else if H.self == SHA256.self {
+            self = .sha2(.sha256)
+        } else if H.self == SHA384.self {
+            self = .sha2(.sha384)
+        } else if H.self == SHA512.self {
+            self = .sha2(.sha512)
+        } else {
             throw CryptoKitError.incorrectKeySize
         }
     }

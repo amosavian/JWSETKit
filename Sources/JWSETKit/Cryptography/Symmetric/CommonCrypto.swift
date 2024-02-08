@@ -181,16 +181,15 @@ extension SymmetricKey {
 
 extension CCPseudoRandomAlgorithm {
     init<H>(_: H.Type) throws where H: HashFunction {
-        switch H.Digest.byteCount {
-        case SHA256.byteCount:
-            self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256)
-        case SHA384.byteCount:
-            self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA384)
-        case SHA512.byteCount:
-            self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA512)
-        case Insecure.SHA1.byteCount:
+        if H.self == Insecure.SHA1.self {
             self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA1)
-        default:
+        } else if H.self == SHA256.self {
+            self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA256)
+        } else if H.self == SHA384.self {
+            self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA384)
+        } else if H.self == SHA512.self {
+            self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA512)
+        } else {
             throw CryptoKitError.incorrectKeySize
         }
     }

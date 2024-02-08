@@ -55,7 +55,7 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
     /// Generates a key object from the public key inside certificate.
     ///
     /// - Returns: A public key to validate signatures.
-    private func jsonWebKey() throws -> any JSONWebValidatingKey {
+    public func jsonWebKey() throws -> any JSONWebValidatingKey {
         if let key = P256.Signing.PublicKey(self) {
             return key
         } else if let key = P384.Signing.PublicKey(self) {

@@ -65,8 +65,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
     var underlyingKey: any JSONWebSigningKey {
         get throws {
             // swiftformat:disable:next redundantSelf
-            try Self
-                .singingType(for: self.keyType ?? .empty, self.curve ?? .empty)
+            try Self.singingType(for: self.keyType ?? .empty, self.curve ?? .empty)
                 .create(storage: storage)
         }
     }

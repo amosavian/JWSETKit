@@ -210,11 +210,6 @@ extension JSONWebKeyEncryptionAlgorithm {
 
 // Key Management
 extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
-    /// **Key Management**: RSAES-PKCS1-v1.5
-    ///
-    /// - Important: This algorithm is not supported on non-Apple platform.
-    public static var rsaEncryptionPKCS1: Self { "RSA1_5" }
-    
     /// **Key Management**: RSAES OAEP using default parameters.
     public static var rsaEncryptionOAEP: Self { "RSA-OAEP" }
     
@@ -226,6 +221,9 @@ extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     
     /// **Key Management**: RSA-OAEP using SHA-512 and MGF1 with SHA-512.
     public static var rsaEncryptionOAEPSHA512: Self { "RSA-OAEP-512" }
+    
+    /// **Key Management**: RSAES-PKCS1-v1.5
+    public static var rsaEncryptionPKCS1: Self { "RSA1_5" }
     
     /// **Key Management**: AES Key-Wrap using 128-bit key.
     public static var aesKeyWrap128: Self { "A128KW" }

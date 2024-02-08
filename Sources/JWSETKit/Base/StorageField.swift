@@ -49,7 +49,7 @@ extension Bool: JSONWebFieldDecodable {
 extension Data: JSONWebFieldEncodable, JSONWebFieldDecodable {
     var jsonWebValue: (any Encodable)? {
         // Default encoding for data is `Base64URL`.
-        self.urlBase64EncodedString()
+        urlBase64EncodedString()
     }
     
     static func castValue(_ value: Any?) -> Self? {
@@ -63,7 +63,7 @@ extension Data: JSONWebFieldEncodable, JSONWebFieldDecodable {
 extension [UInt8]: JSONWebFieldEncodable, JSONWebFieldDecodable {
     var jsonWebValue: (any Encodable)? {
         // Default encoding for data is `Base64URL`.
-        self.urlBase64EncodedString()
+        urlBase64EncodedString()
     }
     
     static func castValue(_ value: Any?) -> Self? {
@@ -76,7 +76,7 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
         // Dates in JWT are `NumericDate` which is a JSON numeric value representing
         // the number of seconds from 1970-01-01T00:00:00Z UTC until
         // the specified UTC date/time, ignoring leap seconds.
-        Int(self.timeIntervalSince1970)
+        Int(timeIntervalSince1970)
     }
     
     static func castValue(_ value: Any?) -> Self? {
