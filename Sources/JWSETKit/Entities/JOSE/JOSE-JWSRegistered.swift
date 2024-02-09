@@ -171,12 +171,23 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
 
 extension JOSEHeader {
     @_documentation(visibility: private)
-    public subscript<T>(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, T?>) -> T? {
+    public subscript<T: Codable>(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
         set {
             storage[stringKey(keyPath)] = newValue
+        }
+    }
+    
+    @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, (any JSONWebKey)?>) -> (any JSONWebKey)? {
+        get {
+            let key: AnyJSONWebKey? = storage[stringKey(keyPath)]
+            return (try? key?.specialized()) ?? key
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue.map(AnyJSONWebKey.init)
         }
     }
     

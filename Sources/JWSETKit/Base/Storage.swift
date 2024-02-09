@@ -14,7 +14,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     private var storage: [String: AnyCodable]
     
     /// Returns value of given key.
-    public subscript<T>(dynamicMember member: String) -> T? {
+    public subscript<T: Codable>(dynamicMember member: String) -> T? {
         get {
             get(key: member, as: T.self)
         }
@@ -24,7 +24,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     /// Returns values of given key.
-    public subscript<T>(dynamicMember member: String) -> [T] {
+    public subscript<T: Codable>(dynamicMember member: String) -> [T] {
         get {
             self[member]
         }
@@ -34,7 +34,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     /// Returns value of given key.
-    public subscript<T>(_ member: String) -> T? {
+    public subscript<T: Codable>(_ member: String) -> T? {
         get {
             get(key: member, as: T.self)
         }
@@ -54,7 +54,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     /// Returns values of given key.
-    public subscript<T>(_ member: String) -> [T] {
+    public subscript<T: Codable>(_ member: String) -> [T] {
         get {
             guard let array = storage[member]?.value as? [Any] else { return [] }
             return array.compactMap { JSONWebValueStorage.cast(value: $0, as: T.self) }
@@ -173,28 +173,27 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         storage.removeValue(forKey: key)
     }
     
-    fileprivate static func cast<T>(value: Any?, as type: T.Type) -> T? {
+    fileprivate static func cast<T>(value: Any?, as type: T.Type) -> T? where T: Encodable {
         guard let value = value else { return nil }
         switch T.self {
         case let type as any JSONWebFieldDecodable.Type:
+            // Some values are encoded differently in JOSE than conventional JSON encoding.
+            // e.g `Data` is encoded in Base64URL rather than standard Bas64, and Date is
+            // encoded in `NumericDate` which is unix timestamp rather than RFC3339.
+            // Other common differences are `Locale` and `TimeZone` where `JOSE` prefers
+            // "BCP-47" presentation rather than "CLDR/ICU", and UUID where lower-cased is
+            // preferred.
+            //
+            // These well known types are handled specially to prevent mis-encoding JWS/JWT
+            // when using a `JSONEncoder` with incorrect data/date formattting strategies.
             return type.castValue(value) as? T
-        case let type as any UnsignedInteger.Type:
-            return ((value as? NSNumber)?.uint64Value)
-                .map { type.init($0) } as? T
-        case let type as any SignedInteger.Type:
-            return ((value as? NSNumber)?.int64Value)
-                .map { type.init($0) } as? T
-        case let type as any BinaryFloatingPoint.Type:
-            return ((value as? NSNumber)?.doubleValue)
-                .map { type.init($0) } as? T
-        case is (any JSONWebKey).Protocol:
-            guard let data = try? JSONEncoder().encode(AnyCodable(value)) else { return nil }
-            return try? AnyJSONWebKey.deserialize(data) as? T
-        case is (any JSONWebAlgorithm).Protocol:
-            guard let data = try? JSONEncoder().encode(AnyCodable(value)) else { return nil }
-            guard let string = try? JSONDecoder().decode(String.self, from: data) else { return nil }
-            return AnyJSONWebAlgorithm.specialized(string) as? T
         case let type as any Decodable.Type:
+            // Some data types are same in JSON while have different types
+            // in Swift, e.g. integer and float types.
+            //
+            // Here, we first type to simply cast value to target type. If this
+            // casting succeed, it will return. Otherwise we try to encode data
+            // using `JSONEncoder` then decode as a "Type-erasure" method.
             if let value = value as? T {
                 return value
             } else {
@@ -202,19 +201,16 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
                 guard let data = try? JSONEncoder().encode(value) else { return nil }
                 return try? JSONDecoder().decode(type, from: data) as? T
             }
-        case is any Encodable.Type:
-            return value as? T
         default:
-            assertionFailure("Unknown storage type")
             return value as? T
         }
     }
     
-    private func get<T>(key: String, as _: T.Type) -> T? {
+    private func get<T>(key: String, as _: T.Type) -> T? where T: Encodable {
         JSONWebValueStorage.cast(value: storage[key]?.value, as: T.self)
     }
     
-    private mutating func updateValue(key: String, value: Any?) {
+    private mutating func updateValue<T>(key: String, value: T?) where T: Decodable {
         guard let value = value else {
             remove(key: key)
             return
@@ -223,11 +219,8 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         switch value {
         case let value as any JSONWebFieldEncodable:
             storage[key] = .init(value.jsonWebValue)
-        case let value as any Decodable:
-            storage[key] = .init(value)
         default:
-            remove(key: key)
-            assertionFailure("Unknown storage type")
+            storage[key] = .init(value)
         }
     }
 }

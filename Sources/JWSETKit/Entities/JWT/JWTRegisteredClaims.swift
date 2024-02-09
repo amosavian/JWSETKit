@@ -152,7 +152,7 @@ public struct JSONWebTokenClaimsRegisteredParameters: JSONWebContainerParameters
 
 extension JSONWebTokenClaims {
     @_documentation(visibility: private)
-    public subscript<T>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, T?>) -> T? {
+    public subscript<T: Codable>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
