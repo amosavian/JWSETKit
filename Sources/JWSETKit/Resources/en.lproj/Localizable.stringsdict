@@ -2,16 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>errorMissingField</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>Required &quot;%@&quot; field is missing.</string>
-	</dict>
-	<key>errorInvalidAudience</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>Audience &quot;%@&quot; is not intended for the token.</string>
-	</dict>
 	<key>errorUnknownAlgorithm</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -37,15 +27,30 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>Operation Not Allowed.</string>
 	</dict>
-	<key>notBeforeToken</key>
+	<key>errorInvalidKeyFormat</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string></string>
+		<string>Invalid Key Format</string>
 	</dict>
 	<key>errorExpiredToken</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>Token is invalid after %@</string>
+	</dict>
+	<key>notBeforeToken</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string></string>
+	</dict>
+	<key>errorInvalidAudience</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Audience &quot;%@&quot; is not intended for the token.</string>
+	</dict>
+	<key>errorMissingField</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Required &quot;%@&quot; field is missing.</string>
 	</dict>
 </dict>
 </plist>

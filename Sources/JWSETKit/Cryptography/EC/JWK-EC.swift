@@ -52,6 +52,44 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Senda
     }
 }
 
+extension JSONWebKeyImportable {
+    fileprivate init(
+        key: Data, format: JSONWebKeyFormat,
+        keyLengthTable: [Int: JSONWebKeyCurve],
+        keyFinder: (_ keyType: JSONWebKeyType, _ curve: JSONWebKeyCurve) throws -> any JSONWebValidatingKey.Type
+    ) throws {
+        guard let curve = keyLengthTable[key.count] else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        guard let type = try keyFinder(.ellipticCurve, curve) as? any JSONWebKeyImportable.Type else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        try self = Self.create(storage: type.init(importing: key, format: format).storage)
+    }
+}
+
+extension JSONWebECPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .raw:
+            try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.publicRawCurve, keyFinder: Self.singingType(for:_:))
+        case .spki:
+            try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.spkiCurve, keyFinder: Self.singingType(for:_:))
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        guard let underlyingKey = (try? underlyingKey) as? (any JSONWebKeyExportable) else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+        return try underlyingKey.exportKey(format: format)
+    }
+}
+
 /// JWK container for different types of Elliptic-Curve private keys consists of P-256, P-384, P-521, Ed25519.
 public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendable {
     public var storage: JSONWebValueStorage
@@ -108,6 +146,28 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
     }
 }
 
+extension JSONWebECPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .raw:
+            try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.privateRawCurve, keyFinder: Self.singingType(for:_:))
+        case .pkcs8:
+            try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.pkc8Curve, keyFinder: Self.singingType(for:_:))
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        guard let underlyingKey = (try? underlyingKey) as? (any JSONWebKeyExportable) else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+        return try underlyingKey.exportKey(format: format)
+    }
+}
+
 enum ECHelper {
     static func ecComponents(_ data: Data, keyLength: Int) throws -> [Data] {
         var data = data
@@ -150,4 +210,22 @@ enum ECHelper {
             throw JSONWebKeyError.unknownKeyType
         }
     }
+}
+
+extension JSONWebKeyCurve {
+    fileprivate static let publicRawCurve: [Int: Self] = [
+        65: .p256, 32: .ed25519, 97: .p384, 133: .p521,
+    ]
+    
+    fileprivate static let privateRawCurve: [Int: Self] = [
+        97: .p256, 32: .ed25519, 145: .p384, 199: .p521,
+    ]
+    
+    fileprivate static let spkiCurve: [Int: Self] = [
+        91: .p256, 120: .p384, 158: .p521,
+    ]
+    
+    fileprivate static let pkc8Curve: [Int: Self] = [
+        138: .p256, 185: .p384, 241: .p521,
+    ]
 }

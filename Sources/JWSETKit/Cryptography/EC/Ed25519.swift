@@ -32,6 +32,8 @@ extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
+extension Curve25519.Signing.PublicKey: CryptoEdKeyPortable {}
+
 extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init()
@@ -41,6 +43,8 @@ extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
         try signature(for: data)
     }
 }
+
+extension Curve25519.Signing.PrivateKey: CryptoEdKeyPortable {}
 
 extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .x25519 }
@@ -54,8 +58,42 @@ extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
     }
 }
 
+extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {}
+
 extension Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init()
+    }
+}
+
+extension Curve25519.KeyAgreement.PrivateKey: CryptoEdKeyPortable {}
+
+protocol CryptoEdKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
+    var rawRepresentation: Data { get }
+    
+    init(rawRepresentation: Data) throws
+}
+
+extension CryptoEdKeyPortable {
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .raw:
+            try self.init(rawRepresentation: key)
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        switch format {
+        case .raw:
+            return rawRepresentation
+        case .jwk:
+            return try JSONEncoder().encode(self)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
     }
 }

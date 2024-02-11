@@ -288,6 +288,40 @@ extension SecKey: JSONWebDecryptingKey {
     }
 }
 
+extension JSONWebKeyImportable where Self: SecKey {    
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .raw:
+            try self.init(derRepresentation: key, keyType: .ellipticCurve)
+        case .spki:
+            try self.init(derRepresentation: key, keyType: SubjectPublicKeyInfo(derEncoded: key).keyType)
+        case .pkcs8:
+            try self.init(derRepresentation: key, keyType: PKCS8PrivateKey(derEncoded: key).keyType)
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        }
+    }
+}
+
+extension SecKey: JSONWebKeyExportable {
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        switch try (format, keyType, isPrivateKey) {
+        case (_, .ellipticCurve, false):
+            return try JSONWebECPublicKey(storage: storage).exportKey(format: format)
+        case (_, .ellipticCurve, true):
+            return try JSONWebECPrivateKey(storage: storage).exportKey(format: format)
+        case (.spki, .rsa, false):
+            return try SubjectPublicKeyInfo(pkcs1: externalRepresentation).derRepresentation
+        case (.pkcs8, .rsa, true):
+            return try PKCS8PrivateKey(pkcs1: externalRepresentation).derRepresentation
+        case (.jwk, _, _):
+            return try JSONEncoder().encode(self)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+}
+
 func handle<T>(_ closure: (_ error: inout Unmanaged<CFError>?) -> T?) throws -> T {
     var error: Unmanaged<CFError>?
     let result = closure(&error)

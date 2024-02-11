@@ -48,6 +48,42 @@ extension CryptoECPublicKey {
     }
 }
 
+protocol CryptoECPublicKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
+    var x963Representation: Data { get }
+    var derRepresentation: Data { get }
+    
+    init(x963Representation: Data) throws
+    init(derRepresentation: Data) throws
+}
+
+extension CryptoECPublicKeyPortable {
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .raw:
+            try self.init(x963Representation: key)
+        case .spki:
+            try self.init(derRepresentation: key)
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        switch format {
+        case .raw:
+            return x963Representation
+        case .spki:
+            return derRepresentation
+        case .jwk:
+            return try JSONEncoder().encode(self)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+}
+
 protocol CryptoECPrivateKey: JSONWebKey {
     associatedtype PublicKey: CryptoECPublicKey
     
@@ -78,5 +114,41 @@ extension CryptoECPrivateKey {
     
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.publicKey == rhs.publicKey
+    }
+}
+
+protocol CryptoECPrivateKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
+    var x963Representation: Data { get }
+    var derRepresentation: Data { get }
+    
+    init(x963Representation: Data) throws
+    init(derRepresentation: Data) throws
+}
+
+extension CryptoECPrivateKeyPortable {
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .raw:
+            try self.init(x963Representation: key)
+        case .pkcs8:
+            try self.init(derRepresentation: key)
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        switch format {
+        case .raw:
+            return x963Representation
+        case .pkcs8:
+            return derRepresentation
+        case .jwk:
+            return try JSONEncoder().encode(self)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
     }
 }

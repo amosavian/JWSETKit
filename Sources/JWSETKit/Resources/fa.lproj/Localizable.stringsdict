@@ -2,16 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>errorMissingField</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>فیلد ضروری &quot;%@&quot; وجود ندارد.</string>
-	</dict>
-	<key>errorInvalidAudience</key>
-	<dict>
-		<key>NSStringLocalizedFormatKey</key>
-		<string>مخاطب %@ برای این توکن نامعتبر است.</string>
-	</dict>
 	<key>errorUnknownAlgorithm</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
@@ -37,15 +27,30 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>عملیات پشتیبانی نمی‌شود.</string>
 	</dict>
-	<key>notBeforeToken</key>
+	<key>errorInvalidKeyFormat</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string>توکن برای قبل از %@ نامعتبر است.</string>
+		<string>فرمت کلید نامعنبر است.</string>
 	</dict>
 	<key>errorExpiredToken</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
 		<string>توکن برای پس از %@ نامعتبر است.</string>
+	</dict>
+	<key>notBeforeToken</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>توکن برای قبل از %@ نامعتبر است.</string>
+	</dict>
+	<key>errorInvalidAudience</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>مخاطب %@ برای این توکن نامعتبر است.</string>
+	</dict>
+	<key>errorMissingField</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>فیلد ضروری &quot;%@&quot; وجود ندارد.</string>
 	</dict>
 </dict>
 </plist>

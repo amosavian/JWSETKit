@@ -27,6 +27,20 @@ import CryptoSwift
 public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSONWebEncryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
+    public var derRepresentation: Data {
+        get throws {
+#if canImport(CommonCrypto)
+            return try SecKey.create(storage: storage).exportKey(format: .spki)
+#elseif canImport(_CryptoExtras)
+            return try _RSA.Signing.PublicKey.create(storage: storage).exportKey(format: .spki)
+#else
+            // This should never happen as CommonCrypto is available on Darwin platforms
+            // and CryptoExtras is used on non-Darwin platform.
+            fatalError("Unimplemented")
+#endif
+        }
+    }
+    
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
     }
@@ -78,6 +92,30 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
     }
 }
 
+extension JSONWebRSAPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .spki:
+            self = try .init(derRepresentation: key)
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        switch format {
+        case .spki:
+            return try derRepresentation
+        case .jwk:
+            return try JSONEncoder().encode(self)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+}
+
 /// JWK container for RSA private keys.
 public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWebDecryptingKey, Sendable {
     @frozen
@@ -116,6 +154,20 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
         result.secondFactorCRTExponent = nil
         result.firstCRTCoefficient = nil
         return result
+    }
+    
+    public var derRepresentation: Data {
+        get throws {
+#if canImport(CommonCrypto)
+            return try SecKey.create(storage: storage).exportKey(format: .pkcs8)
+#elseif canImport(_CryptoExtras)
+            return try _RSA.Signing.PublicKey.create(storage: storage).exportKey(format: .pkcs8)
+#else
+            // This should never happen as CommonCrypto is available on Darwin platforms
+            // and CryptoExtras is used on non-Darwin platform.
+            fatalError("Unimplemented")
+#endif
+        }
     }
     
     public init(algorithm _: any JSONWebAlgorithm) throws {
@@ -182,6 +234,30 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
         // and CryptoSwift is used on non-Darwin platform.
         fatalError("Unimplemented")
 #endif
+    }
+}
+
+extension JSONWebRSAPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .pkcs8:
+            self = try .init(derRepresentation: key)
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        switch format {
+        case .pkcs8:
+            return try derRepresentation
+        case .jwk:
+            return try JSONEncoder().encode(self)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
     }
 }
 
