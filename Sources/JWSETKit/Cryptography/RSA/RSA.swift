@@ -44,6 +44,30 @@ extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
+extension _RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .spki:
+            try self.init(derRepresentation: key)
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        switch format {
+        case .spki:
+            return derRepresentation
+        case .jwk:
+            return try JSONEncoder().encode(self)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+}
+
 extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     public var storage: JSONWebValueStorage {
         get {
@@ -79,6 +103,37 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     
     public func hash(into hasher: inout Hasher) {
         hasher.combine(derRepresentation)
+    }
+}
+
+extension _RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
+    var pkcs8Representation: Data {
+        // PEM is always a valid Bas64.
+        Data(base64Encoded: pkcs8PEMRepresentation
+            .components(separatedBy: .whitespacesAndNewlines)
+            .dropFirst().dropLast().joined()).unsafelyUnwrapped
+    }
+    
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .pkcs8:
+            try self.init(derRepresentation: key)
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        switch format {
+        case .pkcs8:
+            return pkcs8Representation
+        case .jwk:
+            return try JSONEncoder().encode(self)
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
     }
 }
 

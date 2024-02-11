@@ -174,7 +174,7 @@ enum RSA_OAEP_GCM {
     XFBoMYUZodetZdvTiFvSkQ
     """
     
-    static let kek = try! JSONWebRSAPrivateKey(jsonWebKeyData: Data(
+    static let kek = try! JSONWebRSAPrivateKey(importing: Data(
         """
         {"kty":"RSA",
          "n":"oahUIoWw0K0usKNuOR6H4wkf4oBUXHTxRvgb48E-BVvxkeDNjbC4he8rUWcJoZmds2h7M70imEVhRU5djINXtqllXI4DFqcI1DgjT9LewND8MW2Krf3Spsk_ZkoFnilakGygTwpZ3uesH-PFABNIUYpOiN15dsQRkgr0vEhxN92i2asbOenSZeyaxziK72UwxrrKoExv6kc5twXTq4h-QChLOln0_mtUZwfsRaMStPs6mS6XrgxnxbWhojf663tuEQueGC-FCMfra36C9knDFGzKsNa7LZK2djYgyD3JR_MB_4NUJW_TqOQtwHYbxevoJArm-L5StowjzGy-_bq6Gw",
@@ -187,7 +187,7 @@ enum RSA_OAEP_GCM {
          "qi":"VIMpMYbPf47dT1w_zDUXfPimsSegnMOA1zTaX7aGk_8urY6R8-ZW1FxU7AlWAyLWybqq6t16VFd7hQd0y6flUK4SlOydB61gwanOsXGOAOv82cHq0E3eL4HrtZkUuKvnPrMnsUUFlfUdybVzxyjz9JF_XyaY14ardLSjf4L_FNY"
         }
         """.utf8
-    ))
+    ), format: .jwk)
     
     static let cek = SymmetricKey(data: [
         177, 161, 244, 128, 84, 143, 225, 115, 63, 180, 3, 255, 107, 154,
@@ -218,7 +218,7 @@ enum RSA_PKCS1_5_CBC {
     9hH0vgRfYgPnAHOd8stkvw
     """
     
-    static let kek = try! JSONWebRSAPrivateKey(jsonWebKeyData: Data(
+    static let kek = try! JSONWebRSAPrivateKey(importing: Data(
         """
         {"kty":"RSA",
          "n":"sXchDaQebHnPiGvyDOAT4saGEUetSyo9MKLOoWFsueri23bOdgWp4Dy1WlUzewbgBHod5pcM9H95GQRV3JDXboIRROSBigeC5yjU1hGzHHyXss8UDprecbAYxknTcQkhslANGRUZmdTOQ5qTRsLAt6BTYuyvVRdhS8exSZEy_c4gs_7svlJJQ4H9_NxsiIoLwAEk7-Q3UXERGYw_75IDrGA84-lA_-Ct4eTlXHBIY2EaV7t7LjJaynVJCpkv4LKjTTAumiGUIuQhrNhZLuF_RJLqHpM2kgWFLU7-VTdL1VbC2tejvcI2BlMkEpk1BzBZI0KQB0GaDWFLN-aEAw3vRw",
@@ -231,7 +231,7 @@ enum RSA_PKCS1_5_CBC {
          "qi":"eNho5yRBEBxhGBtQRww9QirZsB66TrfFReG_CcteI1aCneT0ELGhYlRlCtUkTRclIfuEPmNsNDPbLoLqqCVznFbvdB7x-Tl-m0l_eFTj2KiqwGqE9PZB9nNTwMVvH3VRRSLWACvPnSiwP8N5Usy-WRXS-V7TbpxIhvepTfE0NNo"
         }
         """.utf8
-    ))
+    ), format: .jwk)
     
     static let cek = SymmetricKey(data: [
         4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250, 63, 170, 106,

@@ -15,7 +15,7 @@ import Crypto
 @testable import JWSETKit
 
 enum ExampleKeys {
-    static let publicEC256 = try! JSONWebECPublicKey(jsonWebKeyData: Data(
+    static let publicEC256 = try! JSONWebECPublicKey(importing: Data(
         """
         {"kty":"EC",
          "crv":"P-256",
@@ -23,9 +23,9 @@ enum ExampleKeys {
          "y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM",
          "kid":"1"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let privateEC256 = try! JSONWebECPrivateKey(jsonWebKeyData: Data(
+    static let privateEC256 = try! JSONWebECPrivateKey(importing: Data(
         """
         {"kty":"EC",
          "crv":"P-256",
@@ -34,9 +34,9 @@ enum ExampleKeys {
          "d":"870MB6gfuTJ4HtUnUvYMyJpr5eUZNP4Bk43bVdj3eAE",
          "kid":"1"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let publicEC384 = try! JSONWebECPublicKey(jsonWebKeyData: Data(
+    static let publicEC384 = try! JSONWebECPublicKey(importing: Data(
         """
         {"kty":"EC",
          "crv":"P-384",
@@ -44,9 +44,9 @@ enum ExampleKeys {
          "y":"0fv1xzyRiGymgQdXlBv5D7YS8IcyXFJD_o3K7DpPtFP2jVoalGVhrquiur4NPyjN",
          "kid":"1"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let privateEC384 = try! JSONWebECPrivateKey(jsonWebKeyData: Data(
+    static let privateEC384 = try! JSONWebECPrivateKey(importing: Data(
         """
         {"kty":"EC",
          "crv":"P-384",
@@ -55,9 +55,9 @@ enum ExampleKeys {
          "d":"8v-MgbBQ8W1q7TB9QHsdZIz9HH3qYbAzD-om_MdpyupBU0jHHm-8P4x5E5aZ-vz5",
          "kid":"1"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let publicEC521 = try! JSONWebECPublicKey(jsonWebKeyData: Data(
+    static let publicEC521 = try! JSONWebECPublicKey(importing: Data(
         """
         {"kty":"EC",
          "crv":"P-521",
@@ -65,9 +65,9 @@ enum ExampleKeys {
          "y":"AWK8LnVkd5AkfEFFSJZiIQFyDLobKmexQTl5pmHeHStLF6VDKuKT3Q4z1OE4EbMFKQEoZCg4nLY0H2JGK5YKR80_",
          "kid":"1"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let privateEC521 = try! JSONWebECPrivateKey(jsonWebKeyData: Data(
+    static let privateEC521 = try! JSONWebECPrivateKey(importing: Data(
         """
         {"kty":"EC",
          "crv":"P-521",
@@ -76,9 +76,9 @@ enum ExampleKeys {
          "d":"AB0ls-pomOPX4LVRJoF6ZKS6h6L-1rzxxslafOs0xoXjtHsX7c13TaS7N_A91UbHILd8SqCwfIo1GADS76TyxGqP",
          "kid":"1"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let privateEd25519 = try! JSONWebECPrivateKey(jsonWebKeyData: Data(
+    static let privateEd25519 = try! JSONWebECPrivateKey(importing: Data(
         """
         {"kty":"OKP",
          "crv":"Ed25519",
@@ -86,18 +86,18 @@ enum ExampleKeys {
          "d":"nWGxne_9WmC6hEr0kuwsxERJxWl7MmkZcDusAxyuf2A",
          "kid":"1"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let publicEd25519 = try! JSONWebECPublicKey(jsonWebKeyData: Data(
+    static let publicEd25519 = try! JSONWebECPublicKey(importing: Data(
         """
         {"kty":"OKP",
          "crv":"Ed25519",
          "x":"11qYAYKxCrfVS_7TyWQHOg7hcvPapiMlrwIaaPcHURo",
          "kid":"1"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let publicRSA2048 = try! JSONWebRSAPublicKey(jsonWebKeyData: Data(
+    static let publicRSA2048 = try! JSONWebRSAPublicKey(importing: Data(
         """
         {"kty":"RSA",
          "n": "0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
@@ -105,9 +105,9 @@ enum ExampleKeys {
          "alg":"RS256",
          "kid":"2011-04-29"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let privateRSA2048 = try! JSONWebRSAPrivateKey(jsonWebKeyData: Data(
+    static let privateRSA2048 = try! JSONWebRSAPrivateKey(importing: Data(
         """
         {"kty":"RSA",
          "n":"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw",
@@ -121,17 +121,17 @@ enum ExampleKeys {
          "alg":"RS256",
          "kid":"2011-04-29"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let symmetric = try! SymmetricKey(jsonWebKeyData: Data(
+    static let symmetric = try! SymmetricKey(importing: Data(
         """
         {"kty":"oct",
          "k":"AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow",
          "kid":"HMAC key used in JWS spec Appendix A.1 example"}
         """.utf8
-    ))
+    ), format: .jwk)
     
-    static let rsaCertificate = try! Certificate(jsonWebKeyData: Data(
+    static let rsaCertificate = try! JSONDecoder().decode(Certificate.self, from: Data(
         """
         {"kty":"RSA",
          "use":"sig",

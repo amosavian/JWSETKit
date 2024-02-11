@@ -47,6 +47,9 @@ public enum JSONWebKeyError: JSONWebError, Sendable {
     /// Operation is not allowed with given class/struct or key.
     case operationNotAllowed
     
+    /// Key format is invalid.
+    case invalidKeyFormat
+    
     /// A localized message describing what error occurred.
     public func localizedError(for locale: Locale) -> String {
         switch self {
@@ -60,6 +63,8 @@ public enum JSONWebKeyError: JSONWebError, Sendable {
             return .init(localizingKey: "errorKeyNotFound", locale: locale)
         case .operationNotAllowed:
             return .init(localizingKey: "errorOperationNotAllowed", locale: locale)
+        case .invalidKeyFormat:
+            return .init(localizingKey: "errorInvalidKeyFormat", locale: locale)
         }
     }
 }

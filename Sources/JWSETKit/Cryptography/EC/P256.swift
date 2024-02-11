@@ -25,6 +25,8 @@ extension P256.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
+extension P256.Signing.PublicKey: CryptoECPublicKeyPortable {}
+
 extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init(compactRepresentable: true)
@@ -34,6 +36,8 @@ extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
         try signature(for: SHA256.hash(data: data)).rawRepresentation
     }
 }
+
+extension P256.Signing.PrivateKey: CryptoECPrivateKeyPortable {}
 
 #if canImport(Darwin)
 extension SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {

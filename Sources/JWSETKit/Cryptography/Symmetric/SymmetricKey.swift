@@ -59,7 +59,7 @@ extension SymmetricKeySize {
     }
 }
 
-extension SymmetricKey: JSONWebSigningKey {
+extension SymmetricKey: JSONWebSymmetricSigningKey {
     public init(algorithm: any JSONWebAlgorithm) throws {
         if let size = AnyJSONWebAlgorithm(algorithm.rawValue).keyLength {
             self.init(size: .init(bitCount: size))
@@ -92,7 +92,7 @@ extension SymmetricKey: JSONWebSigningKey {
     }
 }
 
-extension SymmetricKey: JSONWebDecryptingKey {
+extension SymmetricKey: JSONWebSymmetricDecryptingKey {
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         if let keyClass = JSONWebKeyEncryptionAlgorithm(algorithm.rawValue).keyClass?.private as? any JSONWebSymmetricDecryptingKey.Type {
             return try keyClass.init(self).decrypt(data, using: algorithm)

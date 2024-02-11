@@ -12,7 +12,7 @@ import CryptoKit
 import Crypto
 #endif
 
-/// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159]
+/// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159](https://www.rfc-editor.org/rfc/rfc7159)
 /// data structure that represents a cryptographic key.
 @dynamicMemberLookup
 public protocol JSONWebKey: Codable, Hashable {
@@ -85,6 +85,7 @@ public protocol MutableJSONWebKey: JSONWebKey {
 
 extension JSONWebKey {
     /// Creates a new JWK using json data.
+    @available(*, deprecated, message: "Use JSONDecoder instead.")
     public init(jsonWebKeyData data: Data) throws {
         self = try Self.create(storage: JSONDecoder().decode(JSONWebValueStorage.self, from: data))
     }
@@ -111,6 +112,11 @@ extension JSONWebKey {
                 throw JSONWebKeyError.keyNotFound
             }
         case .ellipticCurve:
+            // swiftformat:disable:next redundantSelf
+            guard self.xCoordinate != nil, self.yCoordinate != nil else {
+                throw JSONWebKeyError.keyNotFound
+            }
+        case .octetKeyPair:
             // swiftformat:disable:next redundantSelf
             guard self.xCoordinate != nil else {
                 throw JSONWebKeyError.keyNotFound
@@ -163,7 +169,7 @@ extension JSONWebDecryptingKey {
 }
 
 /// A JSON Web Key (JWK) able to decrypt cipher-texts using a symmetric key.
-public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey where PublicKey == Self {
+public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey, JSONWebKeySymmetricPortable where PublicKey == Self {
     init(_ key: SymmetricKey) throws
 }
 
@@ -295,7 +301,7 @@ extension JSONWebSigningKey {
 }
 
 /// A JSON Web Key (JWK) able to generate a signature using a symmetric key.
-public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey {
+public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey, JSONWebKeySymmetricPortable {
     init(_ key: SymmetricKey) throws
 }
 

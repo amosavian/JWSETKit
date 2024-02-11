@@ -95,7 +95,7 @@ public struct AnyJSONWebAlgorithm: JSONWebAlgorithm {
     }
     
     var keyLength: Int? {
-        if let result = JSONWebSignatureAlgorithm(rawValue: rawValue).curve?.keySize {
+        if let result = JSONWebSignatureAlgorithm(rawValue: rawValue).curve?.coordinateSize {
             return result * 8
         } else if let result = JSONWebKeyEncryptionAlgorithm(rawValue: rawValue).keyLength {
             return result
@@ -153,7 +153,7 @@ extension JSONWebKeyCurve {
     ]
     
     /// Key size in bytes.
-    public var keySize: Int? {
+    public var coordinateSize: Int? {
         Self.keySizes[self]
     }
     
