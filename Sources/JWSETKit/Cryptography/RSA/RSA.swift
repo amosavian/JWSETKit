@@ -5,14 +5,10 @@
 //  Created by Amir Abbas Mousavian on 9/12/23.
 //
 
+#if canImport(_CryptoExtras)
 import Foundation
 import SwiftASN1
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
-#if canImport(_CryptoExtras)
 import _CryptoExtras
 
 extension _RSA.Signing.PublicKey: JSONWebValidatingKey {

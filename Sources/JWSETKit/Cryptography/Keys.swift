@@ -334,6 +334,54 @@ public struct AnyJSONWebKey: MutableJSONWebKey {
     }
 }
 
+extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
+    private init(importing key: Data, format: JSONWebKeyFormat, keyType: JSONWebKeyType) throws {
+        switch (keyType, format) {
+        case (.ellipticCurve, .spki):
+            self.storage = try JSONWebECPublicKey(importing: key, format: format).storage
+        case (.rsa, .spki):
+            self.storage = try JSONWebRSAPublicKey(importing: key, format: format).storage
+        case (.ellipticCurve, .pkcs8):
+            self.storage = try JSONWebECPrivateKey(importing: key, format: format).storage
+        case (.rsa, .pkcs8):
+            self.storage = try JSONWebRSAPrivateKey(importing: key, format: format).storage
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+    
+    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+        switch format {
+        case .raw:
+            // Here is a little tricky. The key can be either a X9.63 formatted EC
+            // or a symmetric key for HMAC/AES.
+            //
+            // First we try to decode it as EC. If fails, we then fall back to SymmetricKey.
+            if let key = try? JSONWebECPrivateKey(importing: key, format: .raw) {
+                self.init(storage: key.storage)
+            } else if let key = try? JSONWebECPublicKey(importing: key, format: .raw) {
+                self.init(storage: key.storage)
+            } else {
+                try self.init(storage: SymmetricKey(importing: key, format: .raw).storage)
+            }
+        case .pkcs8:
+            try self.init(importing: key, format: format, keyType: try PKCS8PrivateKey(derEncoded: key).keyType)
+        case .spki:
+            try self.init(importing: key, format: format, keyType: try SubjectPublicKeyInfo(derEncoded: key).keyType)
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: key)
+        }
+    }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        guard let key = try specialized() as? any JSONWebKeyExportable else {
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+        
+        return try exportKey(format: format)
+    }
+}
+
 /// A JWK Set is a JSON object that represents a set of JWKs.
 ///
 /// The JSON object MUST have a "keys" member, with its value being an array of JWKs.
