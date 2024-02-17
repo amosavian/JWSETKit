@@ -57,6 +57,10 @@ protocol CryptoECPublicKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
 }
 
 extension CryptoECPublicKeyPortable {
+    public func validate() throws {
+        try checkRequiredFields(\.xCoordinate, \.yCoordinate, \.privateKey)
+    }
+    
     public init(importing key: Data, format: JSONWebKeyFormat) throws {
         switch format {
         case .raw:
@@ -68,6 +72,7 @@ extension CryptoECPublicKeyPortable {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
+        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
@@ -108,6 +113,10 @@ extension CryptoECPrivateKey {
         return try .init(rawRepresentation: privateKey)
     }
     
+    public func validate() throws {
+        try checkRequiredFields(\.xCoordinate, \.yCoordinate, \.privateKey)
+    }
+    
     public func hash(into hasher: inout Hasher) {
         hasher.combine(publicKey)
     }
@@ -137,6 +146,7 @@ extension CryptoECPrivateKeyPortable {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
+        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {

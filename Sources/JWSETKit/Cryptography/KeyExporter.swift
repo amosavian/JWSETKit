@@ -153,7 +153,6 @@ extension DERKeyContainer {
         }
     }
     
-    
     var keyCurve: JSONWebKeyCurve? {
         switch algorithmIdentifier.parameters {
         case try? .init(erasing: ASN1ObjectIdentifier.NamedCurves.secp256r1):

@@ -6,10 +6,10 @@
 //
 
 #if canImport(_CryptoExtras)
+import _CryptoExtras
+import Crypto
 import Foundation
 import SwiftASN1
-import Crypto
-import _CryptoExtras
 
 extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
@@ -50,6 +50,7 @@ extension _RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
+        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
@@ -86,6 +87,15 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
         return try .init(derRepresentation: der)
     }
     
+    public func validate() throws {
+        try checkRequiredFields(
+            \.modulus, \.exponent,
+            \.firstPrimeFactor, \.secondPrimeFactor,
+            \.privateExponent, \.firstCRTCoefficient,
+            \.firstFactorCRTExponent, \.secondFactorCRTExponent
+        )
+    }
+    
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         guard let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.unknownAlgorithm
@@ -119,6 +129,7 @@ extension _RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
+        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
@@ -186,6 +197,15 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
         return try .init(derRepresentation: der)
     }
 
+    public func validate() throws {
+        try checkRequiredFields(
+            \.modulus, \.exponent,
+            \.firstPrimeFactor, \.secondPrimeFactor,
+            \.privateExponent, \.firstCRTCoefficient,
+            \.firstFactorCRTExponent, \.secondFactorCRTExponent
+        )
+    }
+    
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         try decrypt(data, padding: algorithm.rsaEncryptionPadding)
     }

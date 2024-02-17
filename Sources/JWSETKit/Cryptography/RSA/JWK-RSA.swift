@@ -102,6 +102,7 @@ extension JSONWebRSAPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
+        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
@@ -206,6 +207,15 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
         .init(storage: storage)
     }
     
+    public func validate() throws {
+        try checkRequiredFields(
+            \.modulus, \.exponent,
+            \.firstPrimeFactor, \.secondPrimeFactor,
+            \.privateExponent, \.firstCRTCoefficient,
+            \.firstFactorCRTExponent, \.secondFactorCRTExponent
+        )
+    }
+    
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
 #if canImport(CommonCrypto)
         return try SecKey.create(storage: storage).signature(data, using: algorithm)
@@ -247,6 +257,7 @@ extension JSONWebRSAPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
+        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {

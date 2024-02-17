@@ -43,6 +43,26 @@ extension SecKey: JSONWebKey {
         return result
     }
     
+    public func validate() throws {
+        switch try (keyType, isPrivateKey) {
+        case (.rsa, false):
+            try checkRequiredFields(\.modulus, \.exponent)
+        case (.rsa, true):
+            try checkRequiredFields(
+                \.modulus, \.exponent,
+                \.firstPrimeFactor, \.secondPrimeFactor,
+                \.privateExponent, \.firstCRTCoefficient,
+                \.firstFactorCRTExponent, \.secondFactorCRTExponent
+            )
+        case (.ellipticCurve, false):
+            try checkRequiredFields(\.xCoordinate, \.yCoordinate)
+        case (.ellipticCurve, true):
+            try checkRequiredFields(\.xCoordinate, \.yCoordinate, \.privateKey)
+        default:
+            break
+        }
+    }
+    
     fileprivate static func createPairKey(type: JSONWebKeyType, bits length: Int) throws -> SecKey {
         let keyType: CFString
         switch type {
@@ -288,7 +308,7 @@ extension SecKey: JSONWebDecryptingKey {
     }
 }
 
-extension JSONWebKeyImportable where Self: SecKey {    
+extension JSONWebKeyImportable where Self: SecKey {
     public init(importing key: Data, format: JSONWebKeyFormat) throws {
         switch format {
         case .raw:
@@ -300,6 +320,7 @@ extension JSONWebKeyImportable where Self: SecKey {
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: key)
         }
+        try validate()
     }
 }
 

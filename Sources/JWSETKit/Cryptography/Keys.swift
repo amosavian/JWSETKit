@@ -107,27 +107,23 @@ extension JSONWebKey {
         }
         switch keyType {
         case .rsa:
-            // swiftformat:disable:next redundantSelf
-            guard self.modulus != nil, self.exponent != nil else {
-                throw JSONWebKeyError.keyNotFound
-            }
+            try checkRequiredFields(\.modulus, \.exponent)
         case .ellipticCurve:
-            // swiftformat:disable:next redundantSelf
-            guard self.xCoordinate != nil, self.yCoordinate != nil else {
-                throw JSONWebKeyError.keyNotFound
-            }
+            try checkRequiredFields(\.xCoordinate, \.yCoordinate)
         case .octetKeyPair:
-            // swiftformat:disable:next redundantSelf
-            guard self.xCoordinate != nil else {
-                throw JSONWebKeyError.keyNotFound
-            }
+            try checkRequiredFields(\.xCoordinate)
         case .symmetric:
-            // swiftformat:disable:next redundantSelf
-            guard self.keyValue != nil else {
-                throw JSONWebKeyError.keyNotFound
-            }
+            try checkRequiredFields(\.keyValue)
         default:
             break
+        }
+    }
+    
+    func checkRequiredFields<T>(_ fields: KeyPath<Self, T?>...) throws {
+        for field in fields {
+            if self[keyPath: field] == nil {
+                throw JSONWebKeyError.keyNotFound
+            }
         }
     }
 }
@@ -365,9 +361,9 @@ extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
                 try self.init(storage: SymmetricKey(importing: key, format: .raw).storage)
             }
         case .pkcs8:
-            try self.init(importing: key, format: format, keyType: try PKCS8PrivateKey(derEncoded: key).keyType)
+            try self.init(importing: key, format: format, keyType: PKCS8PrivateKey(derEncoded: key).keyType)
         case .spki:
-            try self.init(importing: key, format: format, keyType: try SubjectPublicKeyInfo(derEncoded: key).keyType)
+            try self.init(importing: key, format: format, keyType: SubjectPublicKeyInfo(derEncoded: key).keyType)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: key)
         }
