@@ -22,7 +22,19 @@ public struct JSONWebKeyEncryptionAlgorithm: JSONWebAlgorithm {
 }
 
 extension JSONWebKeyEncryptionAlgorithm {
-    public typealias DecryptionMutatorHandler = (_ header: JOSEHeader, _ kek: inout any JSONWebDecryptingKey, _ cek: inout Data) throws -> Void
+    public typealias EncryptedKeyHandler = (
+        _ header: inout JOSEHeader,
+        _ keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
+        _ kek: (any JSONWebEncryptingKey)?,
+        _ contentEncryptionAlgorithm: JSONWebContentEncryptionAlgorithm,
+        _ cek: Data
+    ) throws -> Data
+    
+    public typealias DecryptionMutatorHandler = (
+        _ header: JOSEHeader,
+        _ kek: inout any JSONWebDecryptingKey,
+        _ cek: inout Data
+    ) throws -> Void
     
     @ReadWriteLocked
     private static var keyRegistryClasses: [Self: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)] = [
@@ -94,6 +106,16 @@ extension JSONWebKeyEncryptionAlgorithm {
     ]
     
     @ReadWriteLocked
+    private static var encryptedKeyHandlers: [Self: EncryptedKeyHandler] = [
+        .aesGCM128KeyWrap: aesGCMKeyWrapEncryptedKey,
+        .aesGCM192KeyWrap: aesGCMKeyWrapEncryptedKey,
+        .aesGCM256KeyWrap: aesGCMKeyWrapEncryptedKey,
+        .pbes2hmac256: pbesEncryptedKey,
+        .pbes2hmac384: pbesEncryptedKey,
+        .pbes2hmac512: pbesEncryptedKey,
+    ]
+    
+    @ReadWriteLocked
     private static var decryptionMutators: [Self: DecryptionMutatorHandler] = [
         .direct: directDecryptionMutator,
         .aesGCM128KeyWrap: aesgcmDecryptionMutator,
@@ -124,6 +146,11 @@ extension JSONWebKeyEncryptionAlgorithm {
         Self.hashFunctions[self]
     }
     
+    /// Returns handler for encrypting content encryption key.
+    public var encryptedKeyHandler: EncryptedKeyHandler? {
+        Self.encryptedKeyHandlers[self]
+    }
+    
     /// Prepares key encryption key and content encryption before applying in decryption.
     public var decryptionMutator: DecryptionMutatorHandler? {
         Self.decryptionMutators[self]
@@ -143,6 +170,7 @@ extension JSONWebKeyEncryptionAlgorithm {
     ///   - privateKeyClass: Private key class. In case the key is symmetric, it equals to `publicKeyClass`.
     ///   - keyLengthInBits:Key length in bits, if applicable.
     ///   - hashFunction: Hash function of symmetric keys.
+    ///   - encryptedKeyHandler: Encrypting content encryption key.
     ///   - decryptionMutating: Prepares key encryption key and content encryption before applying in decryption.
     public static func register<Public, Private>(
         _ algorithm: Self,
@@ -151,12 +179,14 @@ extension JSONWebKeyEncryptionAlgorithm {
         privateKeyClass: Private.Type,
         keyLengthInBits: Int?,
         hashFunction: (any HashFunction.Type)? = nil,
+        encryptedKeyHandler: EncryptedKeyHandler?,
         decryptionMutating: DecryptionMutatorHandler?
     ) where Public: JSONWebEncryptingKey, Private: JSONWebDecryptingKey {
         keyRegistryClasses[algorithm] = (publicKeyClass, privateKeyClass)
         keyTypes[algorithm] = type
         keyLengths[algorithm] = keyLengthInBits
         hashFunctions[algorithm] = hashFunction
+        encryptedKeyHandlers[algorithm] = encryptedKeyHandler
         decryptionMutators[algorithm] = decryptionMutating
     }
     
@@ -168,6 +198,59 @@ extension JSONWebKeyEncryptionAlgorithm {
             throw JSONWebKeyError.unknownAlgorithm
         }
         return try keyClass.init(algorithm: self)
+    }
+}
+
+extension JSONWebKeyEncryptionAlgorithm {
+    static func standardEncryptdKey(
+        _: inout JOSEHeader,
+        _ keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
+        _ keyEncryptionKey: (any JSONWebEncryptingKey)?,
+        _: JSONWebContentEncryptionAlgorithm,
+        _ cekData: Data
+    ) throws -> Data {
+        guard let kek = keyEncryptionKey else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        return try kek.encrypt(cekData, using: keyEncryptingAlgorithm)
+    }
+    
+    fileprivate static func aesGCMKeyWrapEncryptedKey(
+        _ header: inout JOSEHeader,
+        _ keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
+        _ keyEncryptionKey: (any JSONWebEncryptingKey)?,
+        _: JSONWebContentEncryptionAlgorithm,
+        _ cekData: Data
+    ) throws -> Data {
+        guard let kek = keyEncryptionKey?.keyValue else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        let sealed = try kek.seal(cekData, using: JSONWebContentEncryptionAlgorithm(keyEncryptingAlgorithm.rawValue.dropLast(2)))
+        header.initialVector = sealed.iv
+        header.authenticationTag = sealed.tag
+        return sealed.ciphertext
+    }
+    
+    fileprivate static func pbesEncryptedKey(
+        _ header: inout JOSEHeader,
+        _ keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
+        _ keyEncryptionKey: (any JSONWebEncryptingKey)?,
+        _: JSONWebContentEncryptionAlgorithm,
+        _ cekData: Data
+    ) throws -> Data {
+        guard let password = keyEncryptionKey?.keyValue?.data else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        guard let iterations = header.pbes2Count else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        let salt = Data(keyEncryptingAlgorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
+        let key = try SymmetricKey.pbkdf2(
+            password: password, salt: salt,
+            hashFunction: keyEncryptingAlgorithm.hashFunction.unsafelyUnwrapped,
+            iterations: iterations
+        )
+        return try key.encrypt(cekData, using: keyEncryptingAlgorithm)
     }
 }
 
@@ -263,6 +346,15 @@ extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     static func pbes2hmac(bitCount: Int) -> Self {
         .init(rawValue: "PBES2-HS\(bitCount)+A\(bitCount / 2)KW")
     }
+    
+    // **Key Management**:ECDH-ES using Concat KDF and CEK wrapped with "A128KW".
+    public static var ecdhEsAESKeyWrap128: Self { "ECDH-ES+A128KW" }
+    
+    /// **Key Management**: ECDH-ES using Concat KDF and CEK wrapped with "A192KW".
+    public static var ecdhEsAESKeyWrap192: Self { "ECDH-ES+A192KW" }
+    
+    /// **Key Management**: ECDH-ES using Concat KDF and CEK wrapped with "A256KW".
+    public static var ecdhEsAESKeyWrap256: Self { "ECDH-ES+A256KW" }
     
     /// **Key Management**: No encryption for content key.
     public static var direct: Self { "direct" }

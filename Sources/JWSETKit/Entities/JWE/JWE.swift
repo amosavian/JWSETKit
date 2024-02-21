@@ -119,40 +119,15 @@ public struct JSONWebEncryption: Hashable, Sendable {
         guard let cekData = cek.keyValue?.data else {
             throw JSONWebKeyError.keyNotFound
         }
+        
         switch keyEncryptingAlgorithm {
         case .direct:
             self.recipients = []
-        case .aesGCM128KeyWrap, .aesGCM192KeyWrap, .aesGCM256KeyWrap:
-            guard let kek = keyEncryptionKey?.keyValue else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            let sealed = try kek.seal(cekData, using: JSONWebContentEncryptionAlgorithm(keyEncryptingAlgorithm.rawValue.dropLast(2)))
-            header.initialVector = sealed.iv
-            header.authenticationTag = sealed.tag
-            self.recipients = [.init(encrypedKey: sealed.ciphertext)]
-        case .pbes2hmac256, .pbes2hmac384, .pbes2hmac512:
-            guard let password = keyEncryptionKey?.keyValue?.data else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            guard let iterations = header.pbes2Count else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            let salt = Data(keyEncryptingAlgorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
-            let key = try SymmetricKey.pbkdf2(
-                password: password, salt: salt,
-                hashFunction: keyEncryptingAlgorithm.hashFunction.unsafelyUnwrapped,
-                iterations: iterations
-            )
-            self.recipients = try [
-                .init(encrypedKey: key.encrypt(cekData, using: keyEncryptingAlgorithm)),
-            ]
         default:
-            guard let keyEncryptionKey else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            self.recipients = try [
-                .init(encrypedKey: keyEncryptionKey.encrypt(cekData, using: keyEncryptingAlgorithm)),
-            ]
+            let handler = keyEncryptingAlgorithm.encryptedKeyHandler ?? JSONWebKeyEncryptionAlgorithm.standardEncryptdKey
+            self.recipients = try [.init(
+                encrypedKey: handler(&header, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, cekData)
+            )]
         }
         self.header = try .init(protected: ProtectedJSONWebContainer(value: header))
         let authenticating = self.header.protected.encoded.urlBase64EncodedData() + (additionalAuthenticatedData ?? .init())
