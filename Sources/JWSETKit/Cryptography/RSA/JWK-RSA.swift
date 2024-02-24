@@ -99,10 +99,10 @@ extension JSONWebRSAPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
             self = try .init(derRepresentation: key)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: key)
+            try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
-        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
@@ -110,7 +110,7 @@ extension JSONWebRSAPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
         case .spki:
             return try derRepresentation
         case .jwk:
-            return try JSONEncoder().encode(self)
+            return try jwkRepresentation
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
@@ -254,10 +254,10 @@ extension JSONWebRSAPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
             self = try .init(derRepresentation: key)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: key)
+            try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
-        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
@@ -265,7 +265,7 @@ extension JSONWebRSAPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
         case .pkcs8:
             return try derRepresentation
         case .jwk:
-            return try JSONEncoder().encode(self)
+            return try jwkRepresentation
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

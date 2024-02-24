@@ -113,7 +113,7 @@ public struct JSONWebContentType: StringRepresentable {
 extension JSONWebContentType {
     /// Payload contains a JSON with JSON Web Token (JWT) claims.
     ///
-    /// JWT values are encoded as a series of` base64url`-encoded values (some of which may be the empty
+    /// JWT values are encoded as a series of`base64url`-encoded values (some of which may be the empty
     /// string) separated by period ('.') characters.
     public static let jwt: Self = "JWT"
     

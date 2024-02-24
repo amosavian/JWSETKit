@@ -19,6 +19,7 @@ final class StorageTests: XCTestCase {
         "iss":"joe",
         "exp":1300819380,
         "http://example.com/is_root":true,
+        "website": "https://www.apple.com/",
         "e":"AQAB==",
         "eu":"AQAB",
         "keys": [
@@ -49,6 +50,7 @@ final class StorageTests: XCTestCase {
         XCTAssertEqual(storage.iss, "joe")
         XCTAssertEqual(storage.exp, Date(timeIntervalSince1970: 1_300_819_380))
         XCTAssertEqual(storage["http://example.com/is_root"], true)
+        XCTAssertEqual(storage["website"], "https://www.apple.com/")
         
         let keys = try (storage.keys as [AnyJSONWebKey]).map { try $0.specialized() }
         XCTAssertEqual(keys[0].keyType, .ellipticCurve)

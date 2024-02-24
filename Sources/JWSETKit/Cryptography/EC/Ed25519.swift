@@ -22,10 +22,6 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
         result.xCoordinate = rawRepresentation
         return result.storage
     }
-    
-    public func validate() throws {
-        try checkRequiredFields(\.xCoordinate)
-    }
 }
 
 extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
@@ -41,10 +37,6 @@ extension Curve25519.Signing.PublicKey: CryptoEdKeyPortable {}
 extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init()
-    }
-    
-    public func validate() throws {
-        try checkRequiredFields(\.xCoordinate, \.privateKey)
     }
     
     public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
@@ -64,10 +56,6 @@ extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
         result.xCoordinate = rawRepresentation
         return result.storage
     }
-    
-    public func validate() throws {
-        try checkRequiredFields(\.xCoordinate, \.privateKey)
-    }
 }
 
 extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {}
@@ -75,10 +63,6 @@ extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {}
 extension Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init()
-    }
-    
-    public func validate() throws {
-        try checkRequiredFields(\.xCoordinate, \.privateKey)
     }
 }
 
@@ -107,7 +91,7 @@ extension CryptoEdKeyPortable {
         case .raw:
             return rawRepresentation
         case .jwk:
-            return try JSONEncoder().encode(self)
+            return try jwkRepresentation
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

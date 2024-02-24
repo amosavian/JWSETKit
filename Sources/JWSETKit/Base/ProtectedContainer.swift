@@ -7,6 +7,14 @@
 
 import Foundation
 
+extension JSONEncoder {
+    static var encoder: JSONEncoder {
+        let result = JSONEncoder()
+        result.outputFormatting = [.withoutEscapingSlashes]
+        return result
+    }
+}
+
 /// Data value that must be protected by JWS.
 public protocol ProtectedWebContainer: Hashable, Encodable, Sendable {
     /// Signed data.
@@ -116,7 +124,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
                 return
             }
             do {
-                _protected = try JSONEncoder().encode(newValue)
+                _protected = try JSONEncoder.encoder.encode(newValue)
             } catch {
                 if let emptyValue = try? Container(storage: .init()) {
                     _value = emptyValue
@@ -140,7 +148,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
     /// - Parameter value: Object that will be presented in `base64url` json.
     public init(value: Container) throws {
         self._value = value
-        self._protected = try JSONEncoder().encode(value)
+        self._protected = try JSONEncoder.encoder.encode(value)
     }
     
     public init(from decoder: any Decoder) throws {

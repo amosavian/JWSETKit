@@ -157,7 +157,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
 
 extension String {
     public init<Payload: ProtectedWebContainer>(jws: JSONWebSignature<Payload>) throws {
-        self = try String(String(decoding: JSONEncoder().encode(jws), as: UTF8.self).dropFirst().dropLast())
+        self = try String(String(decoding: JSONEncoder.encoder.encode(jws), as: UTF8.self).dropFirst().dropLast())
     }
 }
 

@@ -50,7 +50,6 @@ extension _RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
-        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
@@ -58,7 +57,7 @@ extension _RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
         case .spki:
             return derRepresentation
         case .jwk:
-            return try JSONEncoder().encode(self)
+            return try jwkRepresentation
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
@@ -85,15 +84,6 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Signing.PrivateKey {
         let der = try RSAHelper.pkcs1Representation(AnyJSONWebKey(storage: storage))
         return try .init(derRepresentation: der)
-    }
-    
-    public func validate() throws {
-        try checkRequiredFields(
-            \.modulus, \.exponent,
-            \.firstPrimeFactor, \.secondPrimeFactor,
-            \.privateExponent, \.firstCRTCoefficient,
-            \.firstFactorCRTExponent, \.secondFactorCRTExponent
-        )
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
@@ -129,7 +119,6 @@ extension _RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
-        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
@@ -137,7 +126,7 @@ extension _RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
         case .pkcs8:
             return pkcs8Representation
         case .jwk:
-            return try JSONEncoder().encode(self)
+            return try jwkRepresentation
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
@@ -195,15 +184,6 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Encryption.PrivateKey {
         let der = try RSAHelper.pkcs1Representation(AnyJSONWebKey(storage: storage))
         return try .init(derRepresentation: der)
-    }
-
-    public func validate() throws {
-        try checkRequiredFields(
-            \.modulus, \.exponent,
-            \.firstPrimeFactor, \.secondPrimeFactor,
-            \.privateExponent, \.firstCRTCoefficient,
-            \.firstFactorCRTExponent, \.secondFactorCRTExponent
-        )
     }
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {

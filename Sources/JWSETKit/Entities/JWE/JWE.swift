@@ -109,10 +109,11 @@ public struct JSONWebEncryption: Hashable, Sendable {
         header.encryptionAlgorithm = contentEncryptionAlgorithm
         
         let plainData: any DataProtocol
-        if let compressor = protected?.compressionAlgorithm?.compressor {
+        if let compressor = header.compressionAlgorithm?.compressor {
             plainData = try compressor.compress(content)
         } else {
             plainData = content
+            header.compressionAlgorithm = nil
         }
         
         let cek = try contentEncryptionKey ?? contentEncryptionAlgorithm.generateRandomKey()
@@ -198,7 +199,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
 
 extension String {
     public init(jwe: JSONWebEncryption) throws {
-        self = try String(String(decoding: JSONEncoder().encode(jwe), as: UTF8.self).dropFirst().dropLast())
+        self = try String(String(decoding: JSONEncoder.encoder.encode(jwe), as: UTF8.self).dropFirst().dropLast())
     }
 }
 

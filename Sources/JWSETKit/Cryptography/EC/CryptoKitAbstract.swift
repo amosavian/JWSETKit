@@ -57,10 +57,6 @@ protocol CryptoECPublicKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
 }
 
 extension CryptoECPublicKeyPortable {
-    public func validate() throws {
-        try checkRequiredFields(\.xCoordinate, \.yCoordinate, \.privateKey)
-    }
-    
     public init(importing key: Data, format: JSONWebKeyFormat) throws {
         switch format {
         case .raw:
@@ -72,7 +68,6 @@ extension CryptoECPublicKeyPortable {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
-        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
@@ -82,7 +77,7 @@ extension CryptoECPublicKeyPortable {
         case .spki:
             return derRepresentation
         case .jwk:
-            return try JSONEncoder().encode(self)
+            return try jwkRepresentation
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
@@ -111,10 +106,6 @@ extension CryptoECPrivateKey {
             throw CryptoKitError.incorrectKeySize
         }
         return try .init(rawRepresentation: privateKey)
-    }
-    
-    public func validate() throws {
-        try checkRequiredFields(\.xCoordinate, \.yCoordinate, \.privateKey)
     }
     
     public func hash(into hasher: inout Hasher) {
@@ -146,7 +137,6 @@ extension CryptoECPrivateKeyPortable {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
-        try validate()
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
@@ -156,7 +146,7 @@ extension CryptoECPrivateKeyPortable {
         case .pkcs8:
             return derRepresentation
         case .jwk:
-            return try JSONEncoder().encode(self)
+            return try jwkRepresentation
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

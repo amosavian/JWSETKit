@@ -175,6 +175,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     
     fileprivate static func cast<T>(value: Any?, as type: T.Type) -> T? where T: Encodable {
         guard let value = value else { return nil }
+        if let value = value as? T { return value }
         switch T.self {
         case let type as any JSONWebFieldDecodable.Type:
             // Some values are encoded differently in JOSE than conventional JSON encoding.

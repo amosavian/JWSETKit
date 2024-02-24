@@ -77,6 +77,7 @@ extension JSONWebECPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
             try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.spkiCurve, keyFinder: Self.singingType(for:_:))
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: key)
+            try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

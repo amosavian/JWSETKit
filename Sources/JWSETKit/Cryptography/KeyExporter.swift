@@ -73,6 +73,14 @@ public protocol JSONWebKeyExportable: JSONWebKey {
     func exportKey(format: JSONWebKeyFormat) throws -> Data
 }
 
+extension JSONWebKeyExportable {
+    var jwkRepresentation: Data {
+        get throws {
+            return try JSONEncoder.encoder.encode(self)
+        }
+    }
+}
+
 public protocol JSONWebKeySymmetricPortable: JSONWebKeyImportable, JSONWebKeyExportable {
     init(_ key: SymmetricKey) throws
 }
@@ -98,7 +106,7 @@ extension JSONWebKeySymmetricPortable {
             }
             return data
         case .jwk:
-            return try JSONEncoder().encode(self)
+            return try jwkRepresentation
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

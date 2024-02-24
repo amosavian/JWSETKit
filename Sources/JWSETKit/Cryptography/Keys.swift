@@ -366,6 +366,7 @@ extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
             try self.init(importing: key, format: format, keyType: SubjectPublicKeyInfo(derEncoded: key).keyType)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: key)
+            try validate()
         }
     }
     
@@ -374,7 +375,7 @@ extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
             throw JSONWebKeyError.invalidKeyFormat
         }
         
-        return try exportKey(format: format)
+        return try key.exportKey(format: format)
     }
 }
 
