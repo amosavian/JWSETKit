@@ -29,7 +29,7 @@ final class JWETests: XCTestCase {
         1860ppamavo35UgoRdbYaBcoh9QcfylQr66oc6vFWXRcZ_ZT2LawVCWTIy3brGPi\
         6UklfCpIMfIjf7iGdXKHzg
         """))
-        XCTAssertEqual(jwe.sealed.iv, Data(urlBase64Encoded: "48V1_ALb6US04U3b"))
+        XCTAssertEqual(jwe.sealed.nonce, Data(urlBase64Encoded: "48V1_ALb6US04U3b"))
         XCTAssertEqual(jwe.sealed.ciphertext, Data(urlBase64Encoded: """
         5eym8TW_c8SuK0ltJ3rpYIzOeDQz7TALvtu6UG9oMo4vpzs9tX_EFShS8iB7j6ji\
         SdiwkIr3ajwQzaBtQD_A
@@ -68,6 +68,19 @@ final class JWETests: XCTestCase {
         
         let data = try jwe.decrypt(using: AESKW_CBC.kek)
         XCTAssertEqual(AESKW_CBC.plainData, data)
+    }
+    
+    func testEncrypt_Direct() throws {
+        let jwe = try JSONWebEncryption(
+            content: Direct.plainData,
+            keyEncryptingAlgorithm: .direct,
+            keyEncryptionKey: nil,
+            contentEncryptionAlgorithm: .aesEncryptionGCM128,
+            contentEncryptionKey: Direct.kek.publicKey
+        )
+        
+        let data = try jwe.decrypt(using: Direct.kek)
+        XCTAssertEqual(Direct.plainData, data)
     }
     
     func testEncrypt_RSA_OAEP_AES_GCM() throws {
@@ -145,18 +158,81 @@ final class JWETests: XCTestCase {
         XCTAssertEqual(AESKW_CBC.plainData, data)
     }
 
-    func testEncryptWithCEK_AESKW_CBC() throws {
+    func testEncrypt_AESGCMKW_CBC() throws {
         let jwe = try JSONWebEncryption(
-            content: AESKW_CBC.plainData,
-            keyEncryptingAlgorithm: .aesKeyWrap256,
-            keyEncryptionKey: AESKW_CBC.kek.publicKey,
+            content: AESGCMKW_CBC.plainData,
+            keyEncryptingAlgorithm: .aesGCM128KeyWrap,
+            keyEncryptionKey: AESGCMKW_CBC.kek.publicKey,
             contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512,
-            contentEncryptionKey: AESKW_CBC.cek
+            contentEncryptionKey: AESGCMKW_CBC.cek
         )
         
-        let data = try jwe.decrypt(using: AESKW_CBC.kek)
-        XCTAssertEqual(AESKW_CBC.plainData, data)
+        let data = try jwe.decrypt(using: AESGCMKW_CBC.kek)
+        XCTAssertEqual(AESGCMKW_CBC.plainData, data)
     }
+    
+    func testEncrypt_PBES2_GCM() throws {
+        let jwe = try JSONWebEncryption(
+            content: PBES2_GCM.plainData,
+            keyEncryptingAlgorithm: .pbes2hmac256,
+            keyEncryptionKey: PBES2_GCM.kek.publicKey,
+            contentEncryptionAlgorithm: .aesEncryptionGCM128,
+            contentEncryptionKey: PBES2_GCM.cek
+        )
+        
+        let data = try jwe.decrypt(using: PBES2_GCM.kek)
+        XCTAssertEqual(PBES2_GCM.plainData, data)
+    }
+    
+    func testEncrypt_ECDH_ES_CBC() throws {
+        let jwe = try JSONWebEncryption(
+            content: ECDH_ES.plainData,
+            keyEncryptingAlgorithm: .ecdhEphemeralStatic,
+            keyEncryptionKey: ECDH_ES.kek,
+            contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512
+        )
+        
+        let data = try jwe.decrypt(using: ECDH_ES.kek)
+        XCTAssertEqual(ECDH_ES.plainData, data)
+    }
+    
+    func testEncrypt_ECDH_ES_GCM() throws {
+        let jwe = try JSONWebEncryption(
+            content: ECDH_ES.plainData,
+            keyEncryptingAlgorithm: .ecdhEphemeralStatic,
+            keyEncryptionKey: ECDH_ES.kek,
+            contentEncryptionAlgorithm: .aesEncryptionGCM256
+        )
+        
+        let data = try jwe.decrypt(using: ECDH_ES.kek)
+        XCTAssertEqual(ECDH_ES.plainData, data)
+    }
+    
+    func testEncrypt_ECDH_ES_KW_CBC() throws {
+        let jwe = try JSONWebEncryption(
+            content: ECDH_ES_KW.plainData,
+            keyEncryptingAlgorithm: .ecdhEphemeralStaticAESKeyWrap128,
+            keyEncryptionKey: ECDH_ES_KW.kek,
+            contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512,
+            contentEncryptionKey: ECDH_ES_KW.cek
+        )
+        
+        let data = try jwe.decrypt(using: ECDH_ES_KW.kek)
+        XCTAssertEqual(ECDH_ES_KW.plainData, data)
+    }
+}
+
+enum Direct {
+    static let jweString = """
+    """
+    
+    static let kek = try! JSONWebKeyAESGCM(.init(
+        data: Data(urlBase64Encoded: "GawgguFyGrWKav7AX4VKUg")!))
+    
+    static let plainData = Data([
+        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
+        112, 114, 111, 115, 112, 101, 114, 46,
+    ])
 }
 
 enum RSA_OAEP_GCM {
@@ -256,6 +332,91 @@ enum AESKW_CBC {
     
     static let kek = try! JSONWebKeyAESKW(.init(
         data: Data(urlBase64Encoded: "GawgguFyGrWKav7AX4VKUg")!))
+    
+    static let cek = SymmetricKey(data: [
+        4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250, 63, 170, 106,
+        206, 107, 124, 212, 45, 111, 107, 9, 219, 200, 177, 0, 240, 143, 156,
+        44, 207,
+    ])
+    
+    static let plainData = Data([
+        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
+        112, 114, 111, 115, 112, 101, 114, 46,
+    ])
+}
+
+enum AESGCMKW_CBC {
+    static let jweString = """
+    """
+    
+    static let kek = try! JSONWebKeyAESGCM(.init(
+        data: Data(urlBase64Encoded: "GawgguFyGrWKav7AX4VKUg")!))
+    
+    static let cek = SymmetricKey(data: [
+        4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250, 63, 170, 106,
+        206, 107, 124, 212, 45, 111, 107, 9, 219, 200, 177, 0, 240, 143, 156,
+        44, 207,
+    ])
+    
+    static let plainData = Data([
+        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
+        112, 114, 111, 115, 112, 101, 114, 46,
+    ])
+}
+
+enum PBES2_GCM {
+    static let jweString = """
+    """
+    
+    static let kek = SymmetricKey(data: Data("entrap_oar".utf8))
+    
+    static let cek = SymmetricKey(data: [
+        4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250, 63, 170, 106,
+        206, 107, 124, 212, 45, 111, 107, 9, 219, 200, 177, 0, 240, 143, 156,
+        44, 207,
+    ])
+    
+    static let plainData = Data([
+        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
+        112, 114, 111, 115, 112, 101, 114, 46,
+    ])
+}
+
+enum ECDH_ES {
+    static let jweString = """
+    """
+    
+    static let kek = try! JSONWebECPrivateKey(
+        importing: .init(
+    """
+         {"kty":"EC",
+          "crv":"P-256",
+          "x":"gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
+          "y":"SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
+          "d":"0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo"
+         }
+    """.utf8), format: .jwk)
+    
+    static let plainData = Data([
+        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
+        112, 114, 111, 115, 112, 101, 114, 46,
+    ])
+}
+
+enum ECDH_ES_KW {
+    static let jweString = """
+    """
+    
+    static let kek = try! JSONWebECPrivateKey(
+        importing: .init(
+    """
+         {"kty":"EC",
+          "crv":"P-256",
+          "x":"gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
+          "y":"SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
+          "d":"0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo"
+         }
+    """.utf8), format: .jwk)
     
     static let cek = SymmetricKey(data: [
         4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250, 63, 170, 106,

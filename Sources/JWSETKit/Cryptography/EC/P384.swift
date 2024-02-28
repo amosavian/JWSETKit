@@ -16,6 +16,10 @@ extension P384.Signing.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p384 }
 }
 
+extension P384.KeyAgreement.PublicKey: CryptoECPublicKey {
+    static var curve: JSONWebKeyCurve { .p384 }
+}
+
 extension P384.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let signature = try P384.Signing.ECDSASignature(rawRepresentation: signature)
@@ -27,9 +31,11 @@ extension P384.Signing.PublicKey: JSONWebValidatingKey {
 
 extension P384.Signing.PublicKey: CryptoECPublicKeyPortable {}
 
+extension P384.KeyAgreement.PublicKey: CryptoECPublicKeyPortable {}
+
 extension P384.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
-        self.init(compactRepresentable: true)
+        self.init(compactRepresentable: false)
     }
     
     public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
@@ -37,4 +43,12 @@ extension P384.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     }
 }
 
+extension P384.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+    public init(algorithm _: any JSONWebAlgorithm) throws {
+        self.init(compactRepresentable: false)
+    }
+}
+
 extension P384.Signing.PrivateKey: CryptoECPrivateKeyPortable {}
+
+extension P384.KeyAgreement.PrivateKey: CryptoECPrivateKeyPortable {}

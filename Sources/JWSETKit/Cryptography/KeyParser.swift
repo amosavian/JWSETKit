@@ -26,57 +26,61 @@ extension AnyJSONWebKey {
     ///   - `JSONWebKeyAESGCM` if key type is `oct` and algorithm is `AEDGCM256/384/512`.
     ///   - `CryptKit.Symmetric` if key type is `oct` and no algorithm is present.
     ///   - `JSONWebCertificateChain` if no key type is present but `x5c` has certificates.
-    public func specialized() throws -> any JSONWebKey {
-        // swiftformat:disable:next redundantSelf
-        guard let keyType = self.keyType else {
-            throw JSONWebKeyError.unknownAlgorithm
-        }
-        
-        // swiftformat:disable:next redundantSelf
-        let curve = self.curve
-        // swiftformat:disable:next redundantSelf
-        switch (keyType, self.algorithm) {
-        case (.ellipticCurve, _) where curve != nil, (.octetKeyPair, _) where curve != nil:
+    public func specialized() -> any JSONWebKey {
+        do {
             // swiftformat:disable:next redundantSelf
-            if self.privateKey != nil {
-                return try JSONWebECPrivateKey.create(storage: storage)
-            } else {
-                return try JSONWebECPublicKey.create(storage: storage)
+            guard let keyType = self.keyType else {
+                throw JSONWebKeyError.unknownAlgorithm
             }
-        case (.rsa, _):
+            
             // swiftformat:disable:next redundantSelf
-            if self.privateExponent != nil {
-                return try JSONWebRSAPrivateKey.create(storage: storage)
-            } else {
-                return try JSONWebRSAPublicKey.create(storage: storage)
-            }
-        case (.symmetric, .aesEncryptionGCM128),
-             (.symmetric, .aesEncryptionGCM192),
-             (.symmetric, .aesEncryptionGCM256):
-            return try JSONWebKeyAESGCM.create(storage: storage)
-        case (.symmetric, .aesKeyWrap128),
-             (.symmetric, .aesKeyWrap192),
-             (.symmetric, .aesKeyWrap256):
-            return try JSONWebKeyAESKW.create(storage: storage)
-        case (.symmetric, .aesEncryptionCBC128SHA256),
-             (.symmetric, .aesEncryptionCBC192SHA384),
-             (.symmetric, .aesEncryptionCBC256SHA512):
-            return try JSONWebKeyAESCBCHMAC.create(storage: storage)
-        case (.symmetric, .hmacSHA256):
-            return try JSONWebKeyHMAC<SHA256>.create(storage: storage)
-        case (.symmetric, .hmacSHA384):
-            return try JSONWebKeyHMAC<SHA384>.create(storage: storage)
-        case (.symmetric, .hmacSHA512):
-            return try JSONWebKeyHMAC<SHA512>.create(storage: storage)
-        case (.symmetric, _):
-            return try SymmetricKey.create(storage: storage)
-        default:
+            let curve = self.curve
             // swiftformat:disable:next redundantSelf
-            if !self.certificateChain.isEmpty {
-                return try JSONWebCertificateChain.create(storage: storage)
-            } else {
-                throw JSONWebKeyError.unknownKeyType
+            switch (keyType, self.algorithm) {
+            case (.ellipticCurve, _) where curve != nil, (.octetKeyPair, _) where curve != nil:
+                // swiftformat:disable:next redundantSelf
+                if self.privateKey != nil {
+                    return try JSONWebECPrivateKey.create(storage: storage)
+                } else {
+                    return try JSONWebECPublicKey.create(storage: storage)
+                }
+            case (.rsa, _):
+                // swiftformat:disable:next redundantSelf
+                if self.privateExponent != nil {
+                    return try JSONWebRSAPrivateKey.create(storage: storage)
+                } else {
+                    return try JSONWebRSAPublicKey.create(storage: storage)
+                }
+            case (.symmetric, .aesEncryptionGCM128),
+                 (.symmetric, .aesEncryptionGCM192),
+                 (.symmetric, .aesEncryptionGCM256):
+                return try JSONWebKeyAESGCM.create(storage: storage)
+            case (.symmetric, .aesKeyWrap128),
+                 (.symmetric, .aesKeyWrap192),
+                 (.symmetric, .aesKeyWrap256):
+                return try JSONWebKeyAESKW.create(storage: storage)
+            case (.symmetric, .aesEncryptionCBC128SHA256),
+                 (.symmetric, .aesEncryptionCBC192SHA384),
+                 (.symmetric, .aesEncryptionCBC256SHA512):
+                return try JSONWebKeyAESCBCHMAC.create(storage: storage)
+            case (.symmetric, .hmacSHA256):
+                return try JSONWebKeyHMAC<SHA256>.create(storage: storage)
+            case (.symmetric, .hmacSHA384):
+                return try JSONWebKeyHMAC<SHA384>.create(storage: storage)
+            case (.symmetric, .hmacSHA512):
+                return try JSONWebKeyHMAC<SHA512>.create(storage: storage)
+            case (.symmetric, _):
+                return try SymmetricKey.create(storage: storage)
+            default:
+                // swiftformat:disable:next redundantSelf
+                if !self.certificateChain.isEmpty {
+                    return try JSONWebCertificateChain.create(storage: storage)
+                } else {
+                    throw JSONWebKeyError.unknownKeyType
+                }
             }
+        } catch {
+            return self
         }
     }
     
@@ -86,7 +90,7 @@ extension AnyJSONWebKey {
     /// - Returns: Related specific key object.
     public static func deserialize(_ data: Data) throws -> any JSONWebKey {
         let webKey = try JSONDecoder().decode(AnyJSONWebKey.self, from: data)
-        return try webKey.specialized()
+        return webKey.specialized()
     }
 }
 

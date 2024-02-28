@@ -14,8 +14,10 @@ import Crypto
 
 /// A container for AES ciphers, e.g. AES-GCM, AES-CBC-HMAC, etc.
 public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Sendable {
+    public typealias Nonce = Data
+    
     /// The nonce used to encrypt the data.
-    public let iv: Data
+    public let nonce: Nonce
     
     /// The encrypted data.
     public let ciphertext: Data
@@ -24,7 +26,7 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     public let tag: Data
     
     public var regions: [Data] {
-        [iv, ciphertext, tag].map { $0 }
+        [nonce, ciphertext, tag].map { $0 }
     }
     
     /// A combined element composed of the nonce, encrypted data, and authentication tag.
@@ -37,14 +39,14 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     }
     
     public var endIndex: Int {
-        iv.count + ciphertext.count + tag.count
+        nonce.count + ciphertext.count + tag.count
     }
     
     public subscript(position: Int) -> UInt8 {
-        if position < iv.count {
-            return iv[position]
-        } else if position < iv.count + ciphertext.count {
-            return ciphertext[position - iv.count]
+        if position < nonce.count {
+            return nonce[position]
+        } else if position < nonce.count + ciphertext.count {
+            return ciphertext[position - nonce.count]
         } else {
             return tag[position]
         }
@@ -57,13 +59,13 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     /// Creates a sealed box from the given tag, nonce, and ciphertext.
     ///
     /// - Parameters:
-    ///   - iv: The nonce.
+    ///   - nonce: The nonce or initial vector.
     ///   - ciphertext: The encrypted data.
     ///   - tag: The authentication tag.
-    public init(iv: Data, ciphertext: Data, tag: Data) {
-        self.iv = iv
-        self.ciphertext = ciphertext
-        self.tag = tag
+    public init<C: DataProtocol, T: DataProtocol>(nonce: Nonce, ciphertext: C, tag: T) {
+        self.nonce = nonce
+        self.ciphertext = .init(ciphertext)
+        self.tag = .init(tag)
     }
     
     /// Creates a sealed box from the given AES sealed box.
@@ -71,7 +73,7 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     /// - Parameters:
     ///   - sealedBox: Container for your data.
     public init(_ sealedBox: AES.GCM.SealedBox) {
-        self.iv = Data(sealedBox.nonce)
+        self.nonce = Data(sealedBox.nonce)
         self.ciphertext = sealedBox.ciphertext
         self.tag = sealedBox.tag
     }
@@ -80,17 +82,17 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     ///
     /// - Parameters:
     ///   - sealedBox: Container for your data.
-    public init<D>(data: D, ivLength: Int, tagLength: Int) throws where D: DataProtocol {
-        guard ivLength > 0, tagLength > 0, data.count >= ivLength + tagLength else {
+    public init<D>(data: D, nonceLength: Int, tagLength: Int) throws where D: DataProtocol {
+        guard nonceLength > 0, tagLength > 0, data.count >= nonceLength + tagLength else {
             throw CryptoKitError.incorrectParameterSize
         }
-        self.iv = Data(data.prefix(ivLength))
-        self.ciphertext = Data(data.dropFirst(ivLength).dropLast(tagLength))
+        self.nonce = Data(data.prefix(nonceLength))
+        self.ciphertext = Data(data.dropFirst(nonceLength).dropLast(tagLength))
         self.tag = Data(data.suffix(tagLength))
     }
     
     public static func == (lhs: SealedData, rhs: SealedData) -> Bool {
-        lhs.iv == rhs.iv && lhs.ciphertext == rhs.ciphertext && lhs.tag == rhs.tag
+        lhs.nonce == rhs.nonce && lhs.ciphertext == rhs.ciphertext && lhs.tag == rhs.tag
     }
 }
 
@@ -101,7 +103,7 @@ extension AES.GCM.SealedBox {
     ///   - sealedBox: Container for your data.
     public init(_ sealedData: SealedData) throws {
         self = try .init(
-            nonce: .init(data: sealedData.iv),
+            nonce: .init(data: sealedData.nonce),
             ciphertext: sealedData.ciphertext,
             tag: sealedData.tag
         )

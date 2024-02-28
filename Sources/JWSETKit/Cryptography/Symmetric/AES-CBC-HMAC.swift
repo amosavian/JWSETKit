@@ -107,20 +107,20 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
 #endif
         let authenticated = authenticating.map { Data($0) } ?? .init()
         let tag = try hmac(authenticated + iv + ciphertext + authenticated.cbcTagLengthOctetHexData())
-        return .init(iv: iv, ciphertext: ciphertext, tag: tag.prefix(tagLength))
+        return .init(nonce: iv, ciphertext: ciphertext, tag: tag.prefix(tagLength))
     }
     
     public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using _: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {
         let authenticated = authenticating.map { Data($0) } ?? .init()
-        let tagData = authenticated + Data(data.iv) + data.ciphertext + authenticated.cbcTagLengthOctetHexData()
+        let tagData = authenticated + Data(data.nonce) + data.ciphertext + authenticated.cbcTagLengthOctetHexData()
         guard try data.tag == hmac(tagData).prefix(tagLength) else {
             throw CryptoKitError.authenticationFailure
         }
         
 #if canImport(CommonCrypto)
-        return try aesSymmetricKey.ccCrypt(operation: .aesCBC(decrypt: true), iv: data.iv, data: data.ciphertext)
+        return try aesSymmetricKey.ccCrypt(operation: .aesCBC(decrypt: true), iv: data.nonce, data: data.ciphertext)
 #else
-        return try AES._CBC.decrypt(data.ciphertext, using: aesSymmetricKey, iv: .init(ivBytes: data.iv))
+        return try AES._CBC.decrypt(data.ciphertext, using: aesSymmetricKey, iv: .init(ivBytes: data.nonce))
 #endif
     }
     
@@ -129,7 +129,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
     }
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        try open(.init(data: data, ivLength: ivLength, tagLength: tagLength), using: algorithm)
+        try open(.init(data: data, nonceLength: ivLength, tagLength: tagLength), using: algorithm)
     }
     
     private func hmac(_ data: Data) throws -> Data {

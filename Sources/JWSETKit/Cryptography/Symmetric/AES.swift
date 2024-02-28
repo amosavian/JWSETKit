@@ -80,12 +80,12 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, JSONWebSym
     }
     
     public func encrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        try AES.GCM.open(.init(combined: data), using: symmetricKey)
+        let sealed = try AES.GCM.seal(data, using: symmetricKey)
+        return sealed.combined ?? sealed.ciphertext
     }
     
     public func decrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        let sealed = try AES.GCM.seal(data, using: symmetricKey)
-        return sealed.combined ?? sealed.ciphertext
+        try AES.GCM.open(.init(combined: data), using: symmetricKey)
     }
 }
 

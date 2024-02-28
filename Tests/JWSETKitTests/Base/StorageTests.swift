@@ -52,7 +52,7 @@ final class StorageTests: XCTestCase {
         XCTAssertEqual(storage["http://example.com/is_root"], true)
         XCTAssertEqual(storage["website"], "https://www.apple.com/")
         
-        let keys = try (storage.keys as [AnyJSONWebKey]).map { try $0.specialized() }
+        let keys = (storage.keys as [AnyJSONWebKey]).map { $0.specialized() }
         XCTAssertEqual(keys[0].keyType, .ellipticCurve)
         XCTAssertEqual(
             try P256.Signing.PublicKey.create(storage: keys[0].storage).rawRepresentation,

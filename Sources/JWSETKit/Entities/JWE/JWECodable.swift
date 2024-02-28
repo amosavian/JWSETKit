@@ -89,7 +89,7 @@ extension JSONWebEncryption: Codable {
         let iv = sections[2]
         let ciphertext = sections[3]
         let tag = sections[4]
-        self.sealed = .init(iv: iv ?? .init(), ciphertext: ciphertext ?? .init(), tag: tag ?? .init())
+        self.sealed = .init(nonce: iv ?? .init(), ciphertext: ciphertext ?? .init(), tag: tag ?? .init())
     }
     
     private init(object decoder: any Decoder) throws {
@@ -106,7 +106,7 @@ extension JSONWebEncryption: Codable {
         let iv = try Data(urlBase64Encoded: container.decode(String.self, forKey: .iv))
         let ciphertext = try Data(urlBase64Encoded: container.decode(String.self, forKey: .ciphertext))
         let tag = try Data(urlBase64Encoded: container.decode(String.self, forKey: .tag))
-        self.sealed = .init(iv: iv ?? .init(), ciphertext: ciphertext ?? .init(), tag: tag ?? .init())
+        self.sealed = .init(nonce: iv ?? .init(), ciphertext: ciphertext ?? .init(), tag: tag ?? .init())
     }
     
     public init(from decoder: any Decoder) throws {
@@ -122,7 +122,7 @@ extension JSONWebEncryption: Codable {
         let value = [
             header.protected.encoded,
             encryptedKey ?? .init(),
-            sealed.iv,
+            sealed.nonce,
             sealed.ciphertext,
             sealed.tag,
         ]
@@ -136,7 +136,7 @@ extension JSONWebEncryption: Codable {
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encode(recipients, forKey: .recipients)
         try container.encodeIfPresent(additionalAuthenticatedData, forKey: .aad)
-        try container.encode(sealed.iv, forKey: .iv)
+        try container.encode(sealed.nonce, forKey: .iv)
         try container.encode(sealed.ciphertext, forKey: .ciphertext)
         try container.encode(sealed.tag, forKey: .tag)
     }
@@ -146,7 +146,7 @@ extension JSONWebEncryption: Codable {
         try recipients.first?.encode(to: encoder)
         var container = encoder.container(keyedBy: CodingKeys.self)
         try container.encodeIfPresent(additionalAuthenticatedData, forKey: .aad)
-        try container.encode(sealed.iv, forKey: .iv)
+        try container.encode(sealed.nonce, forKey: .iv)
         try container.encode(sealed.ciphertext, forKey: .ciphertext)
         try container.encode(sealed.tag, forKey: .tag)
     }

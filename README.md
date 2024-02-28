@@ -101,10 +101,10 @@ For detailed usage and API documentation, check [the documentation][docs].
 | A192KW             | ✅ | ✅ |
 | A256KW             | ✅ | ✅ |
 | dir                | ✅ | ✅ |
-| ECDH-ES            | ❌ | ❌ |
-| ECDH-ES+A128KW     | ❌ | ❌ |
-| ECDH-ES+A192KW     | ❌ | ❌ |
-| ECDH-ES+A256KW     | ❌ | ❌ |
+| ECDH-ES            | ✅ | ❌ |
+| ECDH-ES+A128KW     | ✅ | ❌ |
+| ECDH-ES+A192KW     | ✅ | ❌ |
+| ECDH-ES+A256KW     | ✅ | ❌ |
 | A128GCMKW          | ✅ | ❌ |
 | A192GCMKW          | ✅ | ❌ |
 | A256GCMKW          | ✅ | ❌ |

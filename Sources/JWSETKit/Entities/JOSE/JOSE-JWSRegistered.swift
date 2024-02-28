@@ -184,7 +184,7 @@ extension JOSEHeader {
     public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, (any JSONWebKey)?>) -> (any JSONWebKey)? {
         get {
             let key: AnyJSONWebKey? = storage[stringKey(keyPath)]
-            return (try? key?.specialized()) ?? key
+            return (key?.specialized()) ?? key
         }
         set {
             storage[stringKey(keyPath)] = newValue.map(AnyJSONWebKey.init)

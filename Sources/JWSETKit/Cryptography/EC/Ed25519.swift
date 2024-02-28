@@ -24,28 +24,6 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
     }
 }
 
-extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
-    public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        if !isValidSignature(signature, for: data) {
-            throw CryptoKitError.authenticationFailure
-        }
-    }
-}
-
-extension Curve25519.Signing.PublicKey: CryptoEdKeyPortable {}
-
-extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
-    public init(algorithm _: any JSONWebAlgorithm) throws {
-        self.init()
-    }
-    
-    public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
-        try signature(for: data)
-    }
-}
-
-extension Curve25519.Signing.PrivateKey: CryptoEdKeyPortable {}
-
 extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .x25519 }
     
@@ -58,13 +36,35 @@ extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
     }
 }
 
+extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        if !isValidSignature(signature, for: data) {
+            throw CryptoKitError.authenticationFailure
+        }
+    }
+}
+
+extension Curve25519.Signing.PublicKey: CryptoEdKeyPortable {}
+
 extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {}
+
+extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+    public init(algorithm _: any JSONWebAlgorithm) throws {
+        self.init()
+    }
+    
+    public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
+        try signature(for: data)
+    }
+}
 
 extension Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init()
     }
 }
+
+extension Curve25519.Signing.PrivateKey: CryptoEdKeyPortable {}
 
 extension Curve25519.KeyAgreement.PrivateKey: CryptoEdKeyPortable {}
 

@@ -45,7 +45,7 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
     /// the minimum JWK parameters necessary to represent the key;
     /// other JWK parameters included can be checked for consistency and honored,
     /// or they can be ignored.
-    public var ephemeralPublicKey: (any JSONWebKey)?
+    public var ephemeralPublicKey: AnyJSONWebKey?
     
     /// The "`apu`" (agreement PartyUInfo) value for key agreement algorithms
     /// using it (such as "`ECDH-ES`"), represented as a `base64url`-encoded string.

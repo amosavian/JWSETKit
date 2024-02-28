@@ -371,7 +371,7 @@ extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
-        guard let key = try specialized() as? any JSONWebKeyExportable else {
+        guard let key = specialized() as? any JSONWebKeyExportable else {
             throw JSONWebKeyError.invalidKeyFormat
         }
         
@@ -405,7 +405,7 @@ public struct JSONWebKeySet: Codable, Hashable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let keys = try container.decode([AnyJSONWebKey].self, forKey: .keys)
-        self.keys = keys.map { (try? $0.specialized()) ?? $0 }
+        self.keys = keys.map { $0.specialized() }
     }
     
     public func encode(to encoder: any Encoder) throws {

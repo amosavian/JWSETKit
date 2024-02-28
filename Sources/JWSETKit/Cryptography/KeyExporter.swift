@@ -76,7 +76,7 @@ public protocol JSONWebKeyExportable: JSONWebKey {
 extension JSONWebKeyExportable {
     var jwkRepresentation: Data {
         get throws {
-            return try JSONEncoder.encoder.encode(self)
+            try JSONEncoder.encoder.encode(self)
         }
     }
 }

@@ -16,6 +16,10 @@ extension P256.Signing.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p256 }
 }
 
+extension P256.KeyAgreement.PublicKey: CryptoECPublicKey {
+    static var curve: JSONWebKeyCurve { .p256 }
+}
+
 extension P256.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let signature = try P256.Signing.ECDSASignature(rawRepresentation: signature)
@@ -27,9 +31,11 @@ extension P256.Signing.PublicKey: JSONWebValidatingKey {
 
 extension P256.Signing.PublicKey: CryptoECPublicKeyPortable {}
 
+extension P256.KeyAgreement.PublicKey: CryptoECPublicKeyPortable {}
+
 extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
-        self.init(compactRepresentable: true)
+        self.init(compactRepresentable: false)
     }
     
     public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
@@ -37,7 +43,15 @@ extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     }
 }
 
+extension P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+    public init(algorithm _: any JSONWebAlgorithm) throws {
+        self.init(compactRepresentable: false)
+    }
+}
+
 extension P256.Signing.PrivateKey: CryptoECPrivateKeyPortable {}
+
+extension P256.KeyAgreement.PrivateKey: CryptoECPrivateKeyPortable {}
 
 #if canImport(Darwin)
 extension SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
