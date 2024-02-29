@@ -222,17 +222,25 @@ final class JWETests: XCTestCase {
     }
 }
 
+private let key128 = SymmetricKey(data: Data(urlBase64Encoded: "GawgguFyGrWKav7AX4VKUg").unsafelyUnwrapped)
+private let key256 = SymmetricKey(data: [
+    177, 161, 244, 128, 84, 143, 225, 115, 63, 180, 3, 255, 107, 154,
+    212, 246, 138, 7, 110, 91, 112, 46, 34, 105, 47, 130, 203, 46, 122,
+    234, 64, 252,
+])
+
+private let shortRandomBytes = Data([
+    76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
+    112, 114, 111, 115, 112, 101, 114, 46,
+])
+
 enum Direct {
     static let jweString = """
     """
     
-    static let kek = try! JSONWebKeyAESGCM(.init(
-        data: Data(urlBase64Encoded: "GawgguFyGrWKav7AX4VKUg")!))
+    static let kek = try! JSONWebKeyAESGCM(key128)
     
-    static let plainData = Data([
-        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
-        112, 114, 111, 115, 112, 101, 114, 46,
-    ])
+    static let plainData = shortRandomBytes
 }
 
 enum RSA_OAEP_GCM {
@@ -265,11 +273,7 @@ enum RSA_OAEP_GCM {
         """.utf8
     ), format: .jwk)
     
-    static let cek = SymmetricKey(data: [
-        177, 161, 244, 128, 84, 143, 225, 115, 63, 180, 3, 255, 107, 154,
-        212, 246, 138, 7, 110, 91, 112, 46, 34, 105, 47, 130, 203, 46, 122,
-        234, 64, 252,
-    ])
+    static let cek = key256
     
     static let plainData = Data([
         84, 104, 101, 32, 116, 114, 117, 101, 32, 115, 105, 103, 110, 32,
@@ -315,10 +319,7 @@ enum RSA_PKCS1_5_CBC {
         44, 207,
     ])
     
-    static let plainData = Data([
-        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
-        112, 114, 111, 115, 112, 101, 114, 46,
-    ])
+    static let plainData = shortRandomBytes
 }
 
 enum AESKW_CBC {
@@ -330,8 +331,7 @@ enum AESKW_CBC {
     U0m_YmjN04DJvceFICbCVQ
     """
     
-    static let kek = try! JSONWebKeyAESKW(.init(
-        data: Data(urlBase64Encoded: "GawgguFyGrWKav7AX4VKUg")!))
+    static let kek = try! JSONWebKeyAESKW(key128)
     
     static let cek = SymmetricKey(data: [
         4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250, 63, 170, 106,
@@ -339,29 +339,18 @@ enum AESKW_CBC {
         44, 207,
     ])
     
-    static let plainData = Data([
-        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
-        112, 114, 111, 115, 112, 101, 114, 46,
-    ])
+    static let plainData = shortRandomBytes
 }
 
 enum AESGCMKW_CBC {
     static let jweString = """
     """
     
-    static let kek = try! JSONWebKeyAESGCM(.init(
-        data: Data(urlBase64Encoded: "GawgguFyGrWKav7AX4VKUg")!))
+    static let kek = try! JSONWebKeyAESGCM(key128)
     
-    static let cek = SymmetricKey(data: [
-        4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250, 63, 170, 106,
-        206, 107, 124, 212, 45, 111, 107, 9, 219, 200, 177, 0, 240, 143, 156,
-        44, 207,
-    ])
+    static let cek = key256
     
-    static let plainData = Data([
-        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
-        112, 114, 111, 115, 112, 101, 114, 46,
-    ])
+    static let plainData = shortRandomBytes
 }
 
 enum PBES2_GCM {
@@ -370,16 +359,9 @@ enum PBES2_GCM {
     
     static let kek = SymmetricKey(data: Data("entrap_oar".utf8))
     
-    static let cek = SymmetricKey(data: [
-        4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250, 63, 170, 106,
-        206, 107, 124, 212, 45, 111, 107, 9, 219, 200, 177, 0, 240, 143, 156,
-        44, 207,
-    ])
+    static let cek = key256
     
-    static let plainData = Data([
-        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
-        112, 114, 111, 115, 112, 101, 114, 46,
-    ])
+    static let plainData = shortRandomBytes
 }
 
 enum ECDH_ES {
@@ -388,19 +370,17 @@ enum ECDH_ES {
     
     static let kek = try! JSONWebECPrivateKey(
         importing: .init(
-    """
-         {"kty":"EC",
-          "crv":"P-256",
-          "x":"gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
-          "y":"SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
-          "d":"0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo"
-         }
-    """.utf8), format: .jwk)
+            """
+                 {"kty":"EC",
+                  "crv":"P-256",
+                  "x":"gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
+                  "y":"SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
+                  "d":"0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo"
+                 }
+            """.utf8), format: .jwk
+    )
     
-    static let plainData = Data([
-        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
-        112, 114, 111, 115, 112, 101, 114, 46,
-    ])
+    static let plainData = shortRandomBytes
 }
 
 enum ECDH_ES_KW {
@@ -409,23 +389,17 @@ enum ECDH_ES_KW {
     
     static let kek = try! JSONWebECPrivateKey(
         importing: .init(
-    """
-         {"kty":"EC",
-          "crv":"P-256",
-          "x":"gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
-          "y":"SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
-          "d":"0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo"
-         }
-    """.utf8), format: .jwk)
+            """
+                 {"kty":"EC",
+                  "crv":"P-256",
+                  "x":"gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
+                  "y":"SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
+                  "d":"0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo"
+                 }
+            """.utf8), format: .jwk
+    )
     
-    static let cek = SymmetricKey(data: [
-        4, 211, 31, 197, 84, 157, 252, 254, 11, 100, 157, 250, 63, 170, 106,
-        206, 107, 124, 212, 45, 111, 107, 9, 219, 200, 177, 0, 240, 143, 156,
-        44, 207,
-    ])
+    static let cek = key256
     
-    static let plainData = Data([
-        76, 105, 118, 101, 32, 108, 111, 110, 103, 32, 97, 110, 100, 32,
-        112, 114, 111, 115, 112, 101, 114, 46,
-    ])
+    static let plainData = shortRandomBytes
 }

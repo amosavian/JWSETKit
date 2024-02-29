@@ -20,9 +20,9 @@ import CryptoSwift
 
 extension SymmetricKey {
     static let defaultPBES2IterationCount: [Int: Int] = [
-        128: 310000,
-        192: 250000,
-        256: 120000,
+        128: 310_000,
+        192: 250_000,
+        256: 120_000,
     ]
     
     /// Generates a symmetric key using `PBKDF2` algorithm.

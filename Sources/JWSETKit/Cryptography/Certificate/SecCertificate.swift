@@ -14,7 +14,9 @@ import X509
 extension SecCertificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         var key = AnyJSONWebKey(storage: (try? publicKey.storage) ?? .init())
-        key.certificateChain = [.init(self)]
+        if let certificate = try? Certificate(self) {
+            key.certificateChain = [certificate]
+        }
         return key.storage
     }
     
@@ -49,7 +51,7 @@ extension SecCertificate: Expirable {
 extension SecTrust: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         var key = AnyJSONWebKey(storage: (try? certificateChain.first?.publicKey.storage) ?? .init())
-        key.certificateChain = (try? certificateChain)?.compactMap(Certificate.init) ?? []
+        key.certificateChain = (try? certificateChain.compactMap(Certificate.init)) ?? []
         return key.storage
     }
     
@@ -97,18 +99,15 @@ extension Certificate {
     ///
     /// - Returns: A new `SecCertificate` instance.
     public func secCertificate() throws -> SecCertificate {
-        // derRepresentation's output is always a valid ASN1 object and this should not fail.
-        try! SecCertificateCreateWithData(kCFAllocatorDefault, derRepresentation as CFData)!
+        try SecCertificateCreateWithData(kCFAllocatorDefault, derRepresentation as CFData)!
     }
     
     /// Casts `SecCertificate` into `X509.Certificate`.
     ///
     /// - Parameter secCertificate: `SecCertificate` instance to be casted.
-    public init(_ secCertificate: SecCertificate) {
+    public init(_ secCertificate: SecCertificate) throws {
         let der = SecCertificateCopyData(secCertificate) as Data
-        
-        // SecCertificateCopyData's output is always a valid ASN1 object and this should not fail.
-        try! self.init(derEncoded: der)
+        try self.init(derEncoded: der)
     }
 }
 #endif
