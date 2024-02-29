@@ -214,7 +214,9 @@ public struct JSONWebEncryption: Hashable, Sendable {
 
 extension String {
     public init(jwe: JSONWebEncryption) throws {
-        self = try String(String(decoding: JSONEncoder.encoder.encode(jwe), as: UTF8.self).dropFirst().dropLast())
+        var encoder = JSONEncoder.encoder
+        encoder.userInfo[.jwsEncodedRepresentation] = JSONWebEncryptionRepresentation.compact
+        self = try String(String(decoding: encoder.encode(jwe), as: UTF8.self).dropFirst().dropLast())
     }
 }
 
