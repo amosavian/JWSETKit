@@ -7,12 +7,13 @@ A library for working with JSON Web Signature (JWS) and JSON Web Token (JWT).
 [![License][license-badge]][license-url]
 [![Release version][release-badge]][release-url]
 
-[![Lines of Code][sonar-cloc-badge][sonar-link]
-[![Quality Gate Status][sonar-quality-badge][sonar-link]
-[![Reliability Rating][sonar-reliability-badge][sonar-link]
-[![Security Rating][sonar-security-badge][sonar-link]
-[![Maintainability Rating][sonar-maintainability-badge][sonar-link]
-[![Coverage][sonar-coverage-badge][sonar-link]
+[![Lines of Code][sonar-cloc-badge]][sonar-link]
+[![Duplicated Lines][sonar-duplicated-lines-badge]][sonar-link]
+
+[![Quality Gate Status][sonar-quality-badge]][sonar-link]
+[![Technical Debt][sonar-tech-debt-badge]][sonar-link]
+[![Maintainability Rating][sonar-maintainability-badge]][sonar-link]
+[![Coverage][sonar-coverage-badge]][sonar-link]
 
 [![][swift-versions-badge]][spi-url]
 [![][platforms-badge]][spi-url]
@@ -141,11 +142,12 @@ For detailed usage and API documentation, check [the documentation][docs].
 [release-url]: https://github.com/amosavian/JWSETKit/releases
 
 [sonar-link]: https://sonarcloud.io/summary/new_code?id=amosavian_JWSETKit
-[sonar-quality-gate-badge]: https://sonarcloud.io/api/project_badges/measure?project=amosavian_JWSETKit&metric=alert_status
+[sonar-quality-badge]: https://sonarcloud.io/api/project_badges/measure?project=amosavian_JWSETKit&metric=alert_status
 [sonar-cloc-badge]: https://sonarcloud.io/api/project_badges/measure?project=amosavian_JWSETKit&metric=ncloc
 [sonar-duplicated-lines-badge]: https://sonarcloud.io/api/project_badges/measure?project=amosavian_JWSETKit&metric=duplicated_lines_density
 [sonar-maintainability-badge]: https://sonarcloud.io/api/project_badges/measure?project=amosavian_JWSETKit&metric=sqale_rating
-[sonar-complexity-badge]: https://sonarcloud.io/api/project_badges/measure?project=amosavian_JWSETKit&metric=function_complexity
+[sonar-tech-debt-badge]: https://sonarcloud.io/api/project_badges/measure?project=amosavian_JWSETKit&metric=sqale_index
+[sonar-coverage-badge]: https://sonarcloud.io/api/project_badges/measure?project=amosavian_JWSETKit&metric=coverage
 
 [swift-versions-badge]: https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Famosavian%2FJWSETKit%2Fbadge%3Ftype%3Dswift-versions
 [spi-url]: https://swiftpackageindex.com/amosavian/JWSETKit
