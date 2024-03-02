@@ -27,61 +27,12 @@ extension AnyJSONWebKey {
     ///   - `CryptKit.Symmetric` if key type is `oct` and no algorithm is present.
     ///   - `JSONWebCertificateChain` if no key type is present but `x5c` has certificates.
     public func specialized() -> any JSONWebKey {
-        do {
-            // swiftformat:disable:next redundantSelf
-            guard let keyType = self.keyType else {
-                throw JSONWebKeyError.unknownAlgorithm
+        for specializer in AnyJSONWebKey.specializers {
+            if let specialized = try? specializer.specialize(self) {
+                return specialized
             }
-            
-            // swiftformat:disable:next redundantSelf
-            let curve = self.curve
-            // swiftformat:disable:next redundantSelf
-            switch (keyType, self.algorithm) {
-            case (.ellipticCurve, _) where curve != nil, (.octetKeyPair, _) where curve != nil:
-                // swiftformat:disable:next redundantSelf
-                if self.privateKey != nil {
-                    return try JSONWebECPrivateKey.create(storage: storage)
-                } else {
-                    return try JSONWebECPublicKey.create(storage: storage)
-                }
-            case (.rsa, _):
-                // swiftformat:disable:next redundantSelf
-                if self.privateExponent != nil {
-                    return try JSONWebRSAPrivateKey.create(storage: storage)
-                } else {
-                    return try JSONWebRSAPublicKey.create(storage: storage)
-                }
-            case (.symmetric, .aesEncryptionGCM128),
-                 (.symmetric, .aesEncryptionGCM192),
-                 (.symmetric, .aesEncryptionGCM256):
-                return try JSONWebKeyAESGCM.create(storage: storage)
-            case (.symmetric, .aesKeyWrap128),
-                 (.symmetric, .aesKeyWrap192),
-                 (.symmetric, .aesKeyWrap256):
-                return try JSONWebKeyAESKW.create(storage: storage)
-            case (.symmetric, .aesEncryptionCBC128SHA256),
-                 (.symmetric, .aesEncryptionCBC192SHA384),
-                 (.symmetric, .aesEncryptionCBC256SHA512):
-                return try JSONWebKeyAESCBCHMAC.create(storage: storage)
-            case (.symmetric, .hmacSHA256):
-                return try JSONWebKeyHMAC<SHA256>.create(storage: storage)
-            case (.symmetric, .hmacSHA384):
-                return try JSONWebKeyHMAC<SHA384>.create(storage: storage)
-            case (.symmetric, .hmacSHA512):
-                return try JSONWebKeyHMAC<SHA512>.create(storage: storage)
-            case (.symmetric, _):
-                return try SymmetricKey.create(storage: storage)
-            default:
-                // swiftformat:disable:next redundantSelf
-                if !self.certificateChain.isEmpty {
-                    return try JSONWebCertificateChain.create(storage: storage)
-                } else {
-                    throw JSONWebKeyError.unknownKeyType
-                }
-            }
-        } catch {
-            return self
         }
+        return self
     }
     
     /// Deserializes JSON and converts to the most appropriate key.
@@ -91,6 +42,119 @@ extension AnyJSONWebKey {
     public static func deserialize(_ data: Data) throws -> any JSONWebKey {
         let webKey = try JSONDecoder().decode(AnyJSONWebKey.self, from: data)
         return webKey.specialized()
+    }
+}
+
+/// A specializer that can convert a `AnyJSONWebKey` to a specific `JSONWebKey` type.
+public protocol JSONWebKeySpecializer {
+    /// Specializes a `AnyJSONWebKey` to a specific `JSONWebKey` type, returns nil if key is appropiate.
+    ///
+    /// - Parameter key: The key to specialize.
+    /// - Returns: A specific `JSONWebKey` type, or nil if the key is not appropiate.
+    static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)?
+}
+
+enum JSONWebKeyRSASpecializer: JSONWebKeySpecializer {
+    static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
+        guard key.keyType == .rsa else { return nil }
+        if key.privateExponent != nil {
+            return try JSONWebRSAPrivateKey.create(storage: key.storage)
+        } else {
+            return try JSONWebRSAPublicKey.create(storage: key.storage)
+        }
+    }
+}
+
+enum JSONWebKeyEllipticCurveSpecializer: JSONWebKeySpecializer {
+    static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
+        guard key.keyType == .ellipticCurve else { return nil }
+        guard let curve = key.curve else { return nil }
+        switch curve {
+        case .p256, .p384, .p521:
+            if key.privateKey != nil {
+                return try JSONWebECPrivateKey.create(storage: key.storage)
+            } else {
+                return try JSONWebECPublicKey.create(storage: key.storage)
+            }
+        default:
+            return nil
+        }
+    }
+}
+
+enum JSONWebKeyCurve25519Specializer: JSONWebKeySpecializer {
+    static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
+        guard key.keyType == .octetKeyPair else { return nil }
+        guard let curve = key.curve else { return nil }
+        switch curve {
+        case .ed25519, .x25519:
+            if key.privateKey != nil {
+                return try JSONWebECPrivateKey.create(storage: key.storage)
+            } else {
+                return try JSONWebECPublicKey.create(storage: key.storage)
+            }
+        default:
+            return nil
+        }
+    }
+}
+
+enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
+    static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
+        guard key.keyType == .symmetric else { return nil }
+        guard key.keyValue != nil else {
+            throw CryptoKitError.incorrectKeySize
+        }
+        
+        switch key.algorithm {
+        case .none:
+            return try SymmetricKey.create(storage: key.storage)
+        case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
+            return try JSONWebKeyAESGCM.create(storage: key.storage)
+        case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256:
+            return try JSONWebKeyAESKW.create(storage: key.storage)
+        case .aesEncryptionCBC128SHA256, .aesEncryptionCBC192SHA384, .aesEncryptionCBC256SHA512:
+            return try JSONWebKeyAESCBCHMAC.create(storage: key.storage)
+        case .hmacSHA256:
+            return try JSONWebKeyHMAC<SHA256>.create(storage: key.storage)
+        case .hmacSHA384:
+            return try JSONWebKeyHMAC<SHA384>.create(storage: key.storage)
+        case .hmacSHA512:
+            return try JSONWebKeyHMAC<SHA512>.create(storage: key.storage)
+        default:
+            return try SymmetricKey.create(storage: key.storage)
+        }
+    }
+}
+
+enum JSONWebKeyCertificateChainSpecializer: JSONWebKeySpecializer {
+    static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
+        if !key.certificateChain.isEmpty {
+            return try JSONWebCertificateChain.create(storage: key.storage)
+        }
+        return nil
+    }
+}
+
+extension AnyJSONWebKey {
+    @ReadWriteLocked
+    fileprivate static var specializers: [any JSONWebKeySpecializer.Type] = [
+        JSONWebKeyRSASpecializer.self,
+        JSONWebKeyEllipticCurveSpecializer.self,
+        JSONWebKeyCurve25519Specializer.self,
+        JSONWebKeyCertificateChainSpecializer.self,
+        JSONWebKeySymmetricSpecializer.self,
+    ]
+    
+    /// Registers a new key specializer.
+    ///
+    /// - Important: The specializer will be checked against before already registered ones,
+    ///     to allow overriding default registry.
+    ///
+    /// - Parameter specializer: The specializer to register.
+    public static func registerSpecializer(_ specializer: any JSONWebKeySpecializer.Type) {
+        guard !specializers.contains(where: { $0 == specializer }) else { return }
+        specializers.insert(specializer, at: 0)
     }
 }
 

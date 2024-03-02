@@ -31,6 +31,7 @@ let package = Package(
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.8.0")),
         // Plugins
         .package(url: "https://github.com/nicklockwood/SwiftFormat", from: "0.53.1"),
+        .package(url: "https://github.com/apple/swift-docc-plugin", from: "1.3.0"),
     ],
     targets: [
         .target(
