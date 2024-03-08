@@ -47,17 +47,15 @@ extension SharedSecret {
     ) throws -> SymmetricKey where H: HashFunction, APU: DataProtocol, APV: DataProtocol {
         let algorithmID: String
         let keySize: Int
-        if algorithm == .ecdhEphemeralStatic {
+        if let length = algorithm.keyLength {
+            algorithmID = algorithm.rawValue
+            keySize = length
+        } else {
             guard let cek = contentEncryptionAlgorithm, let contentKeySize = cek.keyLength?.bitCount else {
                 throw CryptoKitError.incorrectKeySize
             }
             algorithmID = cek.rawValue
             keySize = contentKeySize
-        } else if let length = algorithm.keyLength {
-            algorithmID = algorithm.rawValue
-            keySize = length
-        } else {
-            throw CryptoKitError.incorrectKeySize
         }
         
         return try SymmetricKey.concatDerivedSymmetricKey(

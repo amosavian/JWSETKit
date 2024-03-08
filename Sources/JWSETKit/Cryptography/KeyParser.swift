@@ -37,9 +37,12 @@ extension AnyJSONWebKey {
     
     /// Deserializes JSON and converts to the most appropriate key.
     ///
-    /// - Parameter jsonWebKey: JWK in JSON string.
+    /// - Parameters:
+    ///   - data: The key data to deserialize.
+    ///   - format: The format of the key data.
     /// - Returns: Related specific key object.
-    public static func deserialize(_ data: Data) throws -> any JSONWebKey {
+    public static func deserialize(_ data: Data, format: JSONWebKeyFormat) throws -> any JSONWebKey {
+        
         let webKey = try JSONDecoder().decode(AnyJSONWebKey.self, from: data)
         return webKey.specialized()
     }
@@ -47,11 +50,19 @@ extension AnyJSONWebKey {
 
 /// A specializer that can convert a `AnyJSONWebKey` to a specific `JSONWebKey` type.
 public protocol JSONWebKeySpecializer {
-    /// Specializes a `AnyJSONWebKey` to a specific `JSONWebKey` type, returns nil if key is appropiate.
+    /// Specializes a `AnyJSONWebKey` to a specific `JSONWebKey` type, returns `nil` if key is not appropiate.
     ///
     /// - Parameter key: The key to specialize.
-    /// - Returns: A specific `JSONWebKey` type, or nil if the key is not appropiate.
+    /// - Returns: A specific `JSONWebKey` type, or `nil` if the key is not appropiate.
     static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)?
+    
+    /// Deserializes a key from a data, returns `nil` if key is not appropiate.
+    ///
+    /// - Parameters:
+    ///   - key: The key data to deserialize.
+    ///   - format: The format of the key data.
+    ///   - Returns: A specific `JSONWebKey` type, or `nil` if the key is not appropiate.
+    static func deserialize(key: Data, format: JSONWebKeyFormat) throws -> (any JSONWebKey)?
 }
 
 enum JSONWebKeyRSASpecializer: JSONWebKeySpecializer {
@@ -61,6 +72,19 @@ enum JSONWebKeyRSASpecializer: JSONWebKeySpecializer {
             return try JSONWebRSAPrivateKey.create(storage: key.storage)
         } else {
             return try JSONWebRSAPublicKey.create(storage: key.storage)
+        }
+    }
+    
+    static func deserialize(key: Data, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? {
+        switch format {
+        case .pkcs8:
+            guard try PKCS8PrivateKey(derEncoded: key).keyType == .rsa else { return nil }
+            return try JSONWebRSAPrivateKey(importing: key, format: format)
+        case .spki:
+            guard try SubjectPublicKeyInfo(derEncoded: key).keyType == .rsa else { return nil }
+            return try JSONWebRSAPublicKey(importing: key, format: format)
+        default:
+            return nil
         }
     }
 }
@@ -76,6 +100,23 @@ enum JSONWebKeyEllipticCurveSpecializer: JSONWebKeySpecializer {
             } else {
                 return try JSONWebECPublicKey.create(storage: key.storage)
             }
+        default:
+            return nil
+        }
+    }
+    
+    static func deserialize(key: Data, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? {
+        switch format {
+        case .pkcs8:
+            let pkcs8 = try PKCS8PrivateKey(derEncoded: key)
+            guard try pkcs8.keyType == .ellipticCurve else { return nil }
+            guard pkcs8.keyCurve != nil else { return nil }
+            return try JSONWebECPrivateKey(importing: key, format: format)
+        case .spki:
+            let spki = try SubjectPublicKeyInfo(derEncoded: key)
+            guard try spki.keyType == .ellipticCurve else { return nil }
+            guard spki.keyCurve != nil else { return nil }
+            return try JSONWebECPublicKey(importing: key, format: format)
         default:
             return nil
         }
@@ -96,6 +137,10 @@ enum JSONWebKeyCurve25519Specializer: JSONWebKeySpecializer {
         default:
             return nil
         }
+    }
+    
+    static func deserialize(key: Data, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? {
+        return nil
     }
 }
 
@@ -125,6 +170,15 @@ enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
             return try SymmetricKey.create(storage: key.storage)
         }
     }
+    
+    static func deserialize(key: Data, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? {
+        switch format {
+        case .raw:
+            return try AnyJSONWebKey(storage: SymmetricKey(importing: key, format: .raw).storage).specialized()
+        default:
+            return nil
+        }
+    }
 }
 
 enum JSONWebKeyCertificateChainSpecializer: JSONWebKeySpecializer {
@@ -134,11 +188,15 @@ enum JSONWebKeyCertificateChainSpecializer: JSONWebKeySpecializer {
         }
         return nil
     }
+    
+    static func deserialize(key: Data, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? {
+        return nil
+    }
 }
 
 extension AnyJSONWebKey {
     @ReadWriteLocked
-    fileprivate static var specializers: [any JSONWebKeySpecializer.Type] = [
+    static var specializers: [any JSONWebKeySpecializer.Type] = [
         JSONWebKeyRSASpecializer.self,
         JSONWebKeyEllipticCurveSpecializer.self,
         JSONWebKeyCurve25519Specializer.self,

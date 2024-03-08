@@ -40,7 +40,7 @@
 	<key>notBeforeToken</key>
 	<dict>
 		<key>NSStringLocalizedFormatKey</key>
-		<string></string>
+		<string>Token is invalid before %@</string>
 	</dict>
 	<key>errorInvalidAudience</key>
 	<dict>

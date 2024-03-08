@@ -165,7 +165,7 @@ extension JSONWebDecryptingKey {
 }
 
 /// A JSON Web Key (JWK) able to decrypt cipher-texts using a symmetric key.
-public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey, JSONWebKeySymmetricPortable where PublicKey == Self {
+public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey, JSONWebKeySymmetric where PublicKey == Self {
     init(_ key: SymmetricKey) throws
 }
 
@@ -297,7 +297,7 @@ extension JSONWebSigningKey {
 }
 
 /// A JSON Web Key (JWK) able to generate a signature using a symmetric key.
-public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey, JSONWebKeySymmetricPortable {
+public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey, JSONWebKeySymmetric {
     init(_ key: SymmetricKey) throws
 }
 
@@ -347,27 +347,17 @@ extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
     }
     
     public init(importing key: Data, format: JSONWebKeyFormat) throws {
-        switch format {
-        case .raw:
-            // Here is a little tricky. The key can be either a X9.63 formatted EC
-            // or a symmetric key for HMAC/AES.
-            //
-            // First we try to decode it as EC. If fails, we then fall back to SymmetricKey.
-            if let key = try? JSONWebECPrivateKey(importing: key, format: .raw) {
-                self.init(storage: key.storage)
-            } else if let key = try? JSONWebECPublicKey(importing: key, format: .raw) {
-                self.init(storage: key.storage)
-            } else {
-                try self.init(storage: SymmetricKey(importing: key, format: .raw).storage)
-            }
-        case .pkcs8:
-            try self.init(importing: key, format: format, keyType: PKCS8PrivateKey(derEncoded: key).keyType)
-        case .spki:
-            try self.init(importing: key, format: format, keyType: SubjectPublicKeyInfo(derEncoded: key).keyType)
-        case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
-            try validate()
+        if format == .jwk {
+            let key = try JSONDecoder().decode(AnyJSONWebKey.self, from: key).specialized()
+            try key.validate()
+            self.storage = key.storage
         }
+        for specializer in AnyJSONWebKey.specializers {
+            if let specialized = try specializer.deserialize(key: key, format: format) {
+                self.storage = specialized.storage
+            }
+        }
+        throw JSONWebKeyError.unknownKeyType
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {

@@ -81,17 +81,18 @@ extension JSONWebKeyExportable {
     }
 }
 
-public protocol JSONWebKeySymmetricPortable: JSONWebKeyImportable, JSONWebKeyExportable {
+public protocol JSONWebKeySymmetric: JSONWebKeyImportable, JSONWebKeyExportable {
     init(_ key: SymmetricKey) throws
 }
 
-extension JSONWebKeySymmetricPortable {
+extension JSONWebKeySymmetric {
     public init(importing key: Data, format: JSONWebKeyFormat) throws {
         switch format {
         case .raw:
             try self.init(.init(data: key))
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: key)
+            try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

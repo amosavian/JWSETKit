@@ -304,12 +304,28 @@ extension JSONWebKeyEncryptionAlgorithm {
             ephemeralKey = try JSONWebECPrivateKey(curve: privateKey.curve ?? .empty).publicKey
             header.ephemeralPublicKey = .init(ephemeralKey)
         }
+        
+        let apu: Data
+        let apv: Data
+        if let headerAPU = header.agreementPartyUInfo {
+            apu = headerAPU
+        } else {
+            apu = ephemeralKey.xCoordinate ?? .init()
+            header.agreementPartyUInfo = apu
+        }
+        if let headerAPV = header.agreementPartyVInfo {
+            apv = headerAPV
+        } else {
+            apv = (keyEncryptionKey?.keyId?.utf8).map { Data($0) } ?? .init()
+            header.agreementPartyVInfo = apv
+        }
+        
         let secret = try privateKey.sharedSecretFromKeyAgreement(with: ephemeralKey)
         let symmetricKey = try secret.concatDerivedSymmetricKey(
             algorithm: keyEncryptingAlgorithm,
             contentEncryptionAlgorithm: header.encryptionAlgorithm,
-            apu: header.agreementPartyUInfo ?? .init(),
-            apv: header.agreementPartyVInfo ?? .init(),
+            apu: apu,
+            apv: apv,
             hashFunction: hashFunction
         )
         if keyEncryptingAlgorithm == .ecdhEphemeralStatic {
