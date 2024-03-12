@@ -1,0 +1,38 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    types: [opened, synchronize, reopened]
+jobs:
+  sonarcloud:
+    name: SonarCloud
+    runs-on: macos-13
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      - name: Run Swift Tests
+        run: |
+          swift test --enable-code-coverage
+      - name: Build docs with SwiftPM
+        run: |
+          xcrun llvm-cov show -instr-profile=.build/debug/codecov/default.profdata \
+          .build/debug/JWSETKitPackageTests.xctest/Contents/MacOS/JWSETKitPackageTests > coverage.report
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.organization=amosavian
+            -Dsonar.projectKey=amosavian_JWSETKit
+            -Dsonar.projectName=JWSETKit
+            -Dsonar.sources=Sources/
+            -Dsonar.exclusions=Tests/**
+            -Dsonar.test.exclusions=Tests/**
+            -Dsonar.swift.coverage.reportPaths=coverage.report
+            -Dsonar.excludedPathsFromCoverage=true
+            
