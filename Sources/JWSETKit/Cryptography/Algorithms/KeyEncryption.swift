@@ -468,5 +468,5 @@ extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     public static var ecdhEphemeralStaticAESKeyWrap256: Self { "ECDH-ES+A256KW" }
     
     /// **Key Management**: No encryption for content key.
-    public static var direct: Self { "direct" }
+    public static var direct: Self { "dir" }
 }
