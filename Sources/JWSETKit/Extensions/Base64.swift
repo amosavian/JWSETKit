@@ -74,19 +74,3 @@ extension Data {
         self = value
     }
 }
-
-extension Data {
-    init<T>(value: T) where T: FixedWidthInteger {
-        var int = value
-        self.init(bytes: &int, count: MemoryLayout<T>.size)
-    }
-}
-
-extension DataProtocol {
-    @inlinable
-    func withUnsafeBuffer<R>(_ body: (_ buffer: UnsafeRawBufferPointer) throws -> R) rethrows -> R {
-        try withContiguousStorageIfAvailable {
-            try body(UnsafeRawBufferPointer($0))
-        } ?? Data(self).withUnsafeBytes(body)
-    }
-}

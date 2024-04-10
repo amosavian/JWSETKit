@@ -62,10 +62,8 @@ public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetr
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        var hmac = try HMAC<H>(key: symmetricKey)
-        hmac.update(data: data)
-        let mac = hmac.finalize()
-        guard Data(mac) == Data(signature) else {
+        let isValid = try HMAC<H>.isValidAuthenticationCode(Data(signature), authenticating: data, using: symmetricKey)
+        guard isValid else {
             throw CryptoKitError.authenticationFailure
         }
     }

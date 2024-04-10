@@ -94,7 +94,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     }
     
     public static func == (lhs: _RSA.Signing.PrivateKey, rhs: _RSA.Signing.PrivateKey) -> Bool {
-        lhs.derRepresentation == rhs.derRepresentation
+        lhs.derRepresentation.safeEqual(to: rhs.derRepresentation)
     }
     
     public func hash(into hasher: inout Hasher) {

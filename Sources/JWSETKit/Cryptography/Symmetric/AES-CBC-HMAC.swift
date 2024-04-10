@@ -113,7 +113,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
     public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using _: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {
         let authenticated = authenticating.map { Data($0) } ?? .init()
         let tagData = authenticated + Data(data.nonce) + data.ciphertext + authenticated.cbcTagLengthOctetHexData()
-        guard try data.tag == hmac(tagData).prefix(tagLength) else {
+        guard try data.tag.safeEqual(to: hmac(tagData).prefix(tagLength)) else {
             throw CryptoKitError.authenticationFailure
         }
         
