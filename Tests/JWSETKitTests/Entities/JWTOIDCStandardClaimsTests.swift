@@ -99,4 +99,18 @@ final class JWTOIDCStandardClaimsTests: XCTestCase {
         
         XCTAssertEqual(claims, decodedClaims)
     }
+    
+    func testLocalized() throws {
+        var claims = JSONWebTokenClaims(storage: .init())
+        let enLocale = Locale(identifier: "en")
+        let faLocale = Locale(identifier: "fa")
+        let faIRLocale = Locale(identifier: "fa_IR")
+        claims.name = "Jane Doe"
+        claims[\.name, faLocale] = "جین دو"
+        
+        XCTAssertEqual(claims.name, "Jane Doe")
+        XCTAssertEqual(claims[\.name, faIRLocale], "جین دو")
+        XCTAssertEqual(claims[\.name, faLocale], "جین دو")
+        XCTAssertEqual(claims[\.name, enLocale], "Jane Doe")
+    }
 }

@@ -41,8 +41,7 @@ extension AnyJSONWebKey {
     ///   - data: The key data to deserialize.
     ///   - format: The format of the key data.
     /// - Returns: Related specific key object.
-    public static func deserialize(_ data: Data, format: JSONWebKeyFormat) throws -> any JSONWebKey {
-        
+    public static func deserialize(_ data: Data, format _: JSONWebKeyFormat) throws -> any JSONWebKey {
         let webKey = try JSONDecoder().decode(AnyJSONWebKey.self, from: data)
         return webKey.specialized()
     }
@@ -139,8 +138,8 @@ enum JSONWebKeyCurve25519Specializer: JSONWebKeySpecializer {
         }
     }
     
-    static func deserialize(key: Data, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? {
-        return nil
+    static func deserialize(key _: Data, format _: JSONWebKeyFormat) throws -> (any JSONWebKey)? {
+        nil
     }
 }
 
@@ -189,20 +188,19 @@ enum JSONWebKeyCertificateChainSpecializer: JSONWebKeySpecializer {
         return nil
     }
     
-    static func deserialize(key: Data, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? {
-        return nil
+    static func deserialize(key _: Data, format _: JSONWebKeyFormat) throws -> (any JSONWebKey)? {
+        nil
     }
 }
 
 extension AnyJSONWebKey {
-    @ReadWriteLocked
-    static var specializers: [any JSONWebKeySpecializer.Type] = [
+    static let specializers: ReadWriteLockedValue<[any JSONWebKeySpecializer.Type]> = .init([
         JSONWebKeyRSASpecializer.self,
         JSONWebKeyEllipticCurveSpecializer.self,
         JSONWebKeyCurve25519Specializer.self,
         JSONWebKeyCertificateChainSpecializer.self,
         JSONWebKeySymmetricSpecializer.self,
-    ]
+    ])
     
     /// Registers a new key specializer.
     ///
@@ -211,8 +209,8 @@ extension AnyJSONWebKey {
     ///
     /// - Parameter specializer: The specializer to register.
     public static func registerSpecializer(_ specializer: any JSONWebKeySpecializer.Type) {
-        guard !specializers.contains(where: { $0 == specializer }) else { return }
-        specializers.insert(specializer, at: 0)
+        guard !specializers.wrappedValue.contains(where: { $0 == specializer }) else { return }
+        specializers.wrappedValue.insert(specializer, at: 0)
     }
 }
 

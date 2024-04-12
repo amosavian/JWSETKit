@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  Data.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 4/10/24.
 //
@@ -21,15 +21,12 @@ extension DataProtocol {
             try body(UnsafeRawBufferPointer($0))
         } ?? Data(self).withUnsafeBytes(body)
     }
-    
-    @inlinable
-    func safeEqual<RHS: DataProtocol>(to rhs: RHS) -> Bool {
-        constantTimeCompare(self, rhs)
-    }
 }
 
+infix operator =~=: ComparisonPrecedence
+
 @inlinable
-func constantTimeCompare<LHS: Collection, RHS: Collection>(_ lhs: LHS, _ rhs: RHS) -> Bool where LHS.Element == UInt8, RHS.Element == UInt8 {
+func =~= <LHS: Collection, RHS: Collection>(_ lhs: LHS, _ rhs: RHS) -> Bool where LHS.Element == UInt8, RHS.Element == UInt8 {
     guard lhs.count == rhs.count else {
         return false
     }

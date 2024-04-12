@@ -21,15 +21,19 @@ extension JSONWebContainerParameters {
 
 extension JSONWebContainer {
     @_documentation(visibility: private)
-    public func stringKey<P: JSONWebContainerParameters<Self>, T>(_ keyPath: KeyPath<P, T>) -> String {
+    public func stringKey<P: JSONWebContainerParameters<Self>, T>(_ keyPath: KeyPath<P, T>, force: Bool = false, locale: Locale? = nil) -> String {
         let key = P.keys[keyPath] ?? keyPath.name.jsonWebKey
-        guard P.localizableKeys.contains(keyPath) else { return key }
-        let locales = storage.storageKeys
-            .filter { $0.hasPrefix(key + "#") }
-            .map { $0.replacingOccurrences(of: key + "#", with: "", options: [.anchored]) }
-            .map(Locale.init(identifier:))
-        guard let bestLocale = JSONWebKit.locale.bestMatch(in: locales) else { return key }
-        return "\(key)#\(bestLocale.identifier)"
+        guard P.localizableKeys.contains(keyPath), let locale else { return key }
+        if force == true {
+            return "\(key)#\(locale.bcp47)"
+        } else {
+            let locales = storage.storageKeys
+                .filter { $0.hasPrefix(key + "#") }
+                .map { $0.replacingOccurrences(of: key + "#", with: "", options: [.anchored]) }
+                .map(Locale.init(identifier:))
+            guard let bestLocale = locale.bestMatch(in: locales) else { return key }
+            return "\(key)#\(bestLocale.identifier)"
+        }
     }
 }
 

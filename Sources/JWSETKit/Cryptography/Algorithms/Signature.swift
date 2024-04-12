@@ -22,8 +22,7 @@ public struct JSONWebSignatureAlgorithm: JSONWebAlgorithm {
 }
 
 extension JSONWebSignatureAlgorithm {
-    @ReadWriteLocked
-    private static var keyRegistryClasses: [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)] = [
+    private static let keyRegistryClasses: ReadWriteLockedValue < [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)]> = .init([
         .none: (JSONWebDirectKey.self, JSONWebDirectKey.self),
         .hmacSHA256: (JSONWebKeyHMAC<SHA256>.self, JSONWebKeyHMAC<SHA256>.self),
         .hmacSHA384: (JSONWebKeyHMAC<SHA384>.self, JSONWebKeyHMAC<SHA384>.self),
@@ -38,10 +37,9 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaSignaturePKCS1v15SHA384: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaSignaturePKCS1v15SHA512: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
-    ]
+    ])
     
-    @ReadWriteLocked
-    private static var keyTypes: [Self: JSONWebKeyType] = [
+    private static let keyTypes: ReadWriteLockedValue<[Self: JSONWebKeyType]> = .init([
         .none: .symmetric,
         .hmacSHA256: .symmetric,
         .hmacSHA384: .symmetric,
@@ -56,16 +54,14 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA256: .rsa,
         .rsaSignaturePKCS1v15SHA384: .rsa,
         .rsaSignaturePKCS1v15SHA512: .rsa,
-    ]
+    ])
     
-    @ReadWriteLocked
-    private static var curves: [Self: JSONWebKeyCurve] = [
+    private static let curves: ReadWriteLockedValue<[Self: JSONWebKeyCurve]> = .init([
         .ecdsaSignatureP256SHA256: .p256, .ecdsaSignatureP384SHA384: .p384,
         .ecdsaSignatureP521SHA512: .p521, .eddsaSignature: .ed25519,
-    ]
+    ])
     
-    @ReadWriteLocked
-    private static var hashFunctions: [Self: any HashFunction.Type] = [
+    private static let hashFunctions: ReadWriteLockedValue<[Self: any HashFunction.Type]> = .init([
         .hmacSHA256: SHA256.self,
         .hmacSHA384: SHA384.self,
         .hmacSHA512: SHA512.self,
@@ -79,7 +75,7 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA256: SHA256.self,
         .rsaSignaturePKCS1v15SHA384: SHA384.self,
         .rsaSignaturePKCS1v15SHA512: SHA512.self,
-    ]
+    ])
     
     public var keyType: JSONWebKeyType? {
         Self.keyTypes[self]
@@ -120,10 +116,10 @@ extension JSONWebSignatureAlgorithm {
         publicKeyClass: Public.Type,
         privateKeyClass: Private.Type
     ) where Public: JSONWebValidatingKey, Private: JSONWebSigningKey {
-        keyRegistryClasses[algorithm] = (publicKeyClass, privateKeyClass)
-        keyTypes[algorithm] = type
-        curves[algorithm] = curve
-        hashFunctions[algorithm] = hashFunction
+        keyRegistryClasses.wrappedValue[algorithm] = (publicKeyClass, privateKeyClass)
+        keyTypes.wrappedValue[algorithm] = type
+        curves.wrappedValue[algorithm] = curve
+        hashFunctions.wrappedValue[algorithm] = hashFunction
     }
 }
 

@@ -154,7 +154,7 @@ For detailed usage and API documentation, check [the documentation][docs].
 [platforms-badge]: https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Famosavian%2FJWSETKit%2Fbadge%3Ftype%3Dplatforms
 
 [RFC7159]: https://www.rfc-editor.org/rfc/rfc7159
-[docs]: https://amosavian.github.io/JWSETKit/documentation/jwsetkit/
+[docs]: https://swiftpackageindex.com/amosavian/JWSETKit/0.16.0/documentation/jwsetkit
 [jwt-kit]: https://github.com/vapor/jwt-kit
 [JOSESwift]: https://github.com/airsidemobile/JOSESwift
 [JWTDecode]: https://github.com/auth0/JWTDecode.swift

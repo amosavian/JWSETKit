@@ -13,15 +13,14 @@ final class LocalizingTests: XCTestCase {
 #if canImport(Darwin)
         let date = Date(timeIntervalSince1970: 0)
         
-        JSONWebKit.locale = Locale(identifier: "en-US")
-        XCTAssertEqual(JSONWebKeyError.unknownAlgorithm.errorDescription, "Given signature/encryption algorithm is no supported.")
-        XCTAssert(JSONWebValidationError.tokenExpired(expiry: date).errorDescription!.hasPrefix("Token is invalid after "))
+        let enLocale = Locale(identifier: "en-US")
+        XCTAssertEqual(JSONWebKeyError.unknownAlgorithm.localizedError(for: enLocale), "Given signature/encryption algorithm is no supported.")
+        XCTAssert(JSONWebValidationError.tokenExpired(expiry: date).localizedError(for: enLocale).hasPrefix("Token is invalid after "))
         
-        JSONWebKit.locale = Locale(identifier: "fa-IR")
-        XCTAssertEqual(JSONWebKeyError.unknownAlgorithm.errorDescription, "الگوریتم انتخابی برای امضا/رمز پشتیبانی نمی‌شود.")
-        XCTAssert(JSONWebValidationError.tokenExpired(expiry: date).errorDescription!.hasPrefix("توکن برای پس از"))
+        let faLocale = Locale(identifier: "fa-IR")
+        XCTAssertEqual(JSONWebKeyError.unknownAlgorithm.localizedError(for: faLocale), "الگوریتم انتخابی برای امضا/رمز پشتیبانی نمی‌شود.")
+        XCTAssert(JSONWebValidationError.tokenExpired(expiry: date).localizedError(for: faLocale).hasPrefix("توکن برای پس از"))
         
-        JSONWebKit.locale = .autoupdatingCurrent
         XCTAssertNotNil(JSONWebKeyError.unknownAlgorithm.errorDescription)
 #endif
     }

@@ -23,7 +23,7 @@ extension JSONWebCompressionAlgorithm {
 }
 
 /// Compressor contain compress and decompress implementation using `Compression` framework.
-public struct AppleCompressor<Codec>: JSONWebCompressor where Codec: CompressionCodec {
+public struct AppleCompressor<Codec>: JSONWebCompressor, Sendable where Codec: CompressionCodec {
     public static func compress<D>(_ data: D) throws -> Data where D: DataProtocol {
         var compressedData = Data()
         let filter = try OutputFilter(.compress, using: Codec.algorithm.appleAlgorithm) {

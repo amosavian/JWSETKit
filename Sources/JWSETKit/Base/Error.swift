@@ -7,13 +7,6 @@
 
 import Foundation
 
-/// General settings and configurations.
-enum JSONWebKit {
-    /// Localization used for key lookups and translating errors.
-    @ReadWriteLocked
-    public static var locale: Locale = .autoupdatingCurrent
-}
-
 /// Error type thrown by JWSETKit framework.
 public protocol JSONWebError: LocalizedError {
     /// Localized error description in given locale's language.
@@ -22,7 +15,7 @@ public protocol JSONWebError: LocalizedError {
 
 extension JSONWebError {
     public var errorDescription: String? {
-        localizedError(for: JSONWebKit.locale)
+        localizedError(for: .current)
     }
 }
 

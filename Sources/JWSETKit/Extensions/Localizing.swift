@@ -23,8 +23,7 @@ extension Bundle {
 }
 
 extension String {
-    init(localizingKey key: String, locale: Locale? = nil) {
-        let locale = locale ?? JSONWebKit.locale
+    init(localizingKey key: String, locale: Locale) {
         let bundle: Bundle
         if locale != .autoupdatingCurrent, locale != .current {
             bundle = Bundle.current.forLocale(locale)
@@ -34,11 +33,11 @@ extension String {
         self = bundle.localizedString(forKey: key, value: "", table: "")
     }
     
-    init(localizingKey key: String, locale: Locale? = nil, _ arguments: any CVarArg...) {
+    init(localizingKey key: String, locale: Locale, _ arguments: any CVarArg...) {
         self = .init(format: .init(localizingKey: key, locale: locale), arguments: arguments)
     }
     
-    init(localizingKey key: String, locale: Locale? = nil, arguments: [any CVarArg]) {
+    init(localizingKey key: String, locale: Locale, arguments: [any CVarArg]) {
         self = .init(format: .init(localizingKey: key, locale: locale), arguments: arguments)
     }
 }

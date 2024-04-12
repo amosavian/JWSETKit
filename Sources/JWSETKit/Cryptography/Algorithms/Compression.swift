@@ -45,13 +45,11 @@ public struct JSONWebCompressionAlgorithm: StringRepresentable {
 
 extension JSONWebCompressionAlgorithm {
 #if canImport(Compression)
-    @ReadWriteLocked
-    private static var compressors: [Self: any JSONWebCompressor.Type] = [
+    private static let compressors: ReadWriteLockedValue<[Self: any JSONWebCompressor.Type]> = .init([
         .deflate: AppleCompressor<DeflateCompressionCodec>.self,
-    ]
+    ])
 #else
-    @ReadWriteLocked
-    private static var compressors: [Self: any JSONWebCompressor.Type] = [:]
+    private static let compressors: ReadWriteLockedValue<[Self: any JSONWebCompressor.Type]> = .init([:])
 #endif
     
     /// Returns provided compressor for this algorithm.
@@ -70,7 +68,7 @@ extension JSONWebCompressionAlgorithm {
     ///   - algorithm: Compression algorithm.
     ///   - compressor: Compressor instance.
     public static func register<C>(_ algorithm: Self, compressor: C.Type) where C: JSONWebCompressor {
-        compressors[algorithm] = compressor
+        compressors.wrappedValue[algorithm] = compressor
     }
 }
 
