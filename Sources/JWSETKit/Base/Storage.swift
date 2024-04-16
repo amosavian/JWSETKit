@@ -183,9 +183,9 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
             // Some values are encoded differently in JOSE than conventional JSON encoding.
             // e.g `Data` is encoded in Base64URL rather than standard Bas64, and Date is
             // encoded in `NumericDate` which is unix timestamp rather than RFC3339.
-            // Other common differences are `Locale` and `TimeZone` where `JOSE` prefers
-            // "BCP-47" presentation rather than "CLDR/ICU", and UUID where lower-cased is
-            // preferred.
+            // Other common differences are `Locale` where `JOSE` prefers
+            // "BCP-47" presentation rather than "CLDR/ICU", `TimeZone` where
+            // "IANA" presentation is expected, and UUID where lower-cased is preferred.
             //
             // These well known types are handled specially to prevent mis-encoding JWS/JWT
             // when using a `JSONEncoder` with incorrect data/date formattting strategies.

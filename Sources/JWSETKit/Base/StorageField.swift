@@ -53,10 +53,14 @@ extension Data: JSONWebFieldEncodable, JSONWebFieldDecodable {
     }
     
     static func castValue(_ value: Any?) -> Self? {
-        (value as? String)
-            .flatMap {
-                Data(urlBase64Encoded: $0) ?? Data(base64Encoded: $0, options: [.ignoreUnknownCharacters])
-            }
+        switch value {
+        case let value as Data:
+            return value
+        case let value as String:
+            return Data(urlBase64Encoded: value) ?? Data(base64Encoded: value, options: [.ignoreUnknownCharacters])
+        default:
+            return nil
+        }
     }
 }
 
@@ -105,27 +109,45 @@ extension Locale: JSONWebFieldEncodable, JSONWebFieldDecodable {
     }
     
     static func castValue(_ value: Any?) -> Self? {
-        (value as? String)
-            .map { Locale(bcp47: $0) }
+        switch value {
+        case let value as Locale:
+            return value
+        case let value as String:
+            return Locale(bcp47: value)
+        default:
+            return nil
+        }
     }
 }
 
 extension TimeZone: JSONWebFieldEncodable, JSONWebFieldDecodable {
     var jsonWebValue: (any Encodable)? {
-        // Timezone in OIDC is formatted using BCP-47 while Apple uses CLDR/ICU formatting.
+        // Timezone in OIDC is formatted using IANA formatting.
         identifier
     }
     
     static func castValue(_ value: Any?) -> Self? {
-        (value as? String)
-            .flatMap { TimeZone(identifier: $0) }
+        switch value {
+        case let value as TimeZone:
+            return value
+        case let value as String:
+            return TimeZone(identifier: value)
+        default:
+            return nil
+        }
     }
 }
 
 extension URL: JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self? {
-        (value as? String)
-            .flatMap { URL(string: $0) }
+        switch value {
+        case let value as URL:
+            return value
+        case let value as String:
+            return URL(string: value)
+        default:
+            return nil
+        }
     }
 }
 

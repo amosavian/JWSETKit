@@ -74,70 +74,61 @@ extension SymmetricKey {
         }
     }
     
-    public func ccWrapKey(_ key: SymmetricKey) throws -> Data {
-        let keyLength = key.bitCount / 8
-        var wrappedKey = Data(repeating: 0, count: CCSymmetricWrappedSize(CCWrappingAlgorithm(kCCWRAPAES), keyLength))
-        let (result, wrappedKeyCount) = withUnsafeBytes { kek in
-            key.withUnsafeBytes { rawKey in
-                wrappedKey.withUnsafeMutableBytes { wrappedKey in
-                    var wrappedKeyCount = 0
-                    let result = CCSymmetricKeyWrap(
+    func ccWrapKey(_ key: SymmetricKey) throws -> Data {
+        let kek = data
+        let rawKeyLength = key.data.count
+        var wrappedKeyLength = CCSymmetricWrappedSize(CCWrappingAlgorithm(kCCWRAPAES), rawKeyLength)
+        var wrappedKey = Data(count: wrappedKeyLength)
+        
+        let status = key.data.withUnsafeBytes { rawKeyBytes in
+            kek.withUnsafeBytes { kekBytes in
+                wrappedKey.withUnsafeMutableBytes { wrappedKeyBytes in
+                    CCSymmetricKeyWrap(
                         CCWrappingAlgorithm(kCCWRAPAES),
                         CCrfc3394_iv,
                         CCrfc3394_ivLen,
-                        kek.baseAddress,
+                        kekBytes.baseAddress,
                         kek.count,
-                        rawKey.baseAddress,
-                        rawKey.count,
-                        wrappedKey.baseAddress,
-                        &wrappedKeyCount
+                        rawKeyBytes.baseAddress,
+                        rawKeyLength,
+                        wrappedKeyBytes.baseAddress,
+                        &wrappedKeyLength
                     )
-                    return (result, wrappedKeyCount)
                 }
             }
         }
-        switch Int(result) {
-        case kCCSuccess:
-            return wrappedKey.prefix(wrappedKeyCount)
-        case kCCParamError:
-            throw CryptoKitError.incorrectParameterSize
-        case kCCBufferTooSmall:
-            throw CryptoKitError.incorrectKeySize
-        default:
-            throw CryptoKitError.underlyingCoreCryptoError(error: result)
+        if let error = status.cryptoKitError {
+            throw error
+        } else {
+            return wrappedKey.prefix(wrappedKeyLength)
         }
     }
     
     func ccUnwrapKey<D>(_ wrappedKey: D) throws -> SymmetricKey where D: DataProtocol {
-        var rawKey = Data(repeating: 0, count: CCSymmetricUnwrappedSize(CCWrappingAlgorithm(kCCWRAPAES), wrappedKey.count))
-        let (result, unwrappedKeyCount) = withUnsafeBytes { kek in
-            wrappedKey.withUnsafeBuffer { wrappedKey in
-                rawKey.withUnsafeMutableBytes { rawKey in
-                    var unwrappedKeyCount = 0
-                    let result = CCSymmetricKeyUnwrap(
+        let kek = data
+        var unwrappedKeyLength = CCSymmetricUnwrappedSize(CCWrappingAlgorithm(kCCWRAPAES), wrappedKey.count)
+        var rawKey = Data(count: unwrappedKeyLength)
+        let status = kek.withUnsafeBytes { kekBytes in
+            wrappedKey.withUnsafeBuffer { wrappedKeyBytes in
+                rawKey.withUnsafeMutableBytes { rawKeyBytes in
+                    CCSymmetricKeyUnwrap(
                         CCWrappingAlgorithm(kCCWRAPAES),
                         CCrfc3394_iv,
                         CCrfc3394_ivLen,
-                        kek.baseAddress,
-                        kek.count,
-                        wrappedKey.baseAddress,
-                        wrappedKey.count,
-                        rawKey.baseAddress,
-                        &unwrappedKeyCount
+                        kekBytes.baseAddress,
+                        kekBytes.count,
+                        wrappedKeyBytes.baseAddress,
+                        wrappedKeyBytes.count,
+                        rawKeyBytes.baseAddress,
+                        &unwrappedKeyLength
                     )
-                    return (result, unwrappedKeyCount)
                 }
             }
         }
-        switch Int(result) {
-        case kCCSuccess:
-            return .init(data: rawKey.prefix(unwrappedKeyCount))
-        case kCCParamError:
-            throw CryptoKitError.incorrectParameterSize
-        case kCCBufferTooSmall:
-            throw CryptoKitError.incorrectKeySize
-        default:
-            throw CryptoKitError.underlyingCoreCryptoError(error: result)
+        if let error = status.cryptoKitError {
+            throw error
+        } else {
+            return .init(data: rawKey.prefix(unwrappedKeyLength))
         }
     }
     
@@ -191,6 +182,21 @@ extension CCPseudoRandomAlgorithm {
             self = CCPseudoRandomAlgorithm(kCCPRFHmacAlgSHA512)
         } else {
             throw CryptoKitError.incorrectKeySize
+        }
+    }
+}
+
+private extension Int32 {
+    var cryptoKitError: CryptoKitError? {
+        switch Int(self) {
+        case kCCSuccess:
+            return nil
+        case kCCParamError:
+            return CryptoKitError.incorrectParameterSize
+        case kCCBufferTooSmall:
+            return CryptoKitError.incorrectKeySize
+        default:
+            return CryptoKitError.underlyingCoreCryptoError(error: self)
         }
     }
 }
