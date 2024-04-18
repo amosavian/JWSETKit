@@ -78,6 +78,10 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
 #endif
         throw JSONWebKeyError.unknownKeyType
     }
+    
+    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H : HashFunction {
+        try jsonWebKey().thumbprint(format: format, using: hashFunction)
+    }
 }
 
 extension DERImplicitlyTaggable {

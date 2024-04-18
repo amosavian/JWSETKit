@@ -145,6 +145,13 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         return result
     }
     
+    public func filter(_ isIncluded: (String) throws -> Bool) rethrows -> JSONWebValueStorage {
+        let storage = try self.storage.filter { try isIncluded($0.key) }
+        var result = JSONWebValueStorage()
+        result.storage = storage
+        return result
+    }
+    
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(storage)

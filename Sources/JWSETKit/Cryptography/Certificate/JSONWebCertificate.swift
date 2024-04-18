@@ -7,6 +7,11 @@
 
 import Foundation
 import X509
+#if canImport(CryptoKit)
+import CryptoKit
+#else
+import Crypto
+#endif
 
 /// JSON Web Key (JWK) container for X509 Certificate chain.
 ///
@@ -37,6 +42,10 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         try leaf.verifySignature(signature, for: data, using: algorithm)
+    }
+    
+    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H : HashFunction {
+        try leaf.thumbprint(format: format, using: hashFunction)
     }
 }
 

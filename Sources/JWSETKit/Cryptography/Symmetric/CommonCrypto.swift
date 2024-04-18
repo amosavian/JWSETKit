@@ -186,8 +186,8 @@ extension CCPseudoRandomAlgorithm {
     }
 }
 
-private extension Int32 {
-    var cryptoKitError: CryptoKitError? {
+extension Int32 {
+    fileprivate var cryptoKitError: CryptoKitError? {
         switch Int(self) {
         case kCCSuccess:
             return nil

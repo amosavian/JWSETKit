@@ -24,7 +24,7 @@ extension JSONWebContainer {
     public func stringKey<P: JSONWebContainerParameters<Self>, T>(_ keyPath: KeyPath<P, T>, force: Bool = false, locale: Locale? = nil) -> String {
         let key = P.keys[keyPath] ?? keyPath.name.jsonWebKey
         guard P.localizableKeys.contains(keyPath), let locale else { return key }
-        if force == true {
+        if force {
             return "\(key)#\(locale.bcp47)"
         } else {
             let locales = storage.storageKeys
@@ -37,7 +37,7 @@ extension JSONWebContainer {
     }
 }
 
-extension KeyPath {
+extension AnyKeyPath {
     var name: String {
 #if canImport(Darwin)
         // `components` never returns empty array.

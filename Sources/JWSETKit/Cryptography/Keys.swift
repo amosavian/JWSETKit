@@ -28,6 +28,28 @@ public protocol JSONWebKey: Codable, Hashable {
     
     /// Validates contents and required fields if applicable.
     func validate() throws
+    
+    /// Creates a thumbprint of current key.
+    ///
+    /// Valid formats for public keys are `spki` and `jwk`.  SPKI thumbprints are used in SSL-pinning.
+    ///
+    /// While it is possible to create a thumbprint for private keys, it is typically not useful to do so,
+    /// as the thumbprint is a cryptographic hash of the key, and the private key contains all the information
+    /// needed to compute the thumbprint. It is possible by passing `pkcs8` or `jwk` as format.
+    ///
+    /// - Important: A hash of a symmetric key has the potential to leak information about
+    ///     the key value.  Thus, the JWK Thumbprint of a symmetric key should
+    ///     typically be concealed from parties not in possession of the
+    ///     symmetric key, unless in the application context, the cryptographic
+    ///     hash used, such as SHA-256, is known to provide sufficient protection
+    ///     against disclosure of the key value.
+    ///
+    /// - Parameter format: Format of key that thumbprint will be calculated from.
+    /// - Parameter hashFunction: Algorithm of thumbprint hashing.
+    ///
+    /// - Returns: A new instance of thumbprint digest.
+    func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction
+
 }
 
 @_documentation(visibility: private)
@@ -124,6 +146,53 @@ extension JSONWebKey {
             if self[keyPath: field] == nil {
                 throw JSONWebKeyError.keyNotFound
             }
+        }
+    }
+    
+    func checkRequiredFields<T>(_ fields: [KeyPath<Self, T?>]) throws {
+        for field in fields {
+            if self[keyPath: field] == nil {
+                throw JSONWebKeyError.keyNotFound
+            }
+        }
+    }
+    
+    func jwkThumbprint<H>(using hashFunction: H.Type) throws -> H.Digest where H : HashFunction {
+        let thumbprintKeys: Set<String> = [
+            // Algorithm-specific keys
+            "kty", "crv",
+            // RSA keys
+            "n", "e", "d", "p", "q", "dp", "dq", "qi",
+            // EC/OKP keys
+            "x", "y", "d",
+            // Symmetric keys
+            "k"
+        ]
+        let thumbprintStorage = storage.filter(thumbprintKeys.contains)
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        let data = try encoder.encode(thumbprintStorage)
+        return H.hash(data: data)
+    }
+    
+    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H : HashFunction {
+        switch format {
+        case .spki:
+            guard let self = self as? (any JSONWebKeyExportable) else {
+                throw JSONWebKeyError.operationNotAllowed
+            }
+            let spki = try self.exportKey(format: .spki)
+            return H.hash(data: spki)
+        case .pkcs8:
+            guard let self = self as? (any JSONWebKeyExportable) else {
+                throw JSONWebKeyError.operationNotAllowed
+            }
+            let spki = try self.exportKey(format: .pkcs8)
+            return H.hash(data: spki)
+        case .jwk:
+            return try jwkThumbprint(using: hashFunction)
+        case .raw:
+            throw JSONWebKeyError.operationNotAllowed
         }
     }
 }
@@ -331,21 +400,6 @@ public struct AnyJSONWebKey: MutableJSONWebKey {
 }
 
 extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
-    private init(importing key: Data, format: JSONWebKeyFormat, keyType: JSONWebKeyType) throws {
-        switch (keyType, format) {
-        case (.ellipticCurve, .spki):
-            self.storage = try JSONWebECPublicKey(importing: key, format: format).storage
-        case (.rsa, .spki):
-            self.storage = try JSONWebRSAPublicKey(importing: key, format: format).storage
-        case (.ellipticCurve, .pkcs8):
-            self.storage = try JSONWebECPrivateKey(importing: key, format: format).storage
-        case (.rsa, .pkcs8):
-            self.storage = try JSONWebRSAPrivateKey(importing: key, format: format).storage
-        default:
-            throw JSONWebKeyError.invalidKeyFormat
-        }
-    }
-    
     public init(importing key: Data, format: JSONWebKeyFormat) throws {
         if format == .jwk {
             let key = try JSONDecoder().decode(AnyJSONWebKey.self, from: key).specialized()
