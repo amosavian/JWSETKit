@@ -137,15 +137,6 @@ extension PKCS8PrivateKey: DERKeyContainer {
     var algorithmIdentifier: RFC5480AlgorithmIdentifier {
         algorithm
     }
-    
-    init(pkcs1: Data) {
-        self.init(
-            algorithm: .init(algorithm: .AlgorithmIdentifier.rsaEncryption, parameters: nil),
-            privateKey: [UInt8](pkcs1),
-            publicKey: []
-        )
-        privateKey.publicKey = nil
-    }
 }
 
 extension DERKeyContainer {
@@ -276,6 +267,8 @@ struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable {
             try coder.serialize(self.algorithm)
             if let parameters = self.parameters {
                 try coder.serialize(parameters)
+            } else {
+                try coder.serialize(ASN1Null())
             }
         }
     }
@@ -297,6 +290,11 @@ extension RFC5480AlgorithmIdentifier {
     static let ecdsaP521 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
         parameters: try! .init(erasing: ASN1ObjectIdentifier.NamedCurves.secp521r1)
+    )
+    
+    static let rsaEncryption = RFC5480AlgorithmIdentifier(
+        algorithm: .AlgorithmIdentifier.rsaEncryption,
+        parameters: nil
     )
 }
 
@@ -391,7 +389,7 @@ struct PKCS8PrivateKey: DERImplicitlyTaggable {
 
     var algorithm: RFC5480AlgorithmIdentifier
 
-    var privateKey: SEC1PrivateKey
+    var privateKey: any DERSerializable
 
     init(derEncoded rootNode: ASN1Node, withIdentifier identifier: ASN1Identifier) throws {
         self = try DER.sequence(rootNode, identifier: identifier) { nodes in
@@ -427,6 +425,11 @@ struct PKCS8PrivateKey: DERImplicitlyTaggable {
         // We nil out the private key here. I don't really know why we do this, but OpenSSL does, and it seems
         // safe enough to do: it certainly avoids the possibility of disagreeing on what it is!
         self.privateKey = SEC1PrivateKey(privateKey: privateKey, algorithm: nil, publicKey: publicKey)
+    }
+    
+    init(pkcs1: [UInt8]) throws {
+        self.algorithm = .rsaEncryption
+        self.privateKey = try ASN1Any(derEncoded: pkcs1[...])
     }
 
     func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier) throws {

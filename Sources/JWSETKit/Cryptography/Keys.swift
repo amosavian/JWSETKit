@@ -49,7 +49,6 @@ public protocol JSONWebKey: Codable, Hashable {
     ///
     /// - Returns: A new instance of thumbprint digest.
     func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction
-
 }
 
 @_documentation(visibility: private)
@@ -105,6 +104,16 @@ public protocol MutableJSONWebKey: JSONWebKey {
     var storage: JSONWebValueStorage { get set }
 }
 
+extension JSONWebValueStorage {
+    fileprivate func normalizedField(_ key: String, blockSize _: Int? = nil) -> Self {
+        var copy = self
+        if let data = self[key] as Data? {
+            copy[key] = data.drop(while: { $0 == 0 })
+        }
+        return copy
+    }
+}
+
 extension JSONWebKey {
     /// Creates a new JWK using json data.
     @available(*, deprecated, message: "Use JSONDecoder instead.")
@@ -142,11 +151,7 @@ extension JSONWebKey {
     }
     
     func checkRequiredFields<T>(_ fields: KeyPath<Self, T?>...) throws {
-        for field in fields {
-            if self[keyPath: field] == nil {
-                throw JSONWebKeyError.keyNotFound
-            }
-        }
+        try checkRequiredFields(fields)
     }
     
     func checkRequiredFields<T>(_ fields: [KeyPath<Self, T?>]) throws {
@@ -157,7 +162,7 @@ extension JSONWebKey {
         }
     }
     
-    func jwkThumbprint<H>(using hashFunction: H.Type) throws -> H.Digest where H : HashFunction {
+    func jwkThumbprint<H>(using _: H.Type) throws -> H.Digest where H: HashFunction {
         let thumbprintKeys: Set<String> = [
             // Algorithm-specific keys
             "kty", "crv",
@@ -166,16 +171,18 @@ extension JSONWebKey {
             // EC/OKP keys
             "x", "y", "d",
             // Symmetric keys
-            "k"
+            "k",
         ]
-        let thumbprintStorage = storage.filter(thumbprintKeys.contains)
+        let thumbprintStorage = storage
+            .filter(thumbprintKeys.contains)
+            .normalizedField("e")
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         let data = try encoder.encode(thumbprintStorage)
         return H.hash(data: data)
     }
     
-    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H : HashFunction {
+    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
         switch format {
         case .spki:
             guard let self = self as? (any JSONWebKeyExportable) else {

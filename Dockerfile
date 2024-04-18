@@ -1,4 +1,4 @@
-FROM swift:5.9
+FROM swift:5.10
 
 # Create app directory
 RUN mkdir -p /usr/src/app

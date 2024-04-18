@@ -79,7 +79,7 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
         throw JSONWebKeyError.unknownKeyType
     }
     
-    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H : HashFunction {
+    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
         try jsonWebKey().thumbprint(format: format, using: hashFunction)
     }
 }

@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  ThumbprintTests.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 4/18/24.
 //
@@ -11,6 +11,9 @@ import XCTest
 import CryptoKit
 #else
 import Crypto
+#endif
+#if canImport(CommonCrypto)
+import CommonCrypto
 #endif
 
 final class ThumbprintTests: XCTestCase {
@@ -35,9 +38,24 @@ final class ThumbprintTests: XCTestCase {
         XCTAssertEqual(thumbprint.data, Data(urlBase64Encoded: "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"))
     }
     
+    func testJWKAmbiguousThumbprint() throws {
+        var key = try JSONWebRSAPublicKey(importing: keyData, format: .jwk)
+        key.exponent = Data([0x00, 0x01, 0x00, 0x01])
+        let thumbprint = try key.thumbprint(format: .jwk, using: SHA256.self)
+        XCTAssertEqual(thumbprint.data, Data(urlBase64Encoded: "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"))
+    }
+    
     func testSPKIThumbprint() throws {
         let key = try JSONWebRSAPublicKey(importing: keyData, format: .jwk)
         let thumbprint = try key.thumbprint(format: .spki, using: SHA256.self)
-        XCTAssertEqual(thumbprint.data, Data(urlBase64Encoded: "HDoH_pBCw1_TM0QPO5q74tZfDFsYFTyw4pknhCU2HP8"))
+        XCTAssertEqual(thumbprint.data, Data(urlBase64Encoded: "rTIyDPbFltiEsFOBulc6uo3dV0m03o9KI6efmondrrI"))
     }
+    
+#if canImport(CommonCrypto)
+    func testECDSAThumbprint() throws {
+        let secECKey = try SecKey(algorithm: .ecdsaSignatureP256SHA256)
+        let ecKey = try P256.Signing.PrivateKey(derRepresentation: secECKey.exportKey(format: .pkcs8))
+        try XCTAssertEqual(ecKey.derRepresentation, secECKey.exportKey(format: .pkcs8))
+    }
+#endif
 }

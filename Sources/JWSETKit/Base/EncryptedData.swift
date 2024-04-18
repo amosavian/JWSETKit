@@ -78,6 +78,15 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
         self.tag = sealedBox.tag
     }
     
+    /// Creates a sealed box from the given ChaChaPoly sealed box.
+    /// - Parameters:
+    ///  - sealedBox: Container for your data.
+    public init(_ sealedBox: ChaChaPoly.SealedBox) {
+        self.nonce = Data(sealedBox.nonce)
+        self.ciphertext = sealedBox.ciphertext
+        self.tag = sealedBox.tag
+    }
+    
     /// Creates a sealed box from the given AES sealed box.
     ///
     /// - Parameters:
@@ -98,6 +107,20 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
 
 extension AES.GCM.SealedBox {
     /// Creates a AES sealed box from the given sealed box.
+    ///
+    /// - Parameters:
+    ///   - sealedBox: Container for your data.
+    public init(_ sealedData: SealedData) throws {
+        self = try .init(
+            nonce: .init(data: sealedData.nonce),
+            ciphertext: sealedData.ciphertext,
+            tag: sealedData.tag
+        )
+    }
+}
+
+extension ChaChaPoly.SealedBox {
+    /// Creates a ChaChaPoly sealed box from the given sealed box.
     ///
     /// - Parameters:
     ///   - sealedBox: Container for your data.

@@ -41,7 +41,7 @@ extension SecCertificate: JSONWebValidatingKey {
         }
     }
     
-    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H : HashFunction {
+    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
         try publicKey.thumbprint(format: format, using: hashFunction)
     }
 }

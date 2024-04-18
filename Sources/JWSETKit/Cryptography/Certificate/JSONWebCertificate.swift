@@ -44,7 +44,7 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
         try leaf.verifySignature(signature, for: data, using: algorithm)
     }
     
-    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H : HashFunction {
+    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
         try leaf.thumbprint(format: format, using: hashFunction)
     }
 }

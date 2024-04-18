@@ -215,9 +215,6 @@ extension JSONWebSigningKey where Self: SecKey {
             secKeyType = kSecAttrKeyTypeRSA
         case .ellipticCurve:
             secKeyType = kSecAttrKeyTypeECSECPrimeRandom
-            if derRepresentation.count.isMultiple(of: 2) {
-                derRepresentation.insert(0x04, at: 0)
-            }
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -313,7 +310,7 @@ extension SecKey: JSONWebKeyExportable {
         case (.spki, .rsa, false):
             return try SubjectPublicKeyInfo(pkcs1: externalRepresentation).derRepresentation
         case (.pkcs8, .rsa, true):
-            return try PKCS8PrivateKey(pkcs1: externalRepresentation).derRepresentation
+            return try PKCS8PrivateKey(pkcs1: [UInt8](externalRepresentation)).derRepresentation
         case (.jwk, _, _):
             return try jwkRepresentation
         default:
