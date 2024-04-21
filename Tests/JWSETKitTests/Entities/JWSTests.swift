@@ -21,6 +21,11 @@ final class JWSTests: XCTestCase {
             urlBase64Encoded: "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ")!)
     )
     
+    let jwsDetachedString =
+        "eyJhbGciOiJIUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY"
+    
+    typealias JWSDetached = JSONWebSignature<ProtectedDataWebContainer>
+    
     func testSignatureHS256() throws {
         let signature = Data(base64Encoded: "dCfJaSBBMSnC8CXslIf5orCzS7AboBan4qE7aXuYSDs=")
         let key = try JSONWebKeyHMAC<SHA256>(ExampleKeys.symmetric)
@@ -117,5 +122,21 @@ final class JWSTests: XCTestCase {
     func testVerifyDates() throws {
         XCTAssertThrowsError(try jws.verifyDate())
         XCTAssertNoThrow(try jws.verifyDate(.init(timeIntervalSince1970: 1_300_819_370)))
+    }
+    
+    func testDetached() throws {
+        var jws = try JWSDetached(from: jwsDetachedString)
+        XCTAssertEqual(jws.payload.encoded, Data())
+        XCTAssertEqual(jwsDetachedString, jws.description)
+        
+        let key = try JSONWebKeyHMAC<SHA256>(importing: Data("""
+        {
+         "kty":"oct",
+         "k":"AyM1SysPpbyDfgZld3umj1qzKObwVMkoqQ-EstJQLr_T-1qS0gZH75aKtMN3Yj0iPS4hcgUuTwjAzZr1Z9CAow"
+        }
+        """.utf8), format: .jwk)
+        jws.payload.encoded = Data("$.02".utf8)
+        XCTAssertEqual(jwsDetachedString, jws.description)
+        XCTAssertNoThrow(try jws.verifySignature(using: key))
     }
 }

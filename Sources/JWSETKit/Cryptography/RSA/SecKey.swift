@@ -208,7 +208,6 @@ extension JSONWebSigningKey where Self: SecKey {
     }
     
     public init(derRepresentation: Data, keyType: JSONWebKeyType) throws {
-        var derRepresentation = derRepresentation
         let secKeyType: CFString
         switch keyType {
         case .rsa:

@@ -158,7 +158,11 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
 extension String {
     public init<Payload: ProtectedWebContainer>(jws: JSONWebSignature<Payload>) throws {
         let encoder = JSONEncoder.encoder
-        encoder.userInfo[.jwsEncodedRepresentation] = JSONWebSignatureRepresentation.compact
+        if jws.signatures.first?.protected.value.base64 == false {
+            encoder.userInfo[.jwsEncodedRepresentation] = JSONWebSignatureRepresentation.compactDetached
+        } else {
+            encoder.userInfo[.jwsEncodedRepresentation] = JSONWebSignatureRepresentation.compact
+        }
         self = try String(String(decoding: encoder.encode(jws), as: UTF8.self).dropFirst().dropLast())
     }
 }

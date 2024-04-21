@@ -123,35 +123,35 @@ extension JSONWebSignature: Codable {
         }
     }
     
-    fileprivate func encodeAsString(_ encoder: any Encoder) throws {
+    fileprivate func encode(_ encoder: any Encoder, parts: [Data]) throws {
         var container = encoder.singleValueContainer()
-        guard let signature = signatures.first else {
-            try container.encode("..")
-            return
-        }
-        let plainPayload = signatures[0].protected.value.base64 == false
-        let value = [
-            signature.protected.encoded.urlBase64EncodedData(),
-            plainPayload ? payload.encoded : payload.encoded.urlBase64EncodedData(),
-            signature.signature.urlBase64EncodedData(),
-        ]
-        .map { String(decoding: $0, as: UTF8.self) }
-        .joined(separator: ".")
+        let value = parts
+            .map { String(decoding: $0, as: UTF8.self) }
+            .joined(separator: ".")
         try container.encode(value)
     }
     
-    fileprivate func encodeAsDetachedString(_ encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
+    fileprivate func encodeAsString(_ encoder: any Encoder) throws {
         guard let signature = signatures.first else {
-            try container.encode("..")
-            return
+            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: "Invalid JWS header."))
         }
-        let value = [
-            signature.protected.encoded.urlBase64EncodedString(),
-            signature.signature.urlBase64EncodedString(),
-        ]
-        .joined(separator: "..")
-        try container.encode(value)
+        let plainPayload = signature.protected.value.base64 == false
+        try encode(encoder, parts: [
+            signature.protected.encoded.urlBase64EncodedData(),
+            plainPayload ? payload.encoded : payload.encoded.urlBase64EncodedData(),
+            signature.signature.urlBase64EncodedData(),
+        ])
+    }
+    
+    fileprivate func encodeAsStringDetached(_ encoder: any Encoder) throws {
+        guard let signature = signatures.first else {
+            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: "Invalid JWS header."))
+        }
+        try encode(encoder, parts: [
+            signature.protected.encoded.urlBase64EncodedData(),
+            .init(),
+            signature.signature.urlBase64EncodedData(),
+        ])
     }
     
     fileprivate func encodeAsCompleteJSON(_ encoder: any Encoder) throws {
@@ -161,12 +161,12 @@ extension JSONWebSignature: Codable {
     }
     
     fileprivate func encodeAsFlattenedJSON(_ encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
-        var headerContainer = encoder.container(keyedBy: JSONWebSignatureHeader.CodingKeys.self)
         guard let signature = signatures.first else {
             throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: "Invalid JWS header."))
         }
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
+        var headerContainer = encoder.container(keyedBy: JSONWebSignatureHeader.CodingKeys.self)
         try headerContainer.encodeIfPresent(signature.protected, forKey: .protected)
         try headerContainer.encodeIfPresent(signature.unprotected, forKey: .header)
         try headerContainer.encodeIfPresent(signature.signature, forKey: .signature)
@@ -197,7 +197,7 @@ extension JSONWebSignature: Codable {
         case .compact:
             return encodeAsString
         case .compactDetached:
-            return encodeAsDetachedString
+            return encodeAsStringDetached
         case .json:
             switch signatures.count {
             case 0, 1:

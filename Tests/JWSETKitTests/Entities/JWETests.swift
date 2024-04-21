@@ -13,6 +13,8 @@ import Crypto
 #endif
 @testable import JWSETKit
 
+extension SymmetricKey: @unchecked Sendable {}
+
 final class JWETests: XCTestCase {
     func testDecode() throws {
         let jwe = try JSONWebEncryption(from: RSA_OAEP_GCM.jweString)
