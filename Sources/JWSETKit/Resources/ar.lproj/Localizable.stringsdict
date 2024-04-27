@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>errorUnknownAlgorithm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>الخوارزمية المعطاة للتوقيع / التشفير غير مدعومة.</string>
+	</dict>
+	<key>errorUnknownKeyType</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>نوع المفتاح غير مدعوم.</string>
+	</dict>
+	<key>errorDecryptionFailed</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>فك تشفير النص الرمزي باستخدام المفتاح المعطى غير ممكن.</string>
+	</dict>
+	<key>errorKeyNotFound</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>فشل في العثور على المفتاح المعطى.</string>
+	</dict>
+	<key>errorOperationNotAllowed</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>العملية غير مسموح بها.</string>
+	</dict>
+	<key>errorInvalidKeyFormat</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>تنسيق المفتاح غير صالح</string>
+	</dict>
+	<key>errorExpiredToken</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>الرمز غير صالح بعد %@</string>
+	</dict>
+	<key>notBeforeToken</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>الرمز غير صالح قبل %@</string>
+	</dict>
+	<key>errorInvalidAudience</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>الجمهور &quot;%@&quot; ليس مقصودًا للرمز المميز.</string>
+	</dict>
+	<key>errorMissingField</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>الحقل المطلوب &quot;%@&quot; مفقود.</string>
+	</dict>
+</dict>
+</plist>

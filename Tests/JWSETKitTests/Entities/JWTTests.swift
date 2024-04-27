@@ -14,7 +14,7 @@ final class JWTTests: XCTestCase {
     
     func testDecode() throws {
         let jwt = try JSONWebToken(from: jwtString)
-        XCTAssert(jwt.signatures.first?.protected.value.algorithm == .hmacSHA256)
+        XCTAssert(jwt.signatures.first?.protected.algorithm == .hmacSHA256)
         XCTAssertEqual(jwt.payload.value.issuedAt, Date(timeIntervalSince1970: 1_516_239_022))
         XCTAssertNoThrow(try jwt.verifySignature(using: ExampleKeys.symmetric))
     }

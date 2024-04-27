@@ -194,13 +194,13 @@ enum JSONWebKeyCertificateChainSpecializer: JSONWebKeySpecializer {
 }
 
 extension AnyJSONWebKey {
-    static let specializers: ReadWriteLockedValue<[any JSONWebKeySpecializer.Type]> = .init([
+    static let specializers: ReadWriteLockedValue<[any JSONWebKeySpecializer.Type]> = [
         JSONWebKeyRSASpecializer.self,
         JSONWebKeyEllipticCurveSpecializer.self,
         JSONWebKeyCurve25519Specializer.self,
         JSONWebKeyCertificateChainSpecializer.self,
         JSONWebKeySymmetricSpecializer.self,
-    ])
+    ]
     
     /// Registers a new key specializer.
     ///
@@ -209,8 +209,8 @@ extension AnyJSONWebKey {
     ///
     /// - Parameter specializer: The specializer to register.
     public static func registerSpecializer(_ specializer: any JSONWebKeySpecializer.Type) {
-        guard !specializers.wrappedValue.contains(where: { $0 == specializer }) else { return }
-        specializers.wrappedValue.insert(specializer, at: 0)
+        guard !specializers.contains(where: { $0 == specializer }) else { return }
+        specializers.insert(specializer, at: 0)
     }
 }
 

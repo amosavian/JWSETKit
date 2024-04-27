@@ -29,7 +29,7 @@ public protocol JSONWebKey: Codable, Hashable {
     /// Validates contents and required fields if applicable.
     func validate() throws
     
-    /// Creates a thumbprint of current key.
+    /// Creates a thumbprint of current key specified in [RFC7638](https://www.rfc-editor.org/rfc/rfc7638).
     ///
     /// Valid formats for public keys are `spki` and `jwk`.  SPKI thumbprints are used in SSL-pinning.
     ///
@@ -44,11 +44,35 @@ public protocol JSONWebKey: Codable, Hashable {
     ///     hash used, such as SHA-256, is known to provide sufficient protection
     ///     against disclosure of the key value.
     ///
-    /// - Parameter format: Format of key that thumbprint will be calculated from.
-    /// - Parameter hashFunction: Algorithm of thumbprint hashing.
+    /// - Parameters:
+    ///   - format: Format of key that thumbprint will be calculated from.
+    ///   - hashFunction: Algorithm of thumbprint hashing.
     ///
     /// - Returns: A new instance of thumbprint digest.
     func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction
+    
+    /// Creates a thumbprint `URI` of current key in `urn:ietf:params:oauth` namespace
+    /// specified in [RFC9278](https://www.rfc-editor.org/rfc/rfc9278).
+    ///
+    /// Valid formats for public keys are `spki` and `jwk`.  SPKI thumbprints are used in SSL-pinning.
+    ///
+    /// While it is possible to create a thumbprint for private keys, it is typically not useful to do so,
+    /// as the thumbprint is a cryptographic hash of the key, and the private key contains all the information
+    /// needed to compute the thumbprint. It is possible by passing `pkcs8` or `jwk` as format.
+    ///
+    /// - Important: A hash of a symmetric key has the potential to leak information about
+    ///     the key value.  Thus, the JWK Thumbprint of a symmetric key should
+    ///     typically be concealed from parties not in possession of the
+    ///     symmetric key, unless in the application context, the cryptographic
+    ///     hash used, such as SHA-256, is known to provide sufficient protection
+    ///     against disclosure of the key value.
+    ///
+    /// - Parameters:
+    ///   - format: Format of key that thumbprint will be calculated from.
+    ///   - hashFunction: Algorithm of thumbprint hashing.
+    ///
+    /// - Returns: A new instance of thumbprint digest in `urn:ietf:params:oauth` namespace.
+    func thumbprintUri<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> String where H: HashFunction
 }
 
 @_documentation(visibility: private)
@@ -115,12 +139,6 @@ extension JSONWebValueStorage {
 }
 
 extension JSONWebKey {
-    /// Creates a new JWK using json data.
-    @available(*, deprecated, message: "Use JSONDecoder instead.")
-    public init(jsonWebKeyData data: Data) throws {
-        self = try Self.create(storage: JSONDecoder().decode(JSONWebValueStorage.self, from: data))
-    }
-    
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         self = try Self.create(storage: container.decode(JSONWebValueStorage.self))
@@ -202,6 +220,33 @@ extension JSONWebKey {
             throw JSONWebKeyError.operationNotAllowed
         }
     }
+    
+    public func thumbprintUri<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> String where H: HashFunction {
+        let digest = try thumbprint(format: format, using: hashFunction)
+        let digestValue = digest.data.urlBase64EncodedString()
+        guard let digestType = H.Digest.self as? any NamedDigest.Type else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        return "urn:ietf:params:oauth:\(format.rawValue)-thumbprint:\(digestType.identifier):\(digestValue)"
+    }
+}
+
+/// Hash name according to [RFC6920](https://www.rfc-editor.org/rfc/rfc6920).
+public protocol NamedDigest: Digest {
+    /// [IANA registration name](https://www.iana.org/assignments/named-information/named-information.xhtml) of the digest algorithm.
+    static var identifier: String { get }
+}
+
+extension SHA256Digest: NamedDigest {
+    public static let identifier = "sha-256"
+}
+
+extension SHA384Digest: NamedDigest {
+    public static let identifier = "sha-384"
+}
+
+extension SHA512Digest: NamedDigest {
+    public static let identifier = "sha-512"
 }
 
 /// A JSON Web Key (JWK) able to encrypt plain-texts.
@@ -412,6 +457,7 @@ extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
             let key = try JSONDecoder().decode(AnyJSONWebKey.self, from: key).specialized()
             try key.validate()
             self.storage = key.storage
+            return
         }
         for specializer in AnyJSONWebKey.specializers {
             if let specialized = try specializer.deserialize(key: key, format: format) {

@@ -165,7 +165,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
         \.key: "jwk", \.keyId: "kid", \.certificateChain: "x5c",
         \.certificateURL: "x5u", \.certificateThumbprint: "x5t",
         \.type: "typ", \.contentType: "cty", \.critical: "crit",
-        \.base64: "b64",
+        \.nonce: "nonce", \.url: "url", \.base64: "b64",
     ]
 }
 

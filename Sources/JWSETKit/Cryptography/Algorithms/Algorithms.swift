@@ -145,11 +145,11 @@ public struct JSONWebKeyCurve: StringRepresentable {
 }
 
 extension JSONWebKeyCurve {
-    private static let keySizes: ReadWriteLockedValue<[Self: Int]> = .init([
+    private static let keySizes: ReadWriteLockedValue<[Self: Int]> = [
         .p256: 32, .ed25519: 32, .x25519: 32,
         .p384: 48,
         .p521: 66,
-    ])
+    ]
     
     /// Key size in bytes.
     public var coordinateSize: Int? {
@@ -167,7 +167,7 @@ extension JSONWebKeyCurve {
     ///   - curve: Curve name.
     ///   - keySize: Uncompressed key size in bytes.
     public static func register(_ curve: Self, keySize: Int) async {
-        keySizes.wrappedValue[curve] = keySize
+        keySizes[curve] = keySize
     }
 }
 

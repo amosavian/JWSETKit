@@ -22,16 +22,16 @@ public struct JSONWebContentEncryptionAlgorithm: JSONWebAlgorithm {
 }
 
 extension JSONWebContentEncryptionAlgorithm {
-    private static let keyRegistryClasses: ReadWriteLockedValue<[Self: any JSONWebSealingKey.Type]> = .init([
+    private static let keyRegistryClasses: ReadWriteLockedValue<[Self: any JSONWebSealingKey.Type]> = [
         .aesEncryptionGCM128: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM192: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM256: JSONWebKeyAESGCM.self,
         .aesEncryptionCBC128SHA256: JSONWebKeyAESCBCHMAC.self,
         .aesEncryptionCBC192SHA384: JSONWebKeyAESCBCHMAC.self,
         .aesEncryptionCBC256SHA512: JSONWebKeyAESCBCHMAC.self,
-    ])
+    ]
     
-    private static let keyLengths: ReadWriteLockedValue<[Self: SymmetricKeySize]> = .init([
+    private static let keyLengths: ReadWriteLockedValue<[Self: SymmetricKeySize]> = [
         .aesEncryptionGCM128: .bits128,
         .aesEncryptionGCM192: .bits192,
         .aesEncryptionGCM256: .bits256,
@@ -41,7 +41,7 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionCBC128SHA256: .bits128 * 2,
         .aesEncryptionCBC192SHA384: .bits192 * 2,
         .aesEncryptionCBC256SHA512: .bits256 * 2,
-    ])
+    ]
     
     /// Key type, either RSA, Elliptic curve, Symmetric, etc.
     public var keyType: JSONWebKeyType? {
@@ -74,8 +74,8 @@ extension JSONWebContentEncryptionAlgorithm {
         keyClass: KT.Type,
         keyLength: SymmetricKeySize
     ) where KT: JSONWebSealingKey {
-        keyRegistryClasses.wrappedValue[algorithm] = keyClass
-        keyLengths.wrappedValue[algorithm] = keyLength
+        keyRegistryClasses[algorithm] = keyClass
+        keyLengths[algorithm] = keyLength
     }
 }
 

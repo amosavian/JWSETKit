@@ -36,7 +36,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         _ cek: inout Data
     ) throws -> Void
     
-    private static let keyRegistryClasses: ReadWriteLockedValue < [Self: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)]> = .init([
+    private static let keyRegistryClasses: ReadWriteLockedValue < [Self: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)]> = [
         .direct: (JSONWebDirectKey.self, JSONWebDirectKey.self),
         .aesKeyWrap128: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
         .aesKeyWrap192: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
@@ -56,9 +56,9 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
         .ecdhEphemeralStaticAESKeyWrap192: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
         .ecdhEphemeralStaticAESKeyWrap256: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
-    ])
+    ]
     
-    private static let keyTypes: ReadWriteLockedValue<[Self: JSONWebKeyType]> = .init([
+    private static let keyTypes: ReadWriteLockedValue<[Self: JSONWebKeyType]> = [
         .direct: .symmetric,
         .aesKeyWrap128: .symmetric,
         .aesKeyWrap192: .symmetric,
@@ -78,9 +78,9 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: .symmetric,
         .ecdhEphemeralStaticAESKeyWrap192: .symmetric,
         .ecdhEphemeralStaticAESKeyWrap256: .symmetric,
-    ])
+    ]
     
-    private static let keyLengths: ReadWriteLockedValue<[Self: Int]> = .init([
+    private static let keyLengths: ReadWriteLockedValue<[Self: Int]> = [
         .aesKeyWrap128: SymmetricKeySize.bits128.bitCount,
         .aesKeyWrap192: SymmetricKeySize.bits192.bitCount,
         .aesKeyWrap256: SymmetricKeySize.bits256.bitCount,
@@ -98,9 +98,9 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: SymmetricKeySize.bits128.bitCount,
         .ecdhEphemeralStaticAESKeyWrap192: SymmetricKeySize.bits192.bitCount,
         .ecdhEphemeralStaticAESKeyWrap256: SymmetricKeySize.bits256.bitCount,
-    ])
+    ]
     
-    private static let hashFunctions: ReadWriteLockedValue<[Self: any HashFunction.Type]> = .init([
+    private static let hashFunctions: ReadWriteLockedValue<[Self: any HashFunction.Type]> = [
         .aesKeyWrap128: SHA256.self,
         .aesKeyWrap192: SHA384.self,
         .aesKeyWrap256: SHA512.self,
@@ -114,9 +114,9 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: SHA256.self,
         .ecdhEphemeralStaticAESKeyWrap192: SHA256.self,
         .ecdhEphemeralStaticAESKeyWrap256: SHA256.self,
-    ])
+    ]
     
-    private static let encryptedKeyHandlers: ReadWriteLockedValue<[Self: EncryptedKeyHandler]> = .init([
+    private static let encryptedKeyHandlers: ReadWriteLockedValue<[Self: EncryptedKeyHandler]> = [
         .aesGCM128KeyWrap: aesGCMKeyWrapEncryptedKey,
         .aesGCM192KeyWrap: aesGCMKeyWrapEncryptedKey,
         .aesGCM256KeyWrap: aesGCMKeyWrapEncryptedKey,
@@ -127,9 +127,9 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: ecdhEsEncryptedKey,
         .ecdhEphemeralStaticAESKeyWrap192: ecdhEsEncryptedKey,
         .ecdhEphemeralStaticAESKeyWrap256: ecdhEsEncryptedKey,
-    ])
+    ]
     
-    private static let decryptionMutators: ReadWriteLockedValue<[Self: DecryptionMutatorHandler]> = .init([
+    private static let decryptionMutators: ReadWriteLockedValue<[Self: DecryptionMutatorHandler]> = [
         .direct: directDecryptionMutator,
         .aesGCM128KeyWrap: aesgcmDecryptionMutator,
         .aesGCM192KeyWrap: aesgcmDecryptionMutator,
@@ -141,7 +141,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: ecdhEsDecryptionMutator,
         .ecdhEphemeralStaticAESKeyWrap192: ecdhEsDecryptionMutator,
         .ecdhEphemeralStaticAESKeyWrap256: ecdhEsDecryptionMutator,
-    ])
+    ]
     
     /// Key type, either RSA, Elliptic curve, Symmetric, etc.
     public var keyType: JSONWebKeyType? {
@@ -199,12 +199,12 @@ extension JSONWebKeyEncryptionAlgorithm {
         encryptedKeyHandler: EncryptedKeyHandler?,
         decryptionMutating: DecryptionMutatorHandler?
     ) where Public: JSONWebEncryptingKey, Private: JSONWebDecryptingKey {
-        keyRegistryClasses.wrappedValue[algorithm] = (publicKeyClass, privateKeyClass)
-        keyTypes.wrappedValue[algorithm] = type
-        keyLengths.wrappedValue[algorithm] = keyLengthInBits
-        hashFunctions.wrappedValue[algorithm] = hashFunction
-        encryptedKeyHandlers.wrappedValue[algorithm] = encryptedKeyHandler
-        decryptionMutators.wrappedValue[algorithm] = decryptionMutating
+        keyRegistryClasses[algorithm] = (publicKeyClass, privateKeyClass)
+        keyTypes[algorithm] = type
+        keyLengths[algorithm] = keyLengthInBits
+        hashFunctions[algorithm] = hashFunction
+        encryptedKeyHandlers[algorithm] = encryptedKeyHandler
+        decryptionMutators[algorithm] = decryptionMutating
     }
     
     /// Generates new random key with minimum key length.
@@ -445,8 +445,8 @@ extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     /// **Key Management**: PBES2 with HMAC SHA-512 and "A256KW" wrapping.
     public static var pbes2hmac512: Self { "PBES2-HS512+A256KW" }
     
-    static func pbes2hmac(bitCount: Int) -> Self {
-        .init(rawValue: "PBES2-HS\(bitCount)+A\(bitCount / 2)KW")
+    static func pbes2hmac(keyBitCount: Int) -> Self {
+        .init(rawValue: "PBES2-HS\(keyBitCount * 2)+A\(keyBitCount)KW")
     }
     
     // **Key Management**:ECDH-ES using Concat KDF and CEK wrapped with "A128KW".

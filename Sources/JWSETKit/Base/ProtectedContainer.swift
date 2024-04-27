@@ -16,7 +16,7 @@ extension JSONEncoder {
 }
 
 /// Data value that must be protected by JWS.
-public protocol ProtectedWebContainer: Hashable, Encodable, Sendable {
+public protocol ProtectedWebContainer: Hashable, Encodable, CustomDebugStringConvertible, Sendable {
     /// Signed data.
     var encoded: Data { get set }
     
@@ -30,6 +30,10 @@ public protocol ProtectedWebContainer: Hashable, Encodable, Sendable {
 }
 
 extension ProtectedWebContainer {
+    public var debugDescription: String {
+        "(Protected: \(encoded.urlBase64EncodedString())"
+    }
+    
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.encoded == rhs.encoded
     }
@@ -62,6 +66,7 @@ extension ProtectedWebContainer {
     }
 }
 
+@dynamicMemberLookup
 public protocol TypedProtectedWebContainer<Container>: ProtectedWebContainer {
     associatedtype Container
     /// Parsed value of data.
@@ -71,6 +76,33 @@ public protocol TypedProtectedWebContainer<Container>: ProtectedWebContainer {
     ///
     /// - Parameter value: Object that will be presented in `protected`.
     init(value: Container) throws
+}
+
+extension TypedProtectedWebContainer {
+    public var debugDescription: String {
+        let valueDescription: String
+        if let value = value as? (any CustomDebugStringConvertible) {
+            valueDescription = value.debugDescription
+        } else {
+            valueDescription = "\(value)"
+        }
+        return "(Protected: \(encoded.urlBase64EncodedString()), Value: \(valueDescription))"
+    }
+    
+    public subscript<T>(dynamicMember keyPath: KeyPath<Container, T>) -> T {
+        get {
+            value[keyPath: keyPath]
+        }
+    }
+    
+    public subscript<T>(dynamicMember keyPath: WritableKeyPath<Container, T>) -> T {
+        get {
+            value[keyPath: keyPath]
+        }
+        mutating set {
+            value[keyPath: keyPath] = newValue
+        }
+    }
 }
 
 public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {

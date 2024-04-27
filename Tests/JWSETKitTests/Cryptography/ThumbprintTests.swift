@@ -51,6 +51,12 @@ final class ThumbprintTests: XCTestCase {
         XCTAssertEqual(thumbprint.data, Data(urlBase64Encoded: "rTIyDPbFltiEsFOBulc6uo3dV0m03o9KI6efmondrrI"))
     }
     
+    func testJWK_URI_Thumbprint() throws {
+        let key = try JSONWebRSAPublicKey(importing: keyData, format: .jwk)
+        let uri = try key.thumbprintUri(format: .jwk, using: SHA256.self)
+        XCTAssertEqual(uri, "urn:ietf:params:oauth:jwk-thumbprint:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs")
+    }
+    
 #if canImport(CommonCrypto)
     func testECDSAThumbprint() throws {
         let secECKey = try SecKey(algorithm: .ecdsaSignatureP256SHA256)

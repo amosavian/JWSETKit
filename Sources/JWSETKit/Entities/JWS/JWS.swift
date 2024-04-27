@@ -67,8 +67,8 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     public mutating func updateSignature(using keys: [any JSONWebSigningKey]) throws {
         signatures = try signatures.map { header in
             let message = header.signedData(payload)
-            let algorithm = JSONWebSignatureAlgorithm(header.protected.value.algorithm.rawValue)
-            let keyId: String? = header.protected.value.keyId ?? header.unprotected?.keyId
+            let algorithm = JSONWebSignatureAlgorithm(header.protected.algorithm.rawValue)
+            let keyId: String? = header.protected.keyId ?? header.unprotected?.keyId
             let signature: Data
             if algorithm == .none {
                 signature = .init()
@@ -158,7 +158,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
 extension String {
     public init<Payload: ProtectedWebContainer>(jws: JSONWebSignature<Payload>) throws {
         let encoder = JSONEncoder.encoder
-        if jws.signatures.first?.protected.value.base64 == false {
+        if jws.signatures.first?.protected.base64 == false {
             encoder.userInfo[.jwsEncodedRepresentation] = JSONWebSignatureRepresentation.compactDetached
         } else {
             encoder.userInfo[.jwsEncodedRepresentation] = JSONWebSignatureRepresentation.compact

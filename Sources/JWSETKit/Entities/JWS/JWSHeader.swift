@@ -58,7 +58,7 @@ public struct JSONWebSignatureHeader: Hashable, Codable, Sendable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        self.protected = try container.decode(ProtectedJSONWebContainer<JOSEHeader>.self, forKey: .protected)
+        self.protected = try container.decodeIfPresent(ProtectedJSONWebContainer<JOSEHeader>.self, forKey: .protected) ?? .init(value: .init())
         self.unprotected = try container.decodeIfPresent(JOSEHeader.self, forKey: .header)
         
         let signatureString = try container.decodeIfPresent(String.self, forKey: .signature) ?? .init()
@@ -77,7 +77,7 @@ public struct JSONWebSignatureHeader: Hashable, Codable, Sendable {
 
 extension JSONWebSignatureHeader {
     func signedData(_ payload: any ProtectedWebContainer) -> Data {
-        if protected.value.critical.contains("b64"), protected.value.base64 == false {
+        if protected.critical.contains("b64"), protected.base64 == false {
             return protected.encoded.urlBase64EncodedData() + Data(".".utf8) + payload.encoded
         } else {
             return protected.encoded.urlBase64EncodedData() + Data(".".utf8) + payload.encoded.urlBase64EncodedData()

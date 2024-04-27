@@ -1,4 +1,4 @@
-# ``JSONWebEncryption``
+# ``JWSETKit/JSONWebEncryption``
 
 Use JWE to encrypt a payload.
 

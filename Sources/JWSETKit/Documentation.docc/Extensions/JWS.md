@@ -1,4 +1,4 @@
-# ``JSONWebSignature``
+# ``JWSETKit/JSONWebSignature``
 
 Using JWS to create, sign and verify a custom payload.
 

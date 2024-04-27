@@ -135,7 +135,7 @@ extension JSONWebSignature: Codable {
         guard let signature = signatures.first else {
             throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: "Invalid JWS header."))
         }
-        let plainPayload = signature.protected.value.base64 == false
+        let plainPayload = signature.protected.base64 == false
         try encode(encoder, parts: [
             signature.protected.encoded.urlBase64EncodedData(),
             plainPayload ? payload.encoded : payload.encoded.urlBase64EncodedData(),
@@ -156,7 +156,9 @@ extension JSONWebSignature: Codable {
     
     fileprivate func encodeAsCompleteJSON(_ encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
+        if !payload.encoded.isEmpty {
+            try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
+        }
         try container.encode(signatures, forKey: .signatures)
     }
     
@@ -165,7 +167,9 @@ extension JSONWebSignature: Codable {
             throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: "Invalid JWS header."))
         }
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
+        if !payload.encoded.isEmpty {
+            try container.encode(payload.encoded.urlBase64EncodedString(), forKey: .payload)
+        }
         var headerContainer = encoder.container(keyedBy: JSONWebSignatureHeader.CodingKeys.self)
         try headerContainer.encodeIfPresent(signature.protected, forKey: .protected)
         try headerContainer.encodeIfPresent(signature.unprotected, forKey: .header)
@@ -177,7 +181,7 @@ extension JSONWebSignature: Codable {
         case 0:
             return .compact
         case 1 where signatures[0].unprotected == nil:
-            if signatures[0].protected.value.base64 == false {
+            if signatures[0].protected.base64 == false {
                 return .compactDetached
             }
             return .compact

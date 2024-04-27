@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>errorUnknownAlgorithm</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>El algoritmo de firma/cifrado dado no es compatible.</string>
+	</dict>
+	<key>errorUnknownKeyType</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>El tipo de clave no es compatible.</string>
+	</dict>
+	<key>errorDecryptionFailed</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>No es posible descifrar el texto cifrado con la clave proporcionada.</string>
+	</dict>
+	<key>errorKeyNotFound</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>No se pudo encontrar la clave proporcionada.</string>
+	</dict>
+	<key>errorOperationNotAllowed</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Operación no permitida.</string>
+	</dict>
+	<key>errorInvalidKeyFormat</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Formato de clave inválido.</string>
+	</dict>
+	<key>errorExpiredToken</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>El token es inválido después de %@</string>
+	</dict>
+	<key>notBeforeToken</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>El token es inválido antes de %@</string>
+	</dict>
+	<key>errorInvalidAudience</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>La audiencia &quot;%@&quot; no está destinada para el token.</string>
+	</dict>
+	<key>errorMissingField</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Falta el campo requerido &quot;%@&quot;.</string>
+	</dict>
+</dict>
+</plist>

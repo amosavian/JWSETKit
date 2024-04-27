@@ -42,7 +42,7 @@ final class JWETests: XCTestCase {
     func testDecrypt_RSA_OAEP_AES_GCM() throws {
         let jwe = try JSONWebEncryption(from: RSA_OAEP_GCM.jweString)
         
-        let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.value.algorithm.rawValue)
+        let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm.rawValue)
         let decryptedCEK = try RSA_OAEP_GCM.kek.decrypt(jwe.encryptedKey!, using: algorithm)
         XCTAssertEqual(decryptedCEK, RSA_OAEP_GCM.cek.data)
         
@@ -53,7 +53,7 @@ final class JWETests: XCTestCase {
     func testDecrypt_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(from: RSA_PKCS1_5_CBC.jweString)
         
-        let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.value.algorithm.rawValue)
+        let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm.rawValue)
         let decryptedCEK = try RSA_PKCS1_5_CBC.kek.decrypt(jwe.encryptedKey!, using: algorithm)
         XCTAssertEqual(decryptedCEK, RSA_PKCS1_5_CBC.cek.data)
         
@@ -64,7 +64,7 @@ final class JWETests: XCTestCase {
     func testDecrypt_AESKW_CBC() throws {
         let jwe = try JSONWebEncryption(from: AESKW_CBC.jweString)
         
-        let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.value.algorithm.rawValue)
+        let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm.rawValue)
         let decryptedCEK = try AESKW_CBC.kek.decrypt(jwe.encryptedKey!, using: algorithm)
         XCTAssertEqual(decryptedCEK, AESKW_CBC.cek.data)
         

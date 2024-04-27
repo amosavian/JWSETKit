@@ -1,4 +1,4 @@
-# ``JSONWebToken``
+# ``JWSETKit/JSONWebToken``
 
 Usage of JWT, Verifying and make new signatures.  
 

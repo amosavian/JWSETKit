@@ -82,6 +82,15 @@ final class ReadWriteLockedValue<T>: @unchecked Sendable {
     subscript<U>(dynamicMember keyPath: KeyPath<T, U>) -> U {
         wrappedValue[keyPath: keyPath]
     }
+    
+    subscript<U>(dynamicMember keyPath: WritableKeyPath<T, U>) -> U {
+        get {
+            wrappedValue[keyPath: keyPath]
+        }
+        set {
+            wrappedValue[keyPath: keyPath] = newValue
+        }
+    }
 }
 
 extension ReadWriteLockedValue: Equatable where T: Equatable {
@@ -141,6 +150,151 @@ extension ReadWriteLockedValue: MutableCollection where T: MutableCollection {
         set {
             wrappedValue[bounds] = newValue
         }
+    }
+}
+
+extension ReadWriteLockedValue: RangeReplaceableCollection where T: RangeReplaceableCollection {
+    convenience init() {
+        self.init(wrappedValue: T())
+    }
+    
+    convenience init<S>(_ elements: S) where S : Sequence, T.Element == S.Element {
+        self.init(wrappedValue: T(elements))
+    }
+    
+    convenience init(repeating repeatedValue: T.Element, count: Int) {
+        self.init(wrappedValue: T(repeating: repeatedValue, count: count))
+    }
+    
+    func reserveCapacity(_ n: Int) {
+        wrappedValue.reserveCapacity(n)
+    }
+    
+    func replaceSubrange<C>(_ subrange: Range<T.Index>, with newElements: C) where C : Collection, T.Element == C.Element {
+        wrappedValue.replaceSubrange(subrange, with: newElements)
+    }
+    
+    func append(_ newElement: T.Element) {
+        wrappedValue.append(newElement)
+    }
+    
+    func append<S>(contentsOf newElements: S) where S : Sequence, T.Element == S.Element {
+        wrappedValue.append(contentsOf: newElements)
+    }
+    
+    func insert(_ newElement: T.Element, at i: T.Index) {
+        wrappedValue.insert(newElement, at: i)
+    }
+    
+    func insert<S>(contentsOf newElements: S, at i: T.Index) where S : Collection, T.Element == S.Element {
+        wrappedValue.insert(contentsOf: newElements, at: i)
+    }
+    
+    func removeSubrange(_ bounds: Range<T.Index>) {
+        wrappedValue.removeSubrange(bounds)
+    }
+    
+    func remove(at i: T.Index) -> T.Element {
+        wrappedValue.remove(at: i)
+    }
+    
+    func removeFirst() -> T.Element {
+        wrappedValue.removeFirst()
+    }
+    
+    func removeFirst(_ k: Int) {
+        wrappedValue.removeFirst(k)
+    }
+    
+    func removeAll(where shouldBeRemoved: (T.Element) throws -> Bool) rethrows {
+        try wrappedValue.removeAll(where: shouldBeRemoved)
+    }
+    
+    func removeAll(keepingCapacity keepCapacity: Bool) {
+        wrappedValue.removeAll(keepingCapacity: keepCapacity)
+    }
+}
+
+extension ReadWriteLockedValue: BidirectionalCollection where T: BidirectionalCollection {
+    func index(before i: T.Index) -> T.Index {
+        wrappedValue.index(before: i)
+    }
+}
+
+extension ReadWriteLockedValue: RandomAccessCollection where T: RandomAccessCollection {}
+
+extension ReadWriteLockedValue: LazySequenceProtocol where T: LazySequenceProtocol {}
+
+extension ReadWriteLockedValue: LazyCollectionProtocol where T: LazyCollectionProtocol {}
+
+extension ReadWriteLockedValue: ExpressibleByNilLiteral where T: ExpressibleByNilLiteral {
+    convenience init(nilLiteral: ()) {
+        self.init(wrappedValue: nil)
+    }
+}
+
+extension ReadWriteLockedValue: ExpressibleByArrayLiteral where T: ExpressibleByArrayLiteral & RangeReplaceableCollection {
+    convenience init(arrayLiteral elements: T.Element...) {
+        self.init(wrappedValue: T(elements))
+    }
+}
+
+extension ReadWriteLockedValue: ExpressibleByFloatLiteral where T: ExpressibleByFloatLiteral {
+    convenience init(floatLiteral value: T.FloatLiteralType) {
+        self.init(wrappedValue: T(floatLiteral: value))
+    }
+}
+
+extension ReadWriteLockedValue: ExpressibleByIntegerLiteral where T: ExpressibleByIntegerLiteral {
+    convenience init(integerLiteral value: T.IntegerLiteralType) {
+        self.init(wrappedValue: T(integerLiteral: value))
+    }
+}
+
+extension ReadWriteLockedValue: ExpressibleByUnicodeScalarLiteral where T: ExpressibleByUnicodeScalarLiteral {
+    convenience init(unicodeScalarLiteral value: T.UnicodeScalarLiteralType) {
+        self.init(wrappedValue: T(unicodeScalarLiteral: value))
+    }
+}
+
+extension ReadWriteLockedValue: ExpressibleByExtendedGraphemeClusterLiteral where T: ExpressibleByExtendedGraphemeClusterLiteral {
+    convenience init(extendedGraphemeClusterLiteral value: T.ExtendedGraphemeClusterLiteralType) {
+        self.init(wrappedValue: T(extendedGraphemeClusterLiteral: value))
+    }
+}
+
+extension ReadWriteLockedValue: ExpressibleByStringLiteral where T: ExpressibleByStringLiteral {
+    convenience init(stringLiteral value: T.StringLiteralType) {
+        self.init(wrappedValue: T(stringLiteral: value))
+    }
+}
+
+extension ReadWriteLockedValue: ExpressibleByStringInterpolation where T: ExpressibleByStringInterpolation {
+    convenience init(stringInterpolation: T.StringInterpolation) {
+        self.init(wrappedValue: T(stringInterpolation: stringInterpolation))
+    }
+}
+
+extension ReadWriteLockedValue: ExpressibleByBooleanLiteral where T: ExpressibleByBooleanLiteral {
+    convenience init(booleanLiteral value: T.BooleanLiteralType) {
+        self.init(wrappedValue: T(booleanLiteral: value))
+    }
+}
+
+protocol DictionaryInitialzable: ExpressibleByDictionaryLiteral {
+    init(elements: [(Key, Value)])
+}
+
+extension Dictionary: DictionaryInitialzable {
+    init(elements: [(Key, Value)]) {
+        self.init(uniqueKeysWithValues: elements)
+    }
+}
+
+extension ReadWriteLockedValue: ExpressibleByDictionaryLiteral where T: ExpressibleByDictionaryLiteral & DictionaryInitialzable, T.Key: Hashable {
+    convenience init(dictionaryLiteral elements: (T.Key, T.Value)...) {
+        let elements = elements.map { ($0, $1) }
+        self.init(wrappedValue: T(elements: elements))
     }
 }
 
