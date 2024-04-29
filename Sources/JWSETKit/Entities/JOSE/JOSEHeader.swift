@@ -52,12 +52,6 @@ public struct JOSEHeader: JSONWebContainer {
         return .init(storage: storage)
     }
     
-    public func validate() throws {
-        guard storage.contains(key: "alg") else {
-            throw JSONWebValidationError.missingRequiredField(key: "alg")
-        }
-    }
-    
     private var normalizedStorage: JSONWebValueStorage {
         var result = storage
         result["typ"] = result["typ"].map(JSONWebContentType.init(rawValue:))?.mimeType

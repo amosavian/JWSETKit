@@ -110,42 +110,42 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     ///
     /// - Parameters:
     ///   - keys: An array of `JSONWebValidatingKey` that would be used for validation.
-    public func verifySignature(using keys: [any JSONWebValidatingKey]) throws {
+    ///   - strict: If `true` (default), the algorithm in the protected header will be used otherwise algorithm in unprotected header will be allowed.
+    public func verifySignature(using keys: [any JSONWebValidatingKey], strict: Bool = true) throws {
         guard !signatures.isEmpty else {
             throw CryptoKitError.authenticationFailure
         }
         for header in signatures {
             let message = header.signedData(payload)
-            let algorithm = JSONWebSignatureAlgorithm(header.protected.value.algorithm.rawValue)
-            let keyId: String? = header.protected.value.keyId ?? header.unprotected?.keyId
-            if algorithm == .none {
-                // If we allow "none" algorithm in verification, a malicious user may simply
-                // remove the signature and change the algorithm to "none".
-                // As this scenario may lead to a critical security vulnaribility, "none"
-                // is not supported algorithm .
-                throw JSONWebKeyError.operationNotAllowed
-            } else if let key = keys.bestMatch(for: algorithm, id: keyId) {
+            var algorithm = JSONWebSignatureAlgorithm(header.protected.algorithm.rawValue)
+            if !strict, algorithm == .none, let unprotected = header.unprotected {
+                algorithm = JSONWebSignatureAlgorithm(unprotected.algorithm.rawValue)
+            }
+            let keyId: String? = header.protected.keyId ?? header.unprotected?.keyId
+            if let key = keys.bestMatch(for: algorithm, id: keyId) {
                 try key.verifySignature(header.signature, for: message, using: algorithm)
-            } else {
-                throw JSONWebKeyError.keyNotFound
+                return
             }
         }
+        throw JSONWebKeyError.keyNotFound
     }
     
     /// Verifies all signatures in protected header(s) using given key set.
     ///
     /// - Parameters:
     ///   - key: A `JSONWebKeySet` object contains keys that would be used for validation.
-    public func verifySignature(using keySet: JSONWebKeySet) throws {
-        try verifySignature(using: keySet.keys.compactMap { $0 as? any JSONWebValidatingKey })
+    ///   - strict: If `true` (default), the algorithm in the protected header will be used otherwise algorithm in unprotected header will be allowed.
+    public func verifySignature(using keySet: JSONWebKeySet, strict: Bool = true) throws {
+        try verifySignature(using: keySet.keys.compactMap { $0 as? any JSONWebValidatingKey }, strict: strict)
     }
     
     /// Verifies all signatures in protected header(s) using given key.
     ///
     /// - Parameters:
     ///   - key: A `JSONWebValidatingKey` object that would be used for validation.
-    public func verifySignature(using key: any JSONWebValidatingKey) throws {
-        try verifySignature(using: [key])
+    ///   - strict: If `true` (default), the algorithm in the protected header will be used otherwise algorithm in unprotected header will be allowed.
+    public func verifySignature(using key: any JSONWebValidatingKey, strict: Bool = true) throws {
+        try verifySignature(using: [key], strict: strict)
     }
     
     /// Validates contents and required fields if applicable.

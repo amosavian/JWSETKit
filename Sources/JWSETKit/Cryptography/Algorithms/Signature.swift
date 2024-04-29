@@ -40,7 +40,7 @@ extension JSONWebSignatureAlgorithm {
     ]
     
     private static let keyTypes: ReadWriteLockedValue<[Self: JSONWebKeyType]> = [
-        .none: .symmetric,
+        .none: .empty,
         .hmacSHA256: .symmetric,
         .hmacSHA384: .symmetric,
         .hmacSHA512: .symmetric,

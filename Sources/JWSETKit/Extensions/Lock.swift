@@ -99,6 +99,12 @@ extension ReadWriteLockedValue: Equatable where T: Equatable {
     }
 }
 
+extension ReadWriteLockedValue: Comparable where T: Comparable {
+    static func < (lhs: ReadWriteLockedValue, rhs: ReadWriteLockedValue) -> Bool {
+        lhs.wrappedValue < rhs.wrappedValue
+    }
+}
+
 extension ReadWriteLockedValue: Hashable where T: Hashable {
     func hash(into hasher: inout Hasher) {
         hasher.combine(wrappedValue)
@@ -108,6 +114,14 @@ extension ReadWriteLockedValue: Hashable where T: Hashable {
 extension ReadWriteLockedValue: Sequence where T: Sequence {
     func makeIterator() -> T.Iterator {
         wrappedValue.makeIterator()
+    }
+    
+    var underestimatedCount: Int {
+        wrappedValue.underestimatedCount
+    }
+    
+    func withContiguousStorageIfAvailable<R>(_ body: (UnsafeBufferPointer<T.Element>) throws -> R) rethrows -> R? {
+        try wrappedValue.withContiguousStorageIfAvailable(body)
     }
 }
 
