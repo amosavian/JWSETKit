@@ -49,7 +49,9 @@ extension JSONWebCompressionAlgorithm {
         .deflate: AppleCompressor<DeflateCompressionCodec>.self,
     ]
 #else
-    private static let compressors: PthreadReadWriteLockedValue<[Self: any JSONWebCompressor.Type]> = [:]
+    private static let compressors: PthreadReadWriteLockedValue<[Self: any JSONWebCompressor.Type]> = [
+        .deflate: Compressor<DeflateCompressionCodec>.self,
+    ]
 #endif
     
     /// Returns provided compressor for this algorithm.

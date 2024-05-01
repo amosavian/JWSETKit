@@ -88,7 +88,11 @@ public final class PthreadReadWriteLock: Locking, @unchecked Sendable {
             result = pthread_rwlock_wrlock(lock)
         }
         if result != 0 {
-            throw POSIXError(POSIXError.Code(rawValue: result) ?? .ELAST)
+            #if canImport(Darwin)
+            throw POSIXError(.init(rawValue: result) ?? .ELAST)
+            #else
+            throw NSError(domain: NSPOSIXErrorDomain, code: Int(result))
+            #endif
         }
     }
     

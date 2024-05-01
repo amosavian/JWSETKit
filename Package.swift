@@ -29,6 +29,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.3.0")),
         .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.2.0")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.8.2")),
+        .package(url: "https://github.com/tsolomko/SWCompression.git", .upToNextMajor(from: "4.8.6")),
     ],
     targets: [
         .target(
@@ -41,6 +42,7 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
+                .product(name: "SWCompression", package: "SWCompression", condition: .when(platforms: .nonDarwin)),
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy"),
