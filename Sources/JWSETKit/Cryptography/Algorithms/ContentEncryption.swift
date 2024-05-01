@@ -22,7 +22,7 @@ public struct JSONWebContentEncryptionAlgorithm: JSONWebAlgorithm {
 }
 
 extension JSONWebContentEncryptionAlgorithm {
-    private static let keyRegistryClasses: ReadWriteLockedValue<[Self: any JSONWebSealingKey.Type]> = [
+    private static let keyRegistryClasses: PthreadReadWriteLockedValue<[Self: any JSONWebSealingKey.Type]> = [
         .aesEncryptionGCM128: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM192: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM256: JSONWebKeyAESGCM.self,
@@ -31,7 +31,7 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionCBC256SHA512: JSONWebKeyAESCBCHMAC.self,
     ]
     
-    private static let keyLengths: ReadWriteLockedValue<[Self: SymmetricKeySize]> = [
+    private static let keyLengths: PthreadReadWriteLockedValue<[Self: SymmetricKeySize]> = [
         .aesEncryptionGCM128: .bits128,
         .aesEncryptionGCM192: .bits192,
         .aesEncryptionGCM256: .bits256,

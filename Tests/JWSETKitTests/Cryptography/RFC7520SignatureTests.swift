@@ -1,5 +1,5 @@
 //
-//  RFC7520Tests.swift
+//  RFC7520SignatureTests.swift
 //
 //
 //  Created by Amir Abbas Mousavian on 1/5/24.
@@ -158,14 +158,13 @@ final class RFC7520Tests: XCTestCase {
     func testSignatureUnprotectedHeader() throws {
         let jws = try JWS(signatures: [
             .init(protected: "eyJhbGciOiJIUzI1NiJ9".decoded,
-                  unprotected: .init({ $0.keyId = "018c0ae5-4d9b-471b-bfd6-eef314bc7037" }),
-                  signature: "bWUSVaxorn7bEF1djytBd0kHv70Ly5pvbomzMWSOr20".decoded)
+                  unprotected: .init { $0.keyId = "018c0ae5-4d9b-471b-bfd6-eef314bc7037" },
+                  signature: "bWUSVaxorn7bEF1djytBd0kHv70Ly5pvbomzMWSOr20".decoded),
         ], payload: .init(encoded: payload.decoded))
         
         XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.macSymmetricKey.validatingKey))
         
         let encoder = JSONEncoder()
-        encoder.userInfo[.jwsEncodedRepresentation] = JSONWebSignatureRepresentation.jsonFlattened
         let jwsFlattened = try encoder.encode(jws)
         let jwsFlattenedValue = try JSONDecoder().decode(JSONWebValueStorage.self, from: jwsFlattened)
         XCTAssertTrue(jwsFlattenedValue.contains(key: "header"))
@@ -181,17 +180,16 @@ final class RFC7520Tests: XCTestCase {
     func testSignatureProtectedContentOnly() throws {
         let jws = try JWS(signatures: [
             .init(protected: JOSEHeader(),
-                  unprotected: .init({
+                  unprotected: .init {
                       $0.algorithm = JSONWebSignatureAlgorithm.hmacSHA256
                       $0.keyId = "018c0ae5-4d9b-471b-bfd6-eef314bc7037"
-                  }),
-                  signature: "xuLifqLGiblpv9zBpuZczWhNj1gARaLV3UxvxhJxZuk".decoded)
+                  },
+                  signature: "xuLifqLGiblpv9zBpuZczWhNj1gARaLV3UxvxhJxZuk".decoded),
         ], payload: .init(encoded: payload.decoded))
         
         XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.macSymmetricKey.validatingKey, strict: false))
         
         let encoder = JSONEncoder()
-        encoder.userInfo[.jwsEncodedRepresentation] = JSONWebSignatureRepresentation.jsonFlattened
         let jwsFlattened = try encoder.encode(jws)
         let jwsFlattenedValue = try JSONDecoder().decode(JSONWebValueStorage.self, from: jwsFlattened)
         XCTAssertTrue(jwsFlattenedValue.contains(key: "header"))

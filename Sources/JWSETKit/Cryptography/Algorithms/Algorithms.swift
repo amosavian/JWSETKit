@@ -145,7 +145,7 @@ public struct JSONWebKeyCurve: StringRepresentable {
 }
 
 extension JSONWebKeyCurve {
-    private static let keySizes: ReadWriteLockedValue<[Self: Int]> = [
+    private static let keySizes: PthreadReadWriteLockedValue<[Self: Int]> = [
         .p256: 32, .ed25519: 32, .x25519: 32,
         .p384: 48,
         .p521: 66,

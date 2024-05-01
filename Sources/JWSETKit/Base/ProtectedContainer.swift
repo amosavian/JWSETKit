@@ -90,9 +90,7 @@ extension TypedProtectedWebContainer {
     }
     
     public subscript<T>(dynamicMember keyPath: KeyPath<Container, T>) -> T {
-        get {
-            value[keyPath: keyPath]
-        }
+        value[keyPath: keyPath]
     }
     
     public subscript<T>(dynamicMember keyPath: WritableKeyPath<Container, T>) -> T {
