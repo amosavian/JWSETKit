@@ -14,7 +14,8 @@ import Crypto
 #endif
 
 typealias JWS = JSONWebSignature<ProtectedDataWebContainer>
-final class RFC7520Tests: XCTestCase {
+
+final class RFC7520SignatureTests: XCTestCase {
     let payload = """
     SXTigJlzIGEgZGFuZ2Vyb3VzIGJ1c2luZXNzLCBGcm9kbywgZ29pbmcgb3V0IH\
     lvdXIgZG9vci4gWW91IHN0ZXAgb250byB0aGUgcm9hZCwgYW5kIGlmIHlvdSBk\
@@ -37,7 +38,7 @@ final class RFC7520Tests: XCTestCase {
         cIe8u9ipH84ogoree7vjbU5y18kDquDg
         """
         var jws = JWS(jwsString)!
-        try jws.updateSignature(using: RFC7520ExampleKeys.rsaPrivateKey.signingKey)
+        try jws.updateSignature(using: RFC7520ExampleKeys.rsaSignPrivateKey.signingKey)
         XCTAssertEqual(jws.signatures[0].signature, signature.decoded)
     }
     
@@ -54,7 +55,7 @@ final class RFC7520Tests: XCTestCase {
         cIe8u9ipH84ogoree7vjbU5y18kDquDg
         """
         let jws = JWS(jwsString)!
-        XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.rsaPublicKey.validatingKey))
+        XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.rsaSignPublicKey.validatingKey))
     }
     
     func testSignatureSignPS384() throws {
@@ -64,8 +65,8 @@ final class RFC7520Tests: XCTestCase {
         .\(payload).
         """
         var jws = JWS(jwsString)!
-        try jws.updateSignature(using: RFC7520ExampleKeys.rsaPrivateKey.signingKey)
-        XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.rsaPublicKey.validatingKey))
+        try jws.updateSignature(using: RFC7520ExampleKeys.rsaSignPrivateKey.signingKey)
+        XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.rsaSignPublicKey.validatingKey))
     }
     
     func testSignatureVerifyPS384() throws {
@@ -81,7 +82,7 @@ final class RFC7520Tests: XCTestCase {
         6GYmJUAfmWjwZ6oD4ifKo8DYM-X72Eaw
         """
         let jws = JWS(jwsString)!
-        XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.rsaPublicKey.validatingKey))
+        XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.rsaSignPublicKey.validatingKey))
     }
     
     func testSignatureSignES521() throws {
@@ -244,7 +245,7 @@ final class RFC7520Tests: XCTestCase {
         let jws = try JSONDecoder().decode(JWS.self, from: jwsString.data)
         XCTAssertEqual(jws.signatures.count, 3)
         
-        XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.rsaPublicKey.validatingKey))
+        XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.rsaSignPublicKey.validatingKey))
         XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.ecPublicKey.validatingKey, strict: false))
         XCTAssertNoThrow(try jws.verifySignature(using: RFC7520ExampleKeys.macSymmetricKey.validatingKey))
     }

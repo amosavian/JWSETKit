@@ -35,13 +35,13 @@ extension SymmetricKey {
     ///
     /// - Returns: A symmetric key derived from parameters.
     public static func paswordBased2DerivedSymmetricKey<PD, SD, H>(
-        password: PD, salt: SD, hashFunction: H.Type, iterations: Int
+        password: PD, salt: SD, iterations: Int, length: Int? = nil, hashFunction: H.Type
     ) throws -> SymmetricKey where PD: DataProtocol, SD: DataProtocol, H: HashFunction {
 #if canImport(CommonCrypto)
-        return try ccPbkdf2(pbkdf2Password: password, salt: salt, hashFunction: hashFunction, iterations: iterations)
+        return try ccPbkdf2(pbkdf2Password: password, salt: salt, iterations: iterations, length: length, hashFunction: hashFunction)
 #elseif canImport(CryptoSwift)
         let variant = try CryptoSwift.HMAC.Variant(hashFunction)
-        let key = try PKCS5.PBKDF2(password: [UInt8](password), salt: [UInt8](salt), iterations: iterations, variant: variant).calculate()
+        let key = try PKCS5.PBKDF2(password: [UInt8](password), salt: [UInt8](salt), iterations: iterations, keyLength: length, variant: variant).calculate()
         return .init(data: key)
 #else
         // This should never happen as CommonCrypto is available on Darwin platforms

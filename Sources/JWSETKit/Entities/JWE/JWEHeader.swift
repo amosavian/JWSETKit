@@ -59,7 +59,7 @@ public struct JSONWebEncryptionHeader: Hashable, Sendable, Codable {
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        self.protected = try container.decode(ProtectedJSONWebContainer<JOSEHeader>.self, forKey: .protected)
+        self.protected = try container.decodeIfPresent(ProtectedJSONWebContainer<JOSEHeader>.self, forKey: .protected) ?? .init(encoded: .init())
         self.unprotected = try container.decodeIfPresent(JOSEHeader.self, forKey: .unprotected)
     }
     

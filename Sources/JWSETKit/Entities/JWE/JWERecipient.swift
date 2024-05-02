@@ -66,7 +66,8 @@ extension [JSONWebEncryptionRecipient] {
         }) {
             return recipient
         } else if let recipient = first(where: {
-            $0.header?.algorithm.keyType == key.keyType && $0.header?.algorithm.curve == key.curve
+            ($0.header?.algorithm.keyType == key.keyType && $0.header?.algorithm.curve == key.curve) ||
+                ($0.header?.ephemeralPublicKey?.keyType == key.keyType && $0.header?.ephemeralPublicKey?.curve == key.curve)
         }) {
             return recipient
         } else if let recipient = first {

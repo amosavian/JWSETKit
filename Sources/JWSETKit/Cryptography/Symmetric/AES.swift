@@ -26,7 +26,7 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, JSONWebSym
             guard let keyValue = self.keyValue else {
                 throw CryptoKitError.incorrectKeySize
             }
-            return SymmetricKey(data: keyValue)
+            return keyValue
         }
     }
     
@@ -103,7 +103,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
             return SymmetricKey(data: keyValue)
         }
     }
-    
+
     public init(algorithm: any JSONWebAlgorithm) throws {
         switch algorithm {
         case .aesKeyWrap128:

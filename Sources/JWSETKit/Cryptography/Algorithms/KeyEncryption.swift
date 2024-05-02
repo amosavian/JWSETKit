@@ -75,9 +75,9 @@ extension JSONWebKeyEncryptionAlgorithm {
         .pbes2hmac384: .symmetric,
         .pbes2hmac512: .symmetric,
         .ecdhEphemeralStatic: .ellipticCurve,
-        .ecdhEphemeralStaticAESKeyWrap128: .symmetric,
-        .ecdhEphemeralStaticAESKeyWrap192: .symmetric,
-        .ecdhEphemeralStaticAESKeyWrap256: .symmetric,
+        .ecdhEphemeralStaticAESKeyWrap128: .ellipticCurve,
+        .ecdhEphemeralStaticAESKeyWrap192: .ellipticCurve,
+        .ecdhEphemeralStaticAESKeyWrap256: .ellipticCurve,
     ]
     
     private static let keyLengths: PthreadReadWriteLockedValue<[Self: Int]> = [
@@ -92,9 +92,9 @@ extension JSONWebKeyEncryptionAlgorithm {
         .rsaEncryptionOAEPSHA256: JSONWebRSAPrivateKey.KeySize.defaultKeyLength,
         .rsaEncryptionOAEPSHA384: JSONWebRSAPrivateKey.KeySize.defaultKeyLength,
         .rsaEncryptionOAEPSHA512: JSONWebRSAPrivateKey.KeySize.defaultKeyLength,
-        .pbes2hmac256: 256,
-        .pbes2hmac384: 384,
-        .pbes2hmac512: 512,
+        .pbes2hmac256: 128,
+        .pbes2hmac384: 192,
+        .pbes2hmac512: 256,
         .ecdhEphemeralStaticAESKeyWrap128: SymmetricKeySize.bits128.bitCount,
         .ecdhEphemeralStaticAESKeyWrap192: SymmetricKeySize.bits192.bitCount,
         .ecdhEphemeralStaticAESKeyWrap256: SymmetricKeySize.bits256.bitCount,
@@ -268,9 +268,8 @@ extension JSONWebKeyEncryptionAlgorithm {
         }
         let salt = Data(keyEncryptingAlgorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
         let key = try SymmetricKey.paswordBased2DerivedSymmetricKey(
-            password: password, salt: salt,
-            hashFunction: keyEncryptingAlgorithm.hashFunction.unsafelyUnwrapped,
-            iterations: iterations
+            password: password, salt: salt, iterations: iterations,
+            length: keyEncryptingAlgorithm.keyLength.map { $0 / 8 }, hashFunction: keyEncryptingAlgorithm.hashFunction.unsafelyUnwrapped
         )
         return try key.encrypt(cekData, using: keyEncryptingAlgorithm)
     }
@@ -353,9 +352,8 @@ extension JSONWebKeyEncryptionAlgorithm {
         }
         let salt = Data(algorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
         kek = try SymmetricKey.paswordBased2DerivedSymmetricKey(
-            password: password, salt: salt,
-            hashFunction: hashFunction,
-            iterations: iterations
+            password: password, salt: salt, iterations: iterations, length: algorithm.keyLength.map { $0 / 8 },
+            hashFunction: hashFunction
         )
     }
     

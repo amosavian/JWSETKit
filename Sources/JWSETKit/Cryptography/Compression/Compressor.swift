@@ -1,6 +1,6 @@
 //
-//  File.swift
-//  
+//  Compressor.swift
+//
 //
 //  Created by Amir Abbas Mousavian on 5/1/24.
 //

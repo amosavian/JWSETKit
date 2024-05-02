@@ -173,6 +173,16 @@ public struct JSONWebEncryption: Hashable, Sendable {
         try self.init(from: Data(string.utf8))
     }
     
+    private func autenticating(header: ProtectedJSONWebContainer<JOSEHeader>, additionalAuthenticatedData: Data?) -> Data {
+        let suffix: Data
+        if let additionalAuthenticatedData, !additionalAuthenticatedData.isEmpty {
+            suffix = Data(".".utf8) + additionalAuthenticatedData.urlBase64EncodedData()
+        } else {
+            suffix = .init()
+        }
+        return header.encoded.urlBase64EncodedData() + suffix
+    }
+    
     /// Decrypts encrypted data, using given private key.
     ///
     /// - Important: For `PBES2` algorithms, provide password using
@@ -185,7 +195,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         let combinedHeader = header.protected.value
             .merging(header.unprotected ?? .init(), uniquingKeysWith: { p, _ in p })
             .merging(recipient?.header ?? .init(), uniquingKeysWith: { p, _ in p })
-        guard let contentEncAlgorithm = header.protected.value.encryptionAlgorithm else {
+        guard let contentEncAlgorithm = combinedHeader.encryptionAlgorithm else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         
@@ -201,14 +211,23 @@ public struct JSONWebEncryption: Hashable, Sendable {
             throw JSONWebKeyError.keyNotFound
         }
         let cek = try SymmetricKey(data: decryptingKey.decrypt(encryptedKey, using: algorithm))
-        let authenticating = header.protected.encoded.urlBase64EncodedData() + (additionalAuthenticatedData ?? .init())
-        let content = try cek.open(sealed, authenticating: authenticating, using: contentEncAlgorithm)
+        let authenticatingData = autenticating(header: header.protected, additionalAuthenticatedData: additionalAuthenticatedData)
+        let content = try cek.open(sealed, authenticating: authenticatingData, using: contentEncAlgorithm)
         
         if let compressor = combinedHeader.compressionAlgorithm?.compressor {
             return try compressor.decompress(content)
         } else {
             return content
         }
+    }
+    
+    public func decrypt(using keys: [any JSONWebKey], keyId: String? = nil) throws -> Data {
+        for key in keys {
+            if let data = try? decrypt(using: key, keyId: keyId) {
+                return data
+            }
+        }
+        throw JSONWebKeyError.keyNotFound
     }
 }
 
