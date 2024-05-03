@@ -22,8 +22,13 @@ extension P384.KeyAgreement.PublicKey: CryptoECPublicKey {
 
 extension P384.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        let signature = try P384.Signing.ECDSASignature(rawRepresentation: signature)
-        if !isValidSignature(signature, for: SHA384.hash(data: data)) {
+        let ecdsaSignature: P384.Signing.ECDSASignature
+        if signature.count == (curve?.coordinateSize ?? 0) * 2 {
+            ecdsaSignature = try .init(rawRepresentation: signature)
+        } else {
+            ecdsaSignature = try .init(derRepresentation: signature)
+        }
+        if !isValidSignature(ecdsaSignature, for: SHA384.hash(data: data)) {
             throw CryptoKitError.authenticationFailure
         }
     }

@@ -133,7 +133,7 @@ extension JSONWebSignature: Codable {
     
     fileprivate func encodeAsString(_ encoder: any Encoder) throws {
         guard let signature = signatures.first else {
-            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: "Invalid JWS header."))
+            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: .invalidHeaderError))
         }
         let plainPayload = signature.protected.base64 == false
         try encode(encoder, parts: [
@@ -145,7 +145,7 @@ extension JSONWebSignature: Codable {
     
     fileprivate func encodeAsStringDetached(_ encoder: any Encoder) throws {
         guard let signature = signatures.first else {
-            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: "Invalid JWS header."))
+            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: .invalidHeaderError))
         }
         try encode(encoder, parts: [
             signature.protected.encoded.urlBase64EncodedData(),
@@ -164,7 +164,7 @@ extension JSONWebSignature: Codable {
     
     fileprivate func encodeAsFlattenedJSON(_ encoder: any Encoder) throws {
         guard let signature = signatures.first else {
-            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: "Invalid JWS header."))
+            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: .invalidHeaderError))
         }
         var container = encoder.container(keyedBy: CodingKeys.self)
         if !payload.encoded.isEmpty {
@@ -240,4 +240,8 @@ extension JSONWebSignature: EncodableWithConfiguration {
         try validate()
         try encodeFunction(for: configuration.representation)(encoder)
     }
+}
+
+extension String {
+    fileprivate static let invalidHeaderError: String = "Invalid JWS header."
 }

@@ -1,5 +1,5 @@
 //
-//  RFC7520EncryptionTests.swift
+//  RFC7520DecryptionTests.swift
 //
 //
 //  Created by Amir Abbas Mousavian on 1/5/24.
@@ -13,7 +13,7 @@ import CryptoKit
 import Crypto
 #endif
 
-final class RFC7520EncryptionTests: XCTestCase {
+final class RFC7520DecryptionTests: XCTestCase {
     let plainText = """
     You can trust us to stick with you through thick and \
     thin\u{2013}to the bitter end. And you can trust us to \
@@ -529,6 +529,11 @@ final class RFC7520EncryptionTests: XCTestCase {
         // Third recipient: AES-GCM KeyWrap
         let decodedText3 = try jwe.decrypt(using: RFC7520ExampleKeys.keyWrapGCMSymmetricKey.key)
         XCTAssertEqual(decodedText3, plainText.data)
+        
+        let decodedText4 = try jwe.decrypt(using: [
+            RFC7520ExampleKeys.rsaOAEPEncPrivateKey.key,
+            RFC7520ExampleKeys.ecdhPrivateKey.key,
+        ])
     }
     
     func testDescryptNestedJWS() throws {
