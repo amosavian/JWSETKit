@@ -242,9 +242,22 @@ extension JSONWebKeyEncryptionAlgorithm {
         guard let kek = keyEncryptionKey?.keyValue else {
             throw JSONWebKeyError.keyNotFound
         }
-        let sealed = try kek.seal(cekData, using: JSONWebContentEncryptionAlgorithm(keyEncryptingAlgorithm.rawValue.dropLast(2)))
-        header.initialVector = sealed.nonce
-        header.authenticationTag = sealed.tag
+        let nonce: Data
+        if let headerNonce = header.initialVector {
+            nonce = headerNonce
+        } else {
+            nonce = AES.GCM.Nonce().data
+            header.initialVector = nonce
+        }
+        let sealed = try kek.seal(cekData, iv: nonce, using: JSONWebContentEncryptionAlgorithm(keyEncryptingAlgorithm.rawValue.dropLast(2)))
+        if let headerTag = header.authenticationTag {
+            guard headerTag == sealed.tag else {
+                throw CryptoKitError.authenticationFailure
+            }
+        } else {
+            header.authenticationTag = sealed.tag
+        }
+        
         return sealed.ciphertext
     }
     
@@ -297,28 +310,12 @@ extension JSONWebKeyEncryptionAlgorithm {
             ephemeralKey = try JSONWebECPrivateKey(curve: privateKey.curve ?? .empty).publicKey
             header.ephemeralPublicKey = .init(ephemeralKey)
         }
-        
-        let apu: Data
-        let apv: Data
-        if let headerAPU = header.agreementPartyUInfo {
-            apu = headerAPU
-        } else {
-            apu = ephemeralKey.xCoordinate ?? .init()
-            header.agreementPartyUInfo = apu
-        }
-        if let headerAPV = header.agreementPartyVInfo {
-            apv = headerAPV
-        } else {
-            apv = (keyEncryptionKey?.keyId?.utf8).map { Data($0) } ?? .init()
-            header.agreementPartyVInfo = apv
-        }
-        
         let secret = try privateKey.sharedSecretFromKeyAgreement(with: ephemeralKey)
         let symmetricKey = try secret.concatDerivedSymmetricKey(
             algorithm: keyEncryptingAlgorithm,
             contentEncryptionAlgorithm: header.encryptionAlgorithm,
-            apu: apu,
-            apv: apv,
+            apu: header.agreementPartyUInfo ?? .init(),
+            apv: header.agreementPartyVInfo ?? .init(),
             hashFunction: hashFunction
         )
         if keyEncryptingAlgorithm == .ecdhEphemeralStatic {

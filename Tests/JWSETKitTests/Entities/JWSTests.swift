@@ -139,4 +139,11 @@ final class JWSTests: XCTestCase {
         XCTAssertEqual(jwsDetachedString, jws.description)
         XCTAssertNoThrow(try jws.verifySignature(using: key))
     }
+    
+    func testNone() throws {
+        var jws = jws
+        jws.signatures[0].protected.algorithm = .none
+        jws.signatures[0].signature = .init()
+        XCTAssertThrowsError(try jws.verifySignature(using: ExampleKeys.publicRSA2048))
+    }
 }

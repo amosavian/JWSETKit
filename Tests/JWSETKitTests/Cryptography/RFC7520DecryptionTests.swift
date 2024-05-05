@@ -533,7 +533,9 @@ final class RFC7520DecryptionTests: XCTestCase {
         let decodedText4 = try jwe.decrypt(using: [
             RFC7520ExampleKeys.rsaOAEPEncPrivateKey.key,
             RFC7520ExampleKeys.ecdhPrivateKey.key,
+            RFC7520ExampleKeys.keyWrapSymmetricKey.key,
         ])
+        XCTAssertEqual(decodedText4, plainText.data)
     }
     
     func testDescryptNestedJWS() throws {

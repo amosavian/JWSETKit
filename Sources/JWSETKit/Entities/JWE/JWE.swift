@@ -87,6 +87,8 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///
     /// - Parameters:
     ///   - protected: Protected header of JWE.
+    ///   - unprotected: Unprotected header of JWE.
+    ///   - nounce: Initialization Vector for content encryption.
     ///   - content: Data to be encrypted.
     ///   - additionalAuthenticatedData: An input to an AEAD operation that is integrity protected but not encrypted.
     ///   - keyEncryptingAlgorithm: Encryption algorithm applied to `contentEncryptionKey`
@@ -95,10 +97,12 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///   - contentEncryptionAlgorithm: Algorithm of content encryption.
     ///   - contentEncryptionKey: AEAD key, generates a new key compatible
     ///         with `contentEncryptionAlgorithm` if `nil` is passed.
-    public init<D: DataProtocol>(
+    public init<ND: DataProtocol, PD: DataProtocol, AD: DataProtocol>(
         protected: JOSEHeader? = nil,
-        content: D,
-        additionalAuthenticatedData: Data? = nil,
+        unprotected: JOSEHeader? = nil,
+        nounce _: ND? = Data?.none,
+        content: PD,
+        additionalAuthenticated _: AD? = Data?.none,
         keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
         keyEncryptionKey: (any JSONWebKey)?,
         contentEncryptionAlgorithm: JSONWebContentEncryptionAlgorithm,
@@ -130,7 +134,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             self.recipients = []
         case .ecdhEphemeralStatic:
             // Content encryption key is exactly the result of ECDH, thus
-            // it's
+            // `contentEncryptionKey` is ignored.
             let cekData = try handler(&header, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, Data())
             cek = SymmetricKey(data: cekData)
             self.recipients = []
@@ -142,10 +146,97 @@ public struct JSONWebEncryption: Hashable, Sendable {
             let encryptedKey = try handler(&header, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, cekData)
             self.recipients = [.init(encrypedKey: encryptedKey)]
         }
-        self.header = try .init(protected: ProtectedJSONWebContainer(value: header))
-        let authenticating = self.header.protected.encoded.urlBase64EncodedData() + (additionalAuthenticatedData ?? .init())
+        self.header = try .init(
+            protected: ProtectedJSONWebContainer(value: header),
+            unprotected: unprotected
+        )
+        let authenticating = self.header.protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
         self.sealed = try cek.seal(
             plainData,
+            authenticating: authenticating,
+            using: contentEncryptionAlgorithm
+        )
+        self.additionalAuthenticatedData = additionalAuthenticatedData.map { Data($0) }
+    }
+    
+    /// Creates new JWE container with encrypted data using given recipients public key.
+    ///
+    /// - Note: `algorithm` and `encryptionAlgorithm` paramteres in `protected` shall
+    ///         be overrided by `keyEncryptingAlgorithm` and `contentEncryptionAlgorithm`.
+    ///
+    /// - Important: For `PBES2` algorithms, provide password using
+    ///         `SymmetricKey(data: Data(password.utf8))` to`keyEncryptionKey`.\
+    ///         `pbes2Count` and `pbes2Salt` must be provided in `protected` fields.
+    ///
+    /// - Parameters:
+    ///   - protected: Protected header of JWE.
+    ///   - unprotected: Unprotected header of JWE.
+    ///   - nounce: Initialization Vector for AEAD.
+    ///   - content: Data to be encrypted.
+    ///   - additionalAuthenticatedData: An input to an AEAD operation that is integrity protected but not encrypted.
+    ///   - keyEncryptionKey: The public key that `contentEncryptionKey` will be encrypted with.
+    ///   - contentEncryptionAlgorithm: Algorithm of content encryption.
+    ///   - contentEncryptionKey: AEAD key, generates a new key compatible
+    ///         with `contentEncryptionAlgorithm` if `nil` is passed.
+    public init<ND: DataProtocol, PD: DataProtocol>(
+        protected: ProtectedJSONWebContainer<JOSEHeader>,
+        unprotected: JOSEHeader? = nil,
+        nounce: ND? = Data?.none,
+        content: PD,
+        additionalAuthenticatedData: Data? = nil,
+        keyEncryptionKey: (any JSONWebKey)?,
+        contentEncryptionKey: (any JSONWebSealingKey)? = nil
+    ) throws {
+        let header = protected.value.merging(unprotected ?? .init(), uniquingKeysWith: { p, _ in p })
+        
+        let plainData: any DataProtocol
+        if let compressor = header.compressionAlgorithm?.compressor {
+            plainData = try compressor.compress(content)
+        } else {
+            plainData = content
+        }
+        
+        let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm.rawValue)
+        let contentEncryptionAlgorithm = JSONWebContentEncryptionAlgorithm(header.encryptionAlgorithm?.rawValue ?? "")
+        let handler = keyEncryptingAlgorithm.encryptedKeyHandler ?? JSONWebKeyEncryptionAlgorithm.standardEncryptdKey
+        
+        let cek: any JSONWebSealingKey
+        switch keyEncryptingAlgorithm {
+        case .direct:
+            // As we don't return content encryption key and content encryption key
+            // must be accessible, no autogenerated key is allowed.
+            guard let inputCek = contentEncryptionKey else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            cek = inputCek
+            self.recipients = []
+        case .ecdhEphemeralStatic:
+            // Content encryption key is exactly the result of ECDH, thus
+            // `contentEncryptionKey` is ignored.
+            var modifiedHeader = header
+            let cekData = try handler(&modifiedHeader, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, Data())
+            guard modifiedHeader == header else {
+                throw JSONWebKeyError.operationNotAllowed
+            }
+            cek = SymmetricKey(data: cekData)
+            self.recipients = []
+        default:
+            cek = try contentEncryptionKey ?? contentEncryptionAlgorithm.generateRandomKey()
+            guard let cekData = cek.keyValue?.data else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            var modifiedHeader = header
+            let encryptedKey = try handler(&modifiedHeader, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, cekData)
+            guard modifiedHeader == header else {
+                throw JSONWebKeyError.operationNotAllowed
+            }
+            self.recipients = [.init(encrypedKey: encryptedKey)]
+        }
+        self.header = try .init(protected: protected, unprotected: unprotected)
+        let authenticating = protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
+        self.sealed = try cek.seal(
+            plainData,
+            iv: nounce,
             authenticating: authenticating,
             using: contentEncryptionAlgorithm
         )
@@ -171,16 +262,6 @@ public struct JSONWebEncryption: Hashable, Sendable {
     /// - Parameter string: Base64URL encoded String.
     public init<S: StringProtocol>(from string: S) throws {
         try self.init(from: Data(string.utf8))
-    }
-    
-    private func autenticating(header: ProtectedJSONWebContainer<JOSEHeader>, additionalAuthenticatedData: Data?) -> Data {
-        let suffix: Data
-        if let additionalAuthenticatedData, !additionalAuthenticatedData.isEmpty {
-            suffix = Data(".".utf8) + additionalAuthenticatedData.urlBase64EncodedData()
-        } else {
-            suffix = .init()
-        }
-        return header.encoded.urlBase64EncodedData() + suffix
     }
     
     /// Decrypts encrypted data, using given private key.
@@ -211,7 +292,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             throw JSONWebKeyError.keyNotFound
         }
         let cek = try SymmetricKey(data: decryptingKey.decrypt(encryptedKey, using: algorithm))
-        let authenticatingData = autenticating(header: header.protected, additionalAuthenticatedData: additionalAuthenticatedData)
+        let authenticatingData = header.protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
         let content = try cek.open(sealed, authenticating: authenticatingData, using: contentEncAlgorithm)
         
         if let compressor = combinedHeader.compressionAlgorithm?.compressor {
@@ -236,6 +317,18 @@ extension String {
         let encoder = JSONEncoder.encoder
         encoder.userInfo[.jwsEncodedRepresentation] = JSONWebEncryptionRepresentation.compact
         self = try String(String(decoding: encoder.encode(jwe), as: UTF8.self).dropFirst().dropLast())
+    }
+}
+
+extension ProtectedWebContainer {
+    fileprivate func autenticating(additionalAuthenticatedData: Data?) -> Data {
+        let suffix: Data
+        if let additionalAuthenticatedData, !additionalAuthenticatedData.isEmpty {
+            suffix = Data(".".utf8) + additionalAuthenticatedData.urlBase64EncodedData()
+        } else {
+            suffix = .init()
+        }
+        return encoded.urlBase64EncodedData() + suffix
     }
 }
 
