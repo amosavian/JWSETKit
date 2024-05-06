@@ -23,7 +23,8 @@ extension P521.KeyAgreement.PublicKey: CryptoECPublicKey {
 extension P521.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let ecdsaSignature: P521.Signing.ECDSASignature
-        if signature.count == (curve?.coordinateSize ?? 0) * 2 {
+        // swiftformat:disable:next redundantSelf
+        if signature.count == (self.curve?.coordinateSize ?? 0) * 2 {
             ecdsaSignature = try .init(rawRepresentation: signature)
         } else {
             ecdsaSignature = try .init(derRepresentation: signature)
