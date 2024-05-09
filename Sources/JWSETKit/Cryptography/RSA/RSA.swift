@@ -78,7 +78,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     }
     
     public init(algorithm _: any JSONWebAlgorithm) throws {
-        try self.init(keySize: .bits2048)
+        try self.init(keySize: .init(bitCount: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount))
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Signing.PrivateKey {

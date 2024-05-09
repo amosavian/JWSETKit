@@ -87,14 +87,14 @@ extension JSONWebKeyEncryptionAlgorithm {
         .aesGCM128KeyWrap: SymmetricKeySize.bits128.bitCount,
         .aesGCM192KeyWrap: SymmetricKeySize.bits192.bitCount,
         .aesGCM256KeyWrap: SymmetricKeySize.bits256.bitCount,
-        .rsaEncryptionPKCS1: JSONWebRSAPrivateKey.KeySize.defaultKeyLength,
-        .rsaEncryptionOAEP: JSONWebRSAPrivateKey.KeySize.defaultKeyLength,
-        .rsaEncryptionOAEPSHA256: JSONWebRSAPrivateKey.KeySize.defaultKeyLength,
-        .rsaEncryptionOAEPSHA384: JSONWebRSAPrivateKey.KeySize.defaultKeyLength,
-        .rsaEncryptionOAEPSHA512: JSONWebRSAPrivateKey.KeySize.defaultKeyLength,
-        .pbes2hmac256: 128,
-        .pbes2hmac384: 192,
-        .pbes2hmac512: 256,
+        .rsaEncryptionPKCS1: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+        .rsaEncryptionOAEP: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+        .rsaEncryptionOAEPSHA256: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+        .rsaEncryptionOAEPSHA384: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+        .rsaEncryptionOAEPSHA512: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+        .pbes2hmac256: SymmetricKeySize.bits128.bitCount,
+        .pbes2hmac384: SymmetricKeySize.bits192.bitCount,
+        .pbes2hmac512: SymmetricKeySize.bits256.bitCount,
         .ecdhEphemeralStaticAESKeyWrap128: SymmetricKeySize.bits128.bitCount,
         .ecdhEphemeralStaticAESKeyWrap192: SymmetricKeySize.bits192.bitCount,
         .ecdhEphemeralStaticAESKeyWrap256: SymmetricKeySize.bits256.bitCount,
@@ -301,16 +301,17 @@ extension JSONWebKeyEncryptionAlgorithm {
             throw JSONWebKeyError.keyNotFound
         }
         
-        let privateKey = JSONWebECPrivateKey(storage: kek.storage)
-        let ephemeralKey: JSONWebECPublicKey
+        let secret: SharedSecret
         if let headerEphemeralKey = header.ephemeralPublicKey {
-            ephemeralKey = JSONWebECPublicKey(storage: headerEphemeralKey.storage)
-            try ephemeralKey.validate()
+            let ephemeralKey = JSONWebECPublicKey(storage: headerEphemeralKey.storage)
+            let staticKey = JSONWebECPrivateKey(storage: kek.storage)
+            secret = try staticKey.sharedSecretFromKeyAgreement(with: ephemeralKey)
         } else {
-            ephemeralKey = try JSONWebECPrivateKey(curve: privateKey.curve ?? .empty).publicKey
-            header.ephemeralPublicKey = .init(ephemeralKey)
+            let ephemeralKey = try JSONWebECPrivateKey(curve: kek.curve ?? .empty)
+            let staticKey = JSONWebECPublicKey(storage: kek.storage)
+            header.ephemeralPublicKey = .init(ephemeralKey.publicKey)
+            secret = try ephemeralKey.sharedSecretFromKeyAgreement(with: staticKey)
         }
-        let secret = try privateKey.sharedSecretFromKeyAgreement(with: ephemeralKey)
         let symmetricKey = try secret.concatDerivedSymmetricKey(
             algorithm: keyEncryptingAlgorithm,
             contentEncryptionAlgorithm: header.encryptionAlgorithm,

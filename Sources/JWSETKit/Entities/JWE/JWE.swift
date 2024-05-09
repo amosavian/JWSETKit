@@ -304,6 +304,9 @@ public struct JSONWebEncryption: Hashable, Sendable {
     
     public func decrypt(using keys: [any JSONWebKey], keyId: String? = nil) throws -> Data {
         for key in keys {
+            guard (try? recipients.match(for: key, keyId: keyId)) != nil else {
+                continue
+            }
             if let data = try? decrypt(using: key, keyId: keyId) {
                 return data
             }

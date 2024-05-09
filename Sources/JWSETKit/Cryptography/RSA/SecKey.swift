@@ -184,7 +184,7 @@ extension JSONWebSigningKey where Self: SecKey {
         let bits: Int
         switch (keyType, algorithm) {
         case (.rsa, _):
-            bits = 2048
+            bits = JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount
         case (_, .ecdsaSignatureP256SHA256):
             bits = 256
         case (_, .ecdsaSignatureP384SHA384):
