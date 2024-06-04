@@ -107,7 +107,7 @@ extension _RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
         // PEM is always a valid Bas64.
         Data(base64Encoded: pkcs8PEMRepresentation
             .components(separatedBy: .whitespacesAndNewlines)
-            .dropFirst().dropLast().joined()).unsafelyUnwrapped
+            .dropFirst().dropLast().joined(), options: [.ignoreUnknownCharacters]).unsafelyUnwrapped
     }
     
     public init(importing key: Data, format: JSONWebKeyFormat) throws {

@@ -432,7 +432,7 @@ enum RFC7520ExampleKeys {
 extension String {
     var data: Data { Data(utf8) }
     
-    var decoded: Data { Data(urlBase64Encoded: data) ?? Data(base64Encoded: data)! }
+    var decoded: Data { Data(urlBase64Encoded: data).unsafelyUnwrapped }
     
     var key: any JSONWebKey {
         get throws {

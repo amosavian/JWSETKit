@@ -9,8 +9,8 @@ import XCTest
 @testable import JWSETKit
 
 final class CompressionTests: XCTestCase {
-    let decompressed = Data("Data compression test. This text must be compressed.".utf8)
-    let deflateCompressed = Data(base64Encoded: "c0ksSVRIzs8tKEotLs7Mz1MoSS0u0VMIycgsBjIrShRyS4tLFJJS4WpSU/QA")!
+    let decompressed = "Data compression test. This text must be compressed.".data
+    let deflateCompressed = "c0ksSVRIzs8tKEotLs7Mz1MoSS0u0VMIycgsBjIrShRyS4tLFJJS4WpSU/QA".decoded
     
     var deflateCompressor: (any JSONWebCompressor.Type)? {
         guard JSONWebCompressionAlgorithm.registeredAlgorithms.contains(.deflate) else { return nil }

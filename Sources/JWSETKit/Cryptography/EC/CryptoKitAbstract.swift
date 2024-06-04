@@ -31,12 +31,10 @@ extension CryptoECPublicKey {
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
         let keyData = AnyJSONWebKey(storage: storage)
-        guard let x = keyData.xCoordinate, !x.isEmpty else {
+        guard let x = keyData.xCoordinate, !x.isEmpty, let y = keyData.yCoordinate, y.count == x.count else {
             throw CryptoKitError.incorrectKeySize
         }
-        let y = keyData.yCoordinate ?? .init()
-        let rawKey = x + y
-        return try .init(rawRepresentation: rawKey)
+        return try .init(rawRepresentation: x + y)
     }
     
     public func hash(into hasher: inout Hasher) {

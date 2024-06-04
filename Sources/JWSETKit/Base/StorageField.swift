@@ -57,7 +57,7 @@ extension Data: JSONWebFieldEncodable, JSONWebFieldDecodable {
         case let value as Data:
             return value
         case let value as String:
-            return Data(urlBase64Encoded: value) ?? Data(base64Encoded: value, options: [.ignoreUnknownCharacters])
+            return Data(urlBase64Encoded: value)
         default:
             return nil
         }
@@ -84,8 +84,21 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
     }
     
     static func castValue(_ value: Any?) -> Self? {
-        (value as? NSNumber)
-            .map { Date(timeIntervalSince1970: $0.doubleValue) }
+        switch value {
+        case let value as NSNumber:
+            return Date(timeIntervalSince1970: value.doubleValue)
+        case let value as Date:
+            return value
+        case let value as String:
+            if let value = Double(value) {
+                return Date(timeIntervalSince1970: value)
+            } else if let value = ISO8601DateFormatter().date(from: value) {
+                return value
+            }
+            return nil
+        default:
+            return nil
+        }
     }
 }
 

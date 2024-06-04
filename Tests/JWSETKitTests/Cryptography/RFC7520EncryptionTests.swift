@@ -327,7 +327,7 @@ final class RFC7520EncryptionTests: XCTestCase {
         XCTAssertEqual(jwe.header.protected.encoded, header)
         XCTAssertEqual(jwe.encryptedKey, "5vUT2WOtQxKWcekM_IzVQwkGgzlFDwPi".decoded)
         XCTAssertEqual(jwe.sealed.nonce, "p9pUq6XHY0jfEZIl".decoded)
-        #if canImport(Compression)
+#if canImport(Compression)
         // TODO: Replace SWCompression with a library which matches zlib deflate algorithm.
         XCTAssertEqual(jwe.sealed.ciphertext, """
         HbDtOsdai1oYziSx25KEeTxmwnh8L8jKMFNc1k3zmMI6VB8hry57tDZ61jXyez\
@@ -336,9 +336,9 @@ final class RFC7520EncryptionTests: XCTestCase {
         hpYA7qi3AyijnCJ7BP9rr3U8kxExCpG3mK420TjOw
         """.decoded)
         XCTAssertEqual(jwe.sealed.tag, "VILuUwuIxaLVmh5X-T7kmA".decoded)
-        #else
+#else
         XCTAssertLessThan(jwe.sealed.ciphertext.count, plainText.data.count)
-        #endif
+#endif
         XCTAssertEqual(try jwe.decrypt(using: RFC7520ExampleKeys.keyWrapSymmetricKey.key), plainText.data)
     }
     

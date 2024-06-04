@@ -12,7 +12,7 @@ import CommonCrypto
 #endif
 
 final class RSATests: XCTestCase {
-    let privateKeyDER = Data(base64Encoded: """
+    let privateKeyDER = """
     MIIEogIBAAKCAQBc8heBuESxpRARckQCuVNuiLsH5AX73F1lqNxpFsS+GPWl6rrT\
     Q0j9Ox/ag2ZwyPby3FtJ11gWT/kDYkjTbqYBCzmzUeGjm3MbuCzErQLPjzGvdUDn\
     vCxx8G+uE2uqTdryfEaregUyo69JmucLq3HQ91cHVeLMN/xMvaAu+xEUbZFiDBcV\
@@ -38,9 +38,9 @@ final class RSATests: XCTestCase {
     5mECgYEAiZXJe66KpFZlzomsvoghwjTCdMb0CSzH8DvstGRC7X2QR1s9BhS8pvSS\
     1cPwodOyPbUm6t16iYgZN1ibqxWG+TtiftzNzBjrPWGAIWVW+v0uvYBRgdOKbN/c\
     nFi6gyV13lGIMMK61gCaEgcgBtJ9hbuIEH6B3a3n8TACIzewfx0=
-    """)!
+    """.decoded
     
-    let publicKeyDER = Data(base64Encoded: """
+    let publicKeyDER = """
     MIIBITANBgkqhkiG9w0BAQEFAAOCAQ4AMIIBCQKCAQBc8heBuESxpRARckQCuVNu\
     iLsH5AX73F1lqNxpFsS+GPWl6rrTQ0j9Ox/ag2ZwyPby3FtJ11gWT/kDYkjTbqYB\
     CzmzUeGjm3MbuCzErQLPjzGvdUDnvCxx8G+uE2uqTdryfEaregUyo69JmucLq3HQ\
@@ -48,7 +48,7 @@ final class RSATests: XCTestCase {
     rbIRyO49u56Y9SulTm/aOcQn/1Qgpc5NvHfRnHJ4Y7zclERWhtOLiDlVPIR7JjOM\
     g3wVUEK18XPgoKdTxHBLJymLF2dQSQhfhLruUcndV0R9vOdt3kMB0cSo7NzF4Fcb\
     AgMBAAE=
-    """)!
+    """.decoded
     
     let plaintext = Data("The quick brown fox jumps over the lazy dog.".utf8)
     

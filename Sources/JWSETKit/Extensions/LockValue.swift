@@ -450,21 +450,16 @@ extension LockedValue: ExpressibleByBooleanLiteral where Value: ExpressibleByBoo
 }
 
 public protocol DictionaryInitialzable: ExpressibleByDictionaryLiteral {
-    init(elements: [(Key, Value)])
+    init<S>(uniqueKeysWithValues keysAndValues: S) where S: Sequence, S.Element == (Key, Value)
 }
 
-extension Dictionary: DictionaryInitialzable {
-    @inlinable
-    public init(elements: [(Key, Value)]) {
-        self.init(uniqueKeysWithValues: elements)
-    }
-}
+extension Dictionary: DictionaryInitialzable {}
 
 extension LockedValue: ExpressibleByDictionaryLiteral where Value: ExpressibleByDictionaryLiteral & DictionaryInitialzable, Value.Key: Hashable {
     @inlinable
     public convenience init(dictionaryLiteral elements: (Value.Key, Value.Value)...) {
         let elements = elements.map { ($0, $1) }
-        self.init(wrappedValue: Value(elements: elements))
+        self.init(wrappedValue: Value(uniqueKeysWithValues: elements))
     }
 }
 

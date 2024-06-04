@@ -27,7 +27,7 @@ final class JWSTests: XCTestCase {
     typealias JWSDetached = JSONWebSignature<ProtectedDataWebContainer>
     
     func testSignatureHS256() throws {
-        let signature = Data(base64Encoded: "dCfJaSBBMSnC8CXslIf5orCzS7AboBan4qE7aXuYSDs=")
+        let signature = "dCfJaSBBMSnC8CXslIf5orCzS7AboBan4qE7aXuYSDs=".decoded
         let key = try JSONWebKeyHMAC<SHA256>(ExampleKeys.symmetric)
         var jws = jws
         jws.signatures[0].protected.algorithm = .hmacSHA256
@@ -37,7 +37,7 @@ final class JWSTests: XCTestCase {
     }
     
     func testSignatureHS384() throws {
-        let signature = Data(base64Encoded: "oXDrZsBTd6/RlkXLUTQJ0DSfHx5raR4Pq5jlRHf5v0WTm+zt8xcsCvXagNl0J4eM")
+        let signature = "oXDrZsBTd6/RlkXLUTQJ0DSfHx5raR4Pq5jlRHf5v0WTm+zt8xcsCvXagNl0J4eM".decoded
         let key = try JSONWebKeyHMAC<SHA384>(ExampleKeys.symmetric)
         var jws = jws
         jws.signatures[0].protected.algorithm = .hmacSHA384
@@ -47,7 +47,7 @@ final class JWSTests: XCTestCase {
     }
     
     func testSignatureHS512() throws {
-        let signature = Data(base64Encoded: "CyfHecbVPqPzB3zBwYd3rgVBi2Dgg+eAeX7JT8B85QbKLwSXyll8WKGdehse606szf9G3i+jr24QGkEtMAGSpg==")
+        let signature = "CyfHecbVPqPzB3zBwYd3rgVBi2Dgg+eAeX7JT8B85QbKLwSXyll8WKGdehse606szf9G3i+jr24QGkEtMAGSpg==".decoded
         let key = try JSONWebKeyHMAC<SHA512>(ExampleKeys.symmetric)
         var jws = jws
         jws.signatures[0].protected.algorithm = .hmacSHA512

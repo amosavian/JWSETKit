@@ -13,16 +13,16 @@ extension DataProtocol {
     /// - returns: The URL-safe Base-64 encoded data.
     public func urlBase64EncodedData() -> Data {
         let result = Data(self).base64EncodedData()
-            .compactMap {
-                switch $0 {
-                case UInt8(ascii: "+"):
-                    return UInt8(ascii: "-")
-                case UInt8(ascii: "/"):
-                    return UInt8(ascii: "_")
-                case UInt8(ascii: "="):
+            .compactMap { (byte: UInt8) -> UInt8? in
+                switch byte {
+                case "+":
+                    return "-"
+                case "/":
+                    return "_"
+                case "=":
                     return nil
                 default:
-                    return $0
+                    return byte
                 }
             }
         return Data(result)
@@ -36,26 +36,31 @@ extension DataProtocol {
     }
 }
 
+extension UInt8: ExpressibleByUnicodeScalarLiteral {
+    public init(unicodeScalarLiteral value: UnicodeScalar) {
+        self = .init(value.value)
+    }
+}
+
 extension Data {
     /// Initialize a `Data` from a URL-safe Base-64, UTF-8 encoded `Data`.
     ///
     /// Returns nil when the input is not recognized as valid Base-64.
     ///
     /// - parameter urlBase64Encoded: URL-safe Base-64, UTF-8 encoded input data.
-    /// - parameter options: Decoding options. Default value is `[]`.
     public init?(urlBase64Encoded: any DataProtocol) {
-        var urlBase64Encoded = urlBase64Encoded.compactMap {
-            switch $0 {
-            case UInt8(ascii: "-"):
-                return UInt8(ascii: "+")
-            case UInt8(ascii: "_"):
-                return UInt8(ascii: "/")
+        var urlBase64Encoded = urlBase64Encoded.map { (byte: UInt8) -> UInt8 in
+            switch byte {
+            case "-":
+                return "+"
+            case "_":
+                return "/"
             default:
-                return $0
+                return byte
             }
         }
         if urlBase64Encoded.count % 4 != 0 {
-            urlBase64Encoded.append(contentsOf: [UInt8](repeating: .init(ascii: "="), count: 4 - urlBase64Encoded.count % 4))
+            urlBase64Encoded.append(contentsOf: [UInt8](repeating: "=", count: 4 - urlBase64Encoded.count % 4))
         }
         guard let value = Data(base64Encoded: .init(urlBase64Encoded), options: [.ignoreUnknownCharacters]) else {
             return nil
@@ -68,7 +73,6 @@ extension Data {
     ///
     /// Returns nil when the input is not recognized as valid Base-64.
     /// - parameter urlBase64Encoded: The string to parse.
-    /// - parameter options: Encoding options. Default value is `[]`.
     public init?(urlBase64Encoded: String) {
         guard let value = Data(urlBase64Encoded: Data(urlBase64Encoded.utf8)) else { return nil }
         self = value

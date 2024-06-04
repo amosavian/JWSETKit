@@ -56,7 +56,7 @@ final class StorageTests: XCTestCase {
         XCTAssertEqual(keys[0].keyType, .ellipticCurve)
         XCTAssertEqual(
             try P256.Signing.PublicKey.create(storage: keys[0].storage).rawRepresentation,
-            Data(base64Encoded: "MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D7gS2XpJFbZiItSs3m9+9Ue6GnvHw/GW2ZZaVtszggXIw==")
+            "MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D7gS2XpJFbZiItSs3m9+9Ue6GnvHw/GW2ZZaVtszggXIw==".decoded
         )
         XCTAssertEqual(keys[1].keyType, .rsa)
         XCTAssert(type(of: keys[0]) == JSONWebECPublicKey.self)

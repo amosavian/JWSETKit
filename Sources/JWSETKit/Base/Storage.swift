@@ -85,7 +85,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
             if urlEncoded {
                 return Data(urlBase64Encoded: value)
             } else {
-                return Data(base64Encoded: value)
+                return Data(base64Encoded: value, options: [.ignoreUnknownCharacters])
             }
         }
         set {
