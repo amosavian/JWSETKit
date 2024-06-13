@@ -23,7 +23,6 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
         return result.storage
     }
     
-    
     public static func create(storage: JSONWebValueStorage) throws -> Self {
         let keyData = AnyJSONWebKey(storage: storage)
         guard let x = keyData.xCoordinate, !x.isEmpty else {
@@ -88,16 +87,20 @@ extension Curve25519.KeyAgreement.PrivateKey: CryptoEdKeyPortable {}
 protocol CryptoEdKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
     var rawRepresentation: Data { get }
     
-    init(rawRepresentation: Data) throws
+    init<D>(rawRepresentation data: D) throws where D: ContiguousBytes
 }
 
 extension CryptoEdKeyPortable {
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:
-            try self.init(rawRepresentation: key)
+            if key.regions.count == 1, let keyData = key.regions.first {
+                try self.init(rawRepresentation: keyData)
+            } else {
+                try self.init(rawRepresentation: Data(key))
+            }
         case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

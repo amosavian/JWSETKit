@@ -45,9 +45,9 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
         self.storage = storage
     }
     
-    public init(derRepresentation: Data) throws {
+    public init<D>(derRepresentation: D) throws where D: DataProtocol {
 #if canImport(CommonCrypto)
-        self.storage = try SecKey(derRepresentation: derRepresentation, keyType: .rsa).storage
+        self.storage = try SecKey(derRepresentation: Data(derRepresentation), keyType: .rsa).storage
 #elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PublicKey(derRepresentation: derRepresentation).storage
 #else
@@ -91,12 +91,12 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
 }
 
 extension JSONWebRSAPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .spki:
             self = try .init(derRepresentation: key)
         case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
             try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
@@ -189,9 +189,9 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
         self.storage = storage
     }
     
-    public init(derRepresentation: Data) throws {
+    public init<D>(derRepresentation: D) throws where D: DataProtocol {
 #if canImport(CommonCrypto)
-        self.storage = try SecKey(derRepresentation: derRepresentation, keyType: .rsa).storage
+        self.storage = try SecKey(derRepresentation: Data(derRepresentation), keyType: .rsa).storage
 #elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PrivateKey(derRepresentation: derRepresentation).storage
 #else
@@ -244,12 +244,12 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 }
 
 extension JSONWebRSAPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .pkcs8:
             self = try .init(derRepresentation: key)
         case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
             try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat

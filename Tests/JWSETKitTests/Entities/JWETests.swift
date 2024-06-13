@@ -371,15 +371,15 @@ enum ECDH_ES {
     """
     
     static let kek = try! JSONWebECPrivateKey(
-        importing: .init(
-            """
-                 {"kty":"EC",
-                  "crv":"P-256",
-                  "x":"gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
-                  "y":"SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
-                  "d":"0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo"
-                 }
-            """.utf8), format: .jwk
+        importing:
+        """
+             {"kty":"EC",
+              "crv":"P-256",
+              "x":"gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
+              "y":"SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
+              "d":"0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo"
+             }
+        """.data, format: .jwk
     )
     
     static let plainData = shortRandomBytes
@@ -390,15 +390,15 @@ enum ECDH_ES_KW {
     """
     
     static let kek = try! JSONWebECPrivateKey(
-        importing: .init(
-            """
-                 {"kty":"EC",
-                  "crv":"P-256",
-                  "x":"gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
-                  "y":"SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
-                  "d":"0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo"
-                 }
-            """.utf8), format: .jwk
+        importing:
+        """
+             {"kty":"EC",
+              "crv":"P-256",
+              "x":"gI0GAILBdu7T53akrFmMyGcsF3n5dO7MmwNBHKW5SV0",
+              "y":"SLW_xSffzlPWrHEVI30DHM_4egVwt3NQqeUD7nMFpps",
+              "d":"0_NxaRPUMQoAJt50Gz8YiTr8gRTwyEaCumd-MToTmIo"
+             }
+        """.data, format: .jwk
     )
     
     static let cek = key256

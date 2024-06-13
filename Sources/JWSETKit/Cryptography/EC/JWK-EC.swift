@@ -53,11 +53,11 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Senda
 }
 
 extension JSONWebKeyImportable {
-    fileprivate init(
-        key: Data, format: JSONWebKeyFormat,
+    fileprivate init<D>(
+        key: D, format: JSONWebKeyFormat,
         keyLengthTable: [Int: JSONWebKeyCurve],
         keyFinder: (_ curve: JSONWebKeyCurve) throws -> any JSONWebValidatingKey.Type
-    ) throws {
+    ) throws where D: DataProtocol {
         guard let curve = keyLengthTable[key.count] else {
             throw JSONWebKeyError.unknownAlgorithm
         }
@@ -69,14 +69,14 @@ extension JSONWebKeyImportable {
 }
 
 extension JSONWebECPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:
             try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.publicRawCurve, keyFinder: Self.signingType)
         case .spki:
             try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.spkiCurve, keyFinder: Self.signingType)
         case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
             try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
@@ -172,14 +172,14 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
 }
 
 extension JSONWebECPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:
             try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.privateRawCurve, keyFinder: Self.signingType)
         case .pkcs8:
             try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.pkc8Curve, keyFinder: Self.signingType)
         case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

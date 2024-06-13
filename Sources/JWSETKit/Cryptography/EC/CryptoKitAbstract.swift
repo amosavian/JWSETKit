@@ -50,19 +50,23 @@ protocol CryptoECPublicKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
     var x963Representation: Data { get }
     var derRepresentation: Data { get }
     
-    init(x963Representation: Data) throws
-    init(derRepresentation: Data) throws
+    init<Bytes>(x963Representation: Bytes) throws where Bytes: ContiguousBytes
+    init<Bytes>(derRepresentation: Bytes) throws where Bytes: RandomAccessCollection, Bytes.Element == UInt8
 }
 
 extension CryptoECPublicKeyPortable {
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:
-            try self.init(x963Representation: key)
+            if key.regions.count == 1, let keyData = key.regions.first {
+                try self.init(x963Representation: keyData)
+            } else {
+                try self.init(x963Representation: Data(key))
+            }
         case .spki:
             try self.init(derRepresentation: key)
         case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
@@ -119,19 +123,23 @@ protocol CryptoECPrivateKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable 
     var x963Representation: Data { get }
     var derRepresentation: Data { get }
     
-    init(x963Representation: Data) throws
-    init(derRepresentation: Data) throws
+    init<Bytes>(x963Representation: Bytes) throws where Bytes: ContiguousBytes
+    init<Bytes>(derRepresentation: Bytes) throws where Bytes: RandomAccessCollection, Bytes.Element == UInt8
 }
 
 extension CryptoECPrivateKeyPortable {
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:
-            try self.init(x963Representation: key)
+            if key.regions.count == 1, let keyData = key.regions.first {
+                try self.init(x963Representation: keyData)
+            } else {
+                try self.init(x963Representation: Data(key))
+            }
         case .pkcs8:
             try self.init(derRepresentation: key)
         case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

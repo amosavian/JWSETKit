@@ -452,9 +452,9 @@ public struct AnyJSONWebKey: MutableJSONWebKey {
 }
 
 extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         if format == .jwk {
-            let key = try JSONDecoder().decode(AnyJSONWebKey.self, from: key).specialized()
+            let key = try JSONDecoder().decode(AnyJSONWebKey.self, from: Data(key)).specialized()
             try key.validate()
             self.storage = key.storage
             return

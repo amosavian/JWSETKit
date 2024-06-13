@@ -67,13 +67,18 @@ extension SecTrust: JSONWebValidatingKey {
             } else {
                 let count = SecTrustGetCertificateCount(self)
                 guard count > 0 else {
-                    throw JSONWebKeyError.keyNotFound
+                    return []
                 }
                 return (0 ..< count).compactMap {
                     SecTrustGetCertificateAtIndex(self, $0)
                 }
             }
         }
+    }
+    
+    /// Return the public key for a leaf certificate after it has been evaluated.
+    public var publicKey: SecKey? {
+        SecTrustCopyKey(self)
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
@@ -88,7 +93,7 @@ extension SecTrust: JSONWebValidatingKey {
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try certificateChain.first?.verifySignature(signature, for: data, using: algorithm)
+        try publicKey?.verifySignature(signature, for: data, using: algorithm)
     }
 }
 
@@ -113,5 +118,13 @@ extension Certificate {
         let der = SecCertificateCopyData(secCertificate) as Data
         try self.init(derEncoded: der)
     }
+}
+
+public func == (lhs: Certificate, rhs: SecCertificate) -> Bool {
+    lhs == (try? Certificate(rhs))
+}
+
+public func == (lhs: SecCertificate, rhs: Certificate) -> Bool {
+    (try? Certificate(lhs)) == rhs
 }
 #endif

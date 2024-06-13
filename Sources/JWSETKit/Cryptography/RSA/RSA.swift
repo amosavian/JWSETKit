@@ -41,12 +41,12 @@ extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
 }
 
 extension _RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .spki:
             try self.init(derRepresentation: key)
         case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
@@ -110,12 +110,12 @@ extension _RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
             .dropFirst().dropLast().joined(), options: [.ignoreUnknownCharacters]).unsafelyUnwrapped
     }
     
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .pkcs8:
             try self.init(derRepresentation: key)
         case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

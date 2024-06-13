@@ -56,27 +56,10 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
     ///
     /// - Returns: A public key to validate signatures.
     public func jsonWebKey() throws -> any JSONWebValidatingKey {
-        if let key = P256.Signing.PublicKey(self) {
-            return key
-        } else if let key = P384.Signing.PublicKey(self) {
-            return key
-        } else if let key = P521.Signing.PublicKey(self) {
-            return key
+        guard let key = try AnyJSONWebKey(importing: subjectPublicKeyInfoBytes, format: .spki).specialized() as? any JSONWebValidatingKey else {
+            throw JSONWebKeyError.unknownKeyType
         }
-#if canImport(CommonCrypto)
-        if let key = try? SecKey(derRepresentation: derRepresentation, keyType: .rsa) {
-            return key
-        }
-#elseif canImport(_CryptoExtras)
-        if let key = _RSA.Signing.PublicKey(self) {
-            return key
-        }
-#else
-        // This should never happen as CommonCrypto is available on Darwin platforms
-        // and _CryptoExtras is used on non-Darwin platform.
-        fatalError("Unimplemented")
-#endif
-        throw JSONWebKeyError.unknownKeyType
+        return key
     }
     
     public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {

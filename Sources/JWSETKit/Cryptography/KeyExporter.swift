@@ -60,7 +60,7 @@ public protocol JSONWebKeyImportable: JSONWebKey {
     ///   - key: The key in the specified format.
     ///   - format: The format in which the key is supplied.
     /// - Throws: If the key cannot be imported in the specified format.
-    init(importing key: Data, format: JSONWebKeyFormat) throws
+    init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol
 }
 
 public protocol JSONWebKeyExportable: JSONWebKey {
@@ -86,12 +86,16 @@ public protocol JSONWebKeySymmetric: JSONWebKeyImportable, JSONWebKeyExportable 
 }
 
 extension JSONWebKeySymmetric {
-    public init(importing key: Data, format: JSONWebKeyFormat) throws {
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:
-            try self.init(.init(data: key))
+            if key.regions.count == 1, let keyData = key.regions.first {
+                try self.init(.init(data: keyData))
+            } else {
+                try self.init(.init(data: Data(key)))
+            }
         case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: key)
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
             try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
