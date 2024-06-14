@@ -77,10 +77,10 @@ enum JSONWebKeyRSASpecializer: JSONWebKeySpecializer {
     static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
         switch format {
         case .pkcs8:
-            guard try PKCS8PrivateKey(derEncoded: Data(key)).keyType == .rsa else { return nil }
+            guard try PKCS8PrivateKey(derEncoded: key).keyType == .rsa else { return nil }
             return try JSONWebRSAPrivateKey(importing: key, format: format)
         case .spki:
-            guard try SubjectPublicKeyInfo(derEncoded: Data(key)).keyType == .rsa else { return nil }
+            guard try SubjectPublicKeyInfo(derEncoded: key).keyType == .rsa else { return nil }
             return try JSONWebRSAPublicKey(importing: key, format: format)
         default:
             return nil
@@ -107,12 +107,12 @@ enum JSONWebKeyEllipticCurveSpecializer: JSONWebKeySpecializer {
     static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
         switch format {
         case .pkcs8:
-            let pkcs8 = try PKCS8PrivateKey(derEncoded: Data(key))
+            let pkcs8 = try PKCS8PrivateKey(derEncoded: key)
             guard try pkcs8.keyType == .ellipticCurve else { return nil }
             guard pkcs8.keyCurve != nil else { return nil }
             return try JSONWebECPrivateKey(importing: key, format: format)
         case .spki:
-            let spki = try SubjectPublicKeyInfo(derEncoded: Data(key))
+            let spki = try SubjectPublicKeyInfo(derEncoded: key)
             guard try spki.keyType == .ellipticCurve else { return nil }
             guard spki.keyCurve != nil else { return nil }
             return try JSONWebECPublicKey(importing: key, format: format)

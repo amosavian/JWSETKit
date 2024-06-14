@@ -71,7 +71,7 @@ extension DERImplicitlyTaggable {
     /// Initializes a DER serializable object from given data.
     ///
     /// - Parameter derEncoded: DER encoded object.
-    public init(derEncoded: Data) throws {
+    public init<D>(derEncoded: D) throws where D: DataProtocol {
         try self.init(derEncoded: [UInt8](derEncoded))
     }
     
