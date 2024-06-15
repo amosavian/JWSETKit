@@ -7,17 +7,13 @@
 
 import Foundation
 import SwiftASN1
-import X509
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
+import X509
 #if canImport(_CryptoExtras)
 import _CryptoExtras
 #endif
 
-extension Certificate.PublicKey: JSONWebValidatingKey {
+extension X509.Certificate.PublicKey: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         (try? jsonWebKey().storage) ?? .init()
     }
@@ -85,7 +81,7 @@ extension DERImplicitlyTaggable {
     }
 }
 
-extension Certificate: JSONWebValidatingKey {
+extension X509.Certificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         var key = AnyJSONWebKey(storage: publicKey.storage)
         key.certificateChain = [self]
@@ -105,7 +101,7 @@ extension Certificate: JSONWebValidatingKey {
     }
 }
 
-extension Certificate: Expirable {
+extension X509.Certificate: Expirable {
     public func verifyDate(_ currentDate: Date) throws {
         if currentDate > notValidAfter {
             throw JSONWebValidationError.tokenExpired(expiry: notValidAfter)

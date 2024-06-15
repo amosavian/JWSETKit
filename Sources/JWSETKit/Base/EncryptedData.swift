@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// A container for AES ciphers, e.g. AES-GCM, AES-CBC-HMAC, etc.
 public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Sendable {

@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// JSON Web Key (JWK) container for creating/verifying HMAC signatures.
 public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetricSigningKey, Sendable {

@@ -6,13 +6,9 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
-extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
+extension Crypto.Curve25519.Signing.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .ed25519 }
     
     public var storage: JSONWebValueStorage {
@@ -32,7 +28,7 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
     }
 }
 
-extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
+extension Crypto.Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .x25519 }
     
     public var storage: JSONWebValueStorage {
@@ -52,7 +48,7 @@ extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
     }
 }
 
-extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
+extension Crypto.Curve25519.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         if !isValidSignature(signature, for: data) {
             throw CryptoKitError.authenticationFailure
@@ -60,11 +56,11 @@ extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
-extension Curve25519.Signing.PublicKey: CryptoEdKeyPortable {}
+extension Crypto.Curve25519.Signing.PublicKey: CryptoEdKeyPortable {}
 
-extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {}
+extension Crypto.Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {}
 
-extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+extension Crypto.Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init()
     }
@@ -74,15 +70,15 @@ extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     }
 }
 
-extension Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+extension Crypto.Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init()
     }
 }
 
-extension Curve25519.Signing.PrivateKey: CryptoEdKeyPortable {}
+extension Crypto.Curve25519.Signing.PrivateKey: CryptoEdKeyPortable {}
 
-extension Curve25519.KeyAgreement.PrivateKey: CryptoEdKeyPortable {}
+extension Crypto.Curve25519.KeyAgreement.PrivateKey: CryptoEdKeyPortable {}
 
 protocol CryptoEdKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
     var rawRepresentation: Data { get }

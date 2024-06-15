@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 import SwiftASN1
 
 extension AnyJSONWebKey {

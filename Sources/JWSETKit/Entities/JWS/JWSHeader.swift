@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// Represents a signature or MAC over the JWS Payload and the JWS Protected Header.
 public struct JSONWebSignatureHeader: Hashable, Codable, Sendable {

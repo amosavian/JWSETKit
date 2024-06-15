@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// For a JWS, the members of the JSON object(s) representing the JOSE Header
 /// describe the digital signature or MAC applied to the JWS Protected Header

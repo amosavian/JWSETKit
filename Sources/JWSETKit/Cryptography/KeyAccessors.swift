@@ -6,12 +6,8 @@
 //
 
 import Foundation
-import X509
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
+import X509
 
 /// Registered JSON Web Key (JWK) tokens in [RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517).
 public struct JSONWebKeyRegisteredParameters {

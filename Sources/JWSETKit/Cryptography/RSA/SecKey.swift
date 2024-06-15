@@ -11,7 +11,7 @@ import CryptoKit
 import Foundation
 import SwiftASN1
 
-extension SecKey: JSONWebKey {
+extension Security.SecKey: JSONWebKey {
     public var storage: JSONWebValueStorage {
         if let storage = try? jsonWebKey().storage {
             return storage
@@ -144,7 +144,7 @@ extension SecKey: JSONWebKey {
     }
 }
 
-extension SecKey: JSONWebValidatingKey {
+extension Security.SecKey: JSONWebValidatingKey {
     fileprivate static let signingAlgorithms: [JSONWebSignatureAlgorithm: SecKeyAlgorithm] = [
         .ecdsaSignatureP256SHA256: .ecdsaSignatureRFC4754,
         .ecdsaSignatureP384SHA384: .ecdsaSignatureRFC4754,
@@ -176,7 +176,7 @@ extension SecKey: JSONWebValidatingKey {
     }
 }
 
-extension JSONWebSigningKey where Self: SecKey {
+extension JSONWebSigningKey where Self: Security.SecKey {
     public init(algorithm: any JSONWebAlgorithm) throws {
         guard let keyType = algorithm.keyType else {
             throw JSONWebKeyError.unknownKeyType
@@ -240,7 +240,7 @@ extension JSONWebSigningKey where Self: SecKey {
     }
 }
 
-extension SecKey: JSONWebSigningKey {
+extension Security.SecKey: JSONWebSigningKey {
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm], let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.operationNotAllowed
@@ -254,7 +254,7 @@ extension SecKey: JSONWebSigningKey {
     }
 }
 
-extension SecKey: JSONWebDecryptingKey {
+extension Security.SecKey: JSONWebDecryptingKey {
     fileprivate static let encAlgorithms: [JSONWebKeyEncryptionAlgorithm: SecKeyAlgorithm] = [
         .rsaEncryptionPKCS1: .rsaEncryptionPKCS1,
         .rsaEncryptionOAEP: .rsaEncryptionOAEPSHA1,
@@ -284,7 +284,7 @@ extension SecKey: JSONWebDecryptingKey {
     }
 }
 
-extension JSONWebKeyImportable where Self: SecKey {
+extension JSONWebKeyImportable where Self: Security.SecKey {
     public init(importing key: Data, format: JSONWebKeyFormat) throws {
         switch format {
         case .raw:
@@ -299,7 +299,7 @@ extension JSONWebKeyImportable where Self: SecKey {
     }
 }
 
-extension SecKey: JSONWebKeyExportable {
+extension Security.SecKey: JSONWebKeyExportable {
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
         switch try (format, keyType, isPrivateKey) {
         case (_, .ellipticCurve, false):

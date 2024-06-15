@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// JSON Web Key Encryption Algorithms
 public struct JSONWebContentEncryptionAlgorithm: JSONWebAlgorithm {

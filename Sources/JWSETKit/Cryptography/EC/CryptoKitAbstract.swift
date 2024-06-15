@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 protocol CryptoECPublicKey: JSONWebKey {
     static var curve: JSONWebKeyCurve { get }
@@ -43,46 +39,6 @@ extension CryptoECPublicKey {
     
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.rawRepresentation == rhs.rawRepresentation
-    }
-}
-
-protocol CryptoECPublicKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
-    var x963Representation: Data { get }
-    var derRepresentation: Data { get }
-    
-    init<Bytes>(x963Representation: Bytes) throws where Bytes: ContiguousBytes
-    init<Bytes>(derRepresentation: Bytes) throws where Bytes: RandomAccessCollection, Bytes.Element == UInt8
-}
-
-extension CryptoECPublicKeyPortable {
-    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
-        switch format {
-        case .raw:
-            if key.regions.count == 1, let keyData = key.regions.first {
-                try self.init(x963Representation: keyData)
-            } else {
-                try self.init(x963Representation: Data(key))
-            }
-        case .spki:
-            try self.init(derRepresentation: key)
-        case .jwk:
-            self = try JSONDecoder().decode(Self.self, from: Data(key))
-        default:
-            throw JSONWebKeyError.invalidKeyFormat
-        }
-    }
-    
-    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
-        switch format {
-        case .raw:
-            return x963Representation
-        case .spki:
-            return derRepresentation
-        case .jwk:
-            return try jwkRepresentation
-        default:
-            throw JSONWebKeyError.invalidKeyFormat
-        }
     }
 }
 
@@ -119,7 +75,7 @@ extension CryptoECPrivateKey {
     }
 }
 
-protocol CryptoECPrivateKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
+protocol CryptoECKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
     var x963Representation: Data { get }
     var derRepresentation: Data { get }
     
@@ -127,7 +83,12 @@ protocol CryptoECPrivateKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable 
     init<Bytes>(derRepresentation: Bytes) throws where Bytes: RandomAccessCollection, Bytes.Element == UInt8
 }
 
-extension CryptoECPrivateKeyPortable {
+protocol CryptoECKeyPortableCompactRepresentable: CryptoECKeyPortable {
+    @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
+    init<Bytes>(compressedRepresentation: Bytes) throws where Bytes : ContiguousBytes
+}
+
+extension CryptoECKeyPortable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:
@@ -136,7 +97,8 @@ extension CryptoECPrivateKeyPortable {
             } else {
                 try self.init(x963Representation: Data(key))
             }
-        case .pkcs8:
+        case .spki where Self.self is (any CryptoECPublicKey).Type,
+                .pkcs8 where Self.self is (any CryptoECPrivateKey).Type:
             try self.init(derRepresentation: key)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
@@ -149,10 +111,50 @@ extension CryptoECPrivateKeyPortable {
         switch format {
         case .raw:
             return x963Representation
-        case .pkcs8:
+        case .spki where self is any CryptoECPublicKey, 
+                .pkcs8 where self is any CryptoECPrivateKey:
             return derRepresentation
         case .jwk:
             return try jwkRepresentation
+        default:
+            throw JSONWebKeyError.invalidKeyFormat
+        }
+    }
+}
+
+extension CryptoECKeyPortableCompactRepresentable {
+    private init<D>(importingRaw key: D) throws where D: DataProtocol {
+        switch key.first {
+        case 0x04:
+            if key.regions.count == 1, let keyData = key.regions.first {
+                try self.init(x963Representation: keyData)
+            } else {
+                try self.init(x963Representation: Data(key))
+            }
+        case 0x02, 0x03:
+            if #available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *) {
+                if key.regions.count == 1, let keyData = key.regions.first {
+                    try self.init(compressedRepresentation: keyData)
+                } else {
+                    try self.init(compressedRepresentation: Data(key))
+                }
+            } else {
+                throw CryptoKitError.incorrectParameterSize
+            }
+        default:
+            throw CryptoKitError.incorrectParameterSize
+        }
+    }
+    
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
+        switch format {
+        case .raw:
+            try self.init(importingRaw: key)
+        case .spki where Self.self is (any CryptoECPublicKey).Type,
+                .pkcs8 where Self.self is (any CryptoECPrivateKey).Type:
+            try self.init(derRepresentation: key)
+        case .jwk:
+            self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

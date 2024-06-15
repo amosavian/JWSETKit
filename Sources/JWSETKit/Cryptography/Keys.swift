@@ -6,16 +6,12 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159](https://www.rfc-editor.org/rfc/rfc7159)
 /// data structure that represents a cryptographic key.
 @dynamicMemberLookup
-public protocol JSONWebKey: Codable, Hashable {
+public protocol JSONWebKey: Swift.Codable, Swift.Hashable {
     /// Storage of container values.
     var storage: JSONWebValueStorage { get }
     

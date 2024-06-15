@@ -36,7 +36,7 @@ extension DataProtocol {
     }
 }
 
-extension UInt8: ExpressibleByUnicodeScalarLiteral {
+extension Swift.UInt8: Swift.ExpressibleByUnicodeScalarLiteral {
     public init(unicodeScalarLiteral value: UnicodeScalar) {
         self = .init(value.value)
     }

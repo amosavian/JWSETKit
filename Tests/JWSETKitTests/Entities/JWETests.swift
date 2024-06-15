@@ -6,14 +6,10 @@
 //
 
 import XCTest
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 @testable import JWSETKit
 
-extension SymmetricKey: @unchecked Sendable {}
+extension Crypto.SymmetricKey: @unchecked Sendable {}
 
 final class JWETests: XCTestCase {
     func testDecode() throws {

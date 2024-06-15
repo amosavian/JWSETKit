@@ -6,21 +6,17 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
-extension P384.Signing.PublicKey: CryptoECPublicKey {
+extension Crypto.P384.Signing.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p384 }
 }
 
-extension P384.KeyAgreement.PublicKey: CryptoECPublicKey {
+extension Crypto.P384.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p384 }
 }
 
-extension P384.Signing.PublicKey: JSONWebValidatingKey {
+extension Crypto.P384.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let ecdsaSignature: P384.Signing.ECDSASignature
         // swiftformat:disable:next redundantSelf
@@ -35,11 +31,11 @@ extension P384.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
-extension P384.Signing.PublicKey: CryptoECPublicKeyPortable {}
+extension Crypto.P384.Signing.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension P384.KeyAgreement.PublicKey: CryptoECPublicKeyPortable {}
+extension Crypto.P384.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension P384.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+extension Crypto.P384.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
@@ -49,12 +45,12 @@ extension P384.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     }
 }
 
-extension P384.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+extension Crypto.P384.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
 }
 
-extension P384.Signing.PrivateKey: CryptoECPrivateKeyPortable {}
+extension Crypto.P384.Signing.PrivateKey: CryptoECKeyPortable {}
 
-extension P384.KeyAgreement.PrivateKey: CryptoECPrivateKeyPortable {}
+extension Crypto.P384.KeyAgreement.PrivateKey: CryptoECKeyPortable {}

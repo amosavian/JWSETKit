@@ -7,14 +7,9 @@
 
 import Foundation
 import SwiftASN1
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 #if canImport(CommonCrypto)
 import CommonCrypto
-#else
 #endif
 #if canImport(_CryptoExtras)
 import _CryptoExtras
@@ -206,12 +201,13 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
     }
     
     public func validate() throws {
-        try checkRequiredFields(
-            \.modulus, \.exponent,
-            \.firstPrimeFactor, \.secondPrimeFactor,
-            \.privateExponent, \.firstCRTCoefficient,
-            \.firstFactorCRTExponent, \.secondFactorCRTExponent
-        )
+        let fields: [KeyPath<Self, Data?>] = [
+            \Self.modulus, \Self.exponent,
+            \Self.firstPrimeFactor, \Self.secondPrimeFactor,
+            \Self.privateExponent, \Self.firstCRTCoefficient,
+            \Self.firstFactorCRTExponent, \Self.secondFactorCRTExponent
+        ]
+        try checkRequiredFields(fields)
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {

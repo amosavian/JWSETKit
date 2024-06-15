@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// Registered parameters of JOSE header in [RFC 7516](https://www.rfc-editor.org/rfc/rfc7516.html).
 public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {

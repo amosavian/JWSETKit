@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// A string describing the data format of the key to import/export.
 public enum JSONWebKeyFormat: String, Codable, Hashable {

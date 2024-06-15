@@ -7,11 +7,7 @@
 
 import Foundation
 import X509
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 @testable import JWSETKit
 
 enum ExampleKeys {

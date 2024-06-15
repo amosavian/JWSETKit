@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 extension SymmetricKey {
     /// Concatenation Key Derivation Function regarding NIST SP800-56Ar2 section 5.8.1.

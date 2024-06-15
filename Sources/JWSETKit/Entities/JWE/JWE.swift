@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// The JWE cryptographic mechanisms encrypt and provide integrity protection
 /// for an arbitrary sequence of octets.

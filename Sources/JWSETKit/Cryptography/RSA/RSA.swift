@@ -11,7 +11,7 @@ import Crypto
 import Foundation
 import SwiftASN1
 
-extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
+extension _CryptoExtras._RSA.Signing.PublicKey: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         // `pkcs1DERRepresentation` is always a valid ASN1 object and it should not fail.
         try! RSAHelper.rsaWebKey(data: pkcs1DERRepresentation).storage
@@ -40,7 +40,7 @@ extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
-extension _RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
+extension _CryptoExtras._RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .spki:
@@ -64,7 +64,7 @@ extension _RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
     }
 }
 
-extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
+extension _CryptoExtras._RSA.Signing.PrivateKey: JSONWebSigningKey {
     public var storage: JSONWebValueStorage {
         get {
             // `derRepresentation` is always a valid ASN1 object and it should not fail.
@@ -102,7 +102,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     }
 }
 
-extension _RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
+extension _CryptoExtras._RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
     var pkcs8Representation: Data {
         // PEM is always a valid Bas64.
         Data(base64Encoded: pkcs8PEMRepresentation
@@ -133,7 +133,7 @@ extension _RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
     }
 }
 
-extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
+extension _CryptoExtras._RSA.Encryption.PublicKey: JSONWebEncryptingKey {
     public var storage: JSONWebValueStorage {
         get {
             // `pkcs1DERRepresentation` is always a valid ASN1 object and it should not fail.
@@ -164,7 +164,7 @@ extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
     }
 }
 
-extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
+extension _CryptoExtras._RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
     public var storage: JSONWebValueStorage {
         get {
             // `derRepresentation` is always a valid ASN1 object and it should not fail.

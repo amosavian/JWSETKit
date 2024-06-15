@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// JWS represents digitally signed or MACed content using JSON data structures and `base64url` encoding.
 public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendable {

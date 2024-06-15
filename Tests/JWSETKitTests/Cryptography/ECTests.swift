@@ -6,12 +6,8 @@
 //
 
 import XCTest
-@testable import JWSETKit
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
+@testable import JWSETKit
 
 final class ECTests: XCTestCase {
     let plaintext = Data("The quick brown fox jumps over the lazy dog.".utf8)

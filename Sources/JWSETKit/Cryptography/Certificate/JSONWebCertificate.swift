@@ -6,12 +6,8 @@
 //
 
 import Foundation
-import X509
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
+import X509
 
 /// JSON Web Key (JWK) container for X509 Certificate chain.
 ///

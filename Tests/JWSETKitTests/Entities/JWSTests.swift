@@ -7,11 +7,7 @@
 
 import X509
 import XCTest
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 @testable import JWSETKit
 
 final class JWSTests: XCTestCase {

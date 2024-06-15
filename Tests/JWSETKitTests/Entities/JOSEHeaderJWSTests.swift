@@ -5,13 +5,9 @@
 //  Created by Amir Abbas Mousavian on 9/17/23.
 //
 
-import X509
 import XCTest
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
+import X509
 @testable import JWSETKit
 
 final class JOSEHeaderJWSTests: XCTestCase {

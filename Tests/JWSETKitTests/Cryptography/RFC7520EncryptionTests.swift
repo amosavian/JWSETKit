@@ -6,12 +6,8 @@
 //
 
 import XCTest
-@testable import JWSETKit
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
+@testable import JWSETKit
 
 final class RFC7520EncryptionTests: XCTestCase {
     let plainText = """

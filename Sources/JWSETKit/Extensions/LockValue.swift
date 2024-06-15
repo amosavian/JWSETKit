@@ -463,4 +463,4 @@ extension LockedValue: ExpressibleByDictionaryLiteral where Value: ExpressibleBy
     }
 }
 
-extension AnyKeyPath: @unchecked Sendable {}
+extension Swift.AnyKeyPath: @unchecked Swift.Sendable {}

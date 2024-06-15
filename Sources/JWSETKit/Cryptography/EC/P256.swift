@@ -6,21 +6,17 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
-extension P256.Signing.PublicKey: CryptoECPublicKey {
+extension Crypto.P256.Signing.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p256 }
 }
 
-extension P256.KeyAgreement.PublicKey: CryptoECPublicKey {
+extension Crypto.P256.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p256 }
 }
 
-extension P256.Signing.PublicKey: JSONWebValidatingKey {
+extension Crypto.P256.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let ecdsaSignature: P256.Signing.ECDSASignature
         // swiftformat:disable:next redundantSelf
@@ -35,11 +31,11 @@ extension P256.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
-extension P256.Signing.PublicKey: CryptoECPublicKeyPortable {}
+extension Crypto.P256.Signing.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension P256.KeyAgreement.PublicKey: CryptoECPublicKeyPortable {}
+extension Crypto.P256.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+extension Crypto.P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
@@ -49,18 +45,18 @@ extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     }
 }
 
-extension P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+extension Crypto.P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public init(algorithm _: any JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
 }
 
-extension P256.Signing.PrivateKey: CryptoECPrivateKeyPortable {}
+extension Crypto.P256.Signing.PrivateKey: CryptoECKeyPortable {}
 
-extension P256.KeyAgreement.PrivateKey: CryptoECPrivateKeyPortable {}
+extension Crypto.P256.KeyAgreement.PrivateKey: CryptoECKeyPortable {}
 
 #if canImport(Darwin)
-extension SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
+extension Crypto.SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
     public var storage: JSONWebValueStorage {
         // Keys stored in SecureEnclave are not exportable.
         //

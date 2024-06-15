@@ -6,11 +6,7 @@
 //
 
 import Foundation
-#if canImport(CryptoKit)
-import CryptoKit
-#else
 import Crypto
-#endif
 
 /// JSON Web Key (JWK) container for different types of Elliptic-Curve public keys consists of P-256, P-384, P-521, Ed25519.
 public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Sendable {
@@ -177,7 +173,7 @@ extension JSONWebECPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
         case .raw:
             try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.privateRawCurve, keyFinder: Self.signingType)
         case .pkcs8:
-            try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.pkc8Curve, keyFinder: Self.signingType)
+            try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.pkcs8Curve, keyFinder: Self.signingType)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
@@ -250,7 +246,7 @@ extension JSONWebKeyCurve {
         91: .p256, 120: .p384, 158: .p521,
     ]
     
-    fileprivate static let pkc8Curve: [Int: Self] = [
+    fileprivate static let pkcs8Curve: [Int: Self] = [
         138: .p256, 185: .p384, 241: .p521,
     ]
 }
