@@ -10,7 +10,7 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-test:
     name: Swift ${{ matrix.swift }} on ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -28,4 +28,9 @@ jobs:
     - name: Build
       run: swift build -v
     - name: Run tests
-      run: swift test -v
+      run: swift test -v --enable-code-coverage
+    - name: Submit code coverage
+      uses: vapor/swift-codecov-action@v0.3
+      with:
+        codecov_token: ${{ secrets.CODECOV_TOKEN }}
+
