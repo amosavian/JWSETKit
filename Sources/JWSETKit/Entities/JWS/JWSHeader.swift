@@ -72,7 +72,7 @@ public struct JSONWebSignatureHeader: Hashable, Codable, Sendable {
 }
 
 extension JSONWebSignatureHeader {
-    func signedData(_ payload: any ProtectedWebContainer) -> Data {
+    func signedData(_ payload: some ProtectedWebContainer) -> Data {
         let protectedEncoded = !protected.storage.storageKeys.isEmpty ? protected.encoded.urlBase64EncodedData() : .init()
         if protected.critical.contains("b64"), protected.base64 == false {
             return protectedEncoded + Data(".".utf8) + payload.encoded

@@ -9,7 +9,7 @@ import XCTest
 import Crypto
 @testable import JWSETKit
 
-extension Crypto.SymmetricKey: @unchecked Sendable {}
+extension Crypto.SymmetricKey: @unchecked Swift.Sendable {}
 
 final class JWETests: XCTestCase {
     func testDecode() throws {

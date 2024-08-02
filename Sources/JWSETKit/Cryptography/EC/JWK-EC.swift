@@ -109,7 +109,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
         self.storage = storage
     }
     
-    public init(algorithm: any JSONWebAlgorithm) throws {
+    public init(algorithm: some JSONWebAlgorithm) throws {
         try self.init(curve: algorithm.curve ?? .empty)
     }
     

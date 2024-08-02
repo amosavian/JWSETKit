@@ -8,7 +8,9 @@
 import Foundation
 import Crypto
 
-extension Crypto.SymmetricKey: JSONWebKey {
+extension Crypto.SymmetricKey: Swift.Hashable, Swift.Codable {}
+
+extension SymmetricKey: JSONWebKey {
     public var storage: JSONWebValueStorage {
         var result = AnyJSONWebKey()
         result.keyType = .symmetric
@@ -55,8 +57,8 @@ extension SymmetricKeySize {
     }
 }
 
-extension Crypto.SymmetricKey: JSONWebSymmetricSigningKey {
-    public init(algorithm: any JSONWebAlgorithm) throws {
+extension SymmetricKey: JSONWebSymmetricSigningKey {
+    public init(algorithm: some JSONWebAlgorithm) throws {
         if let size = AnyJSONWebAlgorithm(algorithm.rawValue).keyLength {
             self.init(size: .init(bitCount: size))
         } else {
@@ -88,7 +90,7 @@ extension Crypto.SymmetricKey: JSONWebSymmetricSigningKey {
     }
 }
 
-extension Crypto.SymmetricKey: JSONWebSymmetricDecryptingKey {
+extension SymmetricKey: JSONWebSymmetricDecryptingKey {
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         if let keyClass = JSONWebKeyEncryptionAlgorithm(algorithm.rawValue).keyClass?.private as? any JSONWebSymmetricDecryptingKey.Type {
             return try keyClass.init(self).decrypt(data, using: algorithm)
@@ -116,7 +118,7 @@ extension Crypto.SymmetricKey: JSONWebSymmetricDecryptingKey {
     }
 }
 
-extension Crypto.SymmetricKey: JSONWebSealingKey {
+extension SymmetricKey: JSONWebSealingKey {
     public init(_ key: SymmetricKey) throws {
         self = key
     }

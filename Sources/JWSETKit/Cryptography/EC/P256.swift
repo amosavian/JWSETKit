@@ -8,15 +8,19 @@
 import Foundation
 import Crypto
 
-extension Crypto.P256.Signing.PublicKey: CryptoECPublicKey {
+extension Crypto.P256.Signing.PublicKey: Swift.Hashable, Swift.Codable {}
+
+extension P256.Signing.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p256 }
 }
 
-extension Crypto.P256.KeyAgreement.PublicKey: CryptoECPublicKey {
+extension Crypto.P256.KeyAgreement.PublicKey: Swift.Hashable, Swift.Codable {}
+
+extension P256.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p256 }
 }
 
-extension Crypto.P256.Signing.PublicKey: JSONWebValidatingKey {
+extension P256.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let ecdsaSignature: P256.Signing.ECDSASignature
         // swiftformat:disable:next redundantSelf
@@ -31,12 +35,14 @@ extension Crypto.P256.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
-extension Crypto.P256.Signing.PublicKey: CryptoECKeyPortableCompactRepresentable {}
+extension P256.Signing.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension Crypto.P256.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {}
+extension P256.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension Crypto.P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
-    public init(algorithm _: any JSONWebAlgorithm) throws {
+extension Crypto.P256.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
+
+extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+    public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
     
@@ -45,18 +51,22 @@ extension Crypto.P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey 
     }
 }
 
-extension Crypto.P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
-    public init(algorithm _: any JSONWebAlgorithm) throws {
+extension Crypto.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {}
+
+extension P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+    public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
 }
 
-extension Crypto.P256.Signing.PrivateKey: CryptoECKeyPortable {}
+extension P256.Signing.PrivateKey: CryptoECKeyPortable {}
 
-extension Crypto.P256.KeyAgreement.PrivateKey: CryptoECKeyPortable {}
+extension P256.KeyAgreement.PrivateKey: CryptoECKeyPortable {}
 
 #if canImport(Darwin)
-extension Crypto.SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
+extension Crypto.SecureEnclave.P256.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
+
+extension SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
     public var storage: JSONWebValueStorage {
         // Keys stored in SecureEnclave are not exportable.
         //
@@ -69,7 +79,7 @@ extension Crypto.SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
         fatalError("Private Keys in Secure Enclave are not encodable.")
     }
     
-    public init(algorithm _: any JSONWebAlgorithm) throws {
+    public init(algorithm _: some JSONWebAlgorithm) throws {
         try self.init(compactRepresentable: true)
     }
     
@@ -79,6 +89,18 @@ extension Crypto.SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
     
     public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         try signature(for: SHA256.hash(data: data)).rawRepresentation
+    }
+}
+
+extension Crypto.SecureEnclave.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {}
+
+extension SecureEnclave.P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+    var rawRepresentation: Data {
+        fatalError("Private Keys in Secure Enclave are not encodable.")
+    }
+    
+    init(rawRepresentation: Data) throws {
+        throw JSONWebKeyError.operationNotAllowed
     }
 }
 #endif

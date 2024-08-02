@@ -13,12 +13,14 @@ import X509
 import _CryptoExtras
 #endif
 
-extension X509.Certificate.PublicKey: JSONWebValidatingKey {
+extension X509.Certificate.PublicKey: Swift.Codable {}
+
+extension Certificate.PublicKey: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         (try? jsonWebKey().storage) ?? .init()
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> X509.Certificate.PublicKey {
+    public static func create(storage: JSONWebValueStorage) throws -> Certificate.PublicKey {
         let key = AnyJSONWebKey(storage: storage)
         
         switch (key.keyType, key.curve) {
@@ -81,14 +83,16 @@ extension DERImplicitlyTaggable {
     }
 }
 
-extension X509.Certificate: JSONWebValidatingKey {
+extension X509.Certificate: Swift.Codable {}
+
+extension Certificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         var key = AnyJSONWebKey(storage: publicKey.storage)
         key.certificateChain = [self]
         return key.storage
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> X509.Certificate {
+    public static func create(storage: JSONWebValueStorage) throws -> Certificate {
         let key = AnyJSONWebKey(storage: storage)
         guard let certificate = key.certificateChain.first else {
             throw JSONWebKeyError.keyNotFound
@@ -101,7 +105,7 @@ extension X509.Certificate: JSONWebValidatingKey {
     }
 }
 
-extension X509.Certificate: Expirable {
+extension Certificate: Expirable {
     public func verifyDate(_ currentDate: Date) throws {
         if currentDate > notValidAfter {
             throw JSONWebValidationError.tokenExpired(expiry: notValidAfter)

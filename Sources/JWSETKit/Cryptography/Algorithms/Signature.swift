@@ -104,14 +104,14 @@ extension JSONWebSignatureAlgorithm {
     ///   - curve: Curve if key is elliptic curve.
     ///   - publicKeyClass: Public key class.
     ///   - privateKeyClass: Private key class. In case the key is symmetric, it equals to `publicKeyClass`.
-    public static func register<Public, Private>(
+    public static func register<Public, Private, Hash>(
         _ algorithm: Self,
         type: JSONWebKeyType,
         curve: JSONWebKeyCurve? = nil,
-        hashFunction: any HashFunction.Type,
+        hashFunction: Hash.Type,
         publicKeyClass: Public.Type,
         privateKeyClass: Private.Type
-    ) where Public: JSONWebValidatingKey, Private: JSONWebSigningKey {
+    ) where Public: JSONWebValidatingKey, Private: JSONWebSigningKey, Hash: HashFunction {
         keyRegistryClasses[algorithm] = (publicKeyClass, privateKeyClass)
         keyTypes[algorithm] = type
         curves[algorithm] = curve

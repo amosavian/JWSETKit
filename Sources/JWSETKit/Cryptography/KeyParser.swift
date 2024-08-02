@@ -204,7 +204,7 @@ extension AnyJSONWebKey {
     ///     to allow overriding default registry.
     ///
     /// - Parameter specializer: The specializer to register.
-    public static func registerSpecializer(_ specializer: any JSONWebKeySpecializer.Type) {
+    public static func registerSpecializer<S>(_ specializer: S.Type) where S: JSONWebKeySpecializer {
         guard !specializers.contains(where: { $0 == specializer }) else { return }
         specializers.insert(specializer, at: 0)
     }

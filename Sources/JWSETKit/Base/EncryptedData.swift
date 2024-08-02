@@ -9,6 +9,7 @@ import Foundation
 import Crypto
 
 /// A container for AES ciphers, e.g. AES-GCM, AES-CBC-HMAC, etc.
+@frozen
 public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Sendable {
     public typealias Nonce = Data
     

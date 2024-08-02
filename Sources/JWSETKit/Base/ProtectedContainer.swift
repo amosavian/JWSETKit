@@ -103,6 +103,7 @@ extension TypedProtectedWebContainer {
     }
 }
 
+@frozen
 public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
     public var encoded: Data
     
@@ -119,6 +120,7 @@ public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
 ///
 /// This cotainer preserves original data to keep consistancy of signature as re-encoding payload
 /// may change sorting.
+@frozen
 public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProtectedWebContainer, Codable {
     private var _protected: Data
     private var _value: Container

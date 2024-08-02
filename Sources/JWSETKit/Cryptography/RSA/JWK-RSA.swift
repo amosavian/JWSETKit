@@ -164,7 +164,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
         }
     }
     
-    public init(algorithm _: any JSONWebAlgorithm) throws {
+    public init(algorithm _: some JSONWebAlgorithm) throws {
         try self.init(keySize: .defaultKeyLength)
     }
     
@@ -372,7 +372,7 @@ extension CryptoSwift.RSA: JSONWebDecryptingKey {
         }
     }
     
-    public convenience init(algorithm _: any JSONWebAlgorithm) throws {
+    public convenience init(algorithm _: some JSONWebAlgorithm) throws {
         try self.init(keySize: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount)
     }
     

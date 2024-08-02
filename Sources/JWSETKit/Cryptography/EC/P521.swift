@@ -8,15 +8,19 @@
 import Foundation
 import Crypto
 
-extension Crypto.P521.Signing.PublicKey: CryptoECPublicKey {
+extension Crypto.P521.Signing.PublicKey: Swift.Hashable, Swift.Codable {}
+
+extension P521.Signing.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p521 }
 }
 
-extension Crypto.P521.KeyAgreement.PublicKey: CryptoECPublicKey {
+extension Crypto.P521.KeyAgreement.PublicKey: Swift.Hashable, Swift.Codable {}
+
+extension P521.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p521 }
 }
 
-extension Crypto.P521.Signing.PublicKey: JSONWebValidatingKey {
+extension P521.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let ecdsaSignature: P521.Signing.ECDSASignature
         // swiftformat:disable:next redundantSelf
@@ -31,12 +35,14 @@ extension Crypto.P521.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
-extension Crypto.P521.Signing.PublicKey: CryptoECKeyPortableCompactRepresentable {}
+extension P521.Signing.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension Crypto.P521.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {}
+extension P521.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension Crypto.P521.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
-    public init(algorithm _: any JSONWebAlgorithm) throws {
+extension Crypto.P521.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
+
+extension P521.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+    public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
     
@@ -45,12 +51,14 @@ extension Crypto.P521.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey 
     }
 }
 
-extension Crypto.P521.KeyAgreement.PrivateKey: CryptoECPrivateKey {
-    public init(algorithm _: any JSONWebAlgorithm) throws {
+extension Crypto.P521.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {}
+
+extension P521.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+    public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
 }
 
-extension Crypto.P521.Signing.PrivateKey: CryptoECKeyPortable {}
+extension P521.Signing.PrivateKey: CryptoECKeyPortable {}
 
-extension Crypto.P521.KeyAgreement.PrivateKey: CryptoECKeyPortable {}
+extension P521.KeyAgreement.PrivateKey: CryptoECKeyPortable {}

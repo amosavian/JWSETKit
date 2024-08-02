@@ -11,7 +11,9 @@ import CommonCrypto
 import CryptoKit
 import X509
 
-extension Security.SecCertificate: JSONWebValidatingKey {
+extension Security.SecCertificate: Swift.Codable {}
+
+extension SecCertificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         var key = AnyJSONWebKey(storage: (try? publicKey.storage) ?? .init())
         if let certificate = try? Certificate(self) {
@@ -46,13 +48,15 @@ extension Security.SecCertificate: JSONWebValidatingKey {
     }
 }
 
-extension Security.SecCertificate: Expirable {
+extension SecCertificate: Expirable {
     public func verifyDate(_ currentDate: Date) throws {
         try Certificate(self).verifyDate(currentDate)
     }
 }
 
-extension Security.SecTrust: JSONWebValidatingKey {
+extension Security.SecTrust: Swift.Codable {}
+
+extension SecTrust: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         var key = AnyJSONWebKey(storage: (try? certificateChain.first?.publicKey.storage) ?? .init())
         key.certificateChain = (try? certificateChain.compactMap(Certificate.init)) ?? []
@@ -97,13 +101,13 @@ extension Security.SecTrust: JSONWebValidatingKey {
     }
 }
 
-extension Security.SecTrust: Expirable {
+extension SecTrust: Expirable {
     public func verifyDate(_ currentDate: Date) throws {
         try certificateChain.forEach { try $0.verifyDate(currentDate) }
     }
 }
 
-extension X509.Certificate {
+extension Certificate {
     /// Casts `X509.Certificate` into `SecCertificate`.
     ///
     /// - Returns: A new `SecCertificate` instance.
@@ -120,11 +124,11 @@ extension X509.Certificate {
     }
 }
 
-public func == (lhs: X509.Certificate, rhs: Security.SecCertificate) -> Bool {
+public func == (lhs: Certificate, rhs: SecCertificate) -> Bool {
     lhs == (try? Certificate(rhs))
 }
 
-public func == (lhs: Security.SecCertificate, rhs: X509.Certificate) -> Bool {
+public func == (lhs: SecCertificate, rhs: Certificate) -> Bool {
     (try? Certificate(lhs)) == rhs
 }
 #endif

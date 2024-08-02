@@ -15,7 +15,7 @@ struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey {
         self
     }
     
-    init(algorithm: any JSONWebAlgorithm) throws {
+    init(algorithm: some JSONWebAlgorithm) throws {
         guard algorithm == .direct else {
             throw JSONWebKeyError.unknownAlgorithm
         }

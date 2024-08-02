@@ -30,7 +30,7 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, JSONWebSym
         .init(storage: storage)
     }
     
-    public init(algorithm: any JSONWebAlgorithm) throws {
+    public init(algorithm: some JSONWebAlgorithm) throws {
         switch algorithm {
         case .aesEncryptionGCM128, .aesGCM128KeyWrap:
             try self.init(SymmetricKey(size: .bits128))
@@ -100,7 +100,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
         }
     }
 
-    public init(algorithm: any JSONWebAlgorithm) throws {
+    public init(algorithm: some JSONWebAlgorithm) throws {
         switch algorithm {
         case .aesKeyWrap128:
             self.init(.bits128)

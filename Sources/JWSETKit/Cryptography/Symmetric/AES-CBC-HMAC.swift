@@ -48,7 +48,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSealingKey, JSONWe
         }
     }
     
-    public init(algorithm: any JSONWebAlgorithm) throws {
+    public init(algorithm: some JSONWebAlgorithm) throws {
         guard let keySize = JSONWebContentEncryptionAlgorithm(algorithm.rawValue).keyLength else {
             throw CryptoKitError.incorrectKeySize
         }

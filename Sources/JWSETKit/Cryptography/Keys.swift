@@ -264,7 +264,7 @@ public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
     var publicKey: PublicKey { get }
     
     /// Generates new random key.
-    init(algorithm: any JSONWebAlgorithm) throws
+    init(algorithm: some JSONWebAlgorithm) throws
     
     /// Decrypts ciphered data using current key.
     ///
@@ -396,7 +396,7 @@ public protocol JSONWebSigningKey: JSONWebValidatingKey {
     var publicKey: PublicKey { get }
     
     /// Generates new random key.
-    init(algorithm: any JSONWebAlgorithm) throws
+    init(algorithm: some JSONWebAlgorithm) throws
     
     /// Creates the cryptographic signature for a block of data using a private key and specified algorithm.
     ///

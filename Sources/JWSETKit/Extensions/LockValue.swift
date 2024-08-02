@@ -12,6 +12,7 @@ public protocol ReadWriteLockContext {
     static var setContext: Self { get }
 }
 
+@frozen
 public struct LockContextEmpty: ReadWriteLockContext {
     public static var getContext: LockContextEmpty {
         LockContextEmpty()
@@ -40,6 +41,7 @@ extension Locking {
     }
 }
 
+@frozen
 public enum PthreadReadWriteContextLock: ReadWriteLockContext {
     case read
     case write

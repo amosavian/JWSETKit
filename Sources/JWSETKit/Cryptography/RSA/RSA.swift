@@ -11,7 +11,9 @@ import Crypto
 import Foundation
 import SwiftASN1
 
-extension _CryptoExtras._RSA.Signing.PublicKey: JSONWebValidatingKey {
+extension _CryptoExtras._RSA.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Codable {}
+
+extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         // `pkcs1DERRepresentation` is always a valid ASN1 object and it should not fail.
         try! RSAHelper.rsaWebKey(data: pkcs1DERRepresentation).storage
@@ -64,7 +66,9 @@ extension _CryptoExtras._RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKey
     }
 }
 
-extension _CryptoExtras._RSA.Signing.PrivateKey: JSONWebSigningKey {
+extension _CryptoExtras._RSA.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Codable {}
+
+extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     public var storage: JSONWebValueStorage {
         get {
             // `derRepresentation` is always a valid ASN1 object and it should not fail.
@@ -77,7 +81,7 @@ extension _CryptoExtras._RSA.Signing.PrivateKey: JSONWebSigningKey {
         }
     }
     
-    public init(algorithm _: any JSONWebAlgorithm) throws {
+    public init(algorithm _: some JSONWebAlgorithm) throws {
         try self.init(keySize: .init(bitCount: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount))
     }
     
@@ -133,7 +137,9 @@ extension _CryptoExtras._RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKe
     }
 }
 
-extension _CryptoExtras._RSA.Encryption.PublicKey: JSONWebEncryptingKey {
+extension _CryptoExtras._RSA.Encryption.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Codable {}
+
+extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
     public var storage: JSONWebValueStorage {
         get {
             // `pkcs1DERRepresentation` is always a valid ASN1 object and it should not fail.
@@ -164,7 +170,9 @@ extension _CryptoExtras._RSA.Encryption.PublicKey: JSONWebEncryptingKey {
     }
 }
 
-extension _CryptoExtras._RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
+extension _CryptoExtras._RSA.Encryption.PrivateKey: Swift.Hashable, Swift.Equatable , Swift.Codable {}
+
+extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
     public var storage: JSONWebValueStorage {
         get {
             // `derRepresentation` is always a valid ASN1 object and it should not fail.
@@ -177,7 +185,7 @@ extension _CryptoExtras._RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
         }
     }
     
-    public init(algorithm _: any JSONWebAlgorithm) throws {
+    public init(algorithm _: some JSONWebAlgorithm) throws {
         try self.init(keySize: .bits2048)
     }
     

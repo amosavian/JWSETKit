@@ -73,7 +73,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
             } else {
                 throw JSONWebKeyError.keyNotFound
             }
-            return try .init(
+            return try JSONWebSignatureHeader(
                 protected: header.protected.encoded,
                 unprotected: header.unprotected,
                 signature: signature
@@ -93,7 +93,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     ///
     /// - Parameters:
     ///   - key: A `JSONWebSigningKey` object that would be used for signing.
-    public mutating func updateSignature(using key: any JSONWebSigningKey) throws {
+    public mutating func updateSignature(using key: some JSONWebSigningKey) throws {
         try updateSignature(using: [key])
     }
     
@@ -140,7 +140,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     /// - Parameters:
     ///   - key: A `JSONWebValidatingKey` object that would be used for validation.
     ///   - strict: If `true` (default), the algorithm in the protected header will be used otherwise algorithm in unprotected header will be allowed.
-    public func verifySignature(using key: any JSONWebValidatingKey, strict: Bool = true) throws {
+    public func verifySignature(using key: some JSONWebValidatingKey, strict: Bool = true) throws {
         try verifySignature(using: [key], strict: strict)
     }
     

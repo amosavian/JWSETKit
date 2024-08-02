@@ -139,6 +139,12 @@ extension PKCS8PrivateKey: DERKeyContainer {
     }
 }
 
+extension ASN1ObjectIdentifier {
+    var asAny: ASN1Any? {
+        try? .init(erasing: self)
+    }
+}
+
 extension DERKeyContainer {
     var keyType: JSONWebKeyType {
         get throws {
@@ -155,11 +161,11 @@ extension DERKeyContainer {
     
     var keyCurve: JSONWebKeyCurve? {
         switch algorithmIdentifier.parameters {
-        case try? .init(erasing: ASN1ObjectIdentifier.NamedCurves.secp256r1):
+        case ASN1ObjectIdentifier.NamedCurves.secp256r1.asAny:
             return .p256
-        case try? .init(erasing: ASN1ObjectIdentifier.NamedCurves.secp384r1):
+        case ASN1ObjectIdentifier.NamedCurves.secp384r1.asAny:
             return .p384
-        case try? .init(erasing: ASN1ObjectIdentifier.NamedCurves.secp521r1):
+        case ASN1ObjectIdentifier.NamedCurves.secp521r1.asAny:
             return .p521
         default:
             return nil
