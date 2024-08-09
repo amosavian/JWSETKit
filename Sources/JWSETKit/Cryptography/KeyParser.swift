@@ -211,7 +211,7 @@ extension AnyJSONWebKey {
 }
 
 extension [any JSONWebKey] {
-    func bestMatch(for algorithm: any JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
+    func bestMatch(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
         guard let keyType = algorithm.keyType else { return nil }
         let candidates = filter {
             $0.keyType == keyType && $0.curve == algorithm.curve
@@ -225,13 +225,13 @@ extension [any JSONWebKey] {
 }
 
 extension [any JSONWebSigningKey] {
-    func bestMatch(for algorithm: any JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
+    func bestMatch(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
         (self as [any JSONWebKey]).bestMatch(for: algorithm, id: id) as? Self.Element
     }
 }
 
 extension [any JSONWebValidatingKey] {
-    func bestMatch(for algorithm: any JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
+    func bestMatch(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
         (self as [any JSONWebKey]).bestMatch(for: algorithm, id: id) as? Self.Element
     }
 }

@@ -8,7 +8,7 @@
 import Foundation
 import Crypto
 
-extension Crypto.Curve25519.Signing.PublicKey: @retroactive Hashable, Swift.Codable {}
+extension Crypto.Curve25519.Signing.PublicKey: Swift.Hashable, Swift.Codable {}
 
 extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .ed25519 }
@@ -30,7 +30,7 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
     }
 }
 
-extension Crypto.Curve25519.KeyAgreement.PublicKey: @retroactive Hashable, Swift.Codable {}
+extension Crypto.Curve25519.KeyAgreement.PublicKey: Swift.Hashable, Swift.Codable {}
 
 extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .x25519 }
@@ -64,7 +64,7 @@ extension Curve25519.Signing.PublicKey: CryptoEdKeyPortable {}
 
 extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {}
 
-extension Crypto.Curve25519.Signing.PrivateKey: @retroactive Hashable, Swift.Codable {}
+extension Crypto.Curve25519.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
 
 extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public init(algorithm _: some JSONWebAlgorithm) throws {
@@ -76,7 +76,7 @@ extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     }
 }
 
-extension Crypto.Curve25519.KeyAgreement.PrivateKey: @retroactive Hashable, Swift.Codable {}
+extension Crypto.Curve25519.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {}
 
 extension Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public init(algorithm _: some JSONWebAlgorithm) throws {

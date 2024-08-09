@@ -1,4 +1,4 @@
-// swift-tools-version: 5.8
+// swift-tools-version: 6.0
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -56,11 +56,7 @@ let package = Package(
 )
 
 for target in package.targets {
-    var swiftSettings: [SwiftSetting] = [
-        .enableExperimentalFeature("StrictConcurrency=complete"),
+    target.swiftSettings = [
+        .enableUpcomingFeature("ExistentialAny"),
     ]
-#if swift(>=5.9)
-    swiftSettings.append(.enableUpcomingFeature("ExistentialAny"))
-#endif
-    target.swiftSettings = swiftSettings
 }

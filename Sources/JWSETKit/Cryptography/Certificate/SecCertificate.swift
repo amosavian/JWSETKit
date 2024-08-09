@@ -28,7 +28,7 @@ extension SecCertificate: JSONWebValidatingKey {
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
         let key = AnyJSONWebKey(storage: storage)
-        guard let certificate = key.certificateChain.first, let result = try certificate.secCertificate() as? Self else {
+        guard let certificate = key.certificateChain.first, let result = try SecCertificate.makeWithCertificate(certificate) as? Self else {
             throw JSONWebKeyError.keyNotFound
         }
         return result
@@ -87,7 +87,7 @@ extension SecTrust: JSONWebValidatingKey {
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
         let key = AnyJSONWebKey(storage: storage)
-        let certificates = try key.certificateChain.map { try $0.secCertificate() }
+        let certificates = try key.certificateChain.map(SecCertificate.makeWithCertificate)
         var result: SecTrust?
         SecTrustCreateWithCertificates(certificates as CFArray, SecPolicyCreateBasicX509(), &result)
         guard let result = result as? Self else {
@@ -104,23 +104,6 @@ extension SecTrust: JSONWebValidatingKey {
 extension SecTrust: Expirable {
     public func verifyDate(_ currentDate: Date) throws {
         try certificateChain.forEach { try $0.verifyDate(currentDate) }
-    }
-}
-
-extension Certificate {
-    /// Casts `X509.Certificate` into `SecCertificate`.
-    ///
-    /// - Returns: A new `SecCertificate` instance.
-    public func secCertificate() throws -> SecCertificate {
-        try SecCertificateCreateWithData(kCFAllocatorDefault, derRepresentation as CFData)!
-    }
-    
-    /// Casts `SecCertificate` into `X509.Certificate`.
-    ///
-    /// - Parameter secCertificate: `SecCertificate` instance to be casted.
-    public init(_ secCertificate: SecCertificate) throws {
-        let der = SecCertificateCopyData(secCertificate) as Data
-        try self.init(derEncoded: der)
     }
 }
 

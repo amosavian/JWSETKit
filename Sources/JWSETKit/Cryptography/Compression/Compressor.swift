@@ -10,7 +10,7 @@ import Foundation
 import SWCompression
 
 extension JSONWebCompressionAlgorithm {
-    var swCompressor: any CompressionAlgorithm.Type {
+    var swCompressor: some CompressionAlgorithm.Type {
         get throws {
             switch self {
             case .deflate:
@@ -21,7 +21,7 @@ extension JSONWebCompressionAlgorithm {
         }
     }
     
-    var swDecompressor: any DecompressionAlgorithm.Type {
+    var swDecompressor: some DecompressionAlgorithm.Type {
         get throws {
             switch self {
             case .deflate:
