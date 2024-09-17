@@ -334,7 +334,7 @@ enum RSAHelper {
 }
 
 #if canImport(CryptoSwift)
-extension CryptoSwift.RSA: JSONWebDecryptingKey {
+extension CryptoSwift.RSA: Swift.Hashable, Swift.Codable, JSONWebDecryptingKey {
     public var publicKey: CryptoSwift.RSA {
         Self(n: n, e: e)
     }
@@ -401,7 +401,7 @@ extension CryptoSwift.RSA: JSONWebDecryptingKey {
     }
     
     public static func == (lhs: CryptoSwift.RSA, rhs: CryptoSwift.RSA) -> Bool {
-        lhs.externalRepresentation() == rhs.externalRepresentation()
+        (try? lhs.publicKey.externalRepresentation()) == (try? rhs.publicKey.externalRepresentation())
     }
     
     public func hash(into hasher: inout Hasher) {
