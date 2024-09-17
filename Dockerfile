@@ -8,8 +8,8 @@ WORKDIR /usr/src/app
 
 VOLUME /usr/src/app
 
-ADD Sources ./Sources
-ADD Tests ./Tests
-ADD Package.swift ./
+COPY Sources ./Sources
+COPY Tests ./Tests
+COPY Package.swift ./
 
-CMD swift test
+EXEC swift test

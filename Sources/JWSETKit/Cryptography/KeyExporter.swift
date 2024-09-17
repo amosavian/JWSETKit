@@ -262,9 +262,9 @@ struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable {
         self = try DER.sequence(rootNode, identifier: identifier) { nodes in
             let algorithmOID = try ASN1ObjectIdentifier(derEncoded: &nodes)
 
-            let parameters = nodes.next().map { ASN1Any(derEncoded: $0) }
+            let nodeParameters = nodes.next().map { ASN1Any(derEncoded: $0) }
 
-            return .init(algorithm: algorithmOID, parameters: parameters)
+            return .init(algorithm: algorithmOID, parameters: nodeParameters)
         }
     }
 
@@ -324,16 +324,16 @@ struct SEC1PrivateKey: DERImplicitlyTaggable, PEMRepresentable {
                 throw ASN1Error.invalidASN1Object(reason: "Invalid version")
             }
 
-            let privateKey = try ASN1OctetString(derEncoded: &nodes)
+            let encodedPrivateKey = try ASN1OctetString(derEncoded: &nodes)
             let parameters = try DER.optionalExplicitlyTagged(&nodes, tagNumber: 0, tagClass: .contextSpecific) {
                 node in
                 try ASN1ObjectIdentifier(derEncoded: node)
             }
-            let publicKey = try DER.optionalExplicitlyTagged(&nodes, tagNumber: 1, tagClass: .contextSpecific) { node in
+            let encodedPublicKey = try DER.optionalExplicitlyTagged(&nodes, tagNumber: 1, tagClass: .contextSpecific) { node in
                 try ASN1BitString(derEncoded: node)
             }
 
-            return try .init(privateKey: privateKey, algorithm: parameters, publicKey: publicKey)
+            return try .init(privateKey: encodedPrivateKey, algorithm: parameters, publicKey: encodedPublicKey)
         }
     }
 
@@ -404,7 +404,7 @@ struct PKCS8PrivateKey: DERImplicitlyTaggable {
                 throw ASN1Error.invalidASN1Object(reason: "Invalid version")
             }
 
-            let algorithm = try RFC5480AlgorithmIdentifier(derEncoded: &nodes)
+            let encodedAlgorithm = try RFC5480AlgorithmIdentifier(derEncoded: &nodes)
             let privateKeyBytes = try ASN1OctetString(derEncoded: &nodes)
 
             // We ignore the attributes
@@ -412,11 +412,11 @@ struct PKCS8PrivateKey: DERImplicitlyTaggable {
 
             let sec1PrivateKeyNode = try DER.parse(privateKeyBytes.bytes)
             let sec1PrivateKey = try SEC1PrivateKey(derEncoded: sec1PrivateKeyNode)
-            if let innerAlgorithm = sec1PrivateKey.algorithm, innerAlgorithm != algorithm {
+            if let innerAlgorithm = sec1PrivateKey.algorithm, innerAlgorithm != encodedAlgorithm {
                 throw ASN1Error.invalidASN1Object(reason: "Mismatched algorithms")
             }
 
-            return try .init(algorithm: algorithm, privateKey: sec1PrivateKey)
+            return try .init(algorithm: encodedAlgorithm, privateKey: sec1PrivateKey)
         }
     }
 

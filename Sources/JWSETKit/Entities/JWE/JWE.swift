@@ -139,8 +139,8 @@ public struct JSONWebEncryption: Hashable, Sendable {
             guard let cekData = cek.keyValue?.data else {
                 throw JSONWebKeyError.keyNotFound
             }
-            let encryptedKey = try handler(&header, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, cekData)
-            self.recipients = [.init(encrypedKey: encryptedKey)]
+            let mutatedEncryptedKey = try handler(&header, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, cekData)
+            self.recipients = [.init(encrypedKey: mutatedEncryptedKey)]
         }
         self.header = try .init(
             protected: ProtectedJSONWebContainer(value: header),
@@ -183,17 +183,17 @@ public struct JSONWebEncryption: Hashable, Sendable {
         keyEncryptionKey: (any JSONWebKey)?,
         contentEncryptionKey: (any JSONWebSealingKey)? = nil
     ) throws {
-        let header = protected.value.merging(unprotected ?? .init(), uniquingKeysWith: { p, _ in p })
+        let mergedHeader = protected.value.merging(unprotected ?? .init(), uniquingKeysWith: { p, _ in p })
         
         let plainData: any DataProtocol
-        if let compressor = header.compressionAlgorithm?.compressor {
+        if let compressor = mergedHeader.compressionAlgorithm?.compressor {
             plainData = try compressor.compress(content)
         } else {
             plainData = content
         }
         
-        let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm.rawValue)
-        let contentEncryptionAlgorithm = JSONWebContentEncryptionAlgorithm(header.encryptionAlgorithm?.rawValue ?? "")
+        let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(mergedHeader.algorithm.rawValue)
+        let contentEncryptionAlgorithm = JSONWebContentEncryptionAlgorithm(mergedHeader.encryptionAlgorithm?.rawValue ?? "")
         let handler = keyEncryptingAlgorithm.encryptedKeyHandler ?? JSONWebKeyEncryptionAlgorithm.standardEncryptdKey
         
         let cek: any JSONWebSealingKey
@@ -209,9 +209,9 @@ public struct JSONWebEncryption: Hashable, Sendable {
         case .ecdhEphemeralStatic:
             // Content encryption key is exactly the result of ECDH, thus
             // `contentEncryptionKey` is ignored.
-            var modifiedHeader = header
+            var modifiedHeader = mergedHeader
             let cekData = try handler(&modifiedHeader, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, Data())
-            guard modifiedHeader == header else {
+            guard modifiedHeader == mergedHeader else {
                 throw JSONWebKeyError.operationNotAllowed
             }
             cek = SymmetricKey(data: cekData)
@@ -221,12 +221,12 @@ public struct JSONWebEncryption: Hashable, Sendable {
             guard let cekData = cek.keyValue?.data else {
                 throw JSONWebKeyError.keyNotFound
             }
-            var modifiedHeader = header
-            let encryptedKey = try handler(&modifiedHeader, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, cekData)
-            guard modifiedHeader == header else {
+            var modifiedHeader = mergedHeader
+            let mutatedEncryptedKey = try handler(&modifiedHeader, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, cekData)
+            guard modifiedHeader == mergedHeader else {
                 throw JSONWebKeyError.operationNotAllowed
             }
-            self.recipients = [.init(encrypedKey: encryptedKey)]
+            self.recipients = [.init(encrypedKey: mutatedEncryptedKey)]
         }
         self.header = try .init(protected: protected, unprotected: unprotected)
         let authenticating = protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
@@ -276,18 +276,18 @@ public struct JSONWebEncryption: Hashable, Sendable {
             throw JSONWebKeyError.unknownAlgorithm
         }
         
-        var encryptedKey = recipient?.encrypedKey ?? .init()
+        var targetEncryptedKey = recipient?.encrypedKey ?? .init()
         let algorithmValue = combinedHeader.algorithm.rawValue
         guard let algorithm = AnyJSONWebAlgorithm.specialized(algorithmValue) as? JSONWebKeyEncryptionAlgorithm else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         
         var decryptingKey = key
-        try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &encryptedKey)
+        try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &targetEncryptedKey)
         guard let decryptingKey = decryptingKey as? (any JSONWebDecryptingKey) else {
             throw JSONWebKeyError.keyNotFound
         }
-        let cek = try SymmetricKey(data: decryptingKey.decrypt(encryptedKey, using: algorithm))
+        let cek = try SymmetricKey(data: decryptingKey.decrypt(targetEncryptedKey, using: algorithm))
         let authenticatingData = header.protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
         let content = try cek.open(sealed, authenticating: authenticatingData, using: contentEncAlgorithm)
         

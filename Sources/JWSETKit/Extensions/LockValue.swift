@@ -170,23 +170,23 @@ public typealias PthreadMutexLockedValue<Value> = LockedValue<LockContextEmpty, 
 public final class LockedValue<Context, Lock: Locking<Context>, Value>: @unchecked Sendable where Context: ReadWriteLockContext {
     private let lock = Lock()
     
-    private var _value: Value
+    private var value: Value
     
     public var wrappedValue: Value {
         get {
             (try? lock.withLock(.getContext) {
-                _value
-            }) ?? _value
+                value
+            }) ?? value
         }
         set {
             try? lock.withLock(.setContext) {
-                _value = newValue
+                value = newValue
             }
         }
     }
     
     public init(wrappedValue: Value) {
-        self._value = wrappedValue
+        self.value = wrappedValue
     }
     
     @inlinable
@@ -206,7 +206,7 @@ public final class LockedValue<Context, Lock: Locking<Context>, Value>: @uncheck
     
     public func withLock<R>(_ context: Context, _ handler: (_ value: inout Value) throws -> R) throws -> R {
         try lock.withLock(context) {
-            try handler(&_value)
+            try handler(&value)
         }
     }
 }

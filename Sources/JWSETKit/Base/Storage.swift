@@ -118,6 +118,10 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         self.storage = [:]
     }
     
+    fileprivate init(_ storage: [String: AnyCodable]) {
+        self.storage = storage
+    }
+    
     public init(dictionaryLiteral elements: (String, Any)...) {
         let elements = elements.map { ($0, AnyCodable($1)) }
         self.storage = .init(uniqueKeysWithValues: elements)
@@ -137,19 +141,13 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     public func merging(_ other: JSONWebValueStorage, uniquingKeysWith combine: (Any, Any) throws -> Any) rethrows -> JSONWebValueStorage {
-        let storage = try storage.merging(other.storage) {
+        return try JSONWebValueStorage(storage.merging(other.storage) {
             try .init(combine($0.value, $1.value))
-        }
-        var result = JSONWebValueStorage()
-        result.storage = storage
-        return result
+        })
     }
     
     public func filter(_ isIncluded: (String) throws -> Bool) rethrows -> JSONWebValueStorage {
-        let storage = try self.storage.filter { try isIncluded($0.key) }
-        var result = JSONWebValueStorage()
-        result.storage = storage
-        return result
+        try JSONWebValueStorage(self.storage.filter { try isIncluded($0.key) })
     }
     
     public func encode(to encoder: any Encoder) throws {
