@@ -401,7 +401,7 @@ extension CryptoSwift.RSA: JSONWebDecryptingKey {
     }
     
     public static func == (lhs: CryptoSwift.RSA, rhs: CryptoSwift.RSA) -> Bool {
-        lhs.n == rhs.n && lhs.e == rhs.e
+        lhs.externalRepresentation() == rhs.externalRepresentation()
     }
     
     public func hash(into hasher: inout Hasher) {

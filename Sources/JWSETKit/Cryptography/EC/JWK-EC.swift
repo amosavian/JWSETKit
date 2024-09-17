@@ -200,7 +200,6 @@ enum ECHelper {
                 throw CryptoKitError.incorrectParameterSize
             }
         }
-        
         return stride(from: 0, to: data.count, by: keyLength / 8).map {
             data.dropFirst($0).prefix(keyLength / 8)
         }
