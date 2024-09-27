@@ -34,12 +34,12 @@ extension JSONWebCompressionAlgorithm {
 }
 
 /// Compressor contain compress and decompress implementation using `Compression` framework.
-public struct Compressor<Codec>: JSONWebCompressor, Sendable where Codec: CompressionCodec {
-    public static func compress<D>(_ data: D) throws -> Data where D: DataProtocol {
+struct Compressor<Codec>: JSONWebCompressor, Sendable where Codec: CompressionCodec {
+    static func compress<D>(_ data: D) throws -> Data where D: DataProtocol {
         try Codec.algorithm.swCompressor.compress(data: Data(data))
     }
     
-    public static func decompress<D>(_ data: D) throws -> Data where D: DataProtocol {
+    static func decompress<D>(_ data: D) throws -> Data where D: DataProtocol {
         try Codec.algorithm.swDecompressor.decompress(data: Data(data))
     }
 }

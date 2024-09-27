@@ -4,7 +4,7 @@
 import PackageDescription
 
 extension [Platform] {
-    static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS, .custom("visionos")]
+    static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS, .visionOS]
     static let nonDarwin: [Platform] = [.linux, .android, .windows, .wasi, .openbsd]
 }
 
@@ -26,7 +26,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/Flight-School/AnyCodable", .upToNextMajor(from: "0.6.7")),
         .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMajor(from: "1.2.0")),
-        .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.5.0")),
+        .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.7.1")),
         .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.5.0")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.8.2")),
         .package(url: "https://github.com/tsolomko/SWCompression.git", .upToNextMajor(from: "4.8.6")),
