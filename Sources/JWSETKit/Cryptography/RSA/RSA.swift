@@ -20,8 +20,11 @@ extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Signing.PublicKey {
-        let der = try RSAHelper.pkcs1Representation(AnyJSONWebKey(storage: storage))
-        return try .init(derRepresentation: der)
+        let key = AnyJSONWebKey(storage: storage)
+        guard let modulus = key.modulus, let exponent = key.exponent else {
+            throw CryptoKitError.incorrectParameterSize
+        }
+        return try .init(n: modulus, e: exponent)
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
@@ -86,8 +89,11 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Signing.PrivateKey {
-        let der = try RSAHelper.pkcs1Representation(AnyJSONWebKey(storage: storage))
-        return try .init(derRepresentation: der)
+        let key = AnyJSONWebKey(storage: storage)
+        guard let modulus = key.modulus, let exponent = key.exponent, let privateExponent = key.privateExponent, let p = key.firstPrimeFactor, let q = key.secondPrimeFactor else {
+            throw CryptoKitError.incorrectParameterSize
+        }
+        return try .init(n: modulus, e: exponent, d: privateExponent, p: p, q: q)
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
@@ -153,8 +159,11 @@ extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Encryption.PublicKey {
-        let der = try RSAHelper.pkcs1Representation(AnyJSONWebKey(storage: storage))
-        return try .init(derRepresentation: der)
+        let key = AnyJSONWebKey(storage: storage)
+        guard let modulus = key.modulus, let exponent = key.exponent else {
+            throw CryptoKitError.incorrectParameterSize
+        }
+        return try .init(n: modulus, e: exponent)
     }
     
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
@@ -190,8 +199,11 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Encryption.PrivateKey {
-        let der = try RSAHelper.pkcs1Representation(AnyJSONWebKey(storage: storage))
-        return try .init(derRepresentation: der)
+        let key = AnyJSONWebKey(storage: storage)
+        guard let modulus = key.modulus, let exponent = key.exponent, let privateExponent = key.privateExponent, let p = key.firstPrimeFactor, let q = key.secondPrimeFactor else {
+            throw CryptoKitError.incorrectParameterSize
+        }
+        return try .init(n: modulus, e: exponent, d: privateExponent, p: p, q: q)
     }
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {

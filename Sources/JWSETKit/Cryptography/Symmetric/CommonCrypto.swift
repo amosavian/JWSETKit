@@ -129,10 +129,10 @@ extension SymmetricKey {
     }
     
     static func ccPbkdf2<PD, SD, H>(
-        pbkdf2Password password: PD, salt: SD, iterations: Int, length: Int? = nil, hashFunction: H.Type
+        pbkdf2Password password: PD, salt: SD, iterations: Int, length: Int, hashFunction: H.Type
     ) throws -> SymmetricKey where PD: DataProtocol, SD: DataProtocol, H: HashFunction {
         let hash = try CCPseudoRandomAlgorithm(hashFunction)
-        var derivedKeyData = Data(repeating: 0, count: length ?? hashFunction.Digest.byteCount)
+        var derivedKeyData = Data(repeating: 0, count: length)
         let derivedCount = derivedKeyData.count
         
         let derivationStatus: OSStatus = derivedKeyData.withUnsafeMutableBytes { derivedKeyBytes in

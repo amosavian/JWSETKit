@@ -1,4 +1,4 @@
-// swift-tools-version: 5.8
+// swift-tools-version: 5.9
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -25,9 +25,9 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/Flight-School/AnyCodable", .upToNextMajor(from: "0.6.7")),
-        .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMajor(from: "1.2.0")),
-        .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.7.1")),
-        .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.5.0")),
+        .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMajor(from: "1.3.0")),
+        .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.9.0")),
+        .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.6.1")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.8.2")),
         .package(url: "https://github.com/tsolomko/SWCompression.git", .upToNextMajor(from: "4.8.6")),
     ],
@@ -56,11 +56,9 @@ let package = Package(
 )
 
 for target in package.targets {
-    var swiftSettings: [SwiftSetting] = [
+    let swiftSettings: [SwiftSetting] = [
         .enableExperimentalFeature("StrictConcurrency=complete"),
+        .enableUpcomingFeature("ExistentialAny")
     ]
-#if swift(>=5.9)
-    swiftSettings.append(.enableUpcomingFeature("ExistentialAny"))
-#endif
     target.swiftSettings = swiftSettings
 }

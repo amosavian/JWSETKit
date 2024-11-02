@@ -7,18 +7,15 @@
 
 import Foundation
 import Crypto
-#if canImport(CommonCrypto)
-import CommonCrypto
-#endif
-#if canImport(CryptoSwift)
-import CryptoSwift
+#if canImport(_CryptoExtras)
+import _CryptoExtras
 #endif
 
 extension SymmetricKey {
     static let defaultPBES2IterationCount: [Int: Int] = [
-        128: 310_000,
-        192: 250_000,
-        256: 120_000,
+        128: 600_000,
+        192: 450_000,
+        256: 210_000,
     ]
     
     /// Generates a symmetric key using `PBKDF2` algorithm.
@@ -33,12 +30,11 @@ extension SymmetricKey {
     public static func paswordBased2DerivedSymmetricKey<PD, SD, H>(
         password: PD, salt: SD, iterations: Int, length: Int? = nil, hashFunction: H.Type
     ) throws -> SymmetricKey where PD: DataProtocol, SD: DataProtocol, H: HashFunction {
+        let length = length ?? hashFunction.Digest.byteCount
 #if canImport(CommonCrypto)
         return try ccPbkdf2(pbkdf2Password: password, salt: salt, iterations: iterations, length: length, hashFunction: hashFunction)
-#elseif canImport(CryptoSwift)
-        let variant = try CryptoSwift.HMAC.Variant(hashFunction)
-        let key = try PKCS5.PBKDF2(password: [UInt8](password), salt: [UInt8](salt), iterations: iterations, keyLength: length, variant: variant).calculate()
-        return .init(data: key)
+#elseif canImport(_CryptoExtras)
+        return try KDF.Insecure.PBKDF2.deriveKey(from: password, salt: salt, using: .init(hashFunction), outputByteCount: length, unsafeUncheckedRounds: iterations)
 #else
         // This should never happen as CommonCrypto is available on Darwin platforms
         // and CryptoSwift is used on non-Darwin platform.
@@ -47,20 +43,18 @@ extension SymmetricKey {
     }
 }
 
-#if canImport(CryptoSwift)
-extension CryptoSwift.HMAC.Variant {
+extension KDF.Insecure.PBKDF2.HashFunction {
     init<H>(_: H.Type) throws where H: HashFunction {
         if H.self == Insecure.SHA1.self {
-            self = .sha1
+            self = .insecureSHA1
         } else if H.self == SHA256.self {
-            self = .sha2(.sha256)
+            self = .sha256
         } else if H.self == SHA384.self {
-            self = .sha2(.sha384)
+            self = .sha384
         } else if H.self == SHA512.self {
-            self = .sha2(.sha512)
+            self = .sha512
         } else {
             throw CryptoKitError.incorrectKeySize
         }
     }
 }
-#endif
