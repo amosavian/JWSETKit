@@ -15,11 +15,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-15, ubuntu-latest]
+        os: [macos-14, ubuntu-latest]
         swift: ["6.0", "5.10"]
 
     steps:
-    - uses: swift-actions/setup-swift@v2
+    - uses: SwiftyLab/setup-swift@latest
       with:
         swift-version: ${{ matrix.swift }}
     - uses: actions/checkout@v4
