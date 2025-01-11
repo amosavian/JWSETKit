@@ -5,21 +5,24 @@
 //  Created by Amir Abbas Mousavian on 10/20/23.
 //
 
-import XCTest
 import Crypto
+import Foundation
+import Testing
 @testable import JWSETKit
 
 extension Crypto.SymmetricKey: @unchecked Swift.Sendable {}
 
-final class JWETests: XCTestCase {
+@Suite
+struct JWETests {
+    @Test
     func testDecode() throws {
         let jwe = try JSONWebEncryption(from: RSA_OAEP_GCM.jweString)
         
         var header = JOSEHeader()
         header.algorithm = .rsaEncryptionOAEP
         header.encryptionAlgorithm = .aesEncryptionGCM256
-        XCTAssertEqual(header, jwe.header.protected.value)
-        XCTAssertEqual(jwe.encryptedKey, Data(urlBase64Encoded: """
+        #expect(header == jwe.header.protected.value)
+        #expect(jwe.encryptedKey == Data(urlBase64Encoded: """
         OKOawDo13gRp2ojaHV7LFpZcgV7T6DVZKTyKOMTYUmKoTCVJRgckCL9kiMT03JGe\
         ipsEdY3mx_etLbbWSrFr05kLzcSr4qKAq7YN7e9jwQRb23nfa6c9d-StnImGyFDb\
         Sv04uVuxIp5Zms1gNxKKK2Da14B8S4rzVRltdYwam_lDp5XnZAYpQdb76FdIKLaV\
@@ -27,47 +30,59 @@ final class JWETests: XCTestCase {
         1860ppamavo35UgoRdbYaBcoh9QcfylQr66oc6vFWXRcZ_ZT2LawVCWTIy3brGPi\
         6UklfCpIMfIjf7iGdXKHzg
         """))
-        XCTAssertEqual(jwe.sealed.nonce, Data(urlBase64Encoded: "48V1_ALb6US04U3b"))
-        XCTAssertEqual(jwe.sealed.ciphertext, Data(urlBase64Encoded: """
+        #expect(jwe.sealed.nonce == Data(urlBase64Encoded: "48V1_ALb6US04U3b"))
+        #expect(jwe.sealed.ciphertext == Data(urlBase64Encoded: """
         5eym8TW_c8SuK0ltJ3rpYIzOeDQz7TALvtu6UG9oMo4vpzs9tX_EFShS8iB7j6ji\
         SdiwkIr3ajwQzaBtQD_A
         """))
-        XCTAssertEqual(jwe.sealed.tag, Data(urlBase64Encoded: "XFBoMYUZodetZdvTiFvSkQ"))
+        #expect(jwe.sealed.tag == Data(urlBase64Encoded: "XFBoMYUZodetZdvTiFvSkQ"))
     }
     
+    @Test
     func testDecrypt_RSA_OAEP_AES_GCM() throws {
         let jwe = try JSONWebEncryption(from: RSA_OAEP_GCM.jweString)
         
-        let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm.rawValue)
+        guard let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm) else {
+            Issue.record("Invalid algorithm")
+            return
+        }
         let decryptedCEK = try RSA_OAEP_GCM.kek.decrypt(jwe.encryptedKey!, using: algorithm)
-        XCTAssertEqual(decryptedCEK, RSA_OAEP_GCM.cek.data)
+        #expect(decryptedCEK == RSA_OAEP_GCM.cek.data)
         
         let data = try jwe.decrypt(using: RSA_OAEP_GCM.kek)
-        XCTAssertEqual(RSA_OAEP_GCM.plainData, data)
+        #expect(RSA_OAEP_GCM.plainData == data)
     }
     
     func testDecrypt_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(from: RSA_PKCS1_5_CBC.jweString)
         
-        let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm.rawValue)
+        guard let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm) else {
+            Issue.record("Invalid algorithm")
+            return
+        }
         let decryptedCEK = try RSA_PKCS1_5_CBC.kek.decrypt(jwe.encryptedKey!, using: algorithm)
-        XCTAssertEqual(decryptedCEK, RSA_PKCS1_5_CBC.cek.data)
+        #expect(decryptedCEK == RSA_PKCS1_5_CBC.cek.data)
         
         let data = try jwe.decrypt(using: RSA_PKCS1_5_CBC.kek)
-        XCTAssertEqual(RSA_PKCS1_5_CBC.plainData, data)
+        #expect(RSA_PKCS1_5_CBC.plainData == data)
     }
     
+    @Test
     func testDecrypt_AESKW_CBC() throws {
         let jwe = try JSONWebEncryption(from: AESKW_CBC.jweString)
         
-        let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm.rawValue)
+        guard let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm) else {
+            Issue.record("Invalid algorithm")
+            return
+        }
         let decryptedCEK = try AESKW_CBC.kek.decrypt(jwe.encryptedKey!, using: algorithm)
-        XCTAssertEqual(decryptedCEK, AESKW_CBC.cek.data)
+        #expect(decryptedCEK == AESKW_CBC.cek.data)
         
         let data = try jwe.decrypt(using: AESKW_CBC.kek)
-        XCTAssertEqual(AESKW_CBC.plainData, data)
+        #expect(AESKW_CBC.plainData == data)
     }
     
+    @Test
     func testEncrypt_Direct() throws {
         let jwe = try JSONWebEncryption(
             content: Direct.plainData,
@@ -78,9 +93,10 @@ final class JWETests: XCTestCase {
         )
         
         let data = try jwe.decrypt(using: Direct.kek)
-        XCTAssertEqual(Direct.plainData, data)
+        #expect(Direct.plainData == data)
     }
     
+    @Test
     func testEncrypt_RSA_OAEP_AES_GCM() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_OAEP_GCM.plainData,
@@ -90,9 +106,10 @@ final class JWETests: XCTestCase {
         )
         
         let data = try jwe.decrypt(using: RSA_OAEP_GCM.kek)
-        XCTAssertEqual(RSA_OAEP_GCM.plainData, data)
+        #expect(RSA_OAEP_GCM.plainData == data)
     }
 
+    @Test
     func testEncryptWithCEK_RSA_OAEP_AES_GCM() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_OAEP_GCM.plainData,
@@ -103,7 +120,7 @@ final class JWETests: XCTestCase {
         )
         
         let data = try jwe.decrypt(using: RSA_OAEP_GCM.kek)
-        XCTAssertEqual(RSA_OAEP_GCM.plainData, data)
+        #expect(RSA_OAEP_GCM.plainData == data)
     }
     
     func testEncryptWithCEK_RSA_OAEP_SHA256_AES_GCM() throws {
@@ -116,34 +133,35 @@ final class JWETests: XCTestCase {
         )
         
         let data = try jwe.decrypt(using: RSA_OAEP_GCM.kek)
-        XCTAssertEqual(RSA_OAEP_GCM.plainData, data)
+        #expect(RSA_OAEP_GCM.plainData == data)
     }
     
     func testEncrypt_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_PKCS1_5_CBC.plainData,
-            keyEncryptingAlgorithm: .rsaEncryptionPKCS1,
+            keyEncryptingAlgorithm: .unsafeRSAEncryptionPKCS1,
             keyEncryptionKey: RSA_PKCS1_5_CBC.kek.publicKey,
             contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512
         )
         
         let data = try jwe.decrypt(using: RSA_PKCS1_5_CBC.kek)
-        XCTAssertEqual(RSA_PKCS1_5_CBC.plainData, data)
+        #expect(RSA_PKCS1_5_CBC.plainData == data)
     }
 
     func testEncryptWithCEK_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_PKCS1_5_CBC.plainData,
-            keyEncryptingAlgorithm: .rsaEncryptionPKCS1,
+            keyEncryptingAlgorithm: .unsafeRSAEncryptionPKCS1,
             keyEncryptionKey: RSA_PKCS1_5_CBC.kek.publicKey,
             contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512,
             contentEncryptionKey: RSA_PKCS1_5_CBC.cek
         )
         
         let data = try jwe.decrypt(using: RSA_PKCS1_5_CBC.kek)
-        XCTAssertEqual(RSA_PKCS1_5_CBC.plainData, data)
+        #expect(RSA_PKCS1_5_CBC.plainData == data)
     }
     
+    @Test
     func testEncrypt_AESKW_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: AESKW_CBC.plainData,
@@ -153,9 +171,10 @@ final class JWETests: XCTestCase {
         )
         
         let data = try jwe.decrypt(using: AESKW_CBC.kek)
-        XCTAssertEqual(AESKW_CBC.plainData, data)
+        #expect(AESKW_CBC.plainData == data)
     }
 
+    @Test
     func testEncrypt_AESGCMKW_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: AESGCMKW_CBC.plainData,
@@ -166,7 +185,7 @@ final class JWETests: XCTestCase {
         )
         
         let data = try jwe.decrypt(using: AESGCMKW_CBC.kek)
-        XCTAssertEqual(AESGCMKW_CBC.plainData, data)
+        #expect(AESGCMKW_CBC.plainData == data)
     }
     
     func testEncrypt_PBES2_GCM() throws {
@@ -179,9 +198,10 @@ final class JWETests: XCTestCase {
         )
         
         let data = try jwe.decrypt(using: PBES2_GCM.kek)
-        XCTAssertEqual(PBES2_GCM.plainData, data)
+        #expect(PBES2_GCM.plainData == data)
     }
     
+    @Test
     func testEncrypt_ECDH_ES_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: ECDH_ES.plainData,
@@ -191,9 +211,10 @@ final class JWETests: XCTestCase {
         )
         
         let data = try jwe.decrypt(using: ECDH_ES.kek)
-        XCTAssertEqual(ECDH_ES.plainData, data)
+        #expect(ECDH_ES.plainData == data)
     }
     
+    @Test
     func testEncrypt_ECDH_ES_GCM() throws {
         let jwe = try JSONWebEncryption(
             content: ECDH_ES.plainData,
@@ -203,9 +224,10 @@ final class JWETests: XCTestCase {
         )
         
         let data = try jwe.decrypt(using: ECDH_ES.kek)
-        XCTAssertEqual(ECDH_ES.plainData, data)
+        #expect(ECDH_ES.plainData == data)
     }
     
+    @Test
     func testEncrypt_ECDH_ES_KW_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: ECDH_ES_KW.plainData,
@@ -216,7 +238,7 @@ final class JWETests: XCTestCase {
         )
         
         let data = try jwe.decrypt(using: ECDH_ES_KW.kek)
-        XCTAssertEqual(ECDH_ES_KW.plainData, data)
+        #expect(ECDH_ES_KW.plainData == data)
     }
 }
 

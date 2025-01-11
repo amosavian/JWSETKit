@@ -5,24 +5,28 @@
 //  Created by Amir Abbas Mousavian on 9/17/23.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import JWSETKit
 
-final class JOSEHeaderJWETests: XCTestCase {
+@Suite
+struct JOSEHeaderJWETests {
     let testClaims = """
     {
        "enc":"A128GCM",
        "zip":"DEF"
     }
     """
+    @Test
     func testEncodeParams() throws {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JOSEHeader.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims.encryptionAlgorithm, .aesEncryptionGCM128)
-        XCTAssertEqual(claims.compressionAlgorithm, .deflate)
+        #expect(claims.encryptionAlgorithm == .aesEncryptionGCM128)
+        #expect(claims.compressionAlgorithm == .deflate)
     }
     
+    @Test
     func testDecodeParams() throws {
         var claims = JOSEHeader(storage: .init())
         
@@ -31,6 +35,6 @@ final class JOSEHeaderJWETests: XCTestCase {
         let decoder = JSONDecoder()
         let decodedClaims = try decoder.decode(JOSEHeader.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims, decodedClaims)
+        #expect(claims == decodedClaims)
     }
 }

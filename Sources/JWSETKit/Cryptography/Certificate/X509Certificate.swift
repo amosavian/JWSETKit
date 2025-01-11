@@ -10,8 +10,8 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import SwiftASN1
 import Crypto
+import SwiftASN1
 import X509
 #if canImport(_CryptoExtras)
 import _CryptoExtras
@@ -41,9 +41,8 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
 #elseif canImport(_CryptoExtras)
             return try .init(_RSA.Signing.PublicKey.create(storage: storage))
 #else
-#error("Unimplemented")
+            #error("Unimplemented")
 #endif
-
         default:
             throw JSONWebKeyError.unknownKeyType
         }

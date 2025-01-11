@@ -5,10 +5,12 @@
 //  Created by Amir Abbas Mousavian on 9/17/23.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import JWSETKit
 
-final class JWTOAuthClaimsTests: XCTestCase {
+@Suite
+struct JWTOAuthClaimsTests {
     let testClaims = """
     {
       "client_id": "s6BhdRkqt3",
@@ -16,16 +18,18 @@ final class JWTOAuthClaimsTests: XCTestCase {
     }
     """
     
+    @Test
     func testEncodeParams() throws {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims.clientID, "s6BhdRkqt3")
+        #expect(claims.clientID == "s6BhdRkqt3")
         
-        XCTAssertEqual(claims.scope, "openid profile reademail")
-        XCTAssertEqual(claims.scopes, ["openid", "profile", "reademail"])
+        #expect(claims.scope == "openid profile reademail")
+        #expect(claims.scopes == ["openid", "profile", "reademail"])
     }
     
+    @Test
     func testDecodeParams() throws {
         var claims = JSONWebTokenClaims(storage: .init())
         claims.clientID = "s6BhdRkqt3"
@@ -34,6 +38,6 @@ final class JWTOAuthClaimsTests: XCTestCase {
         let decoder = JSONDecoder()
         let decodedClaims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims, decodedClaims)
+        #expect(claims == decodedClaims)
     }
 }

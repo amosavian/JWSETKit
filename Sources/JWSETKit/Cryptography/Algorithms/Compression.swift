@@ -52,13 +52,13 @@ extension JSONWebCompressionAlgorithm {
     private static let compressors: PthreadReadWriteLockedValue<[Self: any JSONWebCompressor.Type]> = [
         .deflate: AppleCompressor<DeflateCompressionCodec>.self,
     ]
-#elseif canImport(SWCompression)
+#elseif canImport(Czlib) || canImport(zlib)
     private static let compressors: PthreadReadWriteLockedValue<[Self: any JSONWebCompressor.Type]> = [
-        .deflate: Compressor<DeflateCompressionCodec>.self,
+        .deflate: ZlibCompressor<DeflateCompressionCodec>.self,
     ]
 #else
     // This should never happen as Compression is available on Darwin platforms
-    // and SWCompression is used on non-Darwin platform.
+    // and Zlib is used on non-Darwin platform.
     private static let compressors: PthreadReadWriteLockedValue<[Self: any JSONWebCompressor.Type]> = [:]
 #endif
     

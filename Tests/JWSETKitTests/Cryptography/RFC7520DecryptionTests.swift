@@ -5,11 +5,13 @@
 //  Created by Amir Abbas Mousavian on 1/5/24.
 //
 
-import XCTest
 import Crypto
+import Foundation
+import Testing
 @testable import JWSETKit
 
-final class RFC7520DecryptionTests: XCTestCase {
+@Suite
+struct RFC7520DecryptionTests {
     let plainText = """
     You can trust us to stick with you through thick and \
     thin\u{2013}to the bitter end. And you can trust us to \
@@ -45,9 +47,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.rsa1_5EncPrivateKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptFlatJSON_RSA_v1_5() throws {
         let jweString = """
         {
@@ -76,9 +79,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.rsa1_5EncPrivateKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptCompleteJSON_RSA_v1_5() throws {
         let jweString = """
         {
@@ -111,9 +115,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.rsa1_5EncPrivateKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptCompact_RSA_OAEP() throws {
         let jweString = """
         eyJhbGciOiJSU0EtT0FFUCIsImtpZCI6InNhbXdpc2UuZ2FtZ2VlQGhvYmJpdG\
@@ -146,9 +151,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.rsaOAEPEncPrivateKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
-
+    
+    @Test
     func testDecryptCompact_PBES2() throws {
         let jweString = """
         eyJhbGciOiJQQkVTMi1IUzUxMitBMjU2S1ciLCJwMnMiOiI4UTFTemluYXNSM3\
@@ -198,9 +204,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: pbkdf2Key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptCompact_ECDH_ES_AESKW() throws {
         let jweString = """
         eyJhbGciOiJFQ0RILUVTK0ExMjhLVyIsImtpZCI6InBlcmVncmluLnRvb2tAdH\
@@ -226,9 +233,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.ecdhPrivateKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptCompact_ECDH_ES_AESCBC() throws {
         let jweString = """
         eyJhbGciOiJFQ0RILUVTIiwia2lkIjoibWVyaWFkb2MuYnJhbmR5YnVja0BidW\
@@ -265,9 +273,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: ecdhP256PrivateKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptCompact_Direct_AESGCM() throws {
         let jweString = """
         eyJhbGciOiJkaXIiLCJraWQiOiI3N2M3ZTJiOC02ZTEzLTQ1Y2YtODY3Mi02MT\
@@ -298,9 +307,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: aesGCM128SymmetricKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptCompact_AESGCMKW() throws {
         let jweString = """
         eyJhbGciOiJBMjU2R0NNS1ciLCJraWQiOiIxOGVjMDhlMS1iZmE5LTRkOTUtYj\
@@ -325,9 +335,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.keyWrapGCMSymmetricKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptCompact_AESKW() throws {
         let jweString = """
         eyJhbGciOiJBMTI4S1ciLCJraWQiOiI4MWIyMDk2NS04MzMyLTQzZDktYTQ2OC\
@@ -349,9 +360,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.keyWrapSymmetricKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test//(.disabled(if: JSONWebCompressionAlgorithm.registeredAlgorithms.isEmpty))
     func testDecryptCompact_AESKW_Deflate() throws {
         let jweString = """
         eyJhbGciOiJBMTI4S1ciLCJraWQiOiI4MWIyMDk2NS04MzMyLTQzZDktYTQ2OC\
@@ -371,9 +383,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.keyWrapSymmetricKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptFlatJSON_AES_KW_AAD() throws {
         let jweString = """
         {
@@ -400,9 +413,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.keyWrapSymmetricKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptFlatJSON_AES_KW_PartialUnprotectedHeader() throws {
         let jweString = """
         {
@@ -426,9 +440,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.keyWrapSymmetricKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptFlatJSON_AES_KW_UnprotectedHeader() throws {
         let jweString = """
         {
@@ -452,9 +467,10 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         let jwe = try JSONWebEncryption(from: jweString.data)
         let decodedText = try jwe.decrypt(using: RFC7520ExampleKeys.keyWrapSymmetricKey.key)
-        XCTAssertEqual(decodedText, plainText.data)
+        #expect(decodedText == plainText.data)
     }
     
+    @Test
     func testDecryptMultipleRecipients() throws {
         let jweString = """
         {
@@ -516,24 +532,25 @@ final class RFC7520DecryptionTests: XCTestCase {
         
         // First recipient: RSAv1.5
         let decodedText1 = try jwe.decrypt(using: RFC7520ExampleKeys.rsa1_5EncPrivateKey.key)
-        XCTAssertEqual(decodedText1, plainText.data)
+        #expect(decodedText1 == plainText.data)
         
         // Second recipient: ECDH-ES
         let decodedText2 = try jwe.decrypt(using: RFC7520ExampleKeys.ecdhPrivateKey.key)
-        XCTAssertEqual(decodedText2, plainText.data)
+        #expect(decodedText2 == plainText.data)
         
         // Third recipient: AES-GCM KeyWrap
         let decodedText3 = try jwe.decrypt(using: RFC7520ExampleKeys.keyWrapGCMSymmetricKey.key)
-        XCTAssertEqual(decodedText3, plainText.data)
+        #expect(decodedText3 == plainText.data)
         
         let decodedText4 = try jwe.decrypt(using: [
             RFC7520ExampleKeys.rsaOAEPEncPrivateKey.key,
             RFC7520ExampleKeys.ecdhPrivateKey.key,
             RFC7520ExampleKeys.keyWrapSymmetricKey.key,
         ])
-        XCTAssertEqual(decodedText4, plainText.data)
+        #expect(decodedText4 == plainText.data)
     }
     
+    @Test
     func testDescryptNestedJWS() throws {
         let jweString = """
         eyJhbGciOiJSU0EtT0FFUCIsImN0eSI6IkpXVCIsImVuYyI6IkExMjhHQ00ifQ\
@@ -571,8 +588,8 @@ final class RFC7520DecryptionTests: XCTestCase {
         let jwe = try JSONWebEncryption(from: jweString.data)
         let jwt = try JSONWebToken(from: jwe.decrypt(using: RFC7520ExampleKeys.rsaOAEPEncPrivateKey.key))
         
-        XCTAssertEqual(jwt.payload.issuer, "hobbiton.example")
-        XCTAssertEqual(jwt.payload.expiry, Date(timeIntervalSince1970: 1_300_819_380))
-        XCTAssertEqual(jwt.payload["http://example.com/is_root"], true)
+        #expect(jwt.payload.issuer == "hobbiton.example")
+        #expect(jwt.payload.expiry == Date(timeIntervalSince1970: 1_300_819_380))
+        #expect(jwt.payload["http://example.com/is_root"] == true)
     }
 }

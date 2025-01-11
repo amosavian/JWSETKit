@@ -183,7 +183,7 @@ extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
     }
 }
 
-extension _CryptoExtras._RSA.Encryption.PrivateKey: Swift.Hashable, Swift.Equatable , Swift.Codable {}
+extension _CryptoExtras._RSA.Encryption.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Codable {}
 
 extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
     public var storage: JSONWebValueStorage {

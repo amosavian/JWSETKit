@@ -29,24 +29,33 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.10.0")),
         .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.6.1")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.8.4")),
-        .package(url: "https://github.com/tsolomko/SWCompression.git", .upToNextMajor(from: "4.8.6")),
     ],
     targets: [
+        .systemLibrary(
+            name: "Czlib",
+            pkgConfig: "zlib",
+            providers: [
+                .apt(["zlib1g-dev"]),
+                .brew(["zlib"]),
+                .yum(["zlib-devel"]),
+            ]
+        ),
         .target(
             name: "JWSETKit",
             dependencies: [
                 "AnyCodable",
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "X509", package: "swift-certificates"),
-                // Linux support
                 .product(name: "Crypto", package: "swift-crypto"),
+                // Linux support
                 .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
-                .product(name: "SWCompression", package: "SWCompression", condition: .when(platforms: .nonDarwin)),
+                .byName(name: "Czlib"),
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy"),
-            ]
+            ],
+            swiftSettings: [.enableUpcomingFeature("ExistentialAny")]
         ),
         .testTarget(
             name: "JWSETKitTests",
@@ -54,9 +63,3 @@ let package = Package(
         ),
     ]
 )
-
-for target in package.targets {
-    target.swiftSettings = [
-        .enableUpcomingFeature("ExistentialAny"),
-    ]
-}

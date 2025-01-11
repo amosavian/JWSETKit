@@ -5,12 +5,14 @@
 //  Created by Amir Abbas Mousavian on 9/17/23.
 //
 
-import XCTest
 import Crypto
+import Foundation
+import Testing
 import X509
 @testable import JWSETKit
 
-final class JOSEHeaderJWSTests: XCTestCase {
+@Suite
+struct JOSEHeaderJWSTests {
     let testClaims = """
     {
       "alg": "HS256",
@@ -44,22 +46,24 @@ final class JOSEHeaderJWSTests: XCTestCase {
         return result
     }()
     
+    @Test
     func testEncodeParams() throws {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JOSEHeader.self, from: .init(testClaims.utf8))
         
-        XCTAssert(claims.algorithm == .hmacSHA256)
-        XCTAssertEqual(claims.jsonWebKeySetUrl, URL(string: "http://example.com/janedoe"))
-        XCTAssertEqual(claims.key?.storage, ecKey.storage)
-        XCTAssertEqual(claims.keyId, "2011-04-29")
-        XCTAssertEqual(claims.certificateURL, URL(string: "http://example.com/janedoe"))
-        XCTAssertEqual(claims.certificateThumbprint, "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck=".decoded)
-        XCTAssertEqual(claims.certificateChain, [cert1, cert2,])
-        XCTAssertEqual(claims.type, .jwt)
-        XCTAssertEqual(claims.contentType, .init(rawValue: "application/json"))
-        XCTAssertEqual(claims.critical, ["b64"])
+        #expect(claims.algorithm == .hmacSHA256)
+        #expect(claims.jsonWebKeySetUrl == URL(string: "http://example.com/janedoe"))
+        #expect(claims.key?.storage == ecKey.storage)
+        #expect(claims.keyId == "2011-04-29")
+        #expect(claims.certificateURL == URL(string: "http://example.com/janedoe"))
+        #expect(claims.certificateThumbprint == "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck=".decoded)
+        #expect(claims.certificateChain == [cert1, cert2])
+        #expect(claims.type == .jwt)
+        #expect(claims.contentType == .init(rawValue: "application/json"))
+        #expect(claims.critical == ["b64"])
     }
     
+    @Test
     func testDecodeParams() throws {
         var claims = JOSEHeader(storage: .init())
         
@@ -69,7 +73,7 @@ final class JOSEHeaderJWSTests: XCTestCase {
         claims.keyId = "2011-04-29"
         claims.certificateURL = URL(string: "http://example.com/janedoe")
         claims.certificateThumbprint = "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck=".decoded
-        claims.certificateChain = [cert1, cert2,]
+        claims.certificateChain = [cert1, cert2]
         claims.type = .jwt
         claims.contentType = .init(rawValue: "json")
         claims.critical = ["b64"]
@@ -77,6 +81,6 @@ final class JOSEHeaderJWSTests: XCTestCase {
         let decoder = JSONDecoder()
         let decodedClaims = try decoder.decode(JOSEHeader.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims, decodedClaims)
+        #expect(claims == decodedClaims)
     }
 }

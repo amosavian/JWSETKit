@@ -5,11 +5,7 @@
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
 
 @_documentation(visibility: private)
 public protocol JSONWebContainerParameters<Container> {

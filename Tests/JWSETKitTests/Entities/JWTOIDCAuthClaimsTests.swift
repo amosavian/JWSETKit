@@ -5,10 +5,12 @@
 //  Created by Amir Abbas Mousavian on 9/17/23.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import JWSETKit
 
-final class JWTOIDCAuthClaimsTests: XCTestCase {
+@Suite
+struct JWTOIDCAuthClaimsTests {
     let testClaims = """
     {
        "azp": "s6BhdRkqt3",
@@ -21,19 +23,21 @@ final class JWTOIDCAuthClaimsTests: XCTestCase {
     }
     """
     
+    @Test
     func testEncodeParams() throws {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims.authorizedParty, "s6BhdRkqt3")
-        XCTAssertEqual(claims.nonce, "n-0S6_WzA2Mj")
-        XCTAssertEqual(claims.authTime, Date(timeIntervalSince1970: 1_311_280_969))
-        XCTAssertEqual(claims.authenticationContextClassReference, "urn:mace:incommon:iap:silver")
-        XCTAssertEqual(claims.authenticationMethodsReferences, ["password", "otp"])
-        XCTAssertEqual(claims.accessTokenHash, Data(urlBase64Encoded: "77QmUPtjPfzWtF2AnpK9RQ"))
-        XCTAssertEqual(claims.codeHash, Data(urlBase64Encoded: "LDktKdoQak3Pk0cnXxCltA"))
+        #expect(claims.authorizedParty == "s6BhdRkqt3")
+        #expect(claims.nonce == "n-0S6_WzA2Mj")
+        #expect(claims.authTime == Date(timeIntervalSince1970: 1_311_280_969))
+        #expect(claims.authenticationContextClassReference == "urn:mace:incommon:iap:silver")
+        #expect(claims.authenticationMethodsReferences == ["password", "otp"])
+        #expect(claims.accessTokenHash == Data(urlBase64Encoded: "77QmUPtjPfzWtF2AnpK9RQ"))
+        #expect(claims.codeHash == Data(urlBase64Encoded: "LDktKdoQak3Pk0cnXxCltA"))
     }
     
+    @Test
     func testDecodeParams() throws {
         var claims = JSONWebTokenClaims(storage: .init())
         claims.authorizedParty = "s6BhdRkqt3"
@@ -47,6 +51,6 @@ final class JWTOIDCAuthClaimsTests: XCTestCase {
         let decoder = JSONDecoder()
         let decodedClaims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims, decodedClaims)
+        #expect(claims == decodedClaims)
     }
 }

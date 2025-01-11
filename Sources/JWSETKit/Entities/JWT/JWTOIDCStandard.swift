@@ -5,11 +5,7 @@
 //  Created by Amir Abbas Mousavian on 9/6/23.
 //
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
 
 /// The Address Claim represents a physical mailing address.
 ///

@@ -12,4 +12,4 @@ COPY Sources ./Sources
 COPY Tests ./Tests
 COPY Package.swift ./
 
-ENTRYPOINT swift test
+ENTRYPOINT ["swift", "test"]

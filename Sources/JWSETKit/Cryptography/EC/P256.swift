@@ -103,7 +103,7 @@ extension SecureEnclave.P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
         fatalError("Private Keys in Secure Enclave are not encodable.")
     }
     
-    init(rawRepresentation: Data) throws {
+    init(rawRepresentation _: Data) throws {
         throw JSONWebKeyError.operationNotAllowed
     }
 }

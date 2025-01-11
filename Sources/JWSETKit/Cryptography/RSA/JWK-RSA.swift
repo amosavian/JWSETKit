@@ -10,8 +10,8 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import SwiftASN1
 import Crypto
+import SwiftASN1
 #if canImport(CommonCrypto)
 import CommonCrypto
 #endif
@@ -33,7 +33,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
 #elseif canImport(_CryptoExtras)
             return try _RSA.Signing.PublicKey.create(storage: storage).exportKey(format: .spki)
 #else
-#error("Unimplemented")
+            #error("Unimplemented")
 #endif
         }
     }
@@ -48,7 +48,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
 #elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PublicKey(derRepresentation: derRepresentation).storage
 #else
-#error("Unimplemented")
+        #error("Unimplemented")
 #endif
     }
     
@@ -62,7 +62,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
 #elseif canImport(_CryptoExtras)
         return try _RSA.Signing.PublicKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
 #else
-#error("Unimplemented")
+        #error("Unimplemented")
 #endif
     }
     
@@ -70,13 +70,13 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
 #if canImport(CommonCrypto)
         return try SecKey.create(storage: storage).encrypt(data, using: algorithm)
 #elseif canImport(CryptoSwift) && canImport(_CryptoExtras)
-        if algorithm == .rsaEncryptionPKCS1 {
+        if algorithm == .unsafeRSAEncryptionPKCS1 {
             return try CryptoSwift.RSA.create(storage: storage).encrypt(data, using: algorithm)
         } else {
             return try _RSA.Encryption.PublicKey.create(storage: storage).encrypt(data, using: algorithm)
         }
 #else
-#error("Unimplemented")
+        #error("Unimplemented")
 #endif
     }
 }
@@ -153,7 +153,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 #elseif canImport(_CryptoExtras)
             return try _RSA.Signing.PublicKey.create(storage: storage).exportKey(format: .pkcs8)
 #else
-#error("Unimplemented")
+            #error("Unimplemented")
 #endif
         }
     }
@@ -168,7 +168,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 #elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PrivateKey(keySize: .init(bitCount: keySize.bitCount)).storage
 #else
-#error("Unimplemented")
+        #error("Unimplemented")
 #endif
     }
     
@@ -182,7 +182,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 #elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PrivateKey(derRepresentation: derRepresentation).storage
 #else
-#error("Unimplemented")
+        #error("Unimplemented")
 #endif
     }
     
@@ -195,7 +195,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
             \Self.modulus, \Self.exponent,
             \Self.firstPrimeFactor, \Self.secondPrimeFactor,
             \Self.privateExponent, \Self.firstCRTCoefficient,
-            \Self.firstFactorCRTExponent, \Self.secondFactorCRTExponent
+            \Self.firstFactorCRTExponent, \Self.secondFactorCRTExponent,
         ]
         try checkRequiredFields(fields)
     }
@@ -206,7 +206,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 #elseif canImport(_CryptoExtras)
         return try _RSA.Signing.PrivateKey.create(storage: storage).signature(data, using: algorithm)
 #else
-#error("Unimplemented")
+        #error("Unimplemented")
 #endif
     }
     
@@ -214,13 +214,13 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 #if canImport(CommonCrypto)
         return try SecKey.create(storage: storage).decrypt(data, using: algorithm)
 #elseif canImport(CryptoSwift) && canImport(_CryptoExtras)
-        if algorithm == .rsaEncryptionPKCS1 {
+        if algorithm == .unsafeRSAEncryptionPKCS1 {
             return try CryptoSwift.RSA.create(storage: storage).decrypt(data, using: algorithm)
         } else {
             return try _RSA.Encryption.PrivateKey.create(storage: storage).decrypt(data, using: algorithm)
         }
 #else
-#error("Unimplemented")
+        #error("Unimplemented")
 #endif
     }
 }
@@ -320,7 +320,9 @@ enum RSAHelper {
 }
 
 #if canImport(CryptoSwift)
-extension CryptoSwift.RSA: Swift.Hashable, Swift.Codable, JSONWebDecryptingKey {
+extension CryptoSwift.RSA: Swift.Hashable, Swift.Codable {}
+
+extension CryptoSwift.RSA: JSONWebDecryptingKey {
     public var publicKey: CryptoSwift.RSA {
         Self(n: n, e: e)
     }
@@ -364,7 +366,7 @@ extension CryptoSwift.RSA: Swift.Hashable, Swift.Codable, JSONWebDecryptingKey {
     
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         switch algorithm {
-        case .rsaEncryptionPKCS1:
+        case .unsafeRSAEncryptionPKCS1:
             return try .init(encrypt([UInt8](data), variant: .pksc1v15))
         default:
             throw CryptoKitError.incorrectParameterSize
@@ -373,7 +375,7 @@ extension CryptoSwift.RSA: Swift.Hashable, Swift.Codable, JSONWebDecryptingKey {
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         switch algorithm {
-        case .rsaEncryptionPKCS1:
+        case .unsafeRSAEncryptionPKCS1:
             let rawDecrypted = try decrypt([UInt8](data), variant: .raw)
             // CryptoSwift only asserts padding and does not throw error. We check the padding manually.
             guard !rawDecrypted.isEmpty, rawDecrypted.starts(with: [0x02]) else {

@@ -5,10 +5,12 @@
 //  Created by Amir Abbas Mousavian on 12/30/23.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import JWSETKit
 
-final class JWKSetTests: XCTestCase {
+@Suite
+struct JWKSetTests {
     let jwksData: Data = .init("""
          {"keys":
            [
@@ -70,28 +72,30 @@ final class JWKSetTests: XCTestCase {
          }
     """.utf8)
     
+    @Test
     func testDecode() throws {
         let jwks = try JSONDecoder().decode(JSONWebKeySet.self, from: jwksData)
-        XCTAssertEqual(jwks.count, 4)
-        XCTAssert(jwks[0] is (any JSONWebValidatingKey))
-        XCTAssert(jwks[0] is JSONWebECPublicKey)
+        #expect(jwks.count == 4)
+        #expect(jwks[0] is (any JSONWebValidatingKey))
+        #expect(jwks[0] is JSONWebECPublicKey)
         
-        XCTAssert(jwks[1] is (any JSONWebValidatingKey))
-        XCTAssert(jwks[1] is JSONWebRSAPublicKey)
+        #expect(jwks[1] is (any JSONWebValidatingKey))
+        #expect(jwks[1] is JSONWebRSAPublicKey)
         
-        XCTAssert(jwks[2] is (any JSONWebValidatingKey))
-        XCTAssert(jwks[2] is (any JSONWebSigningKey))
-        XCTAssert(jwks[2] is JSONWebECPrivateKey)
-        XCTAssertFalse(jwks[2] is JSONWebECPublicKey)
+        #expect(jwks[2] is (any JSONWebValidatingKey))
+        #expect(jwks[2] is (any JSONWebSigningKey))
+        #expect(jwks[2] is JSONWebECPrivateKey)
+        #expect(!(jwks[2] is JSONWebECPublicKey))
         
-        XCTAssert(jwks[3] is (any JSONWebValidatingKey))
-        XCTAssert(jwks[3] is (any JSONWebSigningKey))
-        XCTAssert(jwks[3] is JSONWebRSAPrivateKey)
-        XCTAssertFalse(jwks[3] is JSONWebRSAPublicKey)
+        #expect(jwks[3] is (any JSONWebValidatingKey))
+        #expect(jwks[3] is (any JSONWebSigningKey))
+        #expect(jwks[3] is JSONWebRSAPrivateKey)
+        #expect(!(jwks[3] is JSONWebRSAPublicKey))
     }
     
+    @Test
     func testEncode() throws {
         let jwks = try JSONDecoder().decode(JSONWebKeySet.self, from: jwksData)
-        let _ = try JSONEncoder().encode(jwks)
+        _ = try JSONEncoder().encode(jwks)
     }
 }

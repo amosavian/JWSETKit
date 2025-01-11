@@ -5,13 +5,9 @@
 //  Created by Amir Abbas Mousavian on 9/19/23.
 //
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
-import X509
 import Crypto
+import Foundation
+import X509
 @testable import JWSETKit
 
 enum ExampleKeys {

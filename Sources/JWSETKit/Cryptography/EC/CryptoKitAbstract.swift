@@ -89,7 +89,7 @@ protocol CryptoECKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
 
 protocol CryptoECKeyPortableCompactRepresentable: CryptoECKeyPortable {
     @available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *)
-    init<Bytes>(compressedRepresentation: Bytes) throws where Bytes : ContiguousBytes
+    init<Bytes>(compressedRepresentation: Bytes) throws where Bytes: ContiguousBytes
 }
 
 extension CryptoECKeyPortable {
@@ -102,7 +102,7 @@ extension CryptoECKeyPortable {
                 try self.init(x963Representation: Data(key))
             }
         case .spki where Self.self is (any CryptoECPublicKey).Type,
-                .pkcs8 where Self.self is (any CryptoECPrivateKey).Type:
+             .pkcs8 where Self.self is (any CryptoECPrivateKey).Type:
             try self.init(derRepresentation: key)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
@@ -115,8 +115,8 @@ extension CryptoECKeyPortable {
         switch format {
         case .raw:
             return x963Representation
-        case .spki where self is any CryptoECPublicKey, 
-                .pkcs8 where self is any CryptoECPrivateKey:
+        case .spki where self is any CryptoECPublicKey,
+             .pkcs8 where self is any CryptoECPrivateKey:
             return derRepresentation
         case .jwk:
             return try jwkRepresentation
@@ -155,7 +155,7 @@ extension CryptoECKeyPortableCompactRepresentable {
         case .raw:
             try self.init(importingRaw: key)
         case .spki where Self.self is (any CryptoECPublicKey).Type,
-                .pkcs8 where Self.self is (any CryptoECPrivateKey).Type:
+             .pkcs8 where Self.self is (any CryptoECPrivateKey).Type:
             try self.init(derRepresentation: key)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))

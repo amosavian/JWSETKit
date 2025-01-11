@@ -5,10 +5,12 @@
 //  Created by Amir Abbas Mousavian on 9/17/23.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import JWSETKit
 
-final class JWTOIDCStandardClaimsTests: XCTestCase {
+@Suite
+struct JWTOIDCStandardClaimsTests {
     let testClaims = """
     {
        "name": "Jane Doe",
@@ -38,6 +40,7 @@ final class JWTOIDCStandardClaimsTests: XCTestCase {
     }
     """
     
+    @Test
     func testEncodeParams() throws {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
@@ -45,27 +48,28 @@ final class JWTOIDCStandardClaimsTests: XCTestCase {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = .withFullDate
         
-        XCTAssertEqual(claims.name, "Jane Doe")
-        XCTAssertEqual(claims.givenName, "Jane")
-        XCTAssertEqual(claims.middleName, "F.")
-        XCTAssertEqual(claims.familyName, "Doe")
-        XCTAssertEqual(claims.nickname, "Jane")
-        XCTAssertEqual(claims.preferredUsername, "j.doe")
-        XCTAssertEqual(claims.profileURL, URL(string: "http://example.com/janedoe/profile"))
-        XCTAssertEqual(claims.pictureURL, URL(string: "http://example.com/janedoe/me.jpg"))
-        XCTAssertEqual(claims.websiteURL, URL(string: "http://example.com/janedoe"))
-        XCTAssertEqual(claims.email, "janedoe@example.com")
-        XCTAssertEqual(claims.isEmailVerified, true)
-        XCTAssertEqual(claims.gender, "female")
-        XCTAssertEqual(claims.birthdate, formatter.date(from: "2000-10-31"))
-        XCTAssertEqual(claims.zoneInfo, TimeZone(abbreviation: "IRST"))
-        XCTAssertEqual(claims.locale, Locale(identifier: "en_US"))
-        XCTAssertEqual(claims.phoneNumber, "+1 (310) 123-4567")
-        XCTAssertEqual(claims.isPhoneNumberVerified, true)
-        XCTAssertEqual(claims.address, JSONWebAddress(streetAddress: "1234 Hollywood Blvd.", locality: "Los Angeles", region: "CA", postalCode: "90210", country: "US"))
-        XCTAssertEqual(claims.updatedAt, Date(timeIntervalSince1970: 1_311_280_970))
+        #expect(claims.name == "Jane Doe")
+        #expect(claims.givenName == "Jane")
+        #expect(claims.middleName == "F.")
+        #expect(claims.familyName == "Doe")
+        #expect(claims.nickname == "Jane")
+        #expect(claims.preferredUsername == "j.doe")
+        #expect(claims.profileURL == URL(string: "http://example.com/janedoe/profile"))
+        #expect(claims.pictureURL == URL(string: "http://example.com/janedoe/me.jpg"))
+        #expect(claims.websiteURL == URL(string: "http://example.com/janedoe"))
+        #expect(claims.email == "janedoe@example.com")
+        #expect(claims.isEmailVerified == true)
+        #expect(claims.gender == "female")
+        #expect(claims.birthdate == formatter.date(from: "2000-10-31"))
+        #expect(claims.zoneInfo == TimeZone(abbreviation: "IRST"))
+        #expect(claims.locale == Locale(identifier: "en_US"))
+        #expect(claims.phoneNumber == "+1 (310) 123-4567")
+        #expect(claims.isPhoneNumberVerified == true)
+        #expect(claims.address == JSONWebAddress(streetAddress: "1234 Hollywood Blvd.", locality: "Los Angeles", region: "CA", postalCode: "90210", country: "US"))
+        #expect(claims.updatedAt == Date(timeIntervalSince1970: 1_311_280_970))
     }
     
+    @Test
     func testDecodeParams() throws {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = .withFullDate
@@ -97,9 +101,10 @@ final class JWTOIDCStandardClaimsTests: XCTestCase {
         let decoder = JSONDecoder()
         let decodedClaims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
         
-        XCTAssertEqual(claims, decodedClaims)
+        #expect(claims == decodedClaims)
     }
     
+    @Test
     func testLocalized() throws {
         var claims = JSONWebTokenClaims(storage: .init())
         let enLocale = Locale(identifier: "en")
@@ -108,9 +113,9 @@ final class JWTOIDCStandardClaimsTests: XCTestCase {
         claims.name = "Jane Doe"
         claims[\.name, faLocale] = "جین دو"
         
-        XCTAssertEqual(claims.name, "Jane Doe")
-        XCTAssertEqual(claims[\.name, faIRLocale], "جین دو")
-        XCTAssertEqual(claims[\.name, faLocale], "جین دو")
-        XCTAssertEqual(claims[\.name, enLocale], "Jane Doe")
+        #expect(claims.name == "Jane Doe")
+        #expect(claims[\.name, faIRLocale] == "جین دو")
+        #expect(claims[\.name, faLocale] == "جین دو")
+        #expect(claims[\.name, enLocale] == "Jane Doe")
     }
 }

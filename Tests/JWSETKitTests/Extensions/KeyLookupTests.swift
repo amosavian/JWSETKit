@@ -5,13 +5,16 @@
 //  Created by Amir Abbas Mousavian on 9/16/23.
 //
 
-import XCTest
+import Foundation
+import Testing
 @testable import JWSETKit
 
-final class KeyLookupTests: XCTestCase {
+@Suite
+struct KeyLookupTests {
+    @Test
     func testJsonWebKeyNormalizer() throws {
-        XCTAssertEqual("camelCase".jsonWebKey, "camel_case")
-        XCTAssertEqual("clientID".jsonWebKey, "client_id")
-        XCTAssertEqual("authTime".jsonWebKey, "auth_time")
+        #expect("camelCase".jsonWebKey == "camel_case")
+        #expect("clientID".jsonWebKey == "client_id")
+        #expect("authTime".jsonWebKey == "auth_time")
     }
 }

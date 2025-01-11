@@ -5,11 +5,7 @@
 //  Created by Amir Abbas Mousavian on 4/29/24.
 //
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
 
 public protocol ReadWriteLockContext {
     static var getContext: Self { get }

@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 5.10
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -29,20 +29,29 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.10.0")),
         .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.6.1")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.8.4")),
-        .package(url: "https://github.com/tsolomko/SWCompression.git", .upToNextMajor(from: "4.8.6")),
+        .package(url: "https://github.com/swiftlang/swift-testing.git", .upToNextMajor(from: "0.10.0")),
     ],
     targets: [
+        .systemLibrary(
+            name: "Czlib",
+            pkgConfig: "zlib",
+            providers: [
+                .apt(["zlib1g-dev"]),
+                .brew(["zlib"]),
+                .yum(["zlib-devel"]),
+            ]
+        ),
         .target(
             name: "JWSETKit",
             dependencies: [
                 "AnyCodable",
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "X509", package: "swift-certificates"),
-                // Linux support
                 .product(name: "Crypto", package: "swift-crypto"),
+                // Linux support
                 .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
-                .product(name: "SWCompression", package: "SWCompression", condition: .when(platforms: .nonDarwin)),
+                .target(name: "Czlib", condition: .when(platforms: .nonDarwin)),
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy"),
@@ -50,15 +59,10 @@ let package = Package(
         ),
         .testTarget(
             name: "JWSETKitTests",
-            dependencies: ["JWSETKit"]
+            dependencies: [
+                "JWSETKit",
+                .product(name: "Testing", package: "swift-testing"),
+            ]
         ),
     ]
 )
-
-for target in package.targets {
-    let swiftSettings: [SwiftSetting] = [
-        .enableExperimentalFeature("StrictConcurrency=complete"),
-        .enableUpcomingFeature("ExistentialAny")
-    ]
-    target.swiftSettings = swiftSettings
-}

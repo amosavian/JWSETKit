@@ -147,7 +147,7 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     @available(*, deprecated, message: "This algorithm is intended to be deprecated regarding https://datatracker.ietf.org/doc/draft-ietf-jose-deprecate-none-rsa15/")
     public static var none: Self { "none" }
     
-    internal static var unsafeNone: Self { "none" }
+    static var unsafeNone: Self { "none" }
     
     /// **Signature**: HMAC using SHA-256.
     public static var hmacSHA256: Self { "HS256" }

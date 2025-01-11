@@ -5,11 +5,7 @@
 //  Created by Amir Abbas Mousavian on 1/19/24.
 //
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
 import Foundation
-#endif
 
 protocol JSONWebFieldEncodable {
     var jsonWebValue: (any Encodable)? { get }
@@ -42,8 +38,8 @@ extension Bool: JSONWebFieldDecodable {
             return value
         case let value as String:
             return Bool(value)
-        case let value as NSNumber:
-            return value.boolValue
+        case let value as any BinaryInteger:
+            return Int(value) != 0
         default:
             return nil
         }
@@ -89,8 +85,10 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
     
     static func castValue(_ value: Any?) -> Self? {
         switch value {
-        case let value as NSNumber:
-            return Date(timeIntervalSince1970: value.doubleValue)
+        case let value as any BinaryInteger:
+            return Date(timeIntervalSince1970: Double(value))
+        case let value as any BinaryFloatingPoint:
+            return Date(timeIntervalSince1970: Double(value))
         case let value as Date:
             return value
         case let value as String:
@@ -109,8 +107,10 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
 extension Decimal: JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self? {
         switch value {
-        case let value as NSNumber:
-            return value.decimalValue
+        case let value as any BinaryInteger:
+            return Decimal(exactly: value)
+        case let value as any BinaryFloatingPoint:
+            return Decimal(Double(value))
         case let value as String:
             return Decimal(string: value)
         default:

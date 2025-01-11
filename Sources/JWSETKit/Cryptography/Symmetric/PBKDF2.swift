@@ -40,7 +40,7 @@ extension SymmetricKey {
 #elseif canImport(_CryptoExtras)
         return try KDF.Insecure.PBKDF2.deriveKey(from: password, salt: salt, using: .init(hashFunction), outputByteCount: length, unsafeUncheckedRounds: iterations)
 #else
-#error("Unimplemented")
+        #error("Unimplemented")
 #endif
     }
 }

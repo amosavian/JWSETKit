@@ -5,12 +5,14 @@
 //  Created by Amir Abbas Mousavian on 9/17/23.
 //
 
-import X509
-import XCTest
 import Crypto
+import Foundation
+import Testing
+import X509
 @testable import JWSETKit
 
-final class JWSTests: XCTestCase {
+@Suite
+struct JWSTests {
     let jws = try! JSONWebToken(
         signatures: [.init(protected: Data(urlBase64Encoded: "eyJhbGciOiJSUzI1NiJ9")!, signature: Data())],
         payload: .init(encoded: Data(
@@ -28,8 +30,8 @@ final class JWSTests: XCTestCase {
         var jws = jws
         jws.signatures[0].protected.algorithm = .hmacSHA256
         try jws.updateSignature(using: key)
-        XCTAssertEqual(jws.signatures.first?.signature, signature)
-        XCTAssertNoThrow(try jws.verifySignature(using: key))
+        #expect(jws.signatures.first?.signature == signature)
+        #expect(throws: Never.self) { try jws.verifySignature(using: key) }
     }
     
     func testSignatureHS384() throws {
@@ -38,8 +40,8 @@ final class JWSTests: XCTestCase {
         var jws = jws
         jws.signatures[0].protected.algorithm = .hmacSHA384
         try jws.updateSignature(using: key)
-        XCTAssertEqual(jws.signatures.first?.signature, signature)
-        XCTAssertNoThrow(try jws.verifySignature(using: key))
+        #expect(jws.signatures.first?.signature == signature)
+        #expect(throws: Never.self) { try jws.verifySignature(using: key) }
     }
     
     func testSignatureHS512() throws {
@@ -48,82 +50,84 @@ final class JWSTests: XCTestCase {
         var jws = jws
         jws.signatures[0].protected.algorithm = .hmacSHA512
         try jws.updateSignature(using: key)
-        XCTAssertEqual(jws.signatures.first?.signature, signature)
-        XCTAssertNoThrow(try jws.verifySignature(using: key))
+        #expect(jws.signatures.first?.signature == signature)
+        #expect(throws: Never.self) { try jws.verifySignature(using: key) }
     }
     
     func testSignatureES256() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .ecdsaSignatureP256SHA256
         try jws.updateSignature(using: ExampleKeys.privateEC256)
-        XCTAssertNoThrow(try jws.verifySignature(using: ExampleKeys.publicEC256))
+        #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicEC256) }
     }
     
     func testSignatureES384() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .ecdsaSignatureP384SHA384
         try jws.updateSignature(using: ExampleKeys.privateEC384)
-        XCTAssertNoThrow(try jws.verifySignature(using: ExampleKeys.publicEC384))
+        #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicEC384) }
     }
     
     func testSignatureES521() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .ecdsaSignatureP521SHA512
         try jws.updateSignature(using: ExampleKeys.privateEC521)
-        XCTAssertNoThrow(try jws.verifySignature(using: ExampleKeys.publicEC521))
+        #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicEC521) }
     }
     
     func testSignatureRS256() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePKCS1v15SHA256
         try jws.updateSignature(using: ExampleKeys.privateRSA2048)
-        XCTAssertNoThrow(try jws.verifySignature(using: ExampleKeys.publicRSA2048))
+        #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
     func testSignatureRS384() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePKCS1v15SHA384
         try jws.updateSignature(using: ExampleKeys.privateRSA2048)
-        XCTAssertNoThrow(try jws.verifySignature(using: ExampleKeys.publicRSA2048))
+        #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
     func testSignatureRS512() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePKCS1v15SHA512
         try jws.updateSignature(using: ExampleKeys.privateRSA2048)
-        XCTAssertNoThrow(try jws.verifySignature(using: ExampleKeys.publicRSA2048))
+        #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
     func testSignaturePS256() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePSSSHA256
         try jws.updateSignature(using: ExampleKeys.privateRSA2048)
-        XCTAssertNoThrow(try jws.verifySignature(using: ExampleKeys.publicRSA2048))
+        #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
     func testSignaturePS384() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePSSSHA384
         try jws.updateSignature(using: ExampleKeys.privateRSA2048)
-        XCTAssertNoThrow(try jws.verifySignature(using: ExampleKeys.publicRSA2048))
+        #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
     func testSignaturePS512() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePSSSHA512
         try jws.updateSignature(using: ExampleKeys.privateRSA2048)
-        XCTAssertNoThrow(try jws.verifySignature(using: ExampleKeys.publicRSA2048))
+        #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
+    @Test
     func testVerifyDates() throws {
-        XCTAssertThrowsError(try jws.verifyDate())
-        XCTAssertNoThrow(try jws.verifyDate(.init(timeIntervalSince1970: 1_300_819_370)))
+        #expect(throws: JSONWebValidationError.self) { try jws.verifyDate() }
+        #expect(throws: Never.self) { try jws.verifyDate(.init(timeIntervalSince1970: 1_300_819_370)) }
     }
     
+    @Test
     func testDetached() throws {
         var jws = try JWSDetached(from: jwsDetachedString)
-        XCTAssertEqual(jws.payload.encoded, Data())
-        XCTAssertEqual(jwsDetachedString, jws.description)
+        #expect(jws.payload.encoded == Data())
+        #expect(jwsDetachedString == jws.description)
         
         let key = try JSONWebKeyHMAC<SHA256>(importing: Data("""
         {
@@ -132,14 +136,15 @@ final class JWSTests: XCTestCase {
         }
         """.utf8), format: .jwk)
         jws.payload.encoded = Data("$.02".utf8)
-        XCTAssertEqual(jwsDetachedString, jws.description)
-        XCTAssertNoThrow(try jws.verifySignature(using: key))
+        #expect(jwsDetachedString == jws.description)
+        #expect(throws: Never.self) { try jws.verifySignature(using: key) }
     }
     
+    @Test
     func testNone() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .none
         jws.signatures[0].signature = .init()
-        XCTAssertThrowsError(try jws.verifySignature(using: ExampleKeys.publicRSA2048))
+        #expect(throws: JSONWebKeyError.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
 }

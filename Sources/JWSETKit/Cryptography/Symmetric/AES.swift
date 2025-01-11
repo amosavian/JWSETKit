@@ -161,7 +161,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
 #if canImport(CommonCrypto)
             return try symmetricKey.ccUnwrapKey(data)
 #else
-#error("Unimplemented")
+            return try AES.KeyWrap.unwrap(data, using: symmetricKey)
 #endif
         }
     }
@@ -173,7 +173,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
 #if canImport(CommonCrypto)
             return try symmetricKey.ccWrapKey(key)
 #else
-#error("Unimplemented")
+            return try AES.KeyWrap.wrap(key, using: symmetricKey)
 #endif
         }
     }

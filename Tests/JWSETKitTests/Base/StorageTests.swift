@@ -5,11 +5,13 @@
 //  Created by Amir Abbas Mousavian on 9/16/23.
 //
 
-import XCTest
 import Crypto
+import Foundation
+import Testing
 @testable import JWSETKit
 
-final class StorageTests: XCTestCase {
+@Suite
+struct StorageTests {
     let testValue: String = """
     {
         "iss":"joe",
@@ -40,22 +42,23 @@ final class StorageTests: XCTestCase {
     }
     """
     
-    func testAccessors() throws {
+    @Test
+    func accessors() throws {
         let storage = try JSONDecoder().decode(JSONWebValueStorage.self, from: .init(testValue.utf8))
         
-        XCTAssertEqual(storage.iss, "joe")
-        XCTAssertEqual(storage.exp, Date(timeIntervalSince1970: 1_300_819_380))
-        XCTAssertEqual(storage["http://example.com/is_root"], true)
-        XCTAssertEqual(storage["website"], "https://www.apple.com/")
+        #expect(storage.iss == "joe")
+        #expect(storage.exp == Date(timeIntervalSince1970: 1_300_819_380))
+        #expect(storage["http://example.com/is_root"] == true)
+        #expect(storage["website"] == "https://www.apple.com/")
         
         let keys = (storage.keys as [AnyJSONWebKey]).map { $0.specialized() }
-        XCTAssertEqual(keys[0].keyType, .ellipticCurve)
-        XCTAssertEqual(
-            try P256.Signing.PublicKey.create(storage: keys[0].storage).rawRepresentation,
-            "MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D7gS2XpJFbZiItSs3m9+9Ue6GnvHw/GW2ZZaVtszggXIw==".decoded
+        #expect(keys[0].keyType == .ellipticCurve)
+        #expect(
+            try P256.Signing.PublicKey.create(storage: keys[0].storage).rawRepresentation
+                == "MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D7gS2XpJFbZiItSs3m9+9Ue6GnvHw/GW2ZZaVtszggXIw==".decoded
         )
-        XCTAssertEqual(keys[1].keyType, .rsa)
-        XCTAssert(type(of: keys[0]) == JSONWebECPublicKey.self)
-        XCTAssert(type(of: keys[1]) == JSONWebRSAPrivateKey.self)
+        #expect(keys[1].keyType == .rsa)
+        #expect(type(of: keys[0]) == JSONWebECPublicKey.self)
+        #expect(type(of: keys[1]) == JSONWebRSAPrivateKey.self)
     }
 }
