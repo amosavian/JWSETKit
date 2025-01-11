@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftASN1
 import Crypto
 #if canImport(CommonCrypto)
@@ -29,9 +33,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
 #elseif canImport(_CryptoExtras)
             return try _RSA.Signing.PublicKey.create(storage: storage).exportKey(format: .spki)
 #else
-            // This should never happen as CommonCrypto is available on Darwin platforms
-            // and CryptoExtras is used on non-Darwin platform.
-            fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
         }
     }
@@ -46,9 +48,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
 #elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PublicKey(derRepresentation: derRepresentation).storage
 #else
-        // This should never happen as CommonCrypto is available on Darwin platforms
-        // and CryptoExtras is used on non-Darwin platform.
-        fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
     }
     
@@ -62,9 +62,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
 #elseif canImport(_CryptoExtras)
         return try _RSA.Signing.PublicKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
 #else
-        // This should never happen as CommonCrypto is available on Darwin platforms
-        // and CryptoExtras is used on non-Darwin platform.
-        fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
     }
     
@@ -78,9 +76,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSON
             return try _RSA.Encryption.PublicKey.create(storage: storage).encrypt(data, using: algorithm)
         }
 #else
-        // This should never happen as CommonCrypto is available on Darwin platforms
-        // and CryptoSwift is used on non-Darwin platform.
-        fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
     }
 }
@@ -157,9 +153,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 #elseif canImport(_CryptoExtras)
             return try _RSA.Signing.PublicKey.create(storage: storage).exportKey(format: .pkcs8)
 #else
-            // This should never happen as CommonCrypto is available on Darwin platforms
-            // and CryptoExtras is used on non-Darwin platform.
-            fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
         }
     }
@@ -174,9 +168,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 #elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PrivateKey(keySize: .init(bitCount: keySize.bitCount)).storage
 #else
-        // This should never happen as CommonCrypto is available on Darwin platforms
-        // and CryptoExtras is used on non-Darwin platform.
-        fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
     }
     
@@ -190,9 +182,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 #elseif canImport(_CryptoExtras)
         self.storage = try _RSA.Signing.PrivateKey(derRepresentation: derRepresentation).storage
 #else
-        // This should never happen as CommonCrypto is available on Darwin platforms
-        // and CryptoExtras is used on non-Darwin platform.
-        fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
     }
     
@@ -216,9 +206,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
 #elseif canImport(_CryptoExtras)
         return try _RSA.Signing.PrivateKey.create(storage: storage).signature(data, using: algorithm)
 #else
-        // This should never happen as CommonCrypto is available on Darwin platforms
-        // and CryptoExtras is used on non-Darwin platform.
-        fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
     }
     
@@ -232,9 +220,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
             return try _RSA.Encryption.PrivateKey.create(storage: storage).decrypt(data, using: algorithm)
         }
 #else
-        // This should never happen as CommonCrypto is available on Darwin platforms
-        // and CryptoSwift is used on non-Darwin platform.
-        fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
     }
 }

@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/5/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 /// JSON Web Signature Algorithms.
@@ -75,6 +79,10 @@ extension JSONWebAlgorithm {
             return JSONWebContentEncryptionAlgorithm(rawValue: rawValue)
         }
         return AnyJSONWebAlgorithm(rawValue)
+    }
+    
+    func specialized() -> any JSONWebAlgorithm {
+        Self.specialized(rawValue)
     }
 }
 

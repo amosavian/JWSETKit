@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/5/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Claims and payload in a JWT.
 public struct JSONWebTokenClaims: JSONWebContainer {

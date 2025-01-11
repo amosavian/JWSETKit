@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/10/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 protocol CryptoECPublicKey: JSONWebKey {

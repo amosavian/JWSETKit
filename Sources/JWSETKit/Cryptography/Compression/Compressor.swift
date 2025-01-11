@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 5/1/24.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 #if canImport(SWCompression)
 import SWCompression
 

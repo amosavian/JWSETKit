@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 2/10/24.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 /// A string describing the data format of the key to import/export.

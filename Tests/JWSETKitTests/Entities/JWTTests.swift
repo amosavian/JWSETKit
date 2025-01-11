@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/21/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import XCTest
 @testable import JWSETKit
 

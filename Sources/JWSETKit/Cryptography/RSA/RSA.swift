@@ -8,7 +8,11 @@
 #if canImport(_CryptoExtras)
 import _CryptoExtras
 import Crypto
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftASN1
 
 extension _CryptoExtras._RSA.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Codable {}
@@ -104,11 +108,11 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     }
     
     public static func == (lhs: _RSA.Signing.PrivateKey, rhs: _RSA.Signing.PrivateKey) -> Bool {
-        lhs.derRepresentation =~= rhs.derRepresentation
+        lhs.publicKey == rhs.publicKey
     }
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(derRepresentation)
+        hasher.combine(publicKey)
     }
 }
 
@@ -211,11 +215,11 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
     }
     
     public static func == (lhs: _RSA.Encryption.PrivateKey, rhs: _RSA.Encryption.PrivateKey) -> Bool {
-        lhs.derRepresentation == rhs.derRepresentation
+        lhs.publicKey == rhs.publicKey
     }
     
     public func hash(into hasher: inout Hasher) {
-        hasher.combine(derRepresentation)
+        hasher.combine(publicKey)
     }
 }
 
@@ -241,8 +245,6 @@ extension JSONWebAlgorithm {
             case .rsaEncryptionOAEPSHA256:
                 return .PKCS1_OAEP_SHA256
             case .rsaEncryptionOAEPSHA384, .rsaEncryptionOAEPSHA512:
-                fallthrough
-            case .rsaEncryptionPKCS1:
                 fallthrough
             default:
                 throw JSONWebKeyError.unknownAlgorithm

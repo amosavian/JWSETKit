@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 #if canImport(CommonCrypto)
 import CommonCrypto
@@ -157,9 +161,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
 #if canImport(CommonCrypto)
             return try symmetricKey.ccUnwrapKey(data)
 #else
-            // This should never happen as CommonCrypto is available on Darwin platforms
-            // and Crypto is used on non-Darwin platform.
-            fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
         }
     }
@@ -171,9 +173,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
 #if canImport(CommonCrypto)
             return try symmetricKey.ccWrapKey(key)
 #else
-            // This should never happen as CommonCrypto is available on Darwin platforms
-            // and Crypto is used on non-Darwin platform.
-            fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
         }
     }

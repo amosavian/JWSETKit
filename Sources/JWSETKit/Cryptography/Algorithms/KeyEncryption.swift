@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 10/13/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 /// JSON Web Key Encryption Algorithms
@@ -14,6 +18,11 @@ public struct JSONWebKeyEncryptionAlgorithm: JSONWebAlgorithm {
     
     public init<S>(_ rawValue: S) where S: StringProtocol {
         self.rawValue = String(rawValue)
+    }
+    
+    init?(_ algorithm: (any JSONWebAlgorithm)?) {
+        guard let rawValue = algorithm?.rawValue else { return nil }
+        self.init(rawValue: rawValue)
     }
 }
 
@@ -40,7 +49,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .aesGCM128KeyWrap: (JSONWebKeyAESGCM.self, JSONWebKeyAESGCM.self),
         .aesGCM192KeyWrap: (JSONWebKeyAESGCM.self, JSONWebKeyAESGCM.self),
         .aesGCM256KeyWrap: (JSONWebKeyAESGCM.self, JSONWebKeyAESGCM.self),
-        .rsaEncryptionPKCS1: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
+        .unsafeRSAEncryptionPKCS1: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaEncryptionOAEP: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaEncryptionOAEPSHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaEncryptionOAEPSHA384: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
@@ -62,7 +71,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .aesGCM128KeyWrap: .symmetric,
         .aesGCM192KeyWrap: .symmetric,
         .aesGCM256KeyWrap: .symmetric,
-        .rsaEncryptionPKCS1: .rsa,
+        .unsafeRSAEncryptionPKCS1: .rsa,
         .rsaEncryptionOAEP: .rsa,
         .rsaEncryptionOAEPSHA256: .rsa,
         .rsaEncryptionOAEPSHA384: .rsa,
@@ -83,7 +92,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .aesGCM128KeyWrap: SymmetricKeySize.bits128.bitCount,
         .aesGCM192KeyWrap: SymmetricKeySize.bits192.bitCount,
         .aesGCM256KeyWrap: SymmetricKeySize.bits256.bitCount,
-        .rsaEncryptionPKCS1: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+        .unsafeRSAEncryptionPKCS1: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
         .rsaEncryptionOAEP: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
         .rsaEncryptionOAEPSHA256: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
         .rsaEncryptionOAEPSHA384: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
@@ -334,7 +343,9 @@ extension JSONWebKeyEncryptionAlgorithm {
     }
     
     fileprivate static func pbesDecryptionMutator(_ header: JOSEHeader, _ kek: inout any JSONWebKey, _: inout Data) throws {
-        let algorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm.rawValue)
+        guard let algorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm) else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
         guard let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.keyNotFound
         }
@@ -361,7 +372,9 @@ extension JSONWebKeyEncryptionAlgorithm {
     }
     
     fileprivate static func ecdhEsDecryptionMutator(_ header: JOSEHeader, _ kek: inout any JSONWebKey, _ cek: inout Data) throws {
-        let algorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm.rawValue)
+        guard let algorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm) else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
         guard let epk = header.ephemeralPublicKey, let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.keyNotFound
         }
@@ -400,7 +413,10 @@ extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     public static var rsaEncryptionOAEPSHA512: Self { "RSA-OAEP-512" }
     
     /// **Key Management**: RSAES-PKCS1-v1.5
+    @available(*, deprecated, message: "This algorithm is intended to be deprecated regarding https://datatracker.ietf.org/doc/draft-ietf-jose-deprecate-none-rsa15//")
     public static var rsaEncryptionPKCS1: Self { "RSA1_5" }
+    
+    static var unsafeRSAEncryptionPKCS1: Self { "RSA1_5" }
     
     /// **Key Management**: AES Key-Wrap using 128-bit key.
     public static var aesKeyWrap128: Self { "A128KW" }

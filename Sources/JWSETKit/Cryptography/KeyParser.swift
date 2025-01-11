@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/8/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 import SwiftASN1
 
@@ -146,9 +150,7 @@ enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
             throw CryptoKitError.incorrectKeySize
         }
         
-        switch key.algorithm {
-        case .none:
-            return try SymmetricKey.create(storage: key.storage)
+        switch key.algorithm ?? JSONWebSignatureAlgorithm("") {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try JSONWebKeyAESGCM.create(storage: key.storage)
         case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256:

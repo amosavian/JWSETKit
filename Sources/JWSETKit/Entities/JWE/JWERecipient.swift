@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 10/3/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Contains JWE Per-Recipient Unprotected Header and
 /// content encryption key encrypted using recipient's public key.
@@ -66,7 +70,8 @@ extension [JSONWebEncryptionRecipient] {
         }) {
             return recipient
         } else if let recipient = first(where: {
-            ($0.header?.algorithm.keyType == key.keyType && $0.header?.algorithm.curve == key.curve) ||
+            guard let algorithm = $0.header?.algorithm else { return false }
+            return (algorithm.keyType == key.keyType && algorithm.curve == key.curve) ||
                 ($0.header?.ephemeralPublicKey?.keyType == key.keyType && $0.header?.ephemeralPublicKey?.curve == key.curve)
         }) {
             return recipient

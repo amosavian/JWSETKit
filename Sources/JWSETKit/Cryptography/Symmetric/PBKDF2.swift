@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 10/11/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 #if canImport(_CryptoExtras)
 import _CryptoExtras
@@ -36,9 +40,7 @@ extension SymmetricKey {
 #elseif canImport(_CryptoExtras)
         return try KDF.Insecure.PBKDF2.deriveKey(from: password, salt: salt, using: .init(hashFunction), outputByteCount: length, unsafeUncheckedRounds: iterations)
 #else
-        // This should never happen as CommonCrypto is available on Darwin platforms
-        // and CryptoSwift is used on non-Darwin platform.
-        fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
     }
 }

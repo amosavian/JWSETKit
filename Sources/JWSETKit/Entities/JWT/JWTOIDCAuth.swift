@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
 public struct JSONWebTokenClaimsPublicOIDCAuthParameters: JSONWebContainerParameters {

@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 2/14/24.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 extension SymmetricKey {

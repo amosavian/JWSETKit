@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 /// A container for AES ciphers, e.g. AES-GCM, AES-CBC-HMAC, etc.

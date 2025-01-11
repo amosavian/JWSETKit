@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/10/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 extension Crypto.SymmetricKey: Swift.Hashable, Swift.Codable {}
@@ -67,23 +71,14 @@ extension SymmetricKey: JSONWebSymmetricSigningKey {
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
-        var algorithm = algorithm
-        if algorithm == .none {
-            algorithm = .init(self.algorithm.rawValue)
-        }
-        guard let keyClass = algorithm.keyClass?.private as? any JSONWebSymmetricSigningKey.Type else {
+        guard let keyClass = (algorithm.keyClass?.public ?? (self.algorithm as? JSONWebSignatureAlgorithm)?.keyClass?.public) as? any JSONWebSymmetricSigningKey.Type else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         return try keyClass.init(self).signature(data, using: algorithm)
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        var algorithm = algorithm
-        if algorithm == .none {
-            algorithm = .init(self.algorithm.rawValue)
-        }
-        
-        guard let keyClass = algorithm.keyClass?.public as? any JSONWebSymmetricSigningKey.Type else {
+        guard let keyClass = (algorithm.keyClass?.public ?? (self.algorithm as? JSONWebSignatureAlgorithm)?.keyClass?.public) as? any JSONWebSymmetricSigningKey.Type else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         try keyClass.init(self).verifySignature(signature, for: data, using: algorithm)

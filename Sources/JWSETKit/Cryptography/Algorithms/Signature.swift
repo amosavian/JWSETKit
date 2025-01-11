@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 10/13/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 /// JSON Web Signature Algorithms
@@ -15,11 +19,16 @@ public struct JSONWebSignatureAlgorithm: JSONWebAlgorithm {
     public init<S>(_ rawValue: S) where S: StringProtocol {
         self.rawValue = String(rawValue)
     }
+    
+    init?(_ algorithm: (any JSONWebAlgorithm)?) {
+        guard let rawValue = algorithm?.rawValue else { return nil }
+        self.init(rawValue: rawValue)
+    }
 }
 
 extension JSONWebSignatureAlgorithm {
     private static let keyRegistryClasses: PthreadReadWriteLockedValue < [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)]> = [
-        .none: (JSONWebDirectKey.self, JSONWebDirectKey.self),
+        .unsafeNone: (JSONWebDirectKey.self, JSONWebDirectKey.self),
         .hmacSHA256: (JSONWebKeyHMAC<SHA256>.self, JSONWebKeyHMAC<SHA256>.self),
         .hmacSHA384: (JSONWebKeyHMAC<SHA384>.self, JSONWebKeyHMAC<SHA384>.self),
         .hmacSHA512: (JSONWebKeyHMAC<SHA512>.self, JSONWebKeyHMAC<SHA512>.self),
@@ -36,7 +45,7 @@ extension JSONWebSignatureAlgorithm {
     ]
     
     private static let keyTypes: PthreadReadWriteLockedValue<[Self: JSONWebKeyType]> = [
-        .none: .empty,
+        .unsafeNone: .empty,
         .hmacSHA256: .symmetric,
         .hmacSHA384: .symmetric,
         .hmacSHA512: .symmetric,
@@ -135,7 +144,10 @@ extension JSONWebSignatureAlgorithm {
 // Signatures
 extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     /// **Signature**: No digital signature or MAC performed.
+    @available(*, deprecated, message: "This algorithm is intended to be deprecated regarding https://datatracker.ietf.org/doc/draft-ietf-jose-deprecate-none-rsa15/")
     public static var none: Self { "none" }
+    
+    internal static var unsafeNone: Self { "none" }
     
     /// **Signature**: HMAC using SHA-256.
     public static var hmacSHA256: Self { "HS256" }

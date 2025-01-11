@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 10/13/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 /// JSON Web Key Encryption Algorithms

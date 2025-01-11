@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 10/5/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// JWSs use one of two serializations: the JWE Compact Serialization or the JWEJSON Serialization.
 ///

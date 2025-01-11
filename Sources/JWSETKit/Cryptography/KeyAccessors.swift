@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 import X509
 
@@ -58,7 +62,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// The "alg" value is a case-sensitive ASCII string.
     ///
     /// Use of this member is OPTIONAL.
-    public var algorithm: any JSONWebAlgorithm
+    public var algorithm: (any JSONWebAlgorithm)?
     
     /// The "`kid`" (key ID) parameter is used to match a specific key.
     ///
@@ -191,8 +195,8 @@ extension JSONWebKey {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, any JSONWebAlgorithm>) -> any JSONWebAlgorithm {
-        storage[stringKey(keyPath)].map(AnyJSONWebAlgorithm.specialized) ?? .none
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, (any JSONWebAlgorithm)?>) -> (any JSONWebAlgorithm)? {
+        storage[stringKey(keyPath)].map(AnyJSONWebAlgorithm.specialized)
     }
     
     @_documentation(visibility: private)
@@ -251,12 +255,12 @@ extension MutableJSONWebKey {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, any JSONWebAlgorithm>) -> any JSONWebAlgorithm {
+    public subscript(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, (any JSONWebAlgorithm)?>) -> (any JSONWebAlgorithm)? {
         get {
-            storage[stringKey(keyPath)].map(AnyJSONWebAlgorithm.specialized) ?? .none
+            storage[stringKey(keyPath)].map(AnyJSONWebAlgorithm.specialized)
         }
         set {
-            storage[stringKey(keyPath)] = newValue.rawValue
+            storage[stringKey(keyPath)] = newValue?.rawValue
         }
     }
     

@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 4/10/24.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension Data {
     init<T>(value: T) where T: FixedWidthInteger {

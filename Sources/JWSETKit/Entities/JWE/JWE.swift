@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 10/3/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 /// The JWE cryptographic mechanisms encrypt and provide integrity protection
@@ -192,7 +196,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             plainData = content
         }
         
-        let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(mergedHeader.algorithm.rawValue)
+        let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(mergedHeader.algorithm) ?? .direct
         let contentEncryptionAlgorithm = JSONWebContentEncryptionAlgorithm(mergedHeader.encryptionAlgorithm?.rawValue ?? "")
         let handler = keyEncryptingAlgorithm.encryptedKeyHandler ?? JSONWebKeyEncryptionAlgorithm.standardEncryptdKey
         
@@ -277,8 +281,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         }
         
         var targetEncryptedKey = recipient?.encrypedKey ?? .init()
-        let algorithmValue = combinedHeader.algorithm.rawValue
-        guard let algorithm = AnyJSONWebAlgorithm.specialized(algorithmValue) as? JSONWebKeyEncryptionAlgorithm else {
+        guard let algorithm = combinedHeader.algorithm?.specialized() as? JSONWebKeyEncryptionAlgorithm else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         

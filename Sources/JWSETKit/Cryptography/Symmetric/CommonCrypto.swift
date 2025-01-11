@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 11/1/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 #if canImport(CommonCrypto)
 import CommonCrypto

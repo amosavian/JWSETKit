@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/27/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 /// Represents a signature or MAC over the JWS Payload and the JWS Protected Header.

@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/5/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 extension DataProtocol {
     /// Returns a URL-safe Base-64 encoded `Data`.

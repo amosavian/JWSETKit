@@ -6,7 +6,11 @@
 //
 
 @preconcurrency import AnyCodable
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Storage for values in JOSE headers or JWT claims
 @dynamicMemberLookup

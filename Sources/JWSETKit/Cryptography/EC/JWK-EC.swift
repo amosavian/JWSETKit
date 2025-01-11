@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/9/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 /// JSON Web Key (JWK) container for different types of Elliptic-Curve public keys consists of P-256, P-384, P-521, Ed25519.
@@ -116,7 +120,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
     public init(curve: JSONWebKeyCurve) throws {
         self.storage = try Self
             .signingType(curve)
-            .init(algorithm: .none).storage
+            .init(algorithm: .unsafeNone).storage
     }
     
     static func signingType(_ curve: JSONWebKeyCurve) throws -> any JSONWebSigningKey.Type {

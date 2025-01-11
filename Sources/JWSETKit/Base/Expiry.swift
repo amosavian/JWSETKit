@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/12/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The container has a expire date or a starting "not before" date.
 public protocol Expirable {

@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Claims registered in [RFC 8693](https://www.rfc-editor.org/rfc/rfc8693.html)
 public struct JSONWebTokenClaimsOAuthParameters: JSONWebContainerParameters {

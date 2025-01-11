@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 10/14/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey {

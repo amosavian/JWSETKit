@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 1/19/24.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 protocol JSONWebFieldEncodable {
     var jsonWebValue: (any Encodable)? { get }

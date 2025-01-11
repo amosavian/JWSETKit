@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/8/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 
 /// JWS represents digitally signed or MACed content using JSON data structures and `base64url` encoding.
@@ -63,12 +67,12 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     public mutating func updateSignature(using keys: [any JSONWebSigningKey]) throws {
         signatures = try signatures.map { header in
             let message = header.signedData(payload)
-            let algorithm = JSONWebSignatureAlgorithm(header.protected.algorithm.rawValue)
+            let algorithm = JSONWebSignatureAlgorithm(header.protected.algorithm)
             let keyId: String? = header.protected.keyId ?? header.unprotected?.keyId
             let signature: Data
             if algorithm == .none {
                 signature = .init()
-            } else if let key = keys.bestMatch(for: algorithm, id: keyId) {
+            } else if let algorithm, let key = keys.bestMatch(for: algorithm, id: keyId) {
                 signature = try key.signature(message, using: algorithm)
             } else {
                 throw JSONWebKeyError.keyNotFound
@@ -113,12 +117,12 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
         }
         for header in signatures {
             let message = header.signedData(payload)
-            var algorithm = JSONWebSignatureAlgorithm(header.protected.algorithm.rawValue)
+            var algorithm = JSONWebSignatureAlgorithm(header.protected.algorithm)
             if !strict, algorithm == .none, let unprotected = header.unprotected {
-                algorithm = JSONWebSignatureAlgorithm(unprotected.algorithm.rawValue)
+                algorithm = JSONWebSignatureAlgorithm(unprotected.algorithm)
             }
             let keyId: String? = header.protected.keyId ?? header.unprotected?.keyId
-            if let key = keys.bestMatch(for: algorithm, id: keyId) {
+            if let algorithm, let key = keys.bestMatch(for: algorithm, id: keyId) {
                 try key.verifySignature(header.signature, for: message, using: algorithm)
                 return
             }

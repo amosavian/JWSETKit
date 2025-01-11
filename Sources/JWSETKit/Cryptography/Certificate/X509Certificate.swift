@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/12/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import SwiftASN1
 import Crypto
 import X509
@@ -37,10 +41,9 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
 #elseif canImport(_CryptoExtras)
             return try .init(_RSA.Signing.PublicKey.create(storage: storage))
 #else
-            // This should never happen as CommonCrypto is available on Darwin platforms
-            // and _CryptoExtras is used on non-Darwin platform.
-            fatalError("Unimplemented")
+#error("Unimplemented")
 #endif
+
         default:
             throw JSONWebKeyError.unknownKeyType
         }

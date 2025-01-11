@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 import Crypto
 import X509
 
@@ -25,7 +29,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     /// The "`alg`" value is a case-sensitive ASCII string containing a `StringOrURI` value.
     ///
     /// This Header Parameter MUST be present and MUST be understood and processed by implementations.
-    public var algorithm: any JSONWebAlgorithm
+    public var algorithm: (any JSONWebAlgorithm)?
     
     /// The "`jku`" (JWK Set URL) Header Parameter is a URI  that
     /// refers to a resource for a set of JSON-encoded public keys,
@@ -198,12 +202,13 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, any JSONWebAlgorithm>) -> any JSONWebAlgorithm {
+    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, (any JSONWebAlgorithm)?>) -> (any JSONWebAlgorithm)? {
         get {
-            storage[stringKey(keyPath)].map(AnyJSONWebAlgorithm.specialized) ?? .none
+            guard let value: String = storage[stringKey(keyPath)] else { return nil }
+            return AnyJSONWebAlgorithm.specialized(value)
         }
         set {
-            storage[stringKey(keyPath)] = newValue.rawValue
+            storage[stringKey(keyPath)] = newValue?.rawValue
         }
     }
     
