@@ -47,7 +47,7 @@ public struct JOSEHeader: JSONWebContainer {
         .init(storage: storage)
     }
     
-    public func merging(_ other: JOSEHeader, uniquingKeysWith combine: (Any, Any) throws -> Any) rethrows -> JOSEHeader {
+    public func merging(_ other: JOSEHeader, uniquingKeysWith combine: (JSONWebValueStorage.Value, JSONWebValueStorage.Value) throws -> JSONWebValueStorage.Value) rethrows -> JOSEHeader {
         let storage = try storage.merging(other.storage, uniquingKeysWith: combine)
         return .init(storage: storage)
     }

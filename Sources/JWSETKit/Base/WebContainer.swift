@@ -54,7 +54,7 @@ extension JSONWebContainer {
     }
     
     /// Returns value of given key.
-    public subscript<T: Codable>(_ member: String) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(_ member: String) -> T? {
         get {
             storage[member]
         }
@@ -68,7 +68,7 @@ extension JSONWebContainer {
     }
     
     @_documentation(visibility: private)
-    public subscript<T: Codable>(dynamicMember member: KeyPath<JSONWebContainerCustomParameters, T?>) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember member: KeyPath<JSONWebContainerCustomParameters, T?>) -> T? {
         get {
             storage[stringKey(member)]
         }
@@ -79,7 +79,7 @@ extension JSONWebContainer {
     
     @_documentation(visibility: private)
     @_disfavoredOverload
-    public subscript<T: Codable>(dynamicMember member: String) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember member: String) -> T? {
         get {
             storage[member.jsonWebKey]
         }

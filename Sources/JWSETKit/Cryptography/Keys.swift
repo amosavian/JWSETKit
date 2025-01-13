@@ -425,7 +425,7 @@ public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey, JSONWebKeySymmetr
 /// A type-erased general container for a JSON Web Key (JWK).
 ///
 /// - Note: To create a key able to do operations (sign, verify, encrypt, decrypt) use `specialzed()` method.
-public struct AnyJSONWebKey: MutableJSONWebKey {
+public struct AnyJSONWebKey: MutableJSONWebKey, Sendable {
     public var storage: JSONWebValueStorage
     
     public static func create(storage: JSONWebValueStorage) throws -> AnyJSONWebKey {

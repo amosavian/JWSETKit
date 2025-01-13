@@ -52,6 +52,7 @@ struct StorageTests {
         #expect(storage["website"] == "https://www.apple.com/")
         
         let keys = (storage.keys as [AnyJSONWebKey]).map { $0.specialized() }
+        try #require(keys.count == 2)
         #expect(keys[0].keyType == .ellipticCurve)
         #expect(
             try P256.Signing.PublicKey.create(storage: keys[0].storage).rawRepresentation

@@ -8,7 +8,8 @@
 import Foundation
 
 protocol JSONWebFieldEncodable {
-    var jsonWebValue: (any Encodable)? { get }
+    associatedtype JSONWebFieldValueType: Codable & Hashable & Sendable
+    var jsonWebValue: JSONWebFieldValueType { get }
 }
 
 protocol JSONWebFieldDecodable {
@@ -20,7 +21,7 @@ protocol JSONWebFieldDeserializable: Decodable {
 }
 
 extension Optional: JSONWebFieldEncodable where Wrapped: JSONWebFieldEncodable {
-    var jsonWebValue: (any Encodable)? {
+    var jsonWebValue: Wrapped.JSONWebFieldValueType? {
         self?.jsonWebValue
     }
 }
@@ -47,7 +48,7 @@ extension Bool: JSONWebFieldDecodable {
 }
 
 extension Data: JSONWebFieldEncodable, JSONWebFieldDecodable {
-    var jsonWebValue: (any Encodable)? {
+    var jsonWebValue: String {
         // Default encoding for data is `Base64URL`.
         urlBase64EncodedString()
     }
@@ -65,7 +66,7 @@ extension Data: JSONWebFieldEncodable, JSONWebFieldDecodable {
 }
 
 extension [UInt8]: JSONWebFieldEncodable, JSONWebFieldDecodable {
-    var jsonWebValue: (any Encodable)? {
+    var jsonWebValue: String {
         // Default encoding for data is `Base64URL`.
         urlBase64EncodedString()
     }
@@ -76,7 +77,7 @@ extension [UInt8]: JSONWebFieldEncodable, JSONWebFieldDecodable {
 }
 
 extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
-    var jsonWebValue: (any Encodable)? {
+    var jsonWebValue: Int {
         // Dates in JWT are `NumericDate` which is a JSON numeric value representing
         // the number of seconds from 1970-01-01T00:00:00Z UTC until
         // the specified UTC date/time, ignoring leap seconds.
@@ -120,7 +121,7 @@ extension Decimal: JSONWebFieldDecodable {
 }
 
 extension Locale: JSONWebFieldEncodable, JSONWebFieldDecodable {
-    var jsonWebValue: (any Encodable)? {
+    var jsonWebValue: String {
         // Locales in OIDC is formatted using BCP-47 while Apple uses CLDR/ICU formatting.
         bcp47
     }
@@ -138,7 +139,7 @@ extension Locale: JSONWebFieldEncodable, JSONWebFieldDecodable {
 }
 
 extension TimeZone: JSONWebFieldEncodable, JSONWebFieldDecodable {
-    var jsonWebValue: (any Encodable)? {
+    var jsonWebValue: String {
         // Timezone in OIDC is formatted using IANA formatting.
         identifier
     }
@@ -169,7 +170,7 @@ extension URL: JSONWebFieldDecodable {
 }
 
 extension UUID: JSONWebFieldEncodable {
-    var jsonWebValue: (any Encodable)? {
+    var jsonWebValue: String {
         // Standards such as ITU-T X.667 and RFC 4122 require them to be formatted
         // using lower-case letters.
         // The NSUUID class and UUID struct use upper-case letters when formatting.

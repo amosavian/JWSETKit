@@ -231,7 +231,7 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters: JSONWebContainerPa
 }
 
 extension JSONWebTokenClaims {
-    public subscript<T: Codable>(_ keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>, locale: Locale) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(_ keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>, locale: Locale) -> T? {
         get {
             storage[stringKey(keyPath, locale: locale)]
         }
@@ -244,7 +244,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript<T: Codable>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

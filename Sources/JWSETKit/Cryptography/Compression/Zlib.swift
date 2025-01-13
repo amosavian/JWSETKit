@@ -64,7 +64,9 @@ struct ZlibCompressor<Codec>: JSONWebCompressor, Sendable where Codec: Compressi
             s.avail_out = uInt(outBuf.count)
             let status = deflate(&s, Z_FINISH)
             compressed.append(outBuf.baseAddress!, count: outBuf.count - Int(s.avail_out))
-            if status == Z_STREAM_END { break }
+            if status == Z_STREAM_END {
+                break
+            }
             if status != Z_OK {
                 throw CompressionError(rawValue: status)
             }

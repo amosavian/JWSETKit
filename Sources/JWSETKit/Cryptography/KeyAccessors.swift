@@ -180,7 +180,7 @@ extension JSONWebKey {
     }
     
     @_documentation(visibility: private)
-    public subscript<T: Codable>(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
         storage[stringKey(keyPath)]
     }
     
@@ -225,7 +225,7 @@ extension JSONWebKey {
 
 extension MutableJSONWebKey {
     @_documentation(visibility: private)
-    public subscript<T: Codable>(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: KeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

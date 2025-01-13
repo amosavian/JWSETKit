@@ -15,10 +15,13 @@ import Foundation
 /// Storage for values in JOSE headers or JWT claims
 @dynamicMemberLookup
 public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLiteral, Sendable {
+    public typealias Key = String
+    public typealias ValueType = Codable & Sendable
+    
     private var storage: [String: AnyCodable]
     
     /// Returns value of given key.
-    public subscript<T: Codable>(dynamicMember member: String) -> T? {
+    public subscript<T: ValueType>(dynamicMember member: String) -> T? {
         get {
             get(key: member, as: T.self)
         }
@@ -28,7 +31,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     /// Returns values of given key.
-    public subscript<T: Codable>(dynamicMember member: String) -> [T] {
+    public subscript<T: ValueType>(dynamicMember member: String) -> [T] {
         get {
             self[member]
         }
@@ -38,7 +41,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     /// Returns value of given key.
-    public subscript<T: Codable>(_ member: String) -> T? {
+    public subscript<T: ValueType>(_ member: String) -> T? {
         get {
             get(key: member, as: T.self)
         }
@@ -58,10 +61,15 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     /// Returns values of given key.
-    public subscript<T: Codable>(_ member: String) -> [T] {
+    public subscript<T: ValueType>(_ member: String) -> [T] {
         get {
-            guard let array = storage[member]?.value as? [Any] else { return [] }
-            return array.compactMap { JSONWebValueStorage.cast(value: $0, as: T.self) }
+            if let array = storage[member]?.value as? [T] {
+                return array
+            } else if let array = storage[member]?.value as? [Any] {
+                return array.compactMap { JSONWebValueStorage.cast(value: $0, as: T.self) }
+            } else {
+                return []
+            }
         }
         set {
             if newValue.isEmpty {
@@ -122,11 +130,17 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         self.storage = [:]
     }
     
-    fileprivate init(_ storage: [String: AnyCodable]) {
-        self.storage = storage
+    /// Initialzes storage with given key values.
+    public init(_ elements: [String: any ValueType]) {
+        self.storage = .init(uniqueKeysWithValues: elements.map {
+            if let value = $1 as? AnyCodable {
+                return ($0, value)
+            }
+            return ($0, AnyCodable($1))
+        })
     }
     
-    public init(dictionaryLiteral elements: (String, Any)...) {
+    public init(dictionaryLiteral elements: (String, any ValueType)...) {
         let elements = elements.map { ($0, AnyCodable($1)) }
         self.storage = .init(uniqueKeysWithValues: elements)
     }
@@ -138,15 +152,20 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         } else if let base64url = try? container.decode(String.self),
                   let data = Data(urlBase64Encoded: base64url)
         {
-            self.storage = try JSONDecoder().decode([String: AnyCodable].self, from: data)
+            self.storage = try JSONDecoder().decode(Self.self, from: data).storage
         } else {
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: ""))
         }
     }
     
-    public func merging(_ other: JSONWebValueStorage, uniquingKeysWith combine: (Any, Any) throws -> Any) rethrows -> JSONWebValueStorage {
+    public func hash(into hasher: inout Hasher) {
+        let storage = storage as any Hashable
+        hasher.combine(storage)
+    }
+    
+    public func merging(_ other: JSONWebValueStorage, uniquingKeysWith combine: (any ValueType, any ValueType) throws -> any ValueType) rethrows -> JSONWebValueStorage {
         try JSONWebValueStorage(storage.merging(other.storage) {
-            try .init(combine($0.value, $1.value))
+            try .init(combine($0.value as! any ValueType, $1.value as! any ValueType))
         })
     }
     
@@ -182,7 +201,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         storage.removeValue(forKey: key)
     }
     
-    fileprivate static func cast<T>(value: Any?, as type: T.Type) -> T? where T: Encodable {
+    fileprivate static func cast<T>(value: Any?, as type: T.Type) -> T? where T: ValueType {
         guard let value = value else { return nil }
         if let value = value as? T {
             return value
@@ -206,9 +225,13 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
             // Here, we first type to simply cast value to target type. If this
             // casting succeed, it will return. Otherwise we try to encode data
             // using `JSONEncoder` then decode as a "Type-erasure" method.
-            if let value = value as? T {
+            switch value {
+            case let value as T:
                 return value
-            } else {
+            case let value as any Encodable:
+                guard let data = try? JSONEncoder().encode(value) else { return nil }
+                return try? JSONDecoder().decode(type, from: data) as? T
+            default:
                 let value = AnyCodable(value)
                 guard let data = try? JSONEncoder().encode(value) else { return nil }
                 return try? JSONDecoder().decode(type, from: data) as? T
@@ -218,11 +241,11 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         }
     }
     
-    private func get<T>(key: String, as _: T.Type) -> T? where T: Encodable {
+    private func get<T>(key: String, as _: T.Type) -> T? where T: ValueType {
         JSONWebValueStorage.cast(value: storage[key]?.value, as: T.self)
     }
     
-    private mutating func updateValue<T>(key: String, value: T?) where T: Decodable {
+    private mutating func updateValue<T>(key: String, value: T?) where T: ValueType {
         guard let value = value else {
             remove(key: key)
             return
