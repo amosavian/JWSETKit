@@ -13,6 +13,7 @@ import Foundation
 import Crypto
 
 /// JSON Web Signature Algorithms
+@frozen
 public struct JSONWebSignatureAlgorithm: JSONWebAlgorithm {
     public let rawValue: String
     

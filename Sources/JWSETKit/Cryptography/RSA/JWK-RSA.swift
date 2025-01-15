@@ -23,6 +23,7 @@ import CryptoSwift
 #endif
 
 /// JSON Web Key (JWK) container for RSA public keys.
+@frozen
 public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSONWebEncryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     

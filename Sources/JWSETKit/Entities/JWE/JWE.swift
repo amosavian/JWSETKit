@@ -14,6 +14,7 @@ import Crypto
 
 /// The JWE cryptographic mechanisms encrypt and provide integrity protection
 /// for an arbitrary sequence of octets.
+@frozen
 public struct JSONWebEncryption: Hashable, Sendable {
     /// Contains JWE Protected Header and JWE Shared Unprotected Header.
     public var header: JSONWebEncryptionHeader
@@ -88,7 +89,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     /// - Parameters:
     ///   - protected: Protected header of JWE.
     ///   - unprotected: Unprotected header of JWE.
-    ///   - nounce: Initialization Vector for content encryption.
+    ///   - nonce: Initialization Vector for content encryption.
     ///   - content: Data to be encrypted.
     ///   - additionalAuthenticatedData: An input to an AEAD operation that is integrity protected but not encrypted.
     ///   - keyEncryptingAlgorithm: Encryption algorithm applied to `contentEncryptionKey`
@@ -100,7 +101,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     public init<ND: DataProtocol, PD: DataProtocol, AD: DataProtocol>(
         protected: JOSEHeader? = nil,
         unprotected: JOSEHeader? = nil,
-        nounce _: ND? = Data?.none,
+        nonce _: ND? = Data?.none,
         content: PD,
         additionalAuthenticated _: AD? = Data?.none,
         keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
@@ -171,7 +172,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     /// - Parameters:
     ///   - protected: Protected header of JWE.
     ///   - unprotected: Unprotected header of JWE.
-    ///   - nounce: Initialization Vector for AEAD.
+    ///   - nonce: Initialization Vector for AEAD.
     ///   - content: Data to be encrypted.
     ///   - additionalAuthenticatedData: An input to an AEAD operation that is integrity protected but not encrypted.
     ///   - keyEncryptionKey: The public key that `contentEncryptionKey` will be encrypted with.
@@ -181,7 +182,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     public init<ND: DataProtocol, PD: DataProtocol>(
         protected: ProtectedJSONWebContainer<JOSEHeader>,
         unprotected: JOSEHeader? = nil,
-        nounce: ND? = Data?.none,
+        nonce: ND? = Data?.none,
         content: PD,
         additionalAuthenticatedData: Data? = nil,
         keyEncryptionKey: (any JSONWebKey)?,
@@ -236,7 +237,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         let authenticating = protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
         self.sealed = try cek.seal(
             plainData,
-            iv: nounce,
+            iv: nonce,
             authenticating: authenticating,
             using: contentEncryptionAlgorithm
         )

@@ -25,7 +25,7 @@ struct RFC7520EncryptionTests {
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
             unprotected: nil,
-            nounce: "bbd5sTkYwhAIqfHsx8DayA".decoded,
+            nonce: "bbd5sTkYwhAIqfHsx8DayA".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.rsa1_5EncPublicKey.key,
@@ -53,7 +53,7 @@ struct RFC7520EncryptionTests {
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
             unprotected: nil,
-            nounce: "-nBoKLH0YkLZPSI9".decoded,
+            nonce: "-nBoKLH0YkLZPSI9".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.rsaOAEPEncPublicKey.key,
@@ -107,7 +107,7 @@ struct RFC7520EncryptionTests {
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
             unprotected: nil,
-            nounce: "VBiCzVHNoLiR3F4V82uoTQ".decoded,
+            nonce: "VBiCzVHNoLiR3F4V82uoTQ".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: pbkdf2Key,
@@ -145,7 +145,7 @@ struct RFC7520EncryptionTests {
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
             unprotected: nil,
-            nounce: "mH-G2zVqgztUtnW_".decoded,
+            nonce: "mH-G2zVqgztUtnW_".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.ecdhPrivateKey.key,
@@ -190,7 +190,7 @@ struct RFC7520EncryptionTests {
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
             unprotected: nil,
-            nounce: "yc9N8v5sYyv3iGQT926IUg".decoded,
+            nonce: "yc9N8v5sYyv3iGQT926IUg".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: kek.key,
@@ -226,7 +226,7 @@ struct RFC7520EncryptionTests {
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
             unprotected: nil,
-            nounce: "refa467QzzKx6QAB".decoded,
+            nonce: "refa467QzzKx6QAB".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: nil,
@@ -259,7 +259,7 @@ struct RFC7520EncryptionTests {
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
             unprotected: nil,
-            nounce: "gz6NjyEFNm_vm8Gj6FwoFQ".decoded,
+            nonce: "gz6NjyEFNm_vm8Gj6FwoFQ".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapGCMSymmetricKey.key,
@@ -291,7 +291,7 @@ struct RFC7520EncryptionTests {
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
             unprotected: nil,
-            nounce: "Qx0pmsDa8KnJc9Jo".decoded,
+            nonce: "Qx0pmsDa8KnJc9Jo".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapSymmetricKey.key,
@@ -322,7 +322,7 @@ struct RFC7520EncryptionTests {
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
             unprotected: nil,
-            nounce: "p9pUq6XHY0jfEZIl".decoded,
+            nonce: "p9pUq6XHY0jfEZIl".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapSymmetricKey.key,
@@ -359,7 +359,7 @@ struct RFC7520EncryptionTests {
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
             unprotected: nil,
-            nounce: "veCx9ece2orS7c_N".decoded,
+            nonce: "veCx9ece2orS7c_N".decoded,
             content: plainText.data,
             additionalAuthenticatedData: aad.decoded,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapSymmetricKey.key,
@@ -390,7 +390,7 @@ struct RFC7520EncryptionTests {
                 container.algorithm = .aesKeyWrap128
                 container.keyId = "81b20965-8332-43d9-a468-82160ad91ac8"
             },
-            nounce: "WgEJsDS9bkoXQ3nR".decoded,
+            nonce: "WgEJsDS9bkoXQ3nR".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapSymmetricKey.key,
@@ -422,7 +422,7 @@ struct RFC7520EncryptionTests {
                 container.encryptionAlgorithm = .aesEncryptionGCM128
                 container.keyId = "81b20965-8332-43d9-a468-82160ad91ac8"
             },
-            nounce: "YihBoVOGsR1l7jCD".decoded,
+            nonce: "YihBoVOGsR1l7jCD".decoded,
             content: plainText.data,
             additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapSymmetricKey.key,

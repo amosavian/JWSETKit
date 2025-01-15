@@ -14,6 +14,7 @@ import Foundation
 
 /// Storage for values in JOSE headers or JWT claims
 @dynamicMemberLookup
+@frozen
 public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLiteral, Sendable {
     public typealias Key = String
     public typealias ValueType = Codable & Sendable

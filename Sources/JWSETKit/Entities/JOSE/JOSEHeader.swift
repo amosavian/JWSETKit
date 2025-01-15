@@ -15,6 +15,7 @@ import Crypto
 /// For a JWS, the members of the JSON object(s) representing the JOSE Header
 /// describe the digital signature or MAC applied to the JWS Protected Header
 /// and the JWS Payload and optionally additional properties of the JWS.
+@frozen
 public struct JOSEHeader: JSONWebContainer {
     public var storage: JSONWebValueStorage
     

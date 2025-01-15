@@ -13,6 +13,7 @@ import Foundation
 import Crypto
 
 /// JSON Web Key (JWK) container for different types of Elliptic-Curve public keys consists of P-256, P-384, P-521, Ed25519.
+@frozen
 public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Sendable {
     public var storage: JSONWebValueStorage
     

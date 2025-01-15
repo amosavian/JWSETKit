@@ -13,6 +13,7 @@ import Foundation
 import Crypto
 
 /// JSON Web Key (JWK) container for creating/verifying HMAC signatures.
+@frozen
 public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetricSigningKey, Sendable {
     public var publicKey: Self { self }
     

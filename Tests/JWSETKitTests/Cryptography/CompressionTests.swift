@@ -14,24 +14,34 @@ struct CompressionTests {
     let decompressed = "Data compression test. This text must be compressed.".data
     let deflateCompressed = "c0ksSVRIzs8tKEotLs7Mz1MoSS0u0VMIycgsBjIrShRyS4tLFJJS4WpSU/QA".decoded
     
-    var deflateCompressor: (any JSONWebCompressor.Type)? {
-        guard JSONWebCompressionAlgorithm.registeredAlgorithms.contains(.deflate) else { return nil }
-        return JSONWebCompressionAlgorithm.deflate.compressor
+    var compressors: [any JSONWebCompressor.Type]
+    
+    init() {
+        var compressors: [any JSONWebCompressor.Type] = []
+#if canImport(Compression)
+        compressors.append(AppleCompressor<DeflateCompressionCodec>.self)
+#endif
+#if canImport(Czlib) || canImport(zlib)
+        compressors.append(ZlibCompressor<DeflateCompressionCodec>.self)
+#endif
+        self.compressors = compressors
     }
     
     @Test
     func deflateCompression() throws {
-        guard let deflateCompressor else { return }
-        let testCompressed = try deflateCompressor.compress(decompressed)
-        #expect(testCompressed == deflateCompressed)
-        #expect(testCompressed.count < decompressed.count)
+        for deflateCompressor in compressors {
+            let testCompressed = try deflateCompressor.compress(decompressed)
+            #expect(testCompressed == deflateCompressed)
+            #expect(testCompressed.count < decompressed.count)
+        }
     }
     
     @Test
     func deflateDecompression() throws {
-        guard let deflateCompressor else { return }
-        let testDecompressed = try deflateCompressor.decompress(deflateCompressed)
-        #expect(testDecompressed == decompressed)
+        for deflateCompressor in compressors {
+            let testDecompressed = try deflateCompressor.decompress(deflateCompressed)
+            #expect(testDecompressed == decompressed)
+        }        
     }
     
     @Test

@@ -13,6 +13,7 @@ import Foundation
 import Crypto
 
 /// JWS represents digitally signed or MACed content using JSON data structures and `base64url` encoding.
+@frozen
 public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendable {
     /// The "signatures" member value MUST be an array of JSON objects.
     ///

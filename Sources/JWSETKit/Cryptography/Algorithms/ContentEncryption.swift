@@ -13,6 +13,7 @@ import Foundation
 import Crypto
 
 /// JSON Web Key Encryption Algorithms
+@frozen
 public struct JSONWebContentEncryptionAlgorithm: JSONWebAlgorithm {
     public let rawValue: String
     

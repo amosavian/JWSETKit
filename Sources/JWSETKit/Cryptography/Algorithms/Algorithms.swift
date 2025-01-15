@@ -87,6 +87,7 @@ extension JSONWebAlgorithm {
 }
 
 /// JSON Web Signature Algorithms.
+@frozen
 public struct AnyJSONWebAlgorithm: JSONWebAlgorithm {
     public let rawValue: String
     
@@ -115,6 +116,7 @@ public struct AnyJSONWebAlgorithm: JSONWebAlgorithm {
 }
 
 /// JSON Key Type, e.g. `RSA`, `EC`, etc.
+@frozen
 public struct JSONWebKeyType: StringRepresentable {
     public let rawValue: String
     
@@ -195,6 +197,7 @@ extension JSONWebKeyCurve {
 }
 
 /// JSON Key Usage, e.g. `sig`, `enc`, etc.
+@frozen
 public struct JSONWebKeyUsage: StringRepresentable {
     public let rawValue: String
     
@@ -212,6 +215,7 @@ extension JSONWebKeyUsage {
 }
 
 /// JSON Key Usage, e.g. `sign`, `decrypt`, `deriveKey`, etc.
+@frozen
 public struct JSONWebKeyOperation: StringRepresentable {
     public let rawValue: String
     

@@ -13,6 +13,56 @@ import Foundation
 import Crypto
 import X509
 
+/// The properties of the revocation.
+public struct JSONWebKeyRevocation: Codable, Hashable, Sendable {
+    /// Identifies the reason for the key revocation.
+    public struct Reason: StringRepresentable {
+        public let rawValue: String
+        
+        public init(rawValue: String) {
+            self.rawValue = rawValue
+        }
+        
+        /// General or unspecified reason for the JWK status change.
+        public static let unspecified = Self(rawValue: "unspecified")
+        
+        /// The private key is believed to have been compromised.
+        public static let compromised = Self(rawValue: "compromised")
+        
+        /// The JWK is no longer active.
+        public static let superseded = Self(rawValue: "superseded")
+    }
+    
+    enum CodingKeys: String, CodingKey {
+        case revokedAt = "revoked_at"
+        case reason
+    }
+    
+    /// Time when the key was revoked or must be considered revoked, using the time format defined for the iat claim
+    public let time: Date?
+    
+    /// Identifies the reason for the key revocation.
+    public let reason: Reason?
+    
+    /// Creates a new instance of `JSONWebKeyRevocation`.
+    public init(at time: Date? = nil, for reason: Reason? = nil) {
+        self.time = time
+        self.reason = reason
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.time = try container.decodeIfPresent(Double.self, forKey: .revokedAt).map(Date.init(timeIntervalSince1970:))
+        self.reason = try container.decodeIfPresent(JSONWebKeyRevocation.Reason.self, forKey: .reason)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encodeIfPresent((self.time?.timeIntervalSince1970).map(Int.init), forKey: .revokedAt)
+        try container.encodeIfPresent(self.reason, forKey: .reason)
+    }
+}
+
 /// Registered JSON Web Key (JWK) tokens in [RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517).
 public struct JSONWebKeyRegisteredParameters {
     /// The "`kty`" (key type) parameter identifies the cryptographic algorithm family
@@ -79,6 +129,31 @@ public struct JSONWebKeyRegisteredParameters {
     /// When used with JWS or JWE, the "kid" value is used to match a JWS or
     /// JWE "`kid`" Header Parameter value.
     public var keyId: String?
+    
+    /// The "`exp`" (expiration time) claim identifies the expiration time on or
+    /// after which the key MUST NOT be accepted for processing.
+    ///
+    /// The processing of the "`exp`" claim requires that the current date/time MUST
+    /// be before the expiration date/time listed in the "`exp`" claim.
+    ///
+    /// Implementers MAY provide for some small leeway, usually no more than a few minutes,
+    /// to account for clock skew.
+    ///
+    /// Its value MUST be a number containing a `NumericDate` value.
+    ///
+    /// Use of this claim is OPTIONAL.
+    public var expiry: Date?
+    
+    /// The "`iat`" (issued at) claim identifies the time at which the key was issued.
+    ///
+    /// This claim can be used to determine the age of the key.
+    /// Its value MUST be a number containing a `NumericDate` value.
+    ///
+    /// Use of this claim is OPTIONAL.
+    public var issuedAt: Date?
+    
+    /// Contains the properties of the revocation including time and reason..
+    public var revoked: JSONWebKeyRevocation?
     
     /// The "`x5u`" (X.509 URL) Header Parameter is a URI that refers to a resource
     /// for the X.509 public key certificate or certificate chain corresponding
@@ -155,8 +230,8 @@ public struct JSONWebKeyRegisteredParameters {
     
     fileprivate static let keys: [PartialKeyPath<Self>: String] = [
         \.keyType: "kty", \.keyUsage: "use", \.keyOperations: "key_ops",
-        \.algorithm: "alg", \.keyId: "kid",
-        \.certificateURL: "x5u", \.certificateChain: "x5c",
+        \.algorithm: "alg", \.keyId: "kid", \.expiry: "exp", \.issuedAt: "iat",
+        \.certificateURL: "x5u", \.certificateChain: "x5c", \.revoked: "revoked",
         \.certificateThumbprint: "x5t",
         \.curve: "crv", \.xCoordinate: "x", \.yCoordinate: "y",
         \.privateKey: "d", \.modulus: "n", \.exponent: "e",

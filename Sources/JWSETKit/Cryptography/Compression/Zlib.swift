@@ -17,68 +17,75 @@ import Czlib
 import zlib
 #endif
 
-struct CompressionError: RawRepresentable, Error {
-    var rawValue: Int32
-    
-    init(rawValue: Int32) {
-        self.rawValue = rawValue
+extension POSIXError {
+    init(zlibStatus: Int32) {
+        self = switch zlibStatus {
+        case Z_ERRNO:
+            POSIXError(.EIO, userInfo: [:])
+        case Z_STREAM_ERROR,
+            Z_DATA_ERROR,
+        Z_VERSION_ERROR:
+            POSIXError(.EINVAL, userInfo: [:])
+        case Z_MEM_ERROR:
+            POSIXError(.ENOMEM, userInfo: [:])
+        case Z_BUF_ERROR:
+            POSIXError(.ENOBUFS, userInfo: [:])
+        default:
+            POSIXError(.ECANCELED, userInfo: [:])
+        }
     }
-    
-    static let streamError = Self(rawValue: Z_STREAM_ERROR)
-    static let dataError = Self(rawValue: Z_DATA_ERROR)
-    static let memoryError = Self(rawValue: Z_MEM_ERROR)
-    static let bufferError = Self(rawValue: Z_BUF_ERROR)
-    static let versionError = Self(rawValue: Z_VERSION_ERROR)
 }
+
+@discardableResult
+private func zlibCall(_ handler: () -> Int32) throws -> Int32 {
+    let status = handler()
+    if status < Z_OK {
+        throw POSIXError(zlibStatus: status)
+    }
+    return status
+}
+
 
 /// Compressor contain compress and decompress implementation using `Compression` framework.
 struct ZlibCompressor<Codec>: JSONWebCompressor, Sendable where Codec: CompressionCodec {
     static func compress<D>(_ data: D) throws -> Data where D: DataProtocol {
         var s = z_stream()
-        let status = deflateInit2_(&s, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
-        guard status == Z_OK else {
-            throw CompressionError(rawValue: status)
+        try zlibCall {
+            deflateInit2_(&s, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -15, 8, Z_DEFAULT_STRATEGY, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
         }
         defer { deflateEnd(&s) }
-
+        let outBuf = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: Codec.pageSize)
+        defer { outBuf.deallocate() }
         var compressed = Data()
         try data.withUnsafeBuffer { inBuf in
             s.next_in = .init(mutating: inBuf.baseAddress?.assumingMemoryBound(to: Bytef.self))
-            s.avail_in = uInt(inBuf.count)
-            let outBuf = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: Codec.pageSize)
-            defer { outBuf.deallocate() }
+            s.avail_in = .init(inBuf.count)
             while s.avail_in > 0 {
                 s.next_out = outBuf.baseAddress
                 s.avail_out = uInt(outBuf.count)
-                let status = deflate(&s, Z_NO_FLUSH)
-                if status != Z_OK {
-                    throw CompressionError(rawValue: status)
+                try zlibCall {
+                    deflate(&s, Z_NO_FLUSH)
                 }
                 compressed.append(outBuf.baseAddress!, count: outBuf.count - Int(s.avail_out))
             }
         }
-        let outBuf = UnsafeMutableBufferPointer<UInt8>.allocate(capacity: Codec.pageSize)
-        defer { outBuf.deallocate() }
-        while true {
+        outBuf.initialize(repeating: 0)
+        var status = Z_OK
+        while status != Z_STREAM_END {
             s.next_out = outBuf.baseAddress
-            s.avail_out = uInt(outBuf.count)
-            let status = deflate(&s, Z_FINISH)
+            s.avail_out = .init(outBuf.count)
+            status = try zlibCall {
+                deflate(&s, Z_FINISH)
+            }
             compressed.append(outBuf.baseAddress!, count: outBuf.count - Int(s.avail_out))
-            if status == Z_STREAM_END {
-                break
-            }
-            if status != Z_OK {
-                throw CompressionError(rawValue: status)
-            }
         }
         return compressed
     }
     
     static func decompress<D>(_ data: D) throws -> Data where D: DataProtocol {
         var s = z_stream()
-        let status = inflateInit2_(&s, -15, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
-        guard status == Z_OK else {
-            throw CompressionError(rawValue: status)
+        try zlibCall {
+            inflateInit2_(&s, -15, ZLIB_VERSION, Int32(MemoryLayout<z_stream>.size))
         }
         defer { inflateEnd(&s) }
 
@@ -91,9 +98,8 @@ struct ZlibCompressor<Codec>: JSONWebCompressor, Sendable where Codec: Compressi
             repeat {
                 s.next_out = outBuf.baseAddress
                 s.avail_out = uInt(outBuf.count)
-                let status = inflate(&s, Z_NO_FLUSH)
-                if status != Z_OK && status != Z_STREAM_END {
-                    throw CompressionError(rawValue: status)
+                try zlibCall {
+                    inflate(&s, Z_NO_FLUSH)
                 }
                 decompressed.append(outBuf.baseAddress!, count: outBuf.count - Int(s.avail_out))
             } while s.avail_out == 0

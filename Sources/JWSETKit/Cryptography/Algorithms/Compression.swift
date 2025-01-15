@@ -39,6 +39,7 @@ public protocol CompressionCodec: Sendable {
 }
 
 /// JSON Web Compression Algorithms.
+@frozen
 public struct JSONWebCompressionAlgorithm: StringRepresentable {
     public let rawValue: String
     

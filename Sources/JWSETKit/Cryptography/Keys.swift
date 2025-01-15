@@ -15,7 +15,7 @@ import Crypto
 /// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159](https://www.rfc-editor.org/rfc/rfc7159)
 /// data structure that represents a cryptographic key.
 @dynamicMemberLookup
-public protocol JSONWebKey: Swift.Codable, Swift.Hashable {
+public protocol JSONWebKey: Swift.Codable, Swift.Hashable, Expirable {
     /// Storage of container values.
     var storage: JSONWebValueStorage { get }
     
@@ -154,6 +154,10 @@ extension JSONWebKey {
         guard let keyType = self.keyType else {
             throw JSONWebKeyError.unknownKeyType
         }
+        // swiftformat:disable:next redundantSelf
+        if let revoked = self.revoked {
+            throw JSONWebValidationError.tokenExpired(expiry: revoked.time ?? .init())
+        }
         switch keyType {
         case .rsa:
             try checkRequiredFields(\.modulus, \.exponent)
@@ -228,6 +232,19 @@ extension JSONWebKey {
             throw JSONWebKeyError.unknownAlgorithm
         }
         return "urn:ietf:params:oauth:\(format.rawValue)-thumbprint:\(digestType.identifier):\(digestValue)"
+    }
+}
+
+extension JSONWebKey {
+    public func verifyDate(_ currentDate: Date) throws {
+        // swiftformat:disable:next redundantSelf
+        if let expiry = self.expiry, currentDate > expiry {
+            throw JSONWebValidationError.tokenExpired(expiry: expiry)
+        }
+        // swiftformat:disable:next redundantSelf
+        if let issuedAt = self.issuedAt, currentDate < issuedAt {
+            throw JSONWebValidationError.tokenInvalidBefore(notBefore: issuedAt)
+        }
     }
 }
 
@@ -425,6 +442,7 @@ public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey, JSONWebKeySymmetr
 /// A type-erased general container for a JSON Web Key (JWK).
 ///
 /// - Note: To create a key able to do operations (sign, verify, encrypt, decrypt) use `specialzed()` method.
+@frozen
 public struct AnyJSONWebKey: MutableJSONWebKey, Sendable {
     public var storage: JSONWebValueStorage
     

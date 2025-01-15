@@ -38,6 +38,12 @@ struct JWKSetTests {
               "use":"enc",
               "kid":"1"},
              {"kty":"RSA",
+              "iat": 123972394872,
+              "exp": 123974394972,
+              "revoked": {
+                "revoked_at": 123972495172,
+                "reason": "compromised",
+              },
               "n":"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4\
     cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMst\
     n64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2Q\
@@ -91,6 +97,8 @@ struct JWKSetTests {
         #expect(jwks[3] is (any JSONWebSigningKey))
         #expect(jwks[3] is JSONWebRSAPrivateKey)
         #expect(!(jwks[3] is JSONWebRSAPublicKey))
+        #expect(jwks[3].issuedAt == .init(timeIntervalSince1970: 123972394872))
+        #expect(jwks[3].revoked == JSONWebKeyRevocation(at: .init(timeIntervalSince1970: 123972495172), for: .compromised))
     }
     
     @Test

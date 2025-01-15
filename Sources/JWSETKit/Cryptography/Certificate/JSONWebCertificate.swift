@@ -16,6 +16,7 @@ import X509
 /// JSON Web Key (JWK) container for X509 Certificate chain.
 ///
 /// - Important: Only `x5c` is supported. Loading from `x5u` is not supported now.
+@frozen
 public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, Sendable {
     public var storage: JSONWebValueStorage
     
