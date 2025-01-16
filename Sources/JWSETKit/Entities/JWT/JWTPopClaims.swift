@@ -5,8 +5,8 @@
 //  Created by Amir Abbas Mousavian on 1/15/25.
 //
 
-import Foundation
 import Crypto
+import Foundation
 
 /// Presenter possesses a particular key and that the recipient can cryptographically
 /// confirm that the presenter has possession of that key as described in
@@ -124,7 +124,7 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
             self = .certificateThumbprint(jktData)
         }
         
-        self = .keyId(try container.decode(String.self, forKey: .kid))
+        self = try .keyId(container.decode(String.self, forKey: .kid))
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -134,9 +134,9 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
             try container.encode(jwk, forKey: .jwk)
         case .encryptedKey(let jwe):
             try container.encode(jwe, forKey: .jwe)
-        case let .keyId(kid):
+        case .keyId(let kid):
             try container.encode(kid, forKey: .kid)
-        case let .url(setURL, kid):
+        case .url(let setURL, let kid):
             try container.encode(setURL, forKey: .jku)
             try container.encodeIfPresent(kid, forKey: .kid)
         case .certificateThumbprint(let x5t):

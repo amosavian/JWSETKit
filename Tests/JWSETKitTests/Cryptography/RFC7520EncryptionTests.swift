@@ -313,7 +313,7 @@ struct RFC7520EncryptionTests {
         #expect(try jwe.decrypt(using: RFC7520ExampleKeys.keyWrapSymmetricKey.key) == plainText.data)
     }
     
-    @Test//(.disabled(if: JSONWebCompressionAlgorithm.registeredAlgorithms.isEmpty))
+    @Test // (.disabled(if: JSONWebCompressionAlgorithm.registeredAlgorithms.isEmpty))
     func testEncrypt_AESKW_Deflate() throws {
         let header = """
         eyJhbGciOiJBMTI4S1ciLCJraWQiOiI4MWIyMDk2NS04MzMyLTQzZDktYTQ2OC\

@@ -51,7 +51,7 @@ let package = Package(
                 // Linux support
                 .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
-                .target(name: "Czlib", condition: .when(platforms: .nonDarwin)),
+                .byName(name: "Czlib"),
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy"),

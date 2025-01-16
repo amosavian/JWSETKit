@@ -5,7 +5,7 @@
 //  Created by Amir Abbas Mousavian on 5/1/24.
 //
 
-#if canImport(Czlib)
+#if canImport(Czlib) || canImport(zlib)
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -23,8 +23,8 @@ extension POSIXError {
         case Z_ERRNO:
             POSIXError(.EIO, userInfo: [:])
         case Z_STREAM_ERROR,
-            Z_DATA_ERROR,
-        Z_VERSION_ERROR:
+             Z_DATA_ERROR,
+             Z_VERSION_ERROR:
             POSIXError(.EINVAL, userInfo: [:])
         case Z_MEM_ERROR:
             POSIXError(.ENOMEM, userInfo: [:])
@@ -44,7 +44,6 @@ private func zlibCall(_ handler: () -> Int32) throws -> Int32 {
     }
     return status
 }
-
 
 /// Compressor contain compress and decompress implementation using `Compression` framework.
 struct ZlibCompressor<Codec>: JSONWebCompressor, Sendable where Codec: CompressionCodec {

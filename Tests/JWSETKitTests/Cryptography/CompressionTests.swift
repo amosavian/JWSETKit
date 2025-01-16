@@ -41,7 +41,7 @@ struct CompressionTests {
         for deflateCompressor in compressors {
             let testDecompressed = try deflateCompressor.decompress(deflateCompressed)
             #expect(testDecompressed == decompressed)
-        }        
+        }
     }
     
     @Test

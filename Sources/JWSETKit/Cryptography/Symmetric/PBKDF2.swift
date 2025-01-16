@@ -19,7 +19,7 @@ extension SymmetricKey {
     static let defaultPBES2IterationCount: [Int: Int] = [
         128: 600_000,
         192: 450_000,
-        256: 210_000,
+        256: 310_000,
     ]
     
     /// Generates a symmetric key using `PBKDF2` algorithm.

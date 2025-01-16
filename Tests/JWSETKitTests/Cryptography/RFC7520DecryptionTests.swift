@@ -363,7 +363,7 @@ struct RFC7520DecryptionTests {
         #expect(decodedText == plainText.data)
     }
     
-    @Test//(.disabled(if: JSONWebCompressionAlgorithm.registeredAlgorithms.isEmpty))
+    @Test // (.disabled(if: JSONWebCompressionAlgorithm.registeredAlgorithms.isEmpty))
     func testDecryptCompact_AESKW_Deflate() throws {
         let jweString = """
         eyJhbGciOiJBMTI4S1ciLCJraWQiOiI4MWIyMDk2NS04MzMyLTQzZDktYTQ2OC\

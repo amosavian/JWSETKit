@@ -97,8 +97,8 @@ struct JWKSetTests {
         #expect(jwks[3] is (any JSONWebSigningKey))
         #expect(jwks[3] is JSONWebRSAPrivateKey)
         #expect(!(jwks[3] is JSONWebRSAPublicKey))
-        #expect(jwks[3].issuedAt == .init(timeIntervalSince1970: 123972394872))
-        #expect(jwks[3].revoked == JSONWebKeyRevocation(at: .init(timeIntervalSince1970: 123972495172), for: .compromised))
+        #expect(jwks[3].issuedAt == .init(timeIntervalSince1970: 123_972_394_872))
+        #expect(jwks[3].revoked == JSONWebKeyRevocation(at: .init(timeIntervalSince1970: 123_972_495_172), for: .compromised))
     }
     
     @Test

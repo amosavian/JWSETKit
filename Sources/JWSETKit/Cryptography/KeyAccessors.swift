@@ -58,8 +58,8 @@ public struct JSONWebKeyRevocation: Codable, Hashable, Sendable {
     
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent((self.time?.timeIntervalSince1970).map(Int.init), forKey: .revokedAt)
-        try container.encodeIfPresent(self.reason, forKey: .reason)
+        try container.encodeIfPresent((time?.timeIntervalSince1970).map(Int.init), forKey: .revokedAt)
+        try container.encodeIfPresent(reason, forKey: .reason)
     }
 }
 
