@@ -49,14 +49,15 @@ public struct JOSEHeader: JSONWebContainer {
     }
     
     public func merging(_ other: JOSEHeader, uniquingKeysWith combine: (JSONWebValueStorage.Value, JSONWebValueStorage.Value) throws -> JSONWebValueStorage.Value) rethrows -> JOSEHeader {
+        guard !other.storage.storageKeys.isEmpty else { return self }
         let storage = try storage.merging(other.storage, uniquingKeysWith: combine)
         return .init(storage: storage)
     }
     
     private var normalizedStorage: JSONWebValueStorage {
         var result = storage
-        result["typ"] = result["typ"].map(JSONWebContentType.init(rawValue:))?.mimeType
-        result["cty"] = result["cty"].map(JSONWebContentType.init(rawValue:))?.mimeType
+        result["typ"] = result["typ"].map(JSONWebContentType.init(rawValue:))
+        result["cty"] = result["cty"].map(JSONWebContentType.init(rawValue:))
         return result
     }
     

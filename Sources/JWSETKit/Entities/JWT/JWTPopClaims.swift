@@ -7,10 +7,11 @@
 
 import Crypto
 import Foundation
+import X509
 
 /// Presenter possesses a particular key and that the recipient can cryptographically
 /// confirm that the presenter has possession of that key as described in
-/// [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800.html).
+/// [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800.html ).
 public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
     /// A JWK representing the confirmation key.
     case key(AnyJSONWebKey)
@@ -38,7 +39,7 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
         case jwe
         case kid
         case jku
-        case x5t = "x5t#S256"
+        case x5tS256 = "x5t#S256"
         case jkt
     }
     
@@ -71,13 +72,36 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
         }
     }
     
-    /// Creates a claim with a key value.
+    /// Creates a claim with a public key value.
     ///
-    /// - Parameter value: The keyinstance to be used as the `jwk` claim.
+    /// - Parameter value: The keyinstance to be used as the `jwk` claim. If key is a private
+    ///     private key, Public key value will be used.
     /// - Returns: A new `JSONWebTokenConfirmation` instance with the specified JWK value.
     @_disfavoredOverload
     public static func key(_ value: any JSONWebKey) -> Self {
-        .key(AnyJSONWebKey(value))
+        switch value {
+        case let value as any JSONWebSigningKey:
+            .key(AnyJSONWebKey(value.publicKey))
+        case let value as any JSONWebDecryptingKey:
+            .key(AnyJSONWebKey(value.publicKey))
+        default:
+            .key(AnyJSONWebKey(value))
+        }
+    }
+    
+    /// SHA-256 hash of the key's JWK representation.
+    public static func keyThumbprint(_ key: any JSONWebKey) throws -> Self {
+        try .keyThumbprint(key.thumbprint(format: .jwk, using: SHA256.self).data)
+    }
+    
+    /// SHA-256 hash of the Certificate public key.
+    public static func certificateThumbprint(_ key: any JSONWebKey) throws -> Self {
+        try .certificateThumbprint(key.thumbprint(format: .spki, using: SHA256.self).data)
+    }
+    
+    /// SHA-256 hash of the Certificate public key.
+    public static func certificateThumbprint(_ key: Certificate) throws -> Self {
+        try .certificateThumbprint(key.thumbprint(format: .spki, using: SHA256.self).data)
     }
     
     /// Creates a POP claim that encrypts a given key using a key encryption key (KEK).
@@ -112,9 +136,9 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
         } else if let jku = try container.decodeIfPresent(URL.self, forKey: .jku) {
             let kid = try container.decodeIfPresent(String.self, forKey: .kid)
             self = .url(jku, keyId: kid)
-        } else if let x5t = try container.decodeIfPresent(String.self, forKey: .x5t) {
+        } else if let x5t = try container.decodeIfPresent(String.self, forKey: .x5tS256) {
             guard let x5tData = Data(urlBase64Encoded: x5t) else {
-                throw DecodingError.dataCorruptedError(forKey: .x5t, in: container, debugDescription: "Base64 is invalid.")
+                throw DecodingError.dataCorruptedError(forKey: .x5tS256, in: container, debugDescription: "Base64 is invalid.")
             }
             self = .certificateThumbprint(x5tData)
         } else if let jkt = try container.decodeIfPresent(String.self, forKey: .jkt) {
@@ -140,7 +164,7 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
             try container.encode(setURL, forKey: .jku)
             try container.encodeIfPresent(kid, forKey: .kid)
         case .certificateThumbprint(let x5t):
-            try container.encode(x5t, forKey: .x5t)
+            try container.encode(x5t, forKey: .x5tS256)
         case .keyThumbprint(let jkt):
             try container.encode(jkt, forKey: .jkt)
         }
@@ -157,18 +181,27 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
     
     /// Decrypts and retrieves a validating key from a set of keys.
     ///
-    /// - Parameter keys: An array of `JSONWebKey` objects to use for decryption
+    /// - Parameter keySet: An array of `JSONWebKey` objects to use for decryption
     /// - Returns: An optional `JSONWebValidatingKey` if decryption is successful
     /// - Throws: Errors that may occur during the decryption process
-    public func decryptedKey(using keys: [any JSONWebKey]) throws -> (any JSONWebValidatingKey)? {
+    public func decryptedKey(using keySet: [any JSONWebKey]) throws -> (any JSONWebValidatingKey)? {
         switch self {
         case .key(let jwk):
             jwk.specialized() as? (any JSONWebValidatingKey)
         case .encryptedKey(let jwe):
-            try JSONDecoder().decode(AnyJSONWebKey.self, from: jwe.decrypt(using: keys)).specialized() as? (any JSONWebValidatingKey)
+            try JSONDecoder().decode(AnyJSONWebKey.self, from: jwe.decrypt(using: keySet)).specialized() as? (any JSONWebValidatingKey)
         default:
             nil
         }
+    }
+    
+    /// Decrypts and retrieves a validating key from a set of keys.
+    ///
+    /// - Parameter keys: A JWK set contains private keys for decryption.
+    /// - Returns: An optional `JSONWebValidatingKey` if decryption is successful
+    /// - Throws: Errors that may occur during the decryption process
+    public func decryptedKey(using keys: JSONWebKeySet) throws -> (any JSONWebValidatingKey)? {
+        try decryptedKey(using: keys.keys)
     }
     
     /// Validates whether the given key matches the thumbprint stored in the proof of possession claims.

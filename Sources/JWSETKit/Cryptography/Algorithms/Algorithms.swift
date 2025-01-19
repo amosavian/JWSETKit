@@ -81,6 +81,7 @@ extension JSONWebAlgorithm {
         return AnyJSONWebAlgorithm(rawValue)
     }
     
+    /// Returns value with appropriate algorithm type.
     func specialized() -> any JSONWebAlgorithm {
         Self.specialized(rawValue)
     }
@@ -90,13 +91,13 @@ extension JSONWebAlgorithm {
 @frozen
 public struct AnyJSONWebAlgorithm: JSONWebAlgorithm {
     public let rawValue: String
-    
+        
     public var keyType: JSONWebKeyType? {
-        Self.specialized(rawValue).keyType
+        specialized().keyType
     }
     
     public var curve: JSONWebKeyCurve? {
-        Self.specialized(rawValue).curve
+        specialized().curve
     }
     
     var keyLength: Int? {

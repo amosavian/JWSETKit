@@ -13,7 +13,7 @@ import Foundation
 import Crypto
 import X509
 
-/// Registered parameters of JOSE header in [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515.html).
+/// Registered parameters of JOSE header in [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515.html ) .
 public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     public typealias Container = JOSEHeader
     /// The "`alg`" (algorithm) Header Parameter identifies the cryptographic algorithm used to secure the JWS.
@@ -157,7 +157,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     /// The "`b64`"  header parameter specifies the payload is encoded with `Base64URL` or not.
     ///
     /// The value is `true` if not present
-    public var base64: Bool?
+    public var base64: Bool
     
     @_documentation(visibility: private)
     public static let keys: [PartialKeyPath<Self>: String] = [
@@ -174,6 +174,21 @@ extension JOSEHeader {
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue
+        }
+    }
+    
+    @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: KeyPath<JoseHeaderJWSRegisteredParameters, Bool>) -> Bool {
+        get {
+            switch keyPath {
+            case \.base64:
+                storage[stringKey(keyPath)] ?? true
+            default:
+                storage[stringKey(keyPath)] ?? false
+            }
         }
         set {
             storage[stringKey(keyPath)] = newValue

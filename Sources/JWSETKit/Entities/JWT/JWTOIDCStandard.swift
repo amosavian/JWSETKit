@@ -256,7 +256,7 @@ extension JSONWebTokenClaims {
     @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Bool>) -> Bool {
         get {
-            storage[stringKey(keyPath)]
+            storage[stringKey(keyPath)] ?? false
         }
         set {
             storage[stringKey(keyPath)] = newValue

@@ -211,29 +211,3 @@ extension AnyJSONWebKey {
         specializers.insert(specializer, at: 0)
     }
 }
-
-extension [any JSONWebKey] {
-    func bestMatch(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        guard let keyType = algorithm.keyType else { return nil }
-        let candidates = filter {
-            $0.keyType == keyType && $0.curve == algorithm.curve
-        }
-        if let key = candidates.first(where: { $0.keyId == id }) {
-            return key
-        } else {
-            return candidates.first
-        }
-    }
-}
-
-extension [any JSONWebSigningKey] {
-    func bestMatch(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        (self as [any JSONWebKey]).bestMatch(for: algorithm, id: id) as? Self.Element
-    }
-}
-
-extension [any JSONWebValidatingKey] {
-    func bestMatch(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        (self as [any JSONWebKey]).bestMatch(for: algorithm, id: id) as? Self.Element
-    }
-}

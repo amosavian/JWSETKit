@@ -126,9 +126,10 @@ struct JWSTests {
     @Test
     func testDetached() throws {
         var jws = try JWSDetached(from: jwsDetachedString)
+        try #require(jws.signatures.count == 1)
         #expect(jws.payload.encoded == Data())
         #expect(jwsDetachedString == jws.description)
-        
+        #expect(!jws.signatures[0].protected.base64)
         let key = try JSONWebKeyHMAC<SHA256>(importing: Data("""
         {
          "kty":"oct",

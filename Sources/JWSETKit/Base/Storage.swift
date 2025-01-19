@@ -81,16 +81,6 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         }
     }
     
-    /// Returns value of given key.
-    public subscript(_ member: String) -> Bool {
-        get {
-            get(key: member, as: Bool.self) ?? false
-        }
-        set {
-            updateValue(key: member, value: newValue)
-        }
-    }
-    
     /// Returns value of given key decoded using base64.
     public subscript(_ member: String, urlEncoded: Bool = true) -> Data? {
         get {

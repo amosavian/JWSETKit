@@ -184,14 +184,15 @@ extension JSONWebKey {
         }
     }
     
-    func jwkThumbprint<H>(using _: H.Type) throws -> H.Digest where H: HashFunction {
+    private func jwkThumbprint<H>(using _: H.Type) throws -> H.Digest where H: HashFunction {
+        // Public key required values.
         let thumbprintKeys: Set<String> = [
             // Algorithm-specific keys
             "kty", "crv",
             // RSA keys
-            "n", "e", "d", "p", "q", "dp", "dq", "qi",
+            "n", "e",
             // EC/OKP keys
-            "x", "y", "d",
+            "x", "y",
             // Symmetric keys
             "k",
         ]
@@ -205,15 +206,24 @@ extension JSONWebKey {
     }
     
     public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
+        let key: any JSONWebKey
+        switch self {
+        case let self as any JSONWebSigningKey:
+            key = self.publicKey
+        case let self as any JSONWebDecryptingKey:
+            key = self.publicKey
+        default:
+            key = self
+        }
         switch format {
         case .spki:
-            guard let self = self as? (any JSONWebKeyExportable) else {
+            guard let self = key as? (any JSONWebKeyExportable) else {
                 throw JSONWebKeyError.operationNotAllowed
             }
             let spki = try self.exportKey(format: .spki)
             return H.hash(data: spki)
         case .pkcs8:
-            guard let self = self as? (any JSONWebKeyExportable) else {
+            guard let self = key as? (any JSONWebKeyExportable) else {
                 throw JSONWebKeyError.operationNotAllowed
             }
             let spki = try self.exportKey(format: .pkcs8)
@@ -517,6 +527,20 @@ public struct JSONWebKeySet: Codable, Hashable {
         self.keys = keys
     }
     
+    /// Initializes JWKSet using given array of key.
+    ///
+    /// - Parameter keys: An array of JWKs.
+    public init<T>(keys: T) where T: Sequence, T.Element == any JSONWebKey {
+        self.keys = .init(keys)
+    }
+    
+    /// Initializes JWKSet using given array of key.
+    ///
+    /// - Parameter keys: An array of JWKs.
+    public init<T>(keys: T) where T: Sequence, T.Element: JSONWebKey {
+        self.keys = .init(keys.map { $0 as any JSONWebKey })
+    }
+    
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let keys = try container.decode([AnyJSONWebKey].self, forKey: .keys)
@@ -525,7 +549,8 @@ public struct JSONWebKeySet: Codable, Hashable {
     
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(keys.map(\.storage), forKey: .keys)
+        var nested = container.nestedUnkeyedContainer(forKey: .keys)
+        try keys.forEach { try nested.encode($0) }
     }
     
     public static func == (lhs: JSONWebKeySet, rhs: JSONWebKeySet) -> Bool {
@@ -534,6 +559,25 @@ public struct JSONWebKeySet: Codable, Hashable {
     
     public func hash(into hasher: inout Hasher) {
         keys.forEach { hasher.combine($0) }
+    }
+    
+    public func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
+        guard let keyType = algorithm.keyType else { return nil }
+        let candidates = filter {
+            $0.keyType == keyType && $0.curve == algorithm.curve
+        }
+        if let key = candidates.first(where: { $0.keyId == id }) {
+            return key
+        } else {
+            return candidates.first
+        }
+    }
+    
+    public func matches(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> [Self.Element] {
+        guard let keyType = algorithm.keyType else { return [] }
+        return filter {
+            $0.keyType == keyType && $0.curve == algorithm.curve && (id == nil || $0.keyId == id)
+        }
     }
 }
 
@@ -563,6 +607,24 @@ extension JSONWebKeySet: RandomAccessCollection {
     }
     
     public subscript(bounds: Range<Int>) -> JSONWebKeySet {
-        .init(keys: Array(keys[bounds]))
+        .init(keys: keys[bounds])
+    }
+}
+
+extension [any JSONWebKey] {
+    func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
+        JSONWebKeySet(keys: self).match(for: algorithm, id: id)
+    }
+}
+
+extension [any JSONWebSigningKey] {
+    func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
+        JSONWebKeySet(keys: self).match(for: algorithm, id: id) as? Self.Element
+    }
+}
+
+extension [any JSONWebValidatingKey] {
+    func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
+        JSONWebKeySet(keys: self).match(for: algorithm, id: id) as? Self.Element
     }
 }

@@ -39,7 +39,6 @@ extension JSONWebContainer {
 
 extension AnyKeyPath {
     var name: String {
-        return String(reflecting: self).components(separatedBy: ".").last!
 #if canImport(Darwin) || swift(>=6.0)
         // `components` never returns empty array.
         return String(reflecting: self).components(separatedBy: ".").last!

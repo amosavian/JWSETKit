@@ -302,6 +302,13 @@ public struct JSONWebEncryption: Hashable, Sendable {
         }
     }
     
+    /// Decrypts encrypted data, using given private key.
+    ///
+    /// - Important: For `PBES2` algorithms, provide password using
+    ///         `SymmetricKey(data: Data(password.utf8))` to`key`.
+    ///
+    /// - Parameter keys: An array of keys that used to encrypt the content encryption key.
+    /// - Returns: Decrypted payload.
     public func decrypt(using keys: [any JSONWebKey], keyId: String? = nil) throws -> Data {
         for key in keys {
             guard (try? recipients.match(for: key, keyId: keyId)) != nil else {
@@ -312,6 +319,17 @@ public struct JSONWebEncryption: Hashable, Sendable {
             }
         }
         throw JSONWebKeyError.keyNotFound
+    }
+    
+    /// Decrypts encrypted data, using given private key.
+    ///
+    /// - Important: For `PBES2` algorithms, provide password using
+    ///         `SymmetricKey(data: Data(password.utf8))` to`key`.
+    ///
+    /// - Parameter keySet: An array of keys that used to encrypt the content encryption key.
+    /// - Returns: Decrypted payload.
+    public func decrypt(using keySet: JSONWebKeySet, keyId: String? = nil) throws -> Data {
+        try decrypt(using: keySet.keys, keyId: keyId)
     }
 }
 

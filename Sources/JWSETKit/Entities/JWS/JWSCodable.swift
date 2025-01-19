@@ -185,7 +185,7 @@ extension JSONWebSignature: Codable {
         case 0:
             return .compact
         case 1 where signatures[0].unprotected == nil:
-            if signatures[0].protected.base64 == false {
+            if signatures[0].protected.base64 {
                 return .compactDetached
             }
             return .compact

@@ -20,6 +20,17 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     /// Each object represents a signature or MAC over the JWS Payload and the JWS Protected Header.
     public var signatures: [JSONWebSignatureHeader]
     
+    /// Combination of protected header and unprotected header.
+    ///
+    /// - Note: If a key exists in both protected and unprotected headers, value in protected
+    ///     will be returned.
+    public var header: JOSEHeader {
+        guard let signature = signatures.first else {
+            return .init()
+        }
+        return signature.protected.value.merging(signature.unprotected ?? .init(), uniquingKeysWith: { protected, _ in protected })
+    }
+    
     /// The "`payload`" member MUST be present and contain the value of JWS Payload.
     public var payload: Payload
     
@@ -73,7 +84,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
             let signature: Data
             if algorithm == .none {
                 signature = .init()
-            } else if let algorithm, let key = keys.bestMatch(for: algorithm, id: keyId) {
+            } else if let algorithm, let key = keys.match(for: algorithm, id: keyId) {
                 signature = try key.signature(message, using: algorithm)
             } else {
                 throw JSONWebKeyError.keyNotFound
@@ -123,7 +134,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
                 algorithm = JSONWebSignatureAlgorithm(unprotected.algorithm)
             }
             let keyId: String? = header.protected.keyId ?? header.unprotected?.keyId
-            if let algorithm, let key = keys.bestMatch(for: algorithm, id: keyId) {
+            if let algorithm, let key = keys.match(for: algorithm, id: keyId) {
                 try key.verifySignature(header.signature, for: message, using: algorithm)
                 return
             }

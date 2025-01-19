@@ -77,6 +77,10 @@ extension CryptoECPrivateKey {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.publicKey == rhs.publicKey
     }
+    
+    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
+        try publicKey.thumbprint(format: format, using: hashFunction)
+    }
 }
 
 protocol CryptoECKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {

@@ -70,7 +70,7 @@ extension P256.KeyAgreement.PrivateKey: CryptoECKeyPortable {}
 #if canImport(Darwin)
 extension Crypto.SecureEnclave.P256.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
 
-extension SecureEnclave.P256.Signing.PrivateKey: CryptoECPrivateKey {
+extension SecureEnclave.P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     public var storage: JSONWebValueStorage {
         // Keys stored in SecureEnclave are not exportable.
         //
