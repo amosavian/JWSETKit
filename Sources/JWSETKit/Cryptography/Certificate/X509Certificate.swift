@@ -33,7 +33,9 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
         case (.some(.ellipticCurve), .some(.p384)):
             return try .init(P384.Signing.PublicKey.create(storage: storage))
         case (.some(.ellipticCurve), .some(.p521)):
-            return try .init(P384.Signing.PublicKey.create(storage: storage))
+            return try .init(P521.Signing.PublicKey.create(storage: storage))
+        case (.some(.octetKeyPair), .some(.ed25519)):
+            return try .init(Curve25519.Signing.PublicKey.create(storage: storage))
         case (.some(.rsa), _):
 #if canImport(CommonCrypto)
             let der = try SecKey.create(storage: storage).externalRepresentation
@@ -71,12 +73,12 @@ extension DERImplicitlyTaggable {
     /// Initializes a DER serializable object from given data.
     ///
     /// - Parameter derEncoded: DER encoded object.
-    public init<D>(derEncoded: D) throws where D: DataProtocol {
+    init<D>(derEncoded: D) throws where D: DataProtocol {
         try self.init(derEncoded: [UInt8](derEncoded))
     }
     
     /// DER serialized data representation of object.
-    public var derRepresentation: Data {
+    var derRepresentation: Data {
         get throws {
             var derSerializer = DER.Serializer()
             try serialize(into: &derSerializer)

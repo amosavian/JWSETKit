@@ -100,11 +100,7 @@ extension CryptoECKeyPortable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:
-            if key.regions.count == 1, let keyData = key.regions.first {
-                try self.init(x963Representation: keyData)
-            } else {
-                try self.init(x963Representation: Data(key))
-            }
+            try self.init(x963Representation: key.asContiguousBytes)
         case .spki where Self.self is (any CryptoECPublicKey).Type,
              .pkcs8 where Self.self is (any CryptoECPrivateKey).Type:
             try self.init(derRepresentation: key)
@@ -134,18 +130,10 @@ extension CryptoECKeyPortableCompactRepresentable {
     private init<D>(importingRaw key: D) throws where D: DataProtocol {
         switch key.first {
         case 0x04:
-            if key.regions.count == 1, let keyData = key.regions.first {
-                try self.init(x963Representation: keyData)
-            } else {
-                try self.init(x963Representation: Data(key))
-            }
+            try self.init(x963Representation: key.asContiguousBytes)
         case 0x02, 0x03:
             if #available(iOS 16.0, macOS 13.0, watchOS 9.0, tvOS 16.0, *) {
-                if key.regions.count == 1, let keyData = key.regions.first {
-                    try self.init(compressedRepresentation: keyData)
-                } else {
-                    try self.init(compressedRepresentation: Data(key))
-                }
+                try self.init(compressedRepresentation: key.asContiguousBytes)
             } else {
                 throw CryptoKitError.incorrectParameterSize
             }

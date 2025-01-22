@@ -58,20 +58,24 @@ public enum PthreadReadWriteContextLock: ReadWriteLockContext {
 }
 
 public final class PthreadReadWriteLock: Locking, @unchecked Sendable {
-    private let lock: UnsafeMutablePointer<pthread_rwlock_t>
+    @usableFromInline
+    let lock: UnsafeMutablePointer<pthread_rwlock_t>
     
+    @inlinable
     public init() {
         self.lock = .allocate(capacity: 1)
         lock.initialize(to: pthread_rwlock_t())
         pthread_rwlock_init(lock, nil)
     }
-
+    
+    @inlinable
     deinit {
         pthread_rwlock_destroy(lock)
         lock.deinitialize(count: 1)
         lock.deallocate()
     }
     
+    @inlinable
     public func tryLock(_ context: PthreadReadWriteContextLock) -> Bool {
         switch context {
         case .read:
@@ -81,6 +85,7 @@ public final class PthreadReadWriteLock: Locking, @unchecked Sendable {
         }
     }
     
+    @inlinable
     public func lock(_ context: PthreadReadWriteContextLock) throws {
         let result: Int32
         switch context {
@@ -98,6 +103,7 @@ public final class PthreadReadWriteLock: Locking, @unchecked Sendable {
         }
     }
     
+    @inlinable
     public func unlock() {
         pthread_rwlock_unlock(lock)
     }
@@ -107,26 +113,32 @@ public typealias PthreadReadWriteLockedValue<Value> = LockedValue<PthreadReadWri
 
 #if canImport(Darwin)
 public final class OSUnfairLock: Locking, @unchecked Sendable {
-    private let lock: os_unfair_lock_t
+    @usableFromInline
+    let lock: os_unfair_lock_t
     
+    @inlinable
     public init() {
         self.lock = .allocate(capacity: 1)
         lock.initialize(to: os_unfair_lock())
     }
-
+    
+    @inlinable
     deinit {
         lock.deinitialize(count: 1)
         lock.deallocate()
     }
     
+    @inlinable
     public func tryLock(_: LockContextEmpty) -> Bool {
         os_unfair_lock_trylock(lock)
     }
     
+    @inlinable
     public func lock(_: LockContextEmpty) {
         os_unfair_lock_lock(lock)
     }
     
+    @inlinable
     public func unlock() {
         os_unfair_lock_unlock(lock)
     }
@@ -136,28 +148,34 @@ public typealias OSUnfairLockedValue<Value> = LockedValue<LockContextEmpty, OSUn
 #endif
 
 public final class PthreadMutex: Locking, @unchecked Sendable {
-    private let lock: UnsafeMutablePointer<pthread_mutex_t>
+    @usableFromInline
+    let lock: UnsafeMutablePointer<pthread_mutex_t>
     
+    @inlinable
     public init() {
         self.lock = .allocate(capacity: 1)
         lock.initialize(to: pthread_mutex_t())
         pthread_mutex_init(lock, nil)
     }
-
+    
+    @inlinable
     deinit {
         pthread_mutex_destroy(lock)
         lock.deinitialize(count: 1)
         lock.deallocate()
     }
     
+    @inlinable
     public func tryLock(_: LockContextEmpty) -> Bool {
         pthread_mutex_trylock(lock) == 0
     }
     
+    @inlinable
     public func lock(_: LockContextEmpty) {
         pthread_mutex_lock(lock)
     }
     
+    @inlinable
     public func unlock() {
         pthread_mutex_unlock(lock)
     }

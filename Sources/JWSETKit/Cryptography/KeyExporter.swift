@@ -89,11 +89,7 @@ extension JSONWebKeySymmetric {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:
-            if key.regions.count == 1, let keyData = key.regions.first {
-                try self.init(.init(data: keyData))
-            } else {
-                try self.init(.init(data: Data(key)))
-            }
+            try self.init(.init(data: key.asContiguousBytes))
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
             try validate()

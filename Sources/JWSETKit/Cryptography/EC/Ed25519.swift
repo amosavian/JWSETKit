@@ -102,11 +102,7 @@ extension CryptoEdKeyPortable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:
-            if key.regions.count == 1, let keyData = key.regions.first {
-                try self.init(rawRepresentation: keyData)
-            } else {
-                try self.init(rawRepresentation: Data(key))
-            }
+            try self.init(rawRepresentation: key.asContiguousBytes)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:

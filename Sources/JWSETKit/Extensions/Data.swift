@@ -20,6 +20,15 @@ extension Data {
 
 extension DataProtocol {
     @inlinable
+    var asContiguousBytes: any ContiguousBytes {
+        if regions.count == 1, let data = regions.first {
+            return data
+        } else {
+            return Data(self)
+        }
+    }
+    
+    @inlinable
     func withUnsafeBuffer<R>(_ body: (_ buffer: UnsafeRawBufferPointer) throws -> R) rethrows -> R {
         try withContiguousStorageIfAvailable {
             try body(UnsafeRawBufferPointer($0))

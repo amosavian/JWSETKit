@@ -13,26 +13,17 @@ import Foundation
 import Crypto
 
 struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey {
-    var storage: JSONWebValueStorage
+    let storage: JSONWebValueStorage = .init()
     
     var publicKey: Self {
         self
     }
     
-    init(algorithm: some JSONWebAlgorithm) throws {
-        guard algorithm == .direct else {
-            throw JSONWebKeyError.unknownAlgorithm
-        }
-        self.storage = .init()
-    }
+    init(algorithm _: some JSONWebAlgorithm) throws {}
     
-    init() throws {
-        self.storage = .init()
-    }
+    init() throws {}
     
-    init(storage: JSONWebValueStorage) {
-        self.storage = storage
-    }
+    init(storage _: JSONWebValueStorage) {}
     
     static func create(storage: JSONWebValueStorage) throws -> JSONWebDirectKey {
         Self(storage: storage)

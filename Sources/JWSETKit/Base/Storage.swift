@@ -5,7 +5,6 @@
 //  Created by Amir Abbas Mousavian on 9/6/23.
 //
 
-@preconcurrency import AnyCodable
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -143,7 +142,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
         } else if let base64url = try? container.decode(String.self),
                   let data = Data(urlBase64Encoded: base64url)
         {
-            self.storage = try JSONDecoder().decode(Self.self, from: data).storage
+            self = try JSONDecoder().decode(Self.self, from: data)
         } else {
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: ""))
         }
@@ -166,14 +165,17 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
-        try container.encode(storage)
+        let storage = storage as [Key: any Encodable]
+        try container.encode(storage.encodable())
     }
     
     public static func == (lhs: JSONWebValueStorage, rhs: JSONWebValueStorage) -> Bool {
         let encoder = JSONEncoder()
-        let decoder = JSONDecoder()
-        let lhs = try? decoder.decode([String: AnyCodable].self, from: encoder.encode(lhs))
-        let rhs = try? decoder.decode([String: AnyCodable].self, from: encoder.encode(rhs))
+        encoder.outputFormatting = .sortedKeys
+        encoder.dateEncodingStrategy = .millisecondsSince1970
+        encoder.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "Inf", negativeInfinity: "-Inf", nan: "NaN")
+        let lhs = try? encoder.encode(lhs)
+        let rhs = try? encoder.encode(rhs)
         return lhs == rhs
     }
     
@@ -222,7 +224,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
             case let value as any Encodable:
                 guard let data = try? JSONEncoder().encode(value) else { return nil }
                 return try? JSONDecoder().decode(type, from: data) as? T
-            default:
+            case let value as any Sendable:
                 let value = AnyCodable(value)
                 guard let data = try? JSONEncoder().encode(value) else { return nil }
                 return try? JSONDecoder().decode(type, from: data) as? T

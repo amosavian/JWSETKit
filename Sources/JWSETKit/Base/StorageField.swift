@@ -156,7 +156,11 @@ extension TimeZone: JSONWebFieldEncodable, JSONWebFieldDecodable {
     }
 }
 
-extension URL: JSONWebFieldDecodable {
+extension URL: JSONWebFieldEncodable, JSONWebFieldDecodable {
+    var jsonWebValue: String {
+        absoluteString
+    }
+    
     static func castValue(_ value: Any?) -> Self? {
         switch value {
         case let value as URL:

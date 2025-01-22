@@ -41,7 +41,7 @@ extension AnyKeyPath {
     var name: String {
 #if canImport(Darwin) || swift(>=6.0)
         // `components` never returns empty array.
-        return String(reflecting: self).components(separatedBy: ".").last!
+        return String(String(reflecting: self).split(separator: ".").last!)
 #else
         assertionFailure("KeyPath reflection does not work correctly on non-Apple platforms.\n" + String(reflecting: self).components(separatedBy: ".").last!)
         return ""

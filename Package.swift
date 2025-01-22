@@ -24,10 +24,9 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/Flight-School/AnyCodable", .upToNextMajor(from: "0.6.7")),
-        .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMajor(from: "1.3.0")),
+        .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMajor(from: "1.3.1")),
         .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.10.0")),
-        .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.6.1")),
+        .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.7.0")),
         .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.8.4")),
         .package(url: "https://github.com/swiftlang/swift-testing.git", .upToNextMajor(from: "0.10.0")),
     ],
@@ -44,7 +43,6 @@ let package = Package(
         .target(
             name: "JWSETKit",
             dependencies: [
-                "AnyCodable",
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "Crypto", package: "swift-crypto"),

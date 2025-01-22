@@ -550,15 +550,31 @@ public struct JSONWebKeySet: Codable, Hashable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         var nested = container.nestedUnkeyedContainer(forKey: .keys)
-        try keys.forEach { try nested.encode($0) }
+        try forEach { try nested.encode($0) }
     }
     
     public static func == (lhs: JSONWebKeySet, rhs: JSONWebKeySet) -> Bool {
-        Set(lhs.keys.map(\.storage)) == Set(rhs.keys.map(\.storage))
+        Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
+    }
+    
+    public static func == <T: Sequence<JSONWebKey>>(lhs: JSONWebKeySet, rhs: T) -> Bool {
+        Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
+    }
+    
+    public static func == <T: Sequence<JSONWebKey>>(lhs: T, rhs: JSONWebKeySet) -> Bool {
+        Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
+    }
+    
+    public static func == (lhs: JSONWebKeySet, rhs: [any JSONWebKey]) -> Bool {
+        Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
+    }
+    
+    public static func == (lhs: [any JSONWebKey], rhs: JSONWebKeySet) -> Bool {
+        Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
     }
     
     public func hash(into hasher: inout Hasher) {
-        keys.forEach { hasher.combine($0) }
+        forEach { hasher.combine($0) }
     }
     
     public func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {

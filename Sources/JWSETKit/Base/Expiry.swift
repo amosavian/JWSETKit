@@ -21,6 +21,7 @@ public protocol Expirable {
 
 extension Expirable {
     /// Verifies the current system date/time is within the object start date and expiration date.
+    @inlinable
     func verifyDate() throws {
         try verifyDate(.init())
     }
