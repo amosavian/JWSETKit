@@ -61,14 +61,12 @@ public final class PthreadReadWriteLock: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: UnsafeMutablePointer<pthread_rwlock_t>
     
-    @inlinable
     public init() {
         self.lock = .allocate(capacity: 1)
         lock.initialize(to: pthread_rwlock_t())
         pthread_rwlock_init(lock, nil)
     }
     
-    @inlinable
     deinit {
         pthread_rwlock_destroy(lock)
         lock.deinitialize(count: 1)
@@ -116,13 +114,11 @@ public final class OSUnfairLock: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: os_unfair_lock_t
     
-    @inlinable
     public init() {
         self.lock = .allocate(capacity: 1)
         lock.initialize(to: os_unfair_lock())
     }
     
-    @inlinable
     deinit {
         lock.deinitialize(count: 1)
         lock.deallocate()
@@ -151,14 +147,12 @@ public final class PthreadMutex: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: UnsafeMutablePointer<pthread_mutex_t>
     
-    @inlinable
     public init() {
         self.lock = .allocate(capacity: 1)
         lock.initialize(to: pthread_mutex_t())
         pthread_mutex_init(lock, nil)
     }
     
-    @inlinable
     deinit {
         pthread_mutex_destroy(lock)
         lock.deinitialize(count: 1)

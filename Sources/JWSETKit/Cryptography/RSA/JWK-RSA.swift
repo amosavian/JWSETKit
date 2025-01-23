@@ -333,7 +333,7 @@ extension CryptoSwift.RSA: JSONWebDecryptingKey {
             if d != nil {
                 return try _RSA.Encryption.PrivateKey(derRepresentation: externalRepresentation()).storage
             } else {
-                return try _RSA.Encryption.PublicKey(derRepresentation: externalRepresentation()).storage
+                return try _RSA.Encryption.PublicKey(n: n.serialize(), e: e.serialize()).storage
             }
         } catch {
             return .init()
