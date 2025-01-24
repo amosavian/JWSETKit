@@ -21,6 +21,7 @@ struct RFC7520SignatureTests {
     UgeW91IG1pZ2h0IGJlIHN3ZXB0IG9mZiB0by4
     """
     
+    @Test
     func testSignatureSignRS256() throws {
         let jwsString = """
         eyJhbGciOiJSUzI1NiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
@@ -40,6 +41,7 @@ struct RFC7520SignatureTests {
         #expect(jws.signatures[0].signature == signature.decoded)
     }
     
+    @Test
     func testSignatureVerifyRS256() throws {
         let jwsString = """
         eyJhbGciOiJSUzI1NiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
@@ -56,6 +58,7 @@ struct RFC7520SignatureTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.rsaSignPublicKey.validatingKey) }
     }
     
+    @Test
     func testSignatureSignPS384() throws {
         let jwsString = """
         eyJhbGciOiJQUzM4NCIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
@@ -67,6 +70,7 @@ struct RFC7520SignatureTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.rsaSignPublicKey.validatingKey) }
     }
     
+    @Test
     func testSignatureVerifyPS384() throws {
         let jwsString = """
         eyJhbGciOiJQUzM4NCIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
@@ -83,6 +87,7 @@ struct RFC7520SignatureTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.rsaSignPublicKey.validatingKey) }
     }
     
+    @Test
     func testSignatureSignES521() throws {
         let jwsString = """
         eyJhbGciOiJFUzUxMiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
@@ -94,6 +99,7 @@ struct RFC7520SignatureTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.ecPublicKey.validatingKey) }
     }
     
+    @Test
     func testSignatureVerifyES521() throws {
         let jwsString = """
         eyJhbGciOiJFUzUxMiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
@@ -107,6 +113,7 @@ struct RFC7520SignatureTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.ecPublicKey.validatingKey) }
     }
     
+    @Test
     func testSignatureSignHS256() throws {
         let jwsString = """
         eyJhbGciOiJIUzI1NiIsImtpZCI6IjAxOGMwYWU1LTRkOWItNDcxYi1iZmQ2LW\
@@ -121,6 +128,7 @@ struct RFC7520SignatureTests {
         #expect(jws.signatures[0].signature == signature.decoded)
     }
     
+    @Test
     func testSignatureVerifyHS256() throws {
         let jwsString = """
         eyJhbGciOiJIUzI1NiIsImtpZCI6IjAxOGMwYWU1LTRkOWItNDcxYi1iZmQ2LW\

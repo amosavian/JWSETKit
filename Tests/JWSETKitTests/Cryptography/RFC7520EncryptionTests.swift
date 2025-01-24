@@ -20,6 +20,7 @@ struct RFC7520EncryptionTests {
     alone, and go off without a word. We are your friends, Frodo.
     """
     
+    @Test
     func testEncrypt_RSA_v1_5() throws {
         let header = "eyJhbGciOiJSU0ExXzUiLCJraWQiOiJmcm9kby5iYWdnaW5zQGhvYmJpdG9uLmV4YW1wbGUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0".decoded
         let jwe = try JSONWebEncryption(
@@ -74,6 +75,7 @@ struct RFC7520EncryptionTests {
         #expect(try jwe.decrypt(using: RFC7520ExampleKeys.rsaOAEPEncPrivateKey.key) == plainText.data)
     }
     
+    @Test
     func testEncrypt_PBES2() throws {
         let plainText = """
         {"keys":[{\

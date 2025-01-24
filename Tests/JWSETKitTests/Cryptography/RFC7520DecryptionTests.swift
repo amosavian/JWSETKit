@@ -20,6 +20,7 @@ struct RFC7520DecryptionTests {
     alone, and go off without a word. We are your friends, Frodo.
     """
     
+    @Test
     func testDecryptCompact_RSA_v1_5() throws {
         let jweString = """
         eyJhbGciOiJSU0ExXzUiLCJraWQiOiJmcm9kby5iYWdnaW5zQGhvYmJpdG9uLm\

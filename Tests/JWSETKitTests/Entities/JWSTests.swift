@@ -24,6 +24,7 @@ struct JWSTests {
     
     typealias JWSDetached = JSONWebSignature<ProtectedDataWebContainer>
     
+    @Test
     func testSignatureHS256() throws {
         let signature = "dCfJaSBBMSnC8CXslIf5orCzS7AboBan4qE7aXuYSDs=".decoded
         let key = try JSONWebKeyHMAC<SHA256>(ExampleKeys.symmetric)
@@ -34,6 +35,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: key) }
     }
     
+    @Test
     func testSignatureHS384() throws {
         let signature = "oXDrZsBTd6/RlkXLUTQJ0DSfHx5raR4Pq5jlRHf5v0WTm+zt8xcsCvXagNl0J4eM".decoded
         let key = try JSONWebKeyHMAC<SHA384>(ExampleKeys.symmetric)
@@ -44,6 +46,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: key) }
     }
     
+    @Test
     func testSignatureHS512() throws {
         let signature = "CyfHecbVPqPzB3zBwYd3rgVBi2Dgg+eAeX7JT8B85QbKLwSXyll8WKGdehse606szf9G3i+jr24QGkEtMAGSpg==".decoded
         let key = try JSONWebKeyHMAC<SHA512>(ExampleKeys.symmetric)
@@ -54,6 +57,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: key) }
     }
     
+    @Test
     func testSignatureES256() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .ecdsaSignatureP256SHA256
@@ -61,6 +65,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicEC256) }
     }
     
+    @Test
     func testSignatureES384() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .ecdsaSignatureP384SHA384
@@ -68,6 +73,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicEC384) }
     }
     
+    @Test
     func testSignatureES521() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .ecdsaSignatureP521SHA512
@@ -75,6 +81,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicEC521) }
     }
     
+    @Test
     func testSignatureRS256() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePKCS1v15SHA256
@@ -82,6 +89,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
+    @Test
     func testSignatureRS384() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePKCS1v15SHA384
@@ -89,6 +97,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
+    @Test
     func testSignatureRS512() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePKCS1v15SHA512
@@ -96,6 +105,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
+    @Test
     func testSignaturePS256() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePSSSHA256
@@ -103,6 +113,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
+    @Test
     func testSignaturePS384() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePSSSHA384
@@ -110,6 +121,7 @@ struct JWSTests {
         #expect(throws: Never.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
     }
     
+    @Test
     func testSignaturePS512() throws {
         var jws = jws
         jws.signatures[0].protected.algorithm = .rsaSignaturePSSSHA512

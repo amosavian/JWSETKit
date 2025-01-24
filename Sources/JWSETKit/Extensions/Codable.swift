@@ -74,13 +74,7 @@ extension Dictionary where Key == String, Value == any Encodable {
         switch value {
         case nil:
             try container.encodeNil()
-        case let value as Bool:
-            try container.encode(value)
-        case let value as any BinaryInteger:
-            try container.encode(Int64(exactly: value))
-        case let value as any BinaryFloatingPoint:
-            try container.encode(Double(value))
-        case let value as String:
+        case let value as any Encodable:
             try container.encode(value)
         case let value as any JSONWebFieldEncodable:
             try container.encode(value.jsonWebValue)
@@ -88,8 +82,6 @@ extension Dictionary where Key == String, Value == any Encodable {
             try container.encode(value.map { AnyCodable($0) })
         case let value as [String: (any Sendable)?]:
             try container.encode(value.mapValues { AnyCodable($0) })
-        case let value as any Encodable:
-            try value.encode(to: encoder)
         default:
             let context = EncodingError.Context(codingPath: container.codingPath, debugDescription: "Value cannot be encoded")
             throw EncodingError.invalidValue(value as Any, context)

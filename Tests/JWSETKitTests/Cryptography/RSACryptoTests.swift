@@ -53,11 +53,13 @@ struct RSACryptoTests {
     
     let plaintext = Data("The quick brown fox jumps over the lazy dog.".utf8)
     
+    @Test
     func testPKCS8Init() throws {
         #expect(throws: Never.self) { try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER) }
         #expect(throws: Never.self) { try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER) }
     }
     
+    @Test
     func testEncrypt_RSA2048_OAEP_SHA1() throws {
         let publicKey = try _RSA.Encryption.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Encryption.PrivateKey(derRepresentation: privateKeyDER)
@@ -70,6 +72,7 @@ struct RSACryptoTests {
         #expect(ciphertext.count == 2048 / 8)
     }
     
+    @Test
     func testEncrypt_RSA2048_OAEP_SHA256() throws {
         let publicKey = try _RSA.Encryption.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Encryption.PrivateKey(derRepresentation: privateKeyDER)
@@ -82,6 +85,7 @@ struct RSACryptoTests {
         #expect(ciphertext.count == 2048 / 8)
     }
     
+    @Test
     func testSigning_RSA2048_PKCS1_SHA256() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
@@ -93,6 +97,7 @@ struct RSACryptoTests {
         #expect(signature.count == 2048 / 8)
     }
     
+    @Test
     func testSigning_RSA2048_PKCS1_SHA384() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
@@ -104,6 +109,7 @@ struct RSACryptoTests {
         #expect(signature.count == 2048 / 8)
     }
     
+    @Test
     func testSigning_RSA2048_PKCS1_SHA512() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
@@ -115,6 +121,7 @@ struct RSACryptoTests {
         #expect(signature.count == 2048 / 8)
     }
     
+    @Test
     func testSigning_RSA2048_PSS_SHA256() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
@@ -126,6 +133,7 @@ struct RSACryptoTests {
         #expect(signature.count == 2048 / 8)
     }
     
+    @Test
     func testSigning_RSA2048_PSS_SHA384() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
@@ -137,6 +145,7 @@ struct RSACryptoTests {
         #expect(signature.count == 2048 / 8)
     }
     
+    @Test
     func testSigning_RSA2048_PSS_SHA512() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
@@ -148,9 +157,10 @@ struct RSACryptoTests {
         #expect(signature.count == 2048 / 8)
     }
     
+    @Test
     func testSigning_RSA3072_PSS_SHA256() throws {
-        let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
-        let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
+        let privateKey = try _RSA.Signing.PrivateKey(keySize: .bits3072)
+        let publicKey = privateKey.publicKey
         
         let signature = try privateKey.signature(plaintext, using: .rsaSignaturePSSSHA256)
         #expect(throws: Never.self) { try publicKey.verifySignature(signature, for: plaintext, using: .rsaSignaturePSSSHA256) }
@@ -159,9 +169,10 @@ struct RSACryptoTests {
         #expect(signature.count == 3072 / 8)
     }
     
+    @Test
     func testSigning_RSA4096_PSS_SHA256() throws {
-        let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
-        let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
+        let privateKey = try _RSA.Signing.PrivateKey(keySize: .bits4096)
+        let publicKey = privateKey.publicKey
         
         let signature = try privateKey.signature(plaintext, using: .rsaSignaturePSSSHA256)
         #expect(throws: Never.self) { try publicKey.verifySignature(signature, for: plaintext, using: .rsaSignaturePSSSHA256) }

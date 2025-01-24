@@ -123,6 +123,7 @@ struct JWETests {
         #expect(RSA_OAEP_GCM.plainData == data)
     }
     
+    @Test
     func testEncryptWithCEK_RSA_OAEP_SHA256_AES_GCM() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_OAEP_GCM.plainData,
@@ -136,6 +137,7 @@ struct JWETests {
         #expect(RSA_OAEP_GCM.plainData == data)
     }
     
+    @Test
     func testEncrypt_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_PKCS1_5_CBC.plainData,
@@ -148,6 +150,7 @@ struct JWETests {
         #expect(RSA_PKCS1_5_CBC.plainData == data)
     }
 
+    @Test
     func testEncryptWithCEK_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_PKCS1_5_CBC.plainData,
@@ -188,6 +191,7 @@ struct JWETests {
         #expect(AESGCMKW_CBC.plainData == data)
     }
     
+    @Test
     func testEncrypt_PBES2_GCM() throws {
         let jwe = try JSONWebEncryption(
             content: PBES2_GCM.plainData,
