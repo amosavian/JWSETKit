@@ -59,8 +59,27 @@ extension JSONWebKeyImportable {
         keyLengthTable: [Int: JSONWebKeyCurve],
         keyFinder: (_ curve: JSONWebKeyCurve) throws -> any JSONWebValidatingKey.Type
     ) throws where D: DataProtocol {
-        guard let curve = keyLengthTable[key.count] else {
-            throw JSONWebKeyError.unknownAlgorithm
+        let curve: JSONWebKeyCurve
+        switch format {
+        case .raw:
+            guard let probableCurve = keyLengthTable[key.count] else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
+            curve = probableCurve
+        case .spki:
+            let spki = try SubjectPublicKeyInfo(derEncoded: key)
+            guard let probableCurve = spki.keyCurve else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
+            curve = probableCurve
+        case .pkcs8:
+            let pkcs8 = try PKCS8PrivateKey(derEncoded: key)
+            guard let probableCurve = pkcs8.keyCurve else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
+            curve = probableCurve
+        case .jwk:
+            throw JSONWebKeyError.invalidKeyFormat
         }
         guard let type = try keyFinder(curve) as? any JSONWebKeyImportable.Type else {
             throw JSONWebKeyError.unknownAlgorithm
@@ -72,10 +91,8 @@ extension JSONWebKeyImportable {
 extension JSONWebECPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
-        case .raw:
+        case .raw, .spki:
             try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.publicRawCurve, keyFinder: Self.signingType)
-        case .spki:
-            try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.spkiCurve, keyFinder: Self.signingType)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
             try validate()
@@ -151,21 +168,21 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
         try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
     
-    public func sharedSecretFromKeyAgreement(with publicKey: JSONWebECPublicKey) throws -> SharedSecret {
+    public func sharedSecretFromKeyAgreement(with publicKeyShare: JSONWebECPublicKey) throws -> SharedSecret {
         // swiftformat:disable:next redundantSelf
         switch (self.keyType ?? .empty, self.curve ?? .empty) {
         case (JSONWebKeyType.ellipticCurve, .p256):
             return try P256.KeyAgreement.PrivateKey.create(storage: storage)
-                .sharedSecretFromKeyAgreement(with: .create(storage: publicKey.storage))
+                .sharedSecretFromKeyAgreement(with: .create(storage: publicKeyShare.storage))
         case (JSONWebKeyType.ellipticCurve, .p384):
             return try P384.KeyAgreement.PrivateKey.create(storage: storage)
-                .sharedSecretFromKeyAgreement(with: .create(storage: publicKey.storage))
+                .sharedSecretFromKeyAgreement(with: .create(storage: publicKeyShare.storage))
         case (JSONWebKeyType.ellipticCurve, .p521):
             return try P521.KeyAgreement.PrivateKey.create(storage: storage)
-                .sharedSecretFromKeyAgreement(with: .create(storage: publicKey.storage))
+                .sharedSecretFromKeyAgreement(with: .create(storage: publicKeyShare.storage))
         case (JSONWebKeyType.ellipticCurve, .x25519), (JSONWebKeyType.octetKeyPair, .x25519):
             return try Curve25519.KeyAgreement.PrivateKey.create(storage: storage)
-                .sharedSecretFromKeyAgreement(with: .create(storage: publicKey.storage))
+                .sharedSecretFromKeyAgreement(with: .create(storage: publicKeyShare.storage))
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -175,10 +192,8 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
 extension JSONWebECPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
-        case .raw:
+        case .raw, .pkcs8:
             try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.privateRawCurve, keyFinder: Self.signingType)
-        case .pkcs8:
-            try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.pkcs8Curve, keyFinder: Self.signingType)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
@@ -193,6 +208,9 @@ extension JSONWebECPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
         return try underlyingKey.exportKey(format: format)
     }
 }
+
+@available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+extension JSONWebECPrivateKey: DiffieHellmanKeyAgreement {}
 
 enum ECHelper {
     static func ecComponents(_ data: Data, keyLength: Int) throws -> [Data] {
@@ -244,13 +262,5 @@ extension JSONWebKeyCurve {
     
     fileprivate static let privateRawCurve: [Int: Self] = [
         97: .p256, 32: .ed25519, 145: .p384, 199: .p521,
-    ]
-    
-    fileprivate static let spkiCurve: [Int: Self] = [
-        91: .p256, 120: .p384, 158: .p521,
-    ]
-    
-    fileprivate static let pkcs8Curve: [Int: Self] = [
-        138: .p256, 185: .p384, 241: .p521,
     ]
 }

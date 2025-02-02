@@ -138,8 +138,21 @@ enum JSONWebKeyCurve25519Specializer: JSONWebKeySpecializer {
         }
     }
     
-    static func deserialize<D>(key _: D, format _: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
-        nil
+    static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
+        switch format {
+        case .pkcs8:
+            let pkcs8 = try PKCS8PrivateKey(derEncoded: key)
+            guard try pkcs8.keyType == .octetKeyPair else { return nil }
+            guard pkcs8.keyCurve == .ed25519 else { return nil }
+            return try JSONWebECPrivateKey(importing: key, format: format)
+        case .spki:
+            let spki = try SubjectPublicKeyInfo(derEncoded: key)
+            guard try spki.keyType == .octetKeyPair else { return nil }
+            guard spki.keyCurve == .ed25519 else { return nil }
+            return try JSONWebECPublicKey(importing: key, format: format)
+        default:
+            return nil
+        }
     }
 }
 

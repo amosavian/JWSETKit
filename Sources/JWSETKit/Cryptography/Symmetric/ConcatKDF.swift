@@ -19,11 +19,11 @@ extension SymmetricKey {
     ///  - secret: The secret key.
     ///  - hashFunction: The hash function to use.
     ///  - params: The parameters to concatenate .
-    public static func concatDerivedSymmetricKey<H, P>(
-        parameters: [P],
+    public static func concatDerivedSymmetricKey<H>(
+        parameters: [any DataProtocol],
         hashFunction: H.Type,
         keySize: Int
-    ) throws -> SymmetricKey where H: HashFunction, P: DataProtocol {
+    ) throws -> SymmetricKey where H: HashFunction {
         let hashSize = hashFunction.Digest.byteCount * 8
         let iterations = (keySize / hashSize) + (!keySize.isMultiple(of: hashSize) ? 1 : 0)
         
@@ -33,7 +33,7 @@ extension SymmetricKey {
             parameters.forEach { hash.update(data: $0) }
             return partialResult + hash.finalize().data
         }
-        return .init(data: derivedKey.toBitCount(keySize))
+        return .init(data: derivedKey.trim(bitCount: keySize))
     }
 }
 
@@ -57,13 +57,13 @@ extension SharedSecret {
             algorithmID = cek.rawValue
             keySize = contentKeySize
         }
-        
+        let algorithm = Data(algorithmID.utf8)
         return try SymmetricKey.concatDerivedSymmetricKey(
             parameters: [
                 data,
-                Data(algorithmID.utf8).lengthPrefixed,
-                Data(apu).lengthPrefixed,
-                Data(apv).lengthPrefixed,
+                algorithm.lengthBytes, algorithm,
+                apu.lengthBytes, apu,
+                apv.lengthBytes, apv,
                 Data(value: UInt32(keySize).bigEndian), // suppPubInfo
             ],
             hashFunction: hashFunction,
@@ -73,7 +73,7 @@ extension SharedSecret {
 }
 
 extension Data {
-    func toBitCount(_ bitCount: Int) -> Self {
+    fileprivate func trim(bitCount: Int) -> Self {
         var result = self
         if bitCount.isMultiple(of: 8) {
             result.count = bitCount / 8
@@ -85,9 +85,11 @@ extension Data {
         
         return result
     }
-    
-    var lengthPrefixed: Data {
-        Data(value: UInt32(count).bigEndian) + self
+}
+
+extension DataProtocol {
+    fileprivate var lengthBytes: Data {
+        Data(value: UInt32(count).bigEndian)
     }
 }
 

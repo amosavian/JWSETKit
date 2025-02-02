@@ -37,14 +37,18 @@ extension Dictionary where Key == String, Value == any Encodable {
     }
 }
 
-@frozen public struct AnyCodable: Codable {
-    public let value: (any Sendable)?
-
-    public init<T: Sendable>(_ value: T?) {
+@usableFromInline
+@frozen
+struct AnyCodable: Codable, Sendable {
+    let value: (any Sendable)?
+    
+    @usableFromInline
+    init<T: Sendable>(_ value: T?) {
         self.value = value
     }
     
-    public init(from decoder: any Decoder) throws {
+    @usableFromInline
+    init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
 
         if container.decodeNil() {
@@ -68,7 +72,8 @@ extension Dictionary where Key == String, Value == any Encodable {
         }
     }
     
-    public func encode(to encoder: any Encoder) throws {
+    @usableFromInline
+    func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
 
         switch value {

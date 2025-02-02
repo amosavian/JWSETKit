@@ -14,7 +14,6 @@ import Crypto
 
 /// The JWE cryptographic mechanisms encrypt and provide integrity protection
 /// for an arbitrary sequence of octets.
-@frozen
 public struct JSONWebEncryption: Hashable, Sendable {
     /// Contains JWE Protected Header and JWE Shared Unprotected Header.
     public var header: JSONWebEncryptionHeader

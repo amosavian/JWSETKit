@@ -151,6 +151,8 @@ extension DERKeyContainer {
             switch algorithmIdentifier.algorithm {
             case .AlgorithmIdentifier.idEcPublicKey:
                 return .ellipticCurve
+            case .AlgorithmIdentifier.ed25519:
+                return .octetKeyPair
             case .AlgorithmIdentifier.rsaEncryption:
                 return .rsa
             default:
@@ -160,13 +162,15 @@ extension DERKeyContainer {
     }
     
     var keyCurve: JSONWebKeyCurve? {
-        switch algorithmIdentifier.parameters {
-        case ASN1ObjectIdentifier.NamedCurves.secp256r1.asAny:
+        switch (algorithmIdentifier.algorithm, algorithmIdentifier.parameters) {
+        case (_, ASN1ObjectIdentifier.NamedCurves.secp256r1.asAny):
             return .p256
-        case ASN1ObjectIdentifier.NamedCurves.secp384r1.asAny:
+        case (_, ASN1ObjectIdentifier.NamedCurves.secp384r1.asAny):
             return .p384
-        case ASN1ObjectIdentifier.NamedCurves.secp521r1.asAny:
+        case (_, ASN1ObjectIdentifier.NamedCurves.secp521r1.asAny):
             return .p521
+        case (.AlgorithmIdentifier.ed25519, _):
+            return .ed25519
         default:
             return nil
         }
@@ -282,6 +286,10 @@ struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable {
 
 // MARK: Algorithm Identifier Statics
 
+extension ASN1ObjectIdentifier.AlgorithmIdentifier {
+    static let ed25519: ASN1ObjectIdentifier = [1, 3, 101, 112]
+}
+
 extension RFC5480AlgorithmIdentifier {
     static let ecdsaP256 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
@@ -296,6 +304,11 @@ extension RFC5480AlgorithmIdentifier {
     static let ecdsaP521 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
         parameters: try! .init(erasing: ASN1ObjectIdentifier.NamedCurves.secp521r1)
+    )
+    
+    static let ed25519 = RFC5480AlgorithmIdentifier(
+        algorithm: .AlgorithmIdentifier.ed25519,
+        parameters: nil
     )
     
     static let rsaEncryption = RFC5480AlgorithmIdentifier(

@@ -53,7 +53,7 @@ extension Data {
     ///
     /// - parameter urlBase64Encoded: URL-safe Base-64, UTF-8 encoded input data.
     public init?(urlBase64Encoded: some DataProtocol) {
-        var urlBase64Encoded = urlBase64Encoded.map { (byte: UInt8) -> UInt8 in
+        var base64Encoded = urlBase64Encoded.map { (byte: UInt8) -> UInt8 in
             switch byte {
             case "-":
                 return "+"
@@ -63,10 +63,10 @@ extension Data {
                 return byte
             }
         }
-        if urlBase64Encoded.count % 4 != 0 {
-            urlBase64Encoded.append(contentsOf: [UInt8](repeating: "=", count: 4 - urlBase64Encoded.count % 4))
+        if base64Encoded.count % 4 != 0 {
+            base64Encoded.append(contentsOf: [UInt8](repeating: "=", count: 4 - base64Encoded.count % 4))
         }
-        guard let value = Data(base64Encoded: .init(urlBase64Encoded), options: [.ignoreUnknownCharacters]) else {
+        guard let value = Data(base64Encoded: .init(base64Encoded), options: [.ignoreUnknownCharacters]) else {
             return nil
         }
         self.init()
