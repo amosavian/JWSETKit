@@ -258,7 +258,18 @@ extension JSONWebKey {
     }
 }
 
-/// Hash name according to [RFC6920](https://www.rfc-editor.org/rfc/rfc6920).
+extension MutableJSONWebKey {
+    /// Fill Key ID (`kid`) field with JWK's SHA256 thumbprint in URN format, if key is empty or nil.
+    public mutating func populateKeyIdIfNeeded() {
+        // swiftformat:disable:next redundantSelf
+        guard self.keyId?.isEmpty ?? true else { return }
+        guard let thumprintUrn = try? thumbprintUri(format: .jwk, using: SHA256.self) else { return }
+        // swiftformat:disable:next redundantSelf
+        self.keyId = thumprintUrn
+    }
+}
+
+/// Hash name according to [RFC6920](https://www.rfc-editor.org/rfc/rfc6920 ).
 public protocol NamedDigest: Digest {
     /// [IANA registration name](https://www.iana.org/assignments/named-information/named-information.xhtml) of the digest algorithm.
     static var identifier: String { get }
@@ -501,146 +512,5 @@ extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
         }
         
         return try key.exportKey(format: format)
-    }
-}
-
-/// A JWK Set is a JSON object that represents a set of JWKs.
-///
-/// The JSON object MUST have a "keys" member, with its value being an array of JWKs.
-/// This JSON object MAY contain whitespace and/or line breaks.
-public struct JSONWebKeySet: Codable, Hashable {
-    enum CodingKeys: CodingKey {
-        case keys
-    }
-    
-    /// The value of the "keys" parameter is an array of JWK values.
-    ///
-    /// By default, the order of the JWK values within the array does not imply
-    /// an order of preference among them, although applications of JWK Sets
-    /// can choose to assign a meaning to the order for their purposes, if desired.
-    public var keys: [any JSONWebKey]
-    
-    /// Initializes JWKSet using given array of key.
-    ///
-    /// - Parameter keys: An array of JWKs.
-    public init(keys: [any JSONWebKey]) {
-        self.keys = keys
-    }
-    
-    /// Initializes JWKSet using given array of key.
-    ///
-    /// - Parameter keys: An array of JWKs.
-    public init<T>(keys: T) where T: Sequence, T.Element == any JSONWebKey {
-        self.keys = .init(keys)
-    }
-    
-    /// Initializes JWKSet using given array of key.
-    ///
-    /// - Parameter keys: An array of JWKs.
-    public init<T>(keys: T) where T: Sequence, T.Element: JSONWebKey {
-        self.keys = .init(keys.map { $0 as any JSONWebKey })
-    }
-    
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        let keys = try container.decode([AnyJSONWebKey].self, forKey: .keys)
-        self.keys = keys.map { $0.specialized() }
-    }
-    
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        var nested = container.nestedUnkeyedContainer(forKey: .keys)
-        try forEach { try nested.encode($0) }
-    }
-    
-    public static func == (lhs: JSONWebKeySet, rhs: JSONWebKeySet) -> Bool {
-        Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
-    }
-    
-    public static func == <T: Sequence<JSONWebKey>>(lhs: JSONWebKeySet, rhs: T) -> Bool {
-        Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
-    }
-    
-    public static func == <T: Sequence<JSONWebKey>>(lhs: T, rhs: JSONWebKeySet) -> Bool {
-        Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
-    }
-    
-    public static func == (lhs: JSONWebKeySet, rhs: [any JSONWebKey]) -> Bool {
-        Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
-    }
-    
-    public static func == (lhs: [any JSONWebKey], rhs: JSONWebKeySet) -> Bool {
-        Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        forEach { hasher.combine($0) }
-    }
-    
-    public func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        guard let keyType = algorithm.keyType else { return nil }
-        let candidates = filter {
-            $0.keyType == keyType && $0.curve == algorithm.curve
-        }
-        if let key = candidates.first(where: { $0.keyId == id }) {
-            return key
-        } else {
-            return candidates.first
-        }
-    }
-    
-    public func matches(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> [Self.Element] {
-        guard let keyType = algorithm.keyType else { return [] }
-        return filter {
-            $0.keyType == keyType && $0.curve == algorithm.curve && (id == nil || $0.keyId == id)
-        }
-    }
-}
-
-extension JSONWebKeySet: RandomAccessCollection {
-    public var indices: Range<Int> {
-        keys.indices
-    }
-    
-    public var startIndex: Int {
-        keys.startIndex
-    }
-    
-    public var endIndex: Int {
-        keys.endIndex
-    }
-    
-    public var isEmpty: Bool {
-        keys.isEmpty
-    }
-    
-    public var count: Int {
-        keys.count
-    }
-    
-    public subscript(position: Int) -> any JSONWebKey {
-        keys[position]
-    }
-    
-    public subscript(bounds: Range<Int>) -> JSONWebKeySet {
-        .init(keys: keys[bounds])
-    }
-}
-
-extension [any JSONWebKey] {
-    func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        JSONWebKeySet(keys: self).match(for: algorithm, id: id)
-    }
-}
-
-extension [any JSONWebSigningKey] {
-    func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        JSONWebKeySet(keys: self).match(for: algorithm, id: id) as? Self.Element
-    }
-}
-
-extension [any JSONWebValidatingKey] {
-    func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        JSONWebKeySet(keys: self).match(for: algorithm, id: id) as? Self.Element
     }
 }

@@ -20,7 +20,7 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Senda
     var signingKey: any JSONWebValidatingKey {
         get throws {
             // swiftformat:disable:next redundantSelf
-            try Self.signingType(self.curve ?? .empty)
+            try Self.signingType(self.curve)
                 .create(storage: storage)
         }
     }
@@ -33,7 +33,7 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Senda
         .init(storage: storage)
     }
     
-    static func signingType(_ curve: JSONWebKeyCurve) throws -> any JSONWebValidatingKey.Type {
+    static func signingType(_ curve: JSONWebKeyCurve?) throws -> any JSONWebValidatingKey.Type {
         switch curve {
         case .p256:
             return P256.Signing.PublicKey.self
@@ -122,7 +122,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
     var signingKey: any JSONWebSigningKey {
         get throws {
             // swiftformat:disable:next redundantSelf
-            try Self.signingType(self.curve ?? .empty)
+            try Self.signingType(self.curve)
                 .create(storage: storage)
         }
     }
@@ -141,7 +141,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
             .init(algorithm: .unsafeNone).storage
     }
     
-    static func signingType(_ curve: JSONWebKeyCurve) throws -> any JSONWebSigningKey.Type {
+    static func signingType(_ curve: JSONWebKeyCurve?) throws -> any JSONWebSigningKey.Type {
         switch curve {
         case .p256:
             return P256.Signing.PrivateKey.self
@@ -170,7 +170,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
     
     public func sharedSecretFromKeyAgreement(with publicKeyShare: JSONWebECPublicKey) throws -> SharedSecret {
         // swiftformat:disable:next redundantSelf
-        switch (self.keyType ?? .empty, self.curve ?? .empty) {
+        switch (self.keyType, self.curve) {
         case (JSONWebKeyType.ellipticCurve, .p256):
             return try P256.KeyAgreement.PrivateKey.create(storage: storage)
                 .sharedSecretFromKeyAgreement(with: .create(storage: publicKeyShare.storage))

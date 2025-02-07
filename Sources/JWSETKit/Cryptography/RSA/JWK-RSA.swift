@@ -366,27 +366,23 @@ extension CryptoSwift.RSA: JSONWebDecryptingKey {
     }
     
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        switch algorithm {
-        case .unsafeRSAEncryptionPKCS1:
-            return try .init(encrypt([UInt8](data), variant: .pksc1v15))
-        default:
+        guard algorithm == .unsafeRSAEncryptionPKCS1 else {
             throw CryptoKitError.incorrectParameterSize
         }
+        return try .init(encrypt([UInt8](data), variant: .pksc1v15))
     }
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        switch algorithm {
-        case .unsafeRSAEncryptionPKCS1:
-            let rawDecrypted = try decrypt([UInt8](data), variant: .raw)
-            // CryptoSwift only asserts padding and does not throw error. We check the padding manually.
-            guard !rawDecrypted.isEmpty, rawDecrypted.starts(with: [0x02]) else {
-                throw CryptoKitError.incorrectParameterSize
-            }
-            let decrypted = Padding.eme_pkcs1v15.remove(from: [0x00] + rawDecrypted, blockSize: keySizeBytes)
-            return .init(decrypted)
-        default:
+        guard algorithm == .unsafeRSAEncryptionPKCS1 else {
             throw CryptoKitError.incorrectParameterSize
         }
+        let rawDecrypted = try decrypt([UInt8](data), variant: .raw)
+        // CryptoSwift only asserts padding and does not throw error. We check the padding manually.
+        guard !rawDecrypted.isEmpty, rawDecrypted.starts(with: [0x02]) else {
+            throw CryptoKitError.incorrectParameterSize
+        }
+        let decrypted = Padding.eme_pkcs1v15.remove(from: [0x00] + rawDecrypted, blockSize: keySizeBytes)
+        return .init(decrypted)
     }
     
     public static func == (lhs: CryptoSwift.RSA, rhs: CryptoSwift.RSA) -> Bool {

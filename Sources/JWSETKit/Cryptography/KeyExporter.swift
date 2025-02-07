@@ -139,12 +139,6 @@ extension PKCS8PrivateKey: DERKeyContainer {
     }
 }
 
-extension ASN1ObjectIdentifier {
-    var asAny: ASN1Any? {
-        try? .init(erasing: self)
-    }
-}
-
 extension DERKeyContainer {
     var keyType: JSONWebKeyType {
         get throws {
@@ -163,11 +157,11 @@ extension DERKeyContainer {
     
     var keyCurve: JSONWebKeyCurve? {
         switch (algorithmIdentifier.algorithm, algorithmIdentifier.parameters) {
-        case (_, ASN1ObjectIdentifier.NamedCurves.secp256r1.asAny):
+        case (_, ASN1ObjectIdentifier.NamedCurves.secp256r1):
             return .p256
-        case (_, ASN1ObjectIdentifier.NamedCurves.secp384r1.asAny):
+        case (_, ASN1ObjectIdentifier.NamedCurves.secp384r1):
             return .p384
-        case (_, ASN1ObjectIdentifier.NamedCurves.secp521r1.asAny):
+        case (_, ASN1ObjectIdentifier.NamedCurves.secp521r1):
             return .p521
         case (.AlgorithmIdentifier.ed25519, _):
             return .ed25519
@@ -241,9 +235,9 @@ struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable {
 
     var algorithm: ASN1ObjectIdentifier
 
-    var parameters: ASN1Any?
+    var parameters: ASN1ObjectIdentifier?
 
-    init(algorithm: ASN1ObjectIdentifier, parameters: ASN1Any?) {
+    init(algorithm: ASN1ObjectIdentifier, parameters: ASN1ObjectIdentifier?) {
         self.algorithm = algorithm
         self.parameters = parameters
     }
@@ -266,7 +260,7 @@ struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable {
         self = try DER.sequence(rootNode, identifier: identifier) { nodes in
             let algorithmOID = try ASN1ObjectIdentifier(derEncoded: &nodes)
 
-            let nodeParameters = nodes.next().map { ASN1Any(derEncoded: $0) }
+            let nodeParameters = try nodes.next().map { try ASN1ObjectIdentifier(derEncoded: $0) }
 
             return .init(algorithm: algorithmOID, parameters: nodeParameters)
         }
@@ -293,17 +287,17 @@ extension ASN1ObjectIdentifier.AlgorithmIdentifier {
 extension RFC5480AlgorithmIdentifier {
     static let ecdsaP256 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
-        parameters: try! .init(erasing: ASN1ObjectIdentifier.NamedCurves.secp256r1)
+        parameters: ASN1ObjectIdentifier.NamedCurves.secp256r1
     )
 
     static let ecdsaP384 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
-        parameters: try! .init(erasing: ASN1ObjectIdentifier.NamedCurves.secp384r1)
+        parameters: ASN1ObjectIdentifier.NamedCurves.secp384r1
     )
 
     static let ecdsaP521 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
-        parameters: try! .init(erasing: ASN1ObjectIdentifier.NamedCurves.secp521r1)
+        parameters: ASN1ObjectIdentifier.NamedCurves.secp521r1
     )
     
     static let ed25519 = RFC5480AlgorithmIdentifier(

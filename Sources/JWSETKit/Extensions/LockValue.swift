@@ -5,6 +5,7 @@
 //  Created by Amir Abbas Mousavian on 4/29/24.
 //
 
+import Collections
 import Foundation
 
 public protocol ReadWriteLockContext {
@@ -468,6 +469,7 @@ public protocol DictionaryInitialzable: ExpressibleByDictionaryLiteral {
 }
 
 extension Dictionary: DictionaryInitialzable {}
+extension OrderedDictionary: DictionaryInitialzable {}
 
 extension LockedValue: ExpressibleByDictionaryLiteral where Value: ExpressibleByDictionaryLiteral & DictionaryInitialzable, Value.Key: Hashable {
     @inlinable

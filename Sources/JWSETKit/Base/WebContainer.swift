@@ -13,7 +13,7 @@ import Foundation
 
 /// JSON container for payloads and sections of JWS and JWE structures.
 @dynamicMemberLookup
-public protocol JSONWebContainer: Codable, Hashable, Sendable {
+public protocol JSONWebContainer: Codable, Hashable, CustomReflectable, Sendable {
     /// Storage of container values.
     var storage: JSONWebValueStorage { get set }
     
@@ -30,6 +30,10 @@ public protocol JSONWebContainer: Codable, Hashable, Sendable {
 public struct JSONWebContainerCustomParameters {}
 
 extension JSONWebContainer {
+    public var customMirror: Mirror {
+        storage.customMirror
+    }
+    
     /// Initializes container with filled data.
     ///
     /// - Parameter initializer: Setter of fields.

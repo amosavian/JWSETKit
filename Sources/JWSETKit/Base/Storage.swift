@@ -14,11 +14,15 @@ import Foundation
 /// Storage for values in JOSE headers or JWT claims
 @dynamicMemberLookup
 @frozen
-public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLiteral, Sendable {
+public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, ExpressibleByDictionaryLiteral, Sendable {
     public typealias Key = String
     public typealias ValueType = Codable & Sendable
     
     private var storage: [String: AnyCodable]
+    
+    public var customMirror: Mirror {
+        storage.customMirror
+    }
     
     /// Returns value of given key.
     public subscript<T: ValueType>(dynamicMember member: String) -> T? {
@@ -123,10 +127,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     /// Initialzes storage with given key values.
     public init(_ elements: [String: any ValueType]) {
         self.storage = .init(uniqueKeysWithValues: elements.map {
-            if let value = $1 as? AnyCodable {
-                return ($0, value)
-            }
-            return ($0, AnyCodable($1))
+            ($0, AnyCodable($1))
         })
     }
     
@@ -149,8 +150,8 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     }
     
     public func hash(into hasher: inout Hasher) {
-        let storage = storage as any Hashable
-        hasher.combine(storage)
+        let hashable = storage as any Hashable
+        hasher.combine(hashable)
     }
     
     public func merging(_ other: JSONWebValueStorage, uniquingKeysWith combine: (any ValueType, any ValueType) throws -> any ValueType) rethrows -> JSONWebValueStorage {
@@ -165,8 +166,7 @@ public struct JSONWebValueStorage: Codable, Hashable, ExpressibleByDictionaryLit
     
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
-        let storage = storage as [Key: any Encodable]
-        try container.encode(storage.encodable())
+        try container.encode(storage)
     }
     
     public static func == (lhs: JSONWebValueStorage, rhs: JSONWebValueStorage) -> Bool {

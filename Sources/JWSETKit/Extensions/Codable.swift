@@ -39,12 +39,18 @@ extension Dictionary where Key == String, Value == any Encodable {
 
 @usableFromInline
 @frozen
-struct AnyCodable: Codable, Sendable {
+struct AnyCodable: Codable, @unchecked Sendable {
     let value: (any Sendable)?
+    private var mirror: Mirror
     
     @usableFromInline
     init<T: Sendable>(_ value: T?) {
-        self.value = value
+        if let value = value as? AnyCodable {
+            self = value
+        } else {
+            self.value = value
+        }
+        self.mirror = value.customMirror
     }
     
     @usableFromInline
@@ -91,5 +97,12 @@ struct AnyCodable: Codable, Sendable {
             let context = EncodingError.Context(codingPath: container.codingPath, debugDescription: "Value cannot be encoded")
             throw EncodingError.invalidValue(value as Any, context)
         }
+    }
+}
+
+extension AnyCodable: CustomReflectable {
+    @usableFromInline
+    var customMirror: Mirror {
+        mirror
     }
 }

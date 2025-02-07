@@ -185,7 +185,7 @@ enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
         switch format {
         case .raw:
             return try AnyJSONWebKey(storage: SymmetricKey(importing: key, format: .raw).storage).specialized()
-        default:
+        case .pkcs8, .spki, .jwk:
             return nil
         }
     }
