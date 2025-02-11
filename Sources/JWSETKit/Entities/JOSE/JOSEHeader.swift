@@ -151,7 +151,7 @@ extension JSONWebContentType {
         self.init(rawValue: mimeType)
     }
  
-    /// Returns a Uniform Type Identifer corresponding to MIME type.
+    /// Returns a Uniform Type Identifier corresponding to MIME type.
     public var utType: UTType? {
         let mimeType = mimeType
         let conformingType: UTType = mimeType.hasSuffix("+json") ? .json : .data
