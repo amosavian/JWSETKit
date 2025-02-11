@@ -286,7 +286,7 @@ extension JSONWebKeyEncryptionAlgorithm {
             header.pbes2Count = iterations
         }
         let salt = Data(keyEncryptingAlgorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
-        let key = try SymmetricKey.paswordBased2DerivedSymmetricKey(
+        let key = try SymmetricKey.passwordBased2DerivedSymmetricKey(
             password: password, salt: salt, iterations: iterations,
             length: keyEncryptingAlgorithm.keyLength.map { $0 / 8 }, hashFunction: keyEncryptingAlgorithm.hashFunction.unsafelyUnwrapped
         )
@@ -357,7 +357,7 @@ extension JSONWebKeyEncryptionAlgorithm {
             throw JSONWebKeyError.keyNotFound
         }
         let salt = Data(algorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
-        kek = try SymmetricKey.paswordBased2DerivedSymmetricKey(
+        kek = try SymmetricKey.passwordBased2DerivedSymmetricKey(
             password: password, salt: salt, iterations: iterations, length: algorithm.keyLength.map { $0 / 8 },
             hashFunction: hashFunction
         )
