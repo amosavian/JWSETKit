@@ -16,7 +16,7 @@ import Foundation
 public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
     enum CodingKeys: String, CodingKey {
         case header
-        case encrypedKey = "encrypted_key"
+        case encryptedKey = "encrypted_key"
     }
     
     /// JWE Per-Recipient Unprotected Header.
@@ -30,27 +30,27 @@ public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
     ///
     /// A symmetric key for the AEAD algorithm used to encrypt the
     /// plaintext to produce the ciphertext and the Authentication Tag.
-    public var encrypedKey: Data
+    public var encryptedKey: Data
     
     /// Initializes a new recipient with given header and encrypted key.
     ///
     /// - Parameters:
     ///   - header: JWE Per-Recipient Unprotected Header.
+    public init(header: JOSEHeader? = nil, encryptedKey: Data) {
     ///   - encryptedKey: Content Encryption Key (CEK).
-    public init(header: JOSEHeader? = nil, encrypedKey: Data) {
         self.header = header
-        self.encrypedKey = encrypedKey
+        self.encryptedKey = encryptedKey
     }
     
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
         self.header = try container.decodeIfPresent(JOSEHeader.self, forKey: JSONWebEncryptionRecipient.CodingKeys.header)
-        let b64Key = try container.decode(String.self, forKey: JSONWebEncryptionRecipient.CodingKeys.encrypedKey)
+        let b64Key = try container.decode(String.self, forKey: JSONWebEncryptionRecipient.CodingKeys.encryptedKey)
         guard let key = Data(urlBase64Encoded: b64Key) else {
-            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath + [CodingKeys.encrypedKey], debugDescription: "Encrypted key is not a valid Base64URL"))
+            throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath + [CodingKeys.encryptedKey], debugDescription: "Encrypted key is not a valid Base64URL"))
         }
-        self.encrypedKey = key
+        self.encryptedKey = key
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -59,7 +59,7 @@ public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
         if let header, !header.storage.storageKeys.isEmpty {
             try container.encode(header, forKey: .header)
         }
-        try container.encode(encrypedKey.urlBase64EncodedString(), forKey: .encrypedKey)
+        try container.encode(encryptedKey.urlBase64EncodedString(), forKey: .encryptedKey)
     }
 }
 

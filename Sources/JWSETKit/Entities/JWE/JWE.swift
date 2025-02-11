@@ -32,7 +32,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     /// to produce the ciphertext and the Authentication Tag.
     public var encryptedKey: Data? {
         get {
-            recipients.first?.encrypedKey
+            recipients.first?.encryptedKey
         }
         set {
             guard let newValue else {
@@ -40,9 +40,9 @@ public struct JSONWebEncryption: Hashable, Sendable {
                 return
             }
             if !recipients.isEmpty {
-                recipients[0].encrypedKey = newValue
+                recipients[0].encryptedKey = newValue
             } else {
-                recipients = [.init(encrypedKey: newValue)]
+                recipients = [.init(encryptedKey: newValue)]
             }
         }
     }
@@ -71,7 +71,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///   - sealed: Contains JWE Initialization Vector, JWE Ciphertext and JWE Authentication Tag.
     public init(protected: ProtectedJSONWebContainer<JOSEHeader>, encryptedKey: Data, sealed: SealedData) throws {
         self.header = try .init(protected: protected)
-        self.recipients = [.init(encrypedKey: encryptedKey)]
+        self.recipients = [.init(encryptedKey: encryptedKey)]
         self.sealed = sealed
         self.additionalAuthenticatedData = nil
     }
@@ -144,7 +144,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
                 throw JSONWebKeyError.keyNotFound
             }
             let mutatedEncryptedKey = try handler(&header, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, cekData)
-            self.recipients = [.init(encrypedKey: mutatedEncryptedKey)]
+            self.recipients = [.init(encryptedKey: mutatedEncryptedKey)]
         }
         self.header = try .init(
             protected: ProtectedJSONWebContainer(value: header),
@@ -230,7 +230,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             guard modifiedHeader == mergedHeader else {
                 throw JSONWebKeyError.operationNotAllowed
             }
-            self.recipients = [.init(encrypedKey: mutatedEncryptedKey)]
+            self.recipients = [.init(encryptedKey: mutatedEncryptedKey)]
         }
         self.header = try .init(protected: protected, unprotected: unprotected)
         let authenticating = protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
@@ -280,7 +280,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             throw JSONWebKeyError.unknownAlgorithm
         }
         
-        var targetEncryptedKey = recipient?.encrypedKey ?? .init()
+        var targetEncryptedKey = recipient?.encryptedKey ?? .init()
         guard let algorithm = combinedHeader.algorithm?.specialized() as? JSONWebKeyEncryptionAlgorithm else {
             throw JSONWebKeyError.unknownAlgorithm
         }
