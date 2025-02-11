@@ -150,7 +150,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             protected: ProtectedJSONWebContainer(value: header),
             unprotected: unprotected
         )
-        let authenticating = self.header.protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
+        let authenticating = self.header.protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
         self.sealed = try cek.seal(
             plainData,
             authenticating: authenticating,
@@ -233,7 +233,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             self.recipients = [.init(encryptedKey: mutatedEncryptedKey)]
         }
         self.header = try .init(protected: protected, unprotected: unprotected)
-        let authenticating = protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
+        let authenticating = protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
         self.sealed = try cek.seal(
             plainData,
             iv: nonce,
@@ -291,7 +291,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             throw JSONWebKeyError.keyNotFound
         }
         let cek = try SymmetricKey(data: decryptingKey.decrypt(targetEncryptedKey, using: algorithm))
-        let authenticatingData = header.protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
+        let authenticatingData = header.protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
         let content = try cek.open(sealed, authenticating: authenticatingData, using: contentEncAlgorithm)
         
         if let compressor = combinedHeader.compressionAlgorithm?.compressor {
@@ -341,7 +341,7 @@ extension String {
 }
 
 extension ProtectedWebContainer {
-    fileprivate func autenticating(additionalAuthenticatedData: Data?) -> Data {
+    fileprivate func authenticating(additionalAuthenticatedData: Data?) -> Data {
         let suffix: Data
         if let additionalAuthenticatedData, !additionalAuthenticatedData.isEmpty {
             suffix = Data(".".utf8) + additionalAuthenticatedData.urlBase64EncodedData()
