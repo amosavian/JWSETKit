@@ -64,7 +64,7 @@ public enum JSONWebEncryptionRepresentation: Sendable {
 }
 
 extension CodingUserInfoKey {
-    /// Changes serialzation of JWE.
+    /// Changes serialization of JWE.
     ///
     /// Default value is `.compact` if not set.
     public static var jweEncodedRepresentation: Self {
