@@ -71,7 +71,7 @@ For detailed usage and API documentation, check [the documentation][docs].
 | JWS Multiple Signatures        | :white_check_mark: | :x:                | :x:                | :x:                 |
 | JWS Unencoded/Detached Payload | :white_check_mark: | :x:                | :x:                | :x:                 |
 | JSON Web Token (JWT)           | :white_check_mark: | :white_check_mark: | :white_check_mark: | :white_check_mark:  |
-| JWT Signature Verfication      | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| JWT Signature Verification     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
 | JWT Expire/NotBefore Validity  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
 | JSON Web Encryption (JWE)      | :white_check_mark: | :x:                | :white_check_mark: | :x:                 |
 | Support [CommonCrypto] Keys    | :white_check_mark: | :x:                | :x:                | :x:                 |
