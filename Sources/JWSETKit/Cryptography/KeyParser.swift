@@ -49,18 +49,18 @@ extension AnyJSONWebKey {
 
 /// A specializer that can convert a `AnyJSONWebKey` to a specific `JSONWebKey` type.
 public protocol JSONWebKeySpecializer {
-    /// Specializes a `AnyJSONWebKey` to a specific `JSONWebKey` type, returns `nil` if key is not appropiate.
+    /// Specializes a `AnyJSONWebKey` to a specific `JSONWebKey` type, returns `nil` if key is not appropriate.
     ///
     /// - Parameter key: The key to specialize.
-    /// - Returns: A specific `JSONWebKey` type, or `nil` if the key is not appropiate.
+    /// - Returns: A specific `JSONWebKey` type, or `nil` if the key is not appropriate.
     static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)?
     
-    /// Deserializes a key from a data, returns `nil` if key is not appropiate.
+    /// Deserializes a key from a data, returns `nil` if key is not appropriate.
     ///
     /// - Parameters:
     ///   - key: The key data to deserialize.
     ///   - format: The format of the key data.
-    ///   - Returns: A specific `JSONWebKey` type, or `nil` if the key is not appropiate.
+    ///   - Returns: A specific `JSONWebKey` type, or `nil` if the key is not appropriate.
     static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol
 }
 
