@@ -124,7 +124,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
         self.storage = [:]
     }
     
-    /// Initialzes storage with given key values.
+    /// Initializes storage with given key values.
     public init(_ elements: [String: any ValueType]) {
         self.storage = .init(uniqueKeysWithValues: elements.map {
             ($0, AnyCodable($1))

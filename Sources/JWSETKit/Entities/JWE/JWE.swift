@@ -257,7 +257,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         }
     }
     
-    /// Initialzes JWE using Base64URL encoded String.
+    /// Initializes JWE using Base64URL encoded String.
     ///
     /// - Parameter string: Base64URL encoded String.
     public init<S: StringProtocol>(from string: S) throws {
