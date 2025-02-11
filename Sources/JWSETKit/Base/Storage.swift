@@ -209,7 +209,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
             // "IANA" presentation is expected, and UUID where lower-cased is preferred.
             //
             // These well known types are handled specially to prevent mis-encoding JWS/JWT
-            // when using a `JSONEncoder` with incorrect data/date formattting strategies.
+            // when using a `JSONEncoder` with incorrect data/date formatting strategies.
             return type.castValue(value) as? T
         case let type as any Decodable.Type:
             // Some data types are same in JSON while have different types
