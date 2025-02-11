@@ -66,7 +66,7 @@ do {
 ```
 
 Using RSA key for `RS256`, `PS256`, etc. according to `alg` header.
-Also usable for Eliptic-Curve, but `CryptoKit.P256.Signing` is recommended.
+Also usable for Elliptic-Curve, but `CryptoKit.P256.Signing` is recommended.
 
 ```swift
 let attributes: CFDictionary =

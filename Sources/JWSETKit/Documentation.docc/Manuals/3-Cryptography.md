@@ -85,7 +85,7 @@ Supports `A128CBC-HS256`, `A192CBC-HS384` and `A256CBC-HS512` algorithms for enc
 
 Usable for decryption and encrypting. See ``JSONWebKeyAESCBCHMAC``.
 
-### Eliptic-Curve
+### Elliptic-Curve
 
 #### Public Key
 
