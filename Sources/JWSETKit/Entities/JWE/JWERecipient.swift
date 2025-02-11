@@ -36,7 +36,7 @@ public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
     ///
     /// - Parameters:
     ///   - header: JWE Per-Recipient Unprotected Header.
-    ///   - encrypedKey: Content Encryption Key (CEK).
+    ///   - encryptedKey: Content Encryption Key (CEK).
     public init(header: JOSEHeader? = nil, encrypedKey: Data) {
         self.header = header
         self.encrypedKey = encrypedKey
