@@ -78,7 +78,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     
     /// Creates new JWE container with encrypted data using given recipients public key.
     ///
-    /// - Note: `algorithm` and `encryptionAlgorithm` paramteres in `protected` shall
+    /// - Note: `algorithm` and `encryptionAlgorithm` parameters in `protected` shall
     ///         be overrided by `keyEncryptingAlgorithm` and `contentEncryptionAlgorithm`.
     ///
     /// - Important: For `PBES2` algorithms, provide password using
@@ -161,7 +161,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     
     /// Creates new JWE container with encrypted data using given recipients public key.
     ///
-    /// - Note: `algorithm` and `encryptionAlgorithm` paramteres in `protected` shall
+    /// - Note: `algorithm` and `encryptionAlgorithm` parameters in `protected` shall
     ///         be overrided by `keyEncryptingAlgorithm` and `contentEncryptionAlgorithm`.
     ///
     /// - Important: For `PBES2` algorithms, provide password using
