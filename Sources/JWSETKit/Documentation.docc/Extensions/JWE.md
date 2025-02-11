@@ -60,7 +60,7 @@ let jwe = try! JSONWebEncryption(
 let jweString = try! String(jwe: jwe)
 ```
 
-In case multiple recipient support is neccessary or a unknown newly registered key type
+In case multiple recipient support is necessary or a unknown newly registered key type
 is used for encryption, you may first create encrypted key and sealed box and use 
 ``JSONWebEncryption/init(header:recipients:sealed:additionalAuthenticatedData:)``
 to create JWE instance from parts.
