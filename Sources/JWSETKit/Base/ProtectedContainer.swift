@@ -122,7 +122,7 @@ public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
 
 /// A JSON Web Signature/Encryption (JWS/JWE) header or payload with can be signed.
 ///
-/// This cotainer preserves original data to keep consistancy of signature as re-encoding payload
+/// This container preserves original data to keep consistency of signature as re-encoding payload
 /// may change sorting.
 @frozen
 public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProtectedWebContainer, Codable {
