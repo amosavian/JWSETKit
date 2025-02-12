@@ -122,7 +122,7 @@ public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
 
 /// A JSON Web Signature/Encryption (JWS/JWE) header or payload with can be signed.
 ///
-/// This cotainer preserves original data to keep consistancy of signature as re-encoding payload
+/// This container preserves original data to keep consistency of signature as re-encoding payload
 /// may change sorting.
 @frozen
 public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProtectedWebContainer, Codable {
@@ -173,7 +173,7 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
     
     /// Initialized protected container from a JOSE data.
     ///
-    /// - Note: If empty encoded data is given, value will be initialzed as empty object.
+    /// - Note: If empty encoded data is given, value will be initialized as empty object.
     ///
     /// - Parameter protected: Serialzed json object but **not** in `base64url` .
     public init(encoded: Data) throws {

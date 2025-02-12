@@ -54,7 +54,7 @@ public struct JSONWebAddress: Hashable, Codable, Sendable {
     /// Country name component.
     public var country: String?
     
-    /// Initilizes the Address Claim represents a physical mailing address.
+    /// Initializes the Address Claim represents a physical mailing address.
     public init(formatted: String? = nil, streetAddress: String? = nil, locality: String? = nil, region: String? = nil, postalCode: String? = nil, country: String? = nil) {
         self.formatted = formatted
         self.streetAddress = streetAddress

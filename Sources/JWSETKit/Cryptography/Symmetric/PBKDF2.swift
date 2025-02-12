@@ -31,7 +31,7 @@ extension SymmetricKey {
     ///   - iterations: Iteration count, a positive integer.
     ///
     /// - Returns: A symmetric key derived from parameters.
-    public static func paswordBased2DerivedSymmetricKey<PD, SD, H>(
+    public static func passwordBased2DerivedSymmetricKey<PD, SD, H>(
         password: PD, salt: SD, iterations: Int, length: Int? = nil, hashFunction: H.Type
     ) throws -> SymmetricKey where PD: DataProtocol, SD: DataProtocol, H: HashFunction {
         let length = length ?? hashFunction.Digest.byteCount

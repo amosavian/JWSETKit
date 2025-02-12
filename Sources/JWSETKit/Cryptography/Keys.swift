@@ -462,7 +462,7 @@ public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey, JSONWebKeySymmetr
 
 /// A type-erased general container for a JSON Web Key (JWK).
 ///
-/// - Note: To create a key able to do operations (sign, verify, encrypt, decrypt) use `specialzed()` method.
+/// - Note: To create a key able to do operations (sign, verify, encrypt, decrypt) use `specialized()` method.
 @frozen
 public struct AnyJSONWebKey: MutableJSONWebKey, Sendable {
     public var storage: JSONWebValueStorage

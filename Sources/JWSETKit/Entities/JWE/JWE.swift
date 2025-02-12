@@ -32,7 +32,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     /// to produce the ciphertext and the Authentication Tag.
     public var encryptedKey: Data? {
         get {
-            recipients.first?.encrypedKey
+            recipients.first?.encryptedKey
         }
         set {
             guard let newValue else {
@@ -40,9 +40,9 @@ public struct JSONWebEncryption: Hashable, Sendable {
                 return
             }
             if !recipients.isEmpty {
-                recipients[0].encrypedKey = newValue
+                recipients[0].encryptedKey = newValue
             } else {
-                recipients = [.init(encrypedKey: newValue)]
+                recipients = [.init(encryptedKey: newValue)]
             }
         }
     }
@@ -71,14 +71,14 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///   - sealed: Contains JWE Initialization Vector, JWE Ciphertext and JWE Authentication Tag.
     public init(protected: ProtectedJSONWebContainer<JOSEHeader>, encryptedKey: Data, sealed: SealedData) throws {
         self.header = try .init(protected: protected)
-        self.recipients = [.init(encrypedKey: encryptedKey)]
+        self.recipients = [.init(encryptedKey: encryptedKey)]
         self.sealed = sealed
         self.additionalAuthenticatedData = nil
     }
     
     /// Creates new JWE container with encrypted data using given recipients public key.
     ///
-    /// - Note: `algorithm` and `encryptionAlgorithm` paramteres in `protected` shall
+    /// - Note: `algorithm` and `encryptionAlgorithm` parameters in `protected` shall
     ///         be overrided by `keyEncryptingAlgorithm` and `contentEncryptionAlgorithm`.
     ///
     /// - Important: For `PBES2` algorithms, provide password using
@@ -144,13 +144,13 @@ public struct JSONWebEncryption: Hashable, Sendable {
                 throw JSONWebKeyError.keyNotFound
             }
             let mutatedEncryptedKey = try handler(&header, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, cekData)
-            self.recipients = [.init(encrypedKey: mutatedEncryptedKey)]
+            self.recipients = [.init(encryptedKey: mutatedEncryptedKey)]
         }
         self.header = try .init(
             protected: ProtectedJSONWebContainer(value: header),
             unprotected: unprotected
         )
-        let authenticating = self.header.protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
+        let authenticating = self.header.protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
         self.sealed = try cek.seal(
             plainData,
             authenticating: authenticating,
@@ -161,7 +161,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     
     /// Creates new JWE container with encrypted data using given recipients public key.
     ///
-    /// - Note: `algorithm` and `encryptionAlgorithm` paramteres in `protected` shall
+    /// - Note: `algorithm` and `encryptionAlgorithm` parameters in `protected` shall
     ///         be overrided by `keyEncryptingAlgorithm` and `contentEncryptionAlgorithm`.
     ///
     /// - Important: For `PBES2` algorithms, provide password using
@@ -230,10 +230,10 @@ public struct JSONWebEncryption: Hashable, Sendable {
             guard modifiedHeader == mergedHeader else {
                 throw JSONWebKeyError.operationNotAllowed
             }
-            self.recipients = [.init(encrypedKey: mutatedEncryptedKey)]
+            self.recipients = [.init(encryptedKey: mutatedEncryptedKey)]
         }
         self.header = try .init(protected: protected, unprotected: unprotected)
-        let authenticating = protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
+        let authenticating = protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
         self.sealed = try cek.seal(
             plainData,
             iv: nonce,
@@ -257,7 +257,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         }
     }
     
-    /// Initialzes JWE using Base64URL encoded String.
+    /// Initializes JWE using Base64URL encoded String.
     ///
     /// - Parameter string: Base64URL encoded String.
     public init<S: StringProtocol>(from string: S) throws {
@@ -280,7 +280,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             throw JSONWebKeyError.unknownAlgorithm
         }
         
-        var targetEncryptedKey = recipient?.encrypedKey ?? .init()
+        var targetEncryptedKey = recipient?.encryptedKey ?? .init()
         guard let algorithm = combinedHeader.algorithm?.specialized() as? JSONWebKeyEncryptionAlgorithm else {
             throw JSONWebKeyError.unknownAlgorithm
         }
@@ -291,7 +291,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             throw JSONWebKeyError.keyNotFound
         }
         let cek = try SymmetricKey(data: decryptingKey.decrypt(targetEncryptedKey, using: algorithm))
-        let authenticatingData = header.protected.autenticating(additionalAuthenticatedData: additionalAuthenticatedData)
+        let authenticatingData = header.protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
         let content = try cek.open(sealed, authenticating: authenticatingData, using: contentEncAlgorithm)
         
         if let compressor = combinedHeader.compressionAlgorithm?.compressor {
@@ -341,7 +341,7 @@ extension String {
 }
 
 extension ProtectedWebContainer {
-    fileprivate func autenticating(additionalAuthenticatedData: Data?) -> Data {
+    fileprivate func authenticating(additionalAuthenticatedData: Data?) -> Data {
         let suffix: Data
         if let additionalAuthenticatedData, !additionalAuthenticatedData.isEmpty {
             suffix = Data(".".utf8) + additionalAuthenticatedData.urlBase64EncodedData()

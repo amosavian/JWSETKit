@@ -64,7 +64,7 @@ public enum JSONWebEncryptionRepresentation: Sendable {
 }
 
 extension CodingUserInfoKey {
-    /// Changes serialzation of JWE.
+    /// Changes serialization of JWE.
     ///
     /// Default value is `.compact` if not set.
     public static var jweEncodedRepresentation: Self {
@@ -89,7 +89,7 @@ extension JSONWebEncryption: Codable {
             throw DecodingError.dataCorrupted(.init(codingPath: codingPath, debugDescription: "JWE String is not a five part data."))
         }
         self.header = try JSONWebEncryptionHeader(protected: .init(encoded: sections[0] ?? .init()))
-        self.recipients = sections[1].map { [JSONWebEncryptionRecipient(encrypedKey: $0)] } ?? []
+        self.recipients = sections[1].map { [JSONWebEncryptionRecipient(encryptedKey: $0)] } ?? []
         let iv = sections[2]
         let ciphertext = sections[3]
         let tag = sections[4]

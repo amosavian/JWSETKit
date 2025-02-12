@@ -22,7 +22,7 @@ Now it is possible to decrypt data using private key,
 let data = try jwe.decrypt(using: keyEncryptionKey)
 ```
 
-Decrypted content now can be deserialzed. For example if content is JWT claims,
+Decrypted content now can be deserialized. For example if content is JWT claims,
 
 ```swift
 let claims = JSONDecoder().decode(JSONWebTokenClaims.self, from: data)
@@ -60,7 +60,7 @@ let jwe = try! JSONWebEncryption(
 let jweString = try! String(jwe: jwe)
 ```
 
-In case multiple recipient support is neccessary or a unknown newly registered key type
+In case multiple recipient support is necessary or a unknown newly registered key type
 is used for encryption, you may first create encrypted key and sealed box and use 
 ``JSONWebEncryption/init(header:recipients:sealed:additionalAuthenticatedData:)``
 to create JWE instance from parts.
