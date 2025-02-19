@@ -82,13 +82,13 @@ struct JSONWebTokenClaimsJwkParameters: JSONWebContainerParameters {
     var subJsonWebToken: (any JsonWebKey)?
 
     // Key lookup to convert claim to string key.
-    static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
+    static let keys: [SendablePartialKeyPath<Self>: String] = [
         \.subJsonWebToken: "sub_jwk",
     ]
 }
 
 extension JSONWebTokenClaims {
-    subscript<T>(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsJwkParameters, T?> & Sendable) -> T? {
+    subscript<T>(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsJwkParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

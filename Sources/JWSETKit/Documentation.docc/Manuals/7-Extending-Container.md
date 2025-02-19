@@ -20,7 +20,7 @@ struct JSONWebTokenClaimsJwkParameters: JSONWebContainerParameters {
 }
 
 extension JSONWebTokenClaims {
-    subscript<T>(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsJwkParameters, T?> & Sendable) -> T? {
+    subscript<T>(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsJwkParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
@@ -66,7 +66,7 @@ public struct DPoPRegisteredParameters: JSONWebContainerParameters {
     public var accessTokenHash: Data?
     public var nonce: String?
 
-    static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
+    static let keys: [SendablePartialKeyPath<Self>: String] = [
         \.jwtId: "jti", \.httpMethod: "htm", \.httpURL: "htu",
         \.issuedAt: "iat", \.accessTokenHash: "ath", \.nonce: "nonce",
     ]
@@ -74,7 +74,7 @@ public struct DPoPRegisteredParameters: JSONWebContainerParameters {
 
 extension DPoPClaims {
     @_documentation(visibility: private)
-    public subscript<T>(dynamicMember keyPath: any KeyPath<DPoPRegisteredParameters, T?> & Sendable) -> T? {
+    public subscript<T>(dynamicMember keyPath: SendableKeyPath<DPoPRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

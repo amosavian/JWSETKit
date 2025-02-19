@@ -160,7 +160,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     public var base64: Bool
     
     @_documentation(visibility: private)
-    public static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
+    public static let keys: [SendablePartialKeyPath<Self>: String] = [
         \.algorithm: "alg", \.jsonWebKeySetUrl: "jku",
         \.key: "jwk", \.keyId: "kid", \.certificateChain: "x5c",
         \.certificateURL: "x5u", \.certificateThumbprint: "x5t",
@@ -171,7 +171,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
 
 extension JOSEHeader {
     @_documentation(visibility: private)
-    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: any KeyPath<JoseHeaderJWSRegisteredParameters, T?> & Sendable) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
@@ -181,7 +181,7 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: any KeyPath<JoseHeaderJWSRegisteredParameters, Bool> & Sendable) -> Bool {
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, Bool>) -> Bool {
         get {
             switch keyPath {
             case \.base64:
@@ -196,7 +196,7 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: any KeyPath<JoseHeaderJWSRegisteredParameters, (any JSONWebKey)?> & Sendable) -> (any JSONWebKey)? {
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, (any JSONWebKey)?>) -> (any JSONWebKey)? {
         get {
             let key: AnyJSONWebKey? = storage[stringKey(keyPath)]
             return (key?.specialized()) ?? key
@@ -207,7 +207,7 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: any KeyPath<JoseHeaderJWSRegisteredParameters, [String]> & Sendable) -> [String] {
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [String]>) -> [String] {
         get {
             storage[stringKey(keyPath)]
         }
@@ -217,7 +217,7 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: any KeyPath<JoseHeaderJWSRegisteredParameters, (any JSONWebAlgorithm)?> & Sendable) -> (any JSONWebAlgorithm)? {
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, (any JSONWebAlgorithm)?>) -> (any JSONWebAlgorithm)? {
         get {
             guard let value: String = storage[stringKey(keyPath)] else { return nil }
             return AnyJSONWebAlgorithm.specialized(value)
@@ -228,7 +228,7 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: any KeyPath<JoseHeaderJWSRegisteredParameters, [Certificate]> & Sendable) -> [Certificate] {
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [Certificate]>) -> [Certificate] {
         get {
             storage[stringKey(keyPath), false]
                 .compactMap {
@@ -243,7 +243,7 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: any KeyPath<JoseHeaderJWSRegisteredParameters, Data?> & Sendable) -> Data? {
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, Data?>) -> Data? {
         get {
             switch keyPath {
             case \.certificateThumbprint where storage.contains(key: .x5tS256):

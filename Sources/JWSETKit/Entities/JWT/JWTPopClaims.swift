@@ -247,14 +247,14 @@ public struct JSONWebTokenClaimsPopParameters: JSONWebContainerParameters {
     public var confirmation: JSONWebTokenConfirmation?
     
     @_documentation(visibility: private)
-    public static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
+    public static let keys: [SendablePartialKeyPath<Self>: String] = [
         \.confirmation: "cnf",
     ]
 }
 
 extension JSONWebTokenClaims {
     @_documentation(visibility: private)
-    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsPopParameters, T?> & Sendable) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsPopParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

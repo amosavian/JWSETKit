@@ -216,7 +216,7 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters: JSONWebContainerPa
     public var updatedAt: Date?
     
     @_documentation(visibility: private)
-    public static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
+    public static let keys: [SendablePartialKeyPath<Self>: String] = [
         \.name: "name", \.givenName: "given_name", \.familyName: "family_name",
         \.middleName: "middle_name", \.nickname: "nickname", \.preferredUsername: "preferred_username",
         \.profileURL: "profile", \.pictureURL: "picture", \.websiteURL: "website",
@@ -228,14 +228,14 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters: JSONWebContainerPa
     ]
     
     @_documentation(visibility: private)
-    public static let localizableKeys: [any PartialKeyPath<Self> & Sendable] = [
+    public static let localizableKeys: [SendablePartialKeyPath<Self>] = [
         \.name, \.givenName, \.familyName, \.middleName, \.nickname,
         \.profileURL, \.websiteURL,
     ]
 }
 
 extension JSONWebTokenClaims {
-    public subscript<T: JSONWebValueStorage.ValueType>(_ keyPath: any KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?> & Sendable, locale: Locale) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(_ keyPath: SendableKeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>, locale: Locale) -> T? {
         get {
             storage[stringKey(keyPath, locale: locale)]
         }
@@ -248,7 +248,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?> & Sendable) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
@@ -258,7 +258,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Bool> & Sendable) -> Bool {
+    public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Bool>) -> Bool {
         get {
             storage[stringKey(keyPath)] ?? false
         }
@@ -268,7 +268,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Date?> & Sendable) -> Date? {
+    public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Date?>) -> Date? {
         get {
             let key = stringKey(keyPath)
             switch keyPath {

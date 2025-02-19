@@ -172,11 +172,11 @@ extension JSONWebKey {
         }
     }
     
-    func checkRequiredFields<T>(_ fields: any KeyPath<Self, T?> & Sendable...) throws {
+    func checkRequiredFields<T>(_ fields: SendableKeyPath<Self, T?>...) throws {
         try checkRequiredFields(fields)
     }
     
-    func checkRequiredFields<T>(_ fields: [any KeyPath<Self, T?> & Sendable]) throws {
+    func checkRequiredFields<T>(_ fields: [SendableKeyPath<Self, T?>]) throws {
         for field in fields {
             if self[keyPath: field] == nil {
                 throw JSONWebKeyError.keyNotFound

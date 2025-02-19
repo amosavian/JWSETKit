@@ -15,17 +15,17 @@ import Foundation
 public protocol JSONWebContainerParameters<Container> {
     associatedtype Container: JSONWebContainer
     
-    static var keys: [any PartialKeyPath<Self> & Sendable: String] { get }
-    static var localizableKeys: [any PartialKeyPath<Self> & Sendable] { get }
+    static var keys: [SendablePartialKeyPath<Self>: String] { get }
+    static var localizableKeys: [SendablePartialKeyPath<Self>] { get }
 }
 
 extension JSONWebContainerParameters {
-    public static var localizableKeys: [any PartialKeyPath<Self> & Sendable] { [] }
+    public static var localizableKeys: [SendablePartialKeyPath<Self>] { [] }
 }
 
 extension JSONWebContainer {
     @_documentation(visibility: private)
-    public func stringKey<P: JSONWebContainerParameters<Self>, T>(_ keyPath: any KeyPath<P, T> & Sendable, force: Bool = false, locale: Locale? = nil) -> String {
+    public func stringKey<P: JSONWebContainerParameters<Self>, T>(_ keyPath: SendableKeyPath<P, T>, force: Bool = false, locale: Locale? = nil) -> String {
         let key = P.keys[keyPath] ?? keyPath.name.jsonWebKey
         guard P.localizableKeys.contains(keyPath), let locale else { return key }
         if force {

@@ -192,7 +192,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
     }
     
     public func validate() throws {
-        let fields: [any KeyPath<Self, Data?> & Sendable] = [
+        let fields: [SendableKeyPath<Self, Data?>] = [
             \Self.modulus, \Self.exponent,
             \Self.firstPrimeFactor, \Self.secondPrimeFactor,
             \Self.privateExponent, \Self.firstCRTCoefficient,

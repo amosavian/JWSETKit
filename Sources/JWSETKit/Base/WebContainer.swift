@@ -67,12 +67,12 @@ extension JSONWebContainer {
         }
     }
     
-    private func stringKey<T>(_ keyPath: any KeyPath<JSONWebContainerCustomParameters, T> & Sendable) -> String {
+    private func stringKey<T>(_ keyPath: SendableKeyPath<JSONWebContainerCustomParameters, T>) -> String {
         keyPath.name.jsonWebKey
     }
     
     @_documentation(visibility: private)
-    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember member: any KeyPath<JSONWebContainerCustomParameters, T?> & Sendable) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember member: SendableKeyPath<JSONWebContainerCustomParameters, T?>) -> T? {
         get {
             storage[stringKey(member)]
         }

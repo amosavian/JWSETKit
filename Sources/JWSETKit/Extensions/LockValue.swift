@@ -213,12 +213,12 @@ public final class LockedValue<Context, Lock: Locking<Context>, Value>: @uncheck
     }
     
     @inlinable
-    public subscript<U>(dynamicMember keyPath: any KeyPath<Value, U> & Sendable) -> U {
+    public subscript<U>(dynamicMember keyPath: SendableKeyPath<Value, U>) -> U {
         wrappedValue[keyPath: keyPath]
     }
     
     @inlinable
-    public subscript<U>(dynamicMember keyPath: any WritableKeyPath<Value, U> & Sendable) -> U {
+    public subscript<U>(dynamicMember keyPath: SendableWritableKeyPath<Value, U>) -> U {
         get {
             wrappedValue[keyPath: keyPath]
         }
