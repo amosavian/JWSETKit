@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 1/19/24.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 protocol JSONWebFieldEncodable {
     associatedtype JSONWebFieldValueType: Codable & Hashable & Sendable
@@ -95,8 +99,18 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
         case let value as String:
             if let value = Double(value) {
                 return Date(timeIntervalSince1970: value)
-            } else if let value = ISO8601DateFormatter().date(from: value) {
-                return value
+            } else {
+                if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
+                    if let value = try? Date.ISO8601FormatStyle.iso8601.parse(value) {
+                        return value
+                    }
+                } else {
+#if canImport(Foundation.NSISO8601DateFormatter)
+                    if let value = ISO8601DateFormatter().date(from: value) {
+                        return value
+                    }
+#endif
+                }
             }
             return nil
         default:

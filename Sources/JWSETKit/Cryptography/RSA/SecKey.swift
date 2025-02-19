@@ -30,10 +30,29 @@ extension SecKey: JSONWebKey {
         }
     }
     
+    /// Gets the public key associated with the given private key.
+    ///
+    /// The returned public key may be self if the app that created the private key didn’t
+    /// also store the corresponding public key in the keychain,
+    /// or if the system can’t reconstruct the corresponding public key.
+    /// - Returns: The public key corresponding to the given private key.
     public var publicKey: SecKey {
         SecKeyCopyPublicKey(self) ?? self
     }
     
+    /// Returns an external representation of the given key suitable for the key’s type.
+    ///
+    /// The operation fails if the key is not exportable, for example if it is bound to a smart card or to the Secure Enclave.
+    /// It also fails in macOS if the key has the attribute kSecKeyExtractable set to false.
+    ///
+    /// The method returns data in the PKCS #1 format for an RSA key.
+    /// For an elliptic curve public key, the format follows the ANSI X9.63 standard using a byte string
+    /// of 04 || X || Y. For an elliptic curve private key,
+    /// the output is formatted as the public key concatenated with the big endian encoding of the secret scalar,
+    /// or 04 || X || Y || K. All of these representations use constant size integers, including leading zeros as needed.
+    ///
+    /// - Throws: If the key is not exportable.
+    /// - Returns: A data object representing the key in a format suitable for the key type.
     public var externalRepresentation: Data {
         get throws {
             try handle { error in
@@ -139,7 +158,7 @@ extension SecKey: JSONWebKey {
         case .ellipticCurve:
             return try ECHelper.ecWebKey(data: externalRepresentation, keyLength: keyLength, isPrivateKey: isPrivateKey)
         case .rsa:
-            return try RSAHelper.rsaWebKey(data: externalRepresentation)
+            return try RSAHelper.rsaWebKey(pkcs1: externalRepresentation)
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -223,17 +242,24 @@ extension JSONWebSigningKey where Self: SecKey {
         default:
             throw JSONWebKeyError.unknownKeyType
         }
+        
+        let type = RSAHelper.DERType(keyData: derRepresentation) ?? .pkcs1PrivateKey
         var attributes: [CFString: Any] = [
             kSecAttrKeyType: secKeyType,
-            kSecAttrKeyClass: kSecAttrKeyClassPrivate,
+            kSecAttrKeyClass: type.isPublic ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate,
         ]
-        let privateKey = try? handle { error in
+        let key = try? handle { error in
             SecKeyCreateWithData(derRepresentation as CFData, attributes as CFDictionary, &error)
         }
-        if let privateKey = privateKey as? Self {
-            self = privateKey
+        if let key = key as? Self {
+            self = key
             return
         }
+        
+        guard attributes[kSecAttrKeyClass] as! CFString == kSecAttrKeyClassPrivate else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+        assertionFailure()
         attributes[kSecAttrKeyClass] = kSecAttrKeyClassPublic
         let publicKey = try handle { error in
             SecKeyCreateWithData(derRepresentation as CFData, attributes as CFDictionary, &error)

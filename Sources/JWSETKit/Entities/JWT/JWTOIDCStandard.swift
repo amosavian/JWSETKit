@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/6/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// The Address Claim represents a physical mailing address.
 ///
@@ -212,7 +216,7 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters: JSONWebContainerPa
     public var updatedAt: Date?
     
     @_documentation(visibility: private)
-    public static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
         \.name: "name", \.givenName: "given_name", \.familyName: "family_name",
         \.middleName: "middle_name", \.nickname: "nickname", \.preferredUsername: "preferred_username",
         \.profileURL: "profile", \.pictureURL: "picture", \.websiteURL: "website",
@@ -224,14 +228,14 @@ public struct JSONWebTokenClaimsPublicOIDCStandardParameters: JSONWebContainerPa
     ]
     
     @_documentation(visibility: private)
-    public static let localizableKeys: [PartialKeyPath<Self>] = [
+    public static let localizableKeys: [any PartialKeyPath<Self> & Sendable] = [
         \.name, \.givenName, \.familyName, \.middleName, \.nickname,
         \.profileURL, \.websiteURL,
     ]
 }
 
 extension JSONWebTokenClaims {
-    public subscript<T: JSONWebValueStorage.ValueType>(_ keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>, locale: Locale) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(_ keyPath: any KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?> & Sendable, locale: Locale) -> T? {
         get {
             storage[stringKey(keyPath, locale: locale)]
         }
@@ -244,7 +248,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?> & Sendable) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
@@ -254,7 +258,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Bool>) -> Bool {
+    public subscript(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Bool> & Sendable) -> Bool {
         get {
             storage[stringKey(keyPath)] ?? false
         }
@@ -264,14 +268,23 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Date?>) -> Date? {
+    public subscript(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Date?> & Sendable) -> Date? {
         get {
             let key = stringKey(keyPath)
             switch keyPath {
             case \.birthdate:
-                let formatter = ISO8601DateFormatter()
-                formatter.formatOptions = [.withFullDate]
-                return storage[key].flatMap(formatter.date(from:))
+                if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
+                    let parser = Date.ISO8601FormatStyle.iso8601.year().month().day()
+                    return try? storage[key].flatMap(parser.parse)
+                } else {
+#if canImport(Foundation.NSISO8601DateFormatter)
+                    let formatter = ISO8601DateFormatter()
+                    formatter.formatOptions = [.withFullDate]
+                    return storage[key].flatMap(formatter.date(from:))
+#else
+                    return nil
+#endif
+                }
             default:
                 return storage[key]
             }
@@ -280,9 +293,16 @@ extension JSONWebTokenClaims {
             let key = stringKey(keyPath)
             switch keyPath {
             case \.birthdate:
-                let formatter = ISO8601DateFormatter()
-                formatter.formatOptions = [.withFullDate]
-                storage[key] = newValue.map(formatter.string(from:))
+                if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
+                    let parser = Date.ISO8601FormatStyle.iso8601.year().month().day()
+                    storage[key] = newValue.map(parser.format)
+                } else {
+#if canImport(Foundation.NSISO8601DateFormatter)
+                    let formatter = ISO8601DateFormatter()
+                    formatter.formatOptions = [.withFullDate]
+                    storage[key] = newValue.map(formatter.string(from:))
+#endif
+                }
             default:
                 storage[key] = newValue
             }

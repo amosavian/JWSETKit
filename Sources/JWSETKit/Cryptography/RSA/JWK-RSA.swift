@@ -192,7 +192,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
     }
     
     public func validate() throws {
-        let fields: [KeyPath<Self, Data?>] = [
+        let fields: [any KeyPath<Self, Data?> & Sendable] = [
             \Self.modulus, \Self.exponent,
             \Self.firstPrimeFactor, \Self.secondPrimeFactor,
             \Self.privateExponent, \Self.firstCRTCoefficient,
@@ -252,7 +252,54 @@ extension JSONWebRSAPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
 }
 
 enum RSAHelper {
-    static func rsaComponents(_ data: Data) throws -> [Data] {
+    enum DERType {
+        case pkcs1PrivateKey
+        case pkcs1PublicKey
+        case pkcs8PrivateKey
+        case subjectPublicKey
+        
+        var isPublic: Bool {
+            switch self {
+            case .pkcs1PrivateKey, .pkcs8PrivateKey:
+                false
+            case .pkcs1PublicKey, .subjectPublicKey:
+                true
+            }
+        }
+        
+        init?(keyData data: Data) {
+            do {
+                let der = try DER.parse([UInt8](data))
+                guard der.identifier == .sequence, let rootNodes = der.content.sequence else {
+                    throw CryptoKitASN1Error.unexpectedFieldType
+                }
+                guard rootNodes.count >= 2 else {
+                    throw CryptoKitASN1Error.invalidASN1Object
+                }
+                
+                // Private keys start with an INTEGER version field.
+                // PKCS#8 Private Key second element is a SEQUENCE (algorithm identifier)
+                // PKCS#1 Public Key is a SEQUENCE of two INTEGERs (modulus and exponent).
+                switch (rootNodes[0].identifier, rootNodes[1].identifier) {
+                case (.sequence, .bitString):
+                    self = .subjectPublicKey
+                    return
+                case (.integer, .sequence) where rootNodes[0].content.primitive == [0x00]:
+                    self = .pkcs8PrivateKey
+                    return
+                case (.integer, .integer):
+                    self = rootNodes[0].content.primitive == [0x00] ? .pkcs1PrivateKey : .pkcs1PublicKey
+                    return
+                default:
+                    break
+                }
+            } catch {}
+            
+            return nil
+        }
+    }
+    
+    private static func pkcs1Integers(_ data: Data) throws -> [Data] {
         let der = try DER.parse([UInt8](data))
         guard let nodes = der.content.sequence else {
             throw CryptoKitASN1Error.unexpectedFieldType
@@ -264,7 +311,7 @@ enum RSAHelper {
             guard let data = $0.content.primitive else {
                 throw CryptoKitASN1Error.unexpectedFieldType
             }
-            return data
+            return Data(data)
         }
     }
     
@@ -294,17 +341,11 @@ enum RSAHelper {
         return Data(result.serializedBytes)
     }
     
-    static func rsaWebKey(data: Data) throws -> any JSONWebKey {
-        let components = try rsaComponents(data)
+    static func rsaWebKey(pkcs1: Data) throws -> any JSONWebKey {
+        let components = try pkcs1Integers(pkcs1)
         var key = AnyJSONWebKey()
-        switch components.count {
-        case 2:
-            key.keyType = .rsa
-            key.modulus = components[0]
-            key.exponent = components[1]
-            return JSONWebRSAPublicKey(storage: key.storage)
-        case 9:
-            key.keyType = .rsa
+        key.keyType = .rsa
+        if components[0] == Data([0x00]), components.count >= 9 {
             key.modulus = components[1]
             key.exponent = components[2]
             key.privateExponent = components[3]
@@ -314,8 +355,10 @@ enum RSAHelper {
             key.secondFactorCRTExponent = components[7]
             key.firstCRTCoefficient = components[8]
             return JSONWebRSAPrivateKey(storage: key.storage)
-        default:
-            throw JSONWebKeyError.unknownKeyType
+        } else {
+            key.modulus = components[0]
+            key.exponent = components[1]
+            return JSONWebRSAPublicKey(storage: key.storage)
         }
     }
 }

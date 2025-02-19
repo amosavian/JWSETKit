@@ -20,11 +20,6 @@ public struct JSONWebSignatureAlgorithm: JSONWebAlgorithm {
     public init<S>(_ rawValue: S) where S: StringProtocol {
         self.rawValue = String(rawValue)
     }
-    
-    init?(_ algorithm: (any JSONWebAlgorithm)?) {
-        guard let rawValue = algorithm?.rawValue else { return nil }
-        self.init(rawValue: rawValue)
-    }
 }
 
 extension JSONWebSignatureAlgorithm {

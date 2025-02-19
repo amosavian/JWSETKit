@@ -13,12 +13,12 @@ import Foundation
 import SwiftASN1
 
 extension ASN1Node.Content {
-    var primitive: Data? {
+    var primitive: ArraySlice<UInt8>? {
         switch self {
         case .constructed:
             return nil
         case .primitive(let value):
-            return Data(value)
+            return value
         }
     }
     

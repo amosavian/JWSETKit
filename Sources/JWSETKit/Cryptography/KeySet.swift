@@ -26,8 +26,8 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
         case thumbprint(Data)
         case id(kid: String, kty: JSONWebKeyType, curve: JSONWebKeyCurve?, use: JSONWebKeyUsage?, thumbprint: Data)
                 
-        init(_ key: some JSONWebKey) throws {
-            let thumbprint = try key.thumbprint(format: .jwk, using: SHA256.self).data
+        init(_ key: some JSONWebKey) {
+            let thumbprint = (try? key.thumbprint(format: .jwk, using: SHA256.self).data) ?? Data(UUID().uuidString.utf8)
             if let keyId = key.keyId, let kty = key.keyType {
                 self = .id(kid: keyId, kty: kty, curve: key.curve, use: key.keyUsage, thumbprint: thumbprint)
             } else {
@@ -66,29 +66,30 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     /// Initializes JWKSet using given array of key.
     ///
     /// - Parameter keys: An array of JWKs.
-    public init(keys: [any JSONWebKey]) throws {
-        try self.init(keys)
+    public init(keys: [any JSONWebKey]) {
+        self.init(keys)
     }
     
     /// Initializes JWKSet using given array of key.
     ///
     /// - Parameter keys: An array of JWKs.
-    public init<T>(keys: T) throws where T: Sequence, T.Element == any JSONWebKey {
-        try self.init(keys)
+    public init<T>(keys: T) where T: Sequence, T.Element == any JSONWebKey {
+        self.init(keys)
     }
     
     public init(arrayLiteral elements: (any JSONWebKey)...) {
-        try! self.init(elements)
+        self.init(elements)
     }
     
+    /// Initializes an empty JWKSet.
     public init() {
-        try! self.init([])
+        self.init([])
     }
     
-    private init<T>(_ keys: T) throws where T: Sequence, T.Element == any JSONWebKey {
-        self.keySet = try .init(
+    private init<T>(_ keys: T) where T: Sequence, T.Element == any JSONWebKey {
+        self.keySet = .init(
             keys.map {
-                try (.init($0), $0)
+                (.init($0), $0)
             },
             uniquingKeysWith: { first, second in
                 // Prefer private key over public one!
@@ -107,14 +108,14 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     /// Initializes JWKSet using given array of key.
     ///
     /// - Parameter keys: An array of JWKs.
-    public init<T>(keys: T) throws where T: Sequence, T.Element: JSONWebKey {
-        try self.init(keys.map { $0 as any JSONWebKey })
+    public init<T>(keys: T) where T: Sequence, T.Element: JSONWebKey {
+        self.init(keys.map { $0 as any JSONWebKey })
     }
     
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         let keys = try container.decode([AnyJSONWebKey].self, forKey: .keys)
-        try self.init(keys.map { $0.specialized() })
+        self.init(keys.map { $0.specialized() })
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -126,7 +127,10 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     public func hash(into hasher: inout Hasher) {
         forEach { hasher.combine($0) }
     }
-    
+
+    /// Returns the key matches with given thumbprint.
+    ///
+    /// - Parameter thumbprint: The thumbprint of the key.
     public subscript(thumbprint thumbprint: Data) -> (any JSONWebKey)? {
         if let key = keySet[.thumbprint(thumbprint)] {
             return key
@@ -145,10 +149,33 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
         return nil
     }
     
-    public subscript(keyId keyId: String) -> (any JSONWebKey)? {
-        keySet.values.last(where: { $0.keyId == keyId })
+    /// Returns the key matches with given keyId.
+    ///
+    /// - Note: If the keyID is an URI of JWK thumbprint, it will be matched
+    //     with thumbprint even if `kid` field is not set.
+    /// - Parameter keyId: The keyId of the key.
+    /// - Returns: The key matches with given keyId.
+    public subscript(keyId keyId: some StringProtocol) -> (any JSONWebKey)? {
+        let jwkThumbprintPrefix = "urn:ietf:params:oauth:jwk-thumbprint:sha-256:"
+        let thumbprintPrefixLength = jwkThumbprintPrefix.count
+        if keyId.hasPrefix(jwkThumbprintPrefix),
+           let thumbprint = Data(urlBase64Encoded: keyId.dropFirst(thumbprintPrefixLength)),
+           let key = self[thumbprint: thumbprint]
+        {
+            return key
+        }
+        return keySet.values.last { key in
+            guard let itemKeyId = key.keyId else {
+                return false
+            }
+            return itemKeyId == keyId
+        }
     }
     
+    /// Returns the key set using the criteria contained by the given closure.
+    ///
+    /// - Parameter isIncluded:
+    /// - Returns:
     public func filter(_ isIncluded: (any JSONWebKey) -> Bool) -> JSONWebKeySet {
         let dictionary = keySet.filter {
             isIncluded($1)
@@ -156,67 +183,136 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
         return .init(dictionary)
     }
     
+    /// Returns the key set that contains keys that can be used
+    /// for the given algorithm.
     public func filter(algorithm: some JSONWebAlgorithm) -> JSONWebKeySet {
         guard let keyType = algorithm.keyType else { return [] }
         return filter {
-            $0.keyType == keyType && $0.curve == algorithm.curve
+            $0.keyType == keyType && (algorithm.curve == nil || $0.curve == algorithm.curve)
         }
     }
     
-    public func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        let candidates = filter(algorithm: algorithm)
-        if let id {
-            return candidates[keyId: id]
+    /// Returns the key set that contains keys that can be used to verify/decrypt
+    /// of JWS/JWE with given header.
+    ///
+    /// - Parameter header: The JOSE header of JWS or JWE.
+    /// - Returns: The key set that contains keys that can be used
+    ///     to verify/decrypt.
+    public func matches(for header: JOSEHeader) -> JSONWebKeySet {
+        var candidates: JSONWebKeySet
+        
+        if let algorithm = header.algorithm {
+            candidates = filter(algorithm: algorithm)
         } else {
-            return candidates.last
+            candidates = self
         }
+        if let keyId = header.keyId, let key = candidates[keyId: keyId] {
+            return [key]
+        }
+        
+        if let key = candidates.first(where: { $0.isMatched(to: header) }) {
+            return [key]
+        }
+        return candidates
     }
     
+    /// Merges keyset with another keyset, If the are duplicate keys
+    /// by thumbprint or keyId, the `combine` closure will be called.
+    ///
+    /// - Parameters:
+    ///   - other: the other JWK set.
+    ///   - combine: The closure that will be called for duplicate keys.
     public mutating func merge(_ other: JSONWebKeySet, uniquingKeysWith combine: (any JSONWebKey, any JSONWebKey) throws -> any JSONWebKey) rethrows {
         try keySet.merge(other.keySet) {
             try combine($0, $1)
         }
     }
     
+    /// Returns a new keyset that is the result of merging keyset with another keyset,
+    /// If the are duplicate keys by thumbprint or keyId, the `combine` closure will be called.
+    ///
+    /// - Parameters:
+    ///  - other: the other JWK set.
+    /// - combine: The closure that will be called for duplicate keys.
+    /// - Returns: A new keyset that is the result of merging the keyset with another keyset.
     public func merging(_ other: JSONWebKeySet, uniquingKeysWith combine: (any JSONWebKey, any JSONWebKey) throws -> any JSONWebKey) rethrows -> JSONWebKeySet {
         try .init(keySet.merging(other.keySet) {
             try combine($0, $1)
         })
     }
     
-    public mutating func append(_ key: some JSONWebKey) throws {
-        try keySet[.init(key)] = key
+    /// Adds a new key to the keyset.
+    ///
+    /// If another key with the same thumbprint or keyId exists, it will be removed
+    /// and the new key will be appended.
+    ///
+    /// - Parameter key: The new key to be appended.
+    public mutating func append(_ key: some JSONWebKey) {
+        keySet[.init(key)] = key
     }
     
-    public func appending(_ key: some JSONWebKey) throws -> Self {
+    /// Returns a new keyset that is the result of appending a new key to the keyset.
+    ///
+    /// - Parameter key: The new key to be appended.
+    /// - Returns: A new keyset that is the result of appending a new key to the keyset.
+    public func appending(_ key: some JSONWebKey) -> Self {
         var result = self
-        try result.append(key)
+        result.append(key)
         return result
     }
     
-    public mutating func insert(_ key: some JSONWebKey, at index: Int) throws {
-        try keySet.updateValue(key, forKey: .init(key), insertingAt: index)
+    /// Adds a new key to the keyset at the specified position.
+    ///
+    /// If the key is already exists in the keyset, the current index will be returned.
+    ///
+    /// - Parameters:
+    ///  - key: The new key to be inserted.
+    ///  - index: The position to insert the key.
+    ///  - Returns: The index of the inserted key.
+    @discardableResult
+    public mutating func insert(_ key: some JSONWebKey, at index: Int) -> Int {
+        keySet.updateValue(key, forKey: .init(key), insertingAt: index).index
     }
     
-    public func inserting(_ key: some JSONWebKey, at index: Int) throws -> Self {
+    /// Returns a new keyset that is the result of inserting a new key to the keyset at the specified position.
+    ///
+    /// If the key is already exists in keyset, the result will be the same keyset with replacement of new key.
+    /// - Parameters:
+    ///   - key: The new key to be inserted.
+    ///   - index: The position to insert the key.
+    /// - Returns: A new keyset that is the result of inserting a new key to the keyset at the specified position.
+    public func inserting(_ key: some JSONWebKey, at index: Int) -> Self {
         var result = self
-        try result.insert(key, at: index)
+        result.insert(key, at: index)
         return result
     }
     
+    /// Removes the key if a key with same thumbprint exists in keyset and retruns it.
+    ///
+    /// - Parameter key: The key to be removed.
+    /// - Throws: `DecodingError` if thumbprint of key can not be calculated
+    /// - Returns: The removed key.
     @discardableResult
     public mutating func remove(_ key: some JSONWebKey) throws -> (any JSONWebKey)? {
         try remove(thumbprint: key.thumbprint(format: .jwk, using: SHA256.self).data)
     }
     
+    /// Returns a new keyset that is the result of removing the key if a key with same thumbprint exists in keyset.
+    ///
+    /// - Parameter key: The key to be removed.
+    /// - Returns: A new keyset that is the result of removing the key if a key with same thumbprint exists in keyset.
     public func removing(_ key: some JSONWebKey) throws -> Self {
         var result = self
         try result.remove(key)
         return result
     }
     
+    /// Removes key with given thumbprint  in keyset and retruns it.
+    ///
+    /// - Parameter thumbprint: The thumbprint of the key.
+    /// - Returns: The removed key.
     @discardableResult
-    public mutating func remove(thumbprint: Data) throws -> (any JSONWebKey)? {
+    public mutating func remove(thumbprint: Data) -> (any JSONWebKey)? {
         if let key = keySet.removeValue(forKey: .thumbprint(thumbprint)) {
             return key
         } else {
@@ -234,9 +330,13 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
         return nil
     }
     
-    public func removing(thumbprint: Data) throws -> Self {
+    /// Returns a new keyset that is the result of removing key with given thumbprint in keyset.
+    ///
+    /// - Parameter thumbprint: The thumbprint of the key.
+    /// - Returns: A new keyset that is the result of removing key with given thumbprint in keyset.
+    public func removing(thumbprint: Data) -> Self {
         var result = self
-        try result.remove(thumbprint: thumbprint)
+        result.remove(thumbprint: thumbprint)
         return result
     }
 }
@@ -277,7 +377,7 @@ extension JSONWebKeySet: MutableCollection, RandomAccessCollection {
     
     public subscript(bounds: Range<Int>) -> JSONWebKeySet {
         get {
-            try! .init(keys: keys[bounds])
+            .init(keys: keys[bounds])
         }
         set {
             bounds.forEach { keySet.values[$0] = newValue[$0 - bounds.lowerBound] }
@@ -310,28 +410,36 @@ extension JSONWebKey {
             self
         }
     }
-}
-
-extension [any JSONWebKey] {
-    func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        try? JSONWebKeySet(keys: self).match(for: algorithm, id: id)
-    }
-}
-
-extension [any JSONWebSigningKey] {
-    func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        try? JSONWebKeySet(keys: self).match(for: algorithm, id: id) as? Self.Element
-    }
-}
-
-extension [any JSONWebValidatingKey] {
-    func match(for algorithm: some JSONWebAlgorithm, id: String? = nil) -> Self.Element? {
-        try? JSONWebKeySet(keys: self).match(for: algorithm, id: id) as? Self.Element
+    
+    fileprivate func isMatched(to header: JOSEHeader) -> Bool {
+        if let keyId = header.keyId, self.keyId == keyId {
+            return true
+        }
+        if let jwkThumbprint = try? header.key?.thumbprint(format: .jwk, using: SHA256.self), (try? thumbprint(format: .jwk, using: SHA256.self)) == jwkThumbprint {
+            return true
+        }
+        if let x5t = header.certificateThumbprint, x5t.count == SHA256.byteCount, x5t == (try? thumbprint(format: .spki, using: SHA256.self).data) {
+            return true
+        }
+        if let x5t = header.certificateThumbprint, x5t.count == Insecure.SHA1.byteCount, x5t == (try? thumbprint(format: .spki, using: Insecure.SHA1.self).data) {
+            return true
+        }
+        if let x5t = try? header.certificateChain.first?.thumbprint(format: .spki, using: SHA256.self), x5t == (try? thumbprint(format: .spki, using: SHA256.self)) {
+            return true
+        }
+        return false
     }
 }
 
 #if canImport(Foundation.NSURLSession)
+
 extension JSONWebKeySet {
+    /// Initializes JWKSet using given contents of given URL.
+    ///
+    /// - Parameter url: The URL of the JWKSet (`jku`)..
+    ///
+    /// - Throws: `DecodingError` if the data is not valid JSON or not a JWKSet.
+    /// - Throws: `URLError` if the URL is not reachable.
     public init(url: URL) async throws {
         let (data, response) = try await URLSession.shared.data(from: url)
         guard let _ = response as? HTTPURLResponse else {

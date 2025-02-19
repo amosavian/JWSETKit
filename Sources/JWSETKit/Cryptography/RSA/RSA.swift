@@ -20,7 +20,7 @@ extension _CryptoExtras._RSA.Signing.PublicKey: Swift.Hashable, Swift.Equatable,
 extension _RSA.Signing.PublicKey: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
         // `pkcs1DERRepresentation` is always a valid ASN1 object and it should not fail.
-        try! RSAHelper.rsaWebKey(data: pkcs1DERRepresentation).storage
+        try! RSAHelper.rsaWebKey(pkcs1: pkcs1DERRepresentation).storage
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> _RSA.Signing.PublicKey {
@@ -79,7 +79,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey {
     public var storage: JSONWebValueStorage {
         get {
             // `derRepresentation` is always a valid ASN1 object and it should not fail.
-            try! RSAHelper.rsaWebKey(data: derRepresentation).storage
+            try! RSAHelper.rsaWebKey(pkcs1: derRepresentation).storage
         }
         set {
             if let value = try? Self.create(storage: newValue) {
@@ -153,7 +153,7 @@ extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey {
     public var storage: JSONWebValueStorage {
         get {
             // `pkcs1DERRepresentation` is always a valid ASN1 object and it should not fail.
-            try! RSAHelper.rsaWebKey(data: pkcs1DERRepresentation).storage
+            try! RSAHelper.rsaWebKey(pkcs1: pkcs1DERRepresentation).storage
         }
         set {
             if let value = try? Self.create(storage: newValue) {
@@ -189,7 +189,7 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey {
     public var storage: JSONWebValueStorage {
         get {
             // `derRepresentation` is always a valid ASN1 object and it should not fail.
-            try! RSAHelper.rsaWebKey(data: derRepresentation).storage
+            try! RSAHelper.rsaWebKey(pkcs1: derRepresentation).storage
         }
         set {
             if let value = try? Self.create(storage: newValue) {

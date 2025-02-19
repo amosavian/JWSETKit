@@ -5,8 +5,12 @@
 //  Created by Amir Abbas Mousavian on 1/15/25.
 //
 
-import Crypto
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
+import Crypto
 import X509
 
 /// Presenter possesses a particular key and that the recipient can cryptographically
@@ -243,14 +247,14 @@ public struct JSONWebTokenClaimsPopParameters: JSONWebContainerParameters {
     public var confirmation: JSONWebTokenConfirmation?
     
     @_documentation(visibility: private)
-    public static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
         \.confirmation: "cnf",
     ]
 }
 
 extension JSONWebTokenClaims {
     @_documentation(visibility: private)
-    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPopParameters, T?>) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsPopParameters, T?> & Sendable) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

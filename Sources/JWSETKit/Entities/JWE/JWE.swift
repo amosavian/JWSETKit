@@ -308,16 +308,8 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///
     /// - Parameter keys: An array of keys that used to encrypt the content encryption key.
     /// - Returns: Decrypted payload.
-    public func decrypt(using keys: [any JSONWebKey], keyId: String? = nil) throws -> Data {
-        for key in keys {
-            guard (try? recipients.match(for: key, keyId: keyId)) != nil else {
-                continue
-            }
-            if let data = try? decrypt(using: key, keyId: keyId) {
-                return data
-            }
-        }
-        throw JSONWebKeyError.keyNotFound
+    public func decrypt(using keys: [any JSONWebKey]) throws -> Data {
+        try decrypt(using: JSONWebKeySet(keys: keys))
     }
     
     /// Decrypts encrypted data, using given private key.
@@ -327,12 +319,27 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///
     /// - Parameter keySet: An array of keys that used to encrypt the content encryption key.
     /// - Returns: Decrypted payload.
-    public func decrypt(using keySet: JSONWebKeySet, keyId: String? = nil) throws -> Data {
-        try decrypt(using: keySet.keys, keyId: keyId)
+    public func decrypt(using keySet: JSONWebKeySet) throws -> Data {
+        let mergedHeader = header.protected.value
+            .merging(header.unprotected ?? .init(), uniquingKeysWith: { p, _ in p })
+        for recipient in recipients {
+            let recipientMergedHeader = recipient.header
+                .map { mergedHeader.merging($0, uniquingKeysWith: { p, _ in p }) } ?? mergedHeader
+            for key in keySet.matches(for: recipientMergedHeader) {
+                if let plain = try? decrypt(using: key) {
+                    return plain
+                }
+            }
+        }
+        
+        throw JSONWebKeyError.keyNotFound
     }
 }
 
 extension String {
+    /// Encodes JWE to compact representation.
+    /// - Parameter jwe: JWE to be encoded.
+    /// - Throws: Encoding error.
     public init(jwe: JSONWebEncryption) throws {
         let encoder = JSONEncoder.encoder
         encoder.userInfo[.jwsEncodedRepresentation] = JSONWebEncryptionRepresentation.compact

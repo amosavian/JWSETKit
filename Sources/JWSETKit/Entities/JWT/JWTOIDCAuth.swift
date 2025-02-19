@@ -114,7 +114,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters: JSONWebContainerParame
     public var codeHash: Data?
     
     @_documentation(visibility: private)
-    public static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
         \.authTime: "auth_time", \.authenticationContextClassReference: "acr",
         \.authenticationMethodsReferences: "amr", \.nonce: "nonce",
         \.authorizedParty: "azp", \.authorizedPartyURL: "azp",
@@ -124,7 +124,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters: JSONWebContainerParame
 
 extension JSONWebTokenClaims {
     @_documentation(visibility: private)
-    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, T?>) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, T?> & Sendable) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
@@ -134,7 +134,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, [String]>) -> [String] {
+    public subscript(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, [String]> & Sendable) -> [String] {
         get {
             storage[stringKey(keyPath)]
         }

@@ -70,6 +70,11 @@ public func ~= <LHS: JSONWebAlgorithm, RHS: JSONWebAlgorithm>(lhs: LHS, rhs: RHS
 }
 
 extension JSONWebAlgorithm {
+    init?(_ algorithm: (any JSONWebAlgorithm)?) {
+        guard let rawValue = algorithm?.rawValue else { return nil }
+        self.init(rawValue: rawValue)
+    }
+    
     static func specialized(_ rawValue: String) -> any JSONWebAlgorithm {
         if JSONWebSignatureAlgorithm(rawValue: rawValue).keyType != nil {
             return JSONWebSignatureAlgorithm(rawValue: rawValue)

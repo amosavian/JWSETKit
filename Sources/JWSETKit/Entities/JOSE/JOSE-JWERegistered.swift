@@ -110,7 +110,7 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
     public var pbes2Count: Int?
     
     @_documentation(visibility: private)
-    public static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
         \.encryptionAlgorithm: "enc", \.compressionAlgorithm: "zip",
         \.ephemeralPublicKey: "epk", \.agreementPartyUInfo: "apu", \.agreementPartyVInfo: "apv",
         \.initialVector: "iv", \.authenticationTag: "tag",
@@ -120,7 +120,7 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
 
 extension JOSEHeader {
     @_documentation(visibility: private)
-    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: KeyPath<JoseHeaderJWERegisteredParameters, T?>) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: any KeyPath<JoseHeaderJWERegisteredParameters, T?> & Sendable) -> T? {
         get {
             storage[stringKey(keyPath)]
         }

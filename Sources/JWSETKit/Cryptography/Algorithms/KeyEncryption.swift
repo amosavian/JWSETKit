@@ -20,11 +20,6 @@ public struct JSONWebKeyEncryptionAlgorithm: JSONWebAlgorithm {
     public init<S>(_ rawValue: S) where S: StringProtocol {
         self.rawValue = String(rawValue)
     }
-    
-    init?(_ algorithm: (any JSONWebAlgorithm)?) {
-        guard let rawValue = algorithm?.rawValue else { return nil }
-        self.init(rawValue: rawValue)
-    }
 }
 
 extension JSONWebKeyEncryptionAlgorithm {
@@ -458,7 +453,7 @@ extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
         .init(rawValue: "PBES2-HS\(keyBitCount * 2)+A\(keyBitCount)KW")
     }
     
-    // **Key Management**:ECDH-ES using Concat KDF and CEK wrapped with "A128KW".
+    // **Key Management**:ECDH-ES using Concat KDF and CEK encrypted directly.
     public static var ecdhEphemeralStatic: Self { "ECDH-ES" }
     
     // **Key Management**:ECDH-ES using Concat KDF and CEK wrapped with "A128KW".

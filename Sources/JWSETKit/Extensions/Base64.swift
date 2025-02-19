@@ -52,7 +52,7 @@ extension Data {
     /// Returns nil when the input is not recognized as valid Base-64.
     ///
     /// - parameter urlBase64Encoded: URL-safe Base-64, UTF-8 encoded input data.
-    public init?(urlBase64Encoded: some DataProtocol) {
+    public init?(urlBase64Encoded: some Collection<UInt8>) {
         var base64Encoded = urlBase64Encoded.map { (byte: UInt8) -> UInt8 in
             switch byte {
             case "-":
@@ -77,8 +77,9 @@ extension Data {
     ///
     /// Returns nil when the input is not recognized as valid Base-64.
     /// - parameter urlBase64Encoded: The string to parse.
-    public init?(urlBase64Encoded: String) {
-        guard let value = Data(urlBase64Encoded: Data(urlBase64Encoded.utf8)) else { return nil }
+    @inlinable
+    public init?(urlBase64Encoded: some StringProtocol) {
+        guard let value = Data(urlBase64Encoded: urlBase64Encoded.utf8) else { return nil }
         self = value
     }
 }

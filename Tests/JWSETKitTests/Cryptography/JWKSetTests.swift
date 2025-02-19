@@ -104,9 +104,7 @@ struct JWKSetTests {
     @Test
     func testDecode() throws {
         let jwks = try JSONDecoder().decode(JSONWebKeySet.self, from: jwksData)
-        let jwksPublic = try JSONDecoder().decode(JSONWebKeySet.self, from: jwksPublicData)
         try #require(jwks.count == 2)
-//        #expect(jwks.publicKeyset == jwksPublic)
         #expect(jwks.publicKeyset[0] is (any JSONWebValidatingKey))
         #expect(jwks.publicKeyset[0] is JSONWebECPublicKey)
         

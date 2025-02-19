@@ -146,7 +146,7 @@ public struct JSONWebTokenClaimsRegisteredParameters: JSONWebContainerParameters
     public var subjectURL: URL?
     
     @_documentation(visibility: private)
-    public static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
         \.audience: "aud", \.audienceURL: "aud", \.expiry: "exp",
         \.issuedAt: "iat", \.issuer: "iss", \.issuerURL: "iss",
         \.jwtId: "jti", \.jwtUUID: "jti", \.notBefore: "nbf",
@@ -156,7 +156,7 @@ public struct JSONWebTokenClaimsRegisteredParameters: JSONWebContainerParameters
 
 extension JSONWebTokenClaims {
     @_documentation(visibility: private)
-    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, T?>) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsRegisteredParameters, T?> & Sendable) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
@@ -166,7 +166,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, [String]>) -> [String] {
+    public subscript(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsRegisteredParameters, [String]> & Sendable) -> [String] {
         get {
             let key = stringKey(keyPath)
             if let string = storage[key] as String? {
@@ -186,7 +186,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsRegisteredParameters, [URL]>) -> [URL] {
+    public subscript(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsRegisteredParameters, [URL]> & Sendable) -> [URL] {
         get {
             let key = stringKey(keyPath)
             if let url = storage[key].flatMap(URL.init(string:)) {

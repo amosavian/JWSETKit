@@ -38,6 +38,7 @@ extension SecCertificate: JSONWebValidatingKey {
         return result
     }
     
+    /// Retrieves the public key for certificate.
     public var publicKey: SecKey {
         get throws {
             guard let key = SecCertificateCopyKey(self) else {

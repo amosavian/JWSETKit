@@ -42,14 +42,14 @@ public struct JSONWebTokenClaimsOAuthParameters: JSONWebContainerParameters {
     public var clientID: String?
     
     @_documentation(visibility: private)
-    public static let keys: [PartialKeyPath<Self>: String] = [
+    public static let keys: [any PartialKeyPath<Self> & Sendable: String] = [
         \.scope: "scope", \.scopes: "scope", \.clientID: "client_id",
     ]
 }
 
 extension JSONWebTokenClaims {
     @_documentation(visibility: private)
-    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsOAuthParameters, T?>) -> T? {
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsOAuthParameters, T?> & Sendable) -> T? {
         get {
             storage[stringKey(keyPath)]
         }
@@ -59,7 +59,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: KeyPath<JSONWebTokenClaimsOAuthParameters, [String]>) -> [String] {
+    public subscript(dynamicMember keyPath: any KeyPath<JSONWebTokenClaimsOAuthParameters, [String]> & Sendable) -> [String] {
         get {
             (storage[stringKey(keyPath)] as String?)?.components(separatedBy: " ") ?? []
         }

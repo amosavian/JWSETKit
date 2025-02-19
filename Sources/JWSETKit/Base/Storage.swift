@@ -154,12 +154,20 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
         hasher.combine(hashable)
     }
     
+    /// Creates a storage by merging the given storages into this storage,
+    /// using a combining closure to determine the value for duplicate keys.
+    ///
+    /// - Parameters:
+    ///  - other: A storage to merge into this storage.
+    ///  - combine: A closure that combines the values for any duplicate keys.
+    /// - Returns: A new storage with the combined keys and values of this storage and `other`.
     public func merging(_ other: JSONWebValueStorage, uniquingKeysWith combine: (any ValueType, any ValueType) throws -> any ValueType) rethrows -> JSONWebValueStorage {
         try JSONWebValueStorage(storage.merging(other.storage) {
             try .init(combine($0.value as! any ValueType, $1.value as! any ValueType))
         })
     }
     
+    /// Returns a new storage containing the key-value pairs of the storage that satisfy the given predicate.
     public func filter(_ isIncluded: (String) throws -> Bool) rethrows -> JSONWebValueStorage {
         try JSONWebValueStorage(self.storage.filter { try isIncluded($0.key) })
     }

@@ -93,11 +93,11 @@ extension TypedProtectedWebContainer {
         return "(Protected: \(encoded.urlBase64EncodedString()), Value: \(valueDescription))"
     }
     
-    public subscript<T>(dynamicMember keyPath: KeyPath<Container, T>) -> T {
+    public subscript<T>(dynamicMember keyPath: any KeyPath<Container, T> & Sendable) -> T {
         value[keyPath: keyPath]
     }
     
-    public subscript<T>(dynamicMember keyPath: WritableKeyPath<Container, T>) -> T {
+    public subscript<T>(dynamicMember keyPath: any WritableKeyPath<Container, T> & Sendable) -> T {
         get {
             value[keyPath: keyPath]
         }

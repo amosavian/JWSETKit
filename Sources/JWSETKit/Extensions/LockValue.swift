@@ -6,7 +6,22 @@
 //
 
 import Collections
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#if canImport(Glibc)
+import Glibc
+#elseif canImport(Musl)
+import Musl
+#elseif os(Windows)
+import CRT
+#elseif canImport(Android)
+import Android
+#else
+import Darwin
+#endif
+#else
 import Foundation
+#endif
 
 public protocol ReadWriteLockContext {
     static var getContext: Self { get }
@@ -84,7 +99,6 @@ public final class PthreadReadWriteLock: Locking, @unchecked Sendable {
         }
     }
     
-    @inlinable
     public func lock(_ context: PthreadReadWriteContextLock) throws {
         let result: Int32
         switch context {
@@ -94,11 +108,7 @@ public final class PthreadReadWriteLock: Locking, @unchecked Sendable {
             result = pthread_rwlock_wrlock(lock)
         }
         if result != 0 {
-#if canImport(Darwin)
-            throw POSIXError(.init(rawValue: result) ?? .ELAST)
-#else
-            throw NSError(domain: NSPOSIXErrorDomain, code: Int(result))
-#endif
+            throw POSIXError(POSIXError.Code(rawValue: result) ?? .ECANCELED, userInfo: [:])
         }
     }
     
@@ -203,12 +213,12 @@ public final class LockedValue<Context, Lock: Locking<Context>, Value>: @uncheck
     }
     
     @inlinable
-    public subscript<U>(dynamicMember keyPath: KeyPath<Value, U>) -> U {
+    public subscript<U>(dynamicMember keyPath: any KeyPath<Value, U> & Sendable) -> U {
         wrappedValue[keyPath: keyPath]
     }
     
     @inlinable
-    public subscript<U>(dynamicMember keyPath: WritableKeyPath<Value, U>) -> U {
+    public subscript<U>(dynamicMember keyPath: any WritableKeyPath<Value, U> & Sendable) -> U {
         get {
             wrappedValue[keyPath: keyPath]
         }
@@ -478,5 +488,3 @@ extension LockedValue: ExpressibleByDictionaryLiteral where Value: ExpressibleBy
         self.init(wrappedValue: Value(uniqueKeysWithValues: elements))
     }
 }
-
-extension Swift.AnyKeyPath: @unchecked Swift.Sendable {}

@@ -5,7 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/7/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
 import Foundation
+#endif
 
 /// Error type thrown by JWSETKit framework.
 public protocol JSONWebError: LocalizedError {
@@ -47,17 +51,40 @@ public enum JSONWebKeyError: JSONWebError, Sendable {
     public func localizedError(for locale: Locale) -> String {
         switch self {
         case .unknownAlgorithm:
-            return .init(localizingKey: "errorUnknownAlgorithm", locale: locale)
+            return .init(
+                localizingKey: "errorUnknownAlgorithm",
+                value: "Given signature/encryption algorithm is no supported.",
+                locale: locale
+            )
         case .unknownKeyType:
-            return .init(localizingKey: "errorUnknownKeyType", locale: locale)
+            return .init(
+                localizingKey: "errorUnknownKeyType", value: "Key type is not supported.",
+                locale: locale
+            )
         case .decryptionFailed:
-            return .init(localizingKey: "errorDecryptionFailed", locale: locale)
+            return .init(
+                localizingKey: "errorDecryptionFailed",
+                value: "Decrypting cipher-text using given key is not possible.",
+                locale: locale
+            )
         case .keyNotFound:
-            return .init(localizingKey: "errorKeyNotFound", locale: locale)
+            return .init(
+                localizingKey: "errorKeyNotFound",
+                value: "Failed to find given key.",
+                locale: locale
+            )
         case .operationNotAllowed:
-            return .init(localizingKey: "errorOperationNotAllowed", locale: locale)
+            return .init(
+                localizingKey: "errorOperationNotAllowed",
+                value: "Operation Not Allowed.",
+                locale: locale
+            )
         case .invalidKeyFormat:
-            return .init(localizingKey: "errorInvalidKeyFormat", locale: locale)
+            return .init(
+                localizingKey: "errorInvalidKeyFormat",
+                value: "Invalid Key Format",
+                locale: locale
+            )
         }
     }
 }
@@ -78,21 +105,49 @@ public enum JSONWebValidationError: JSONWebError, Sendable {
     /// A required field is missing.
     case missingRequiredField(key: String)
     
-    /// A localized message describing what error occurred.
-    public func localizedError(for locale: Locale) -> String {
+    private func formatDate(_ date: Date, locale: Locale) -> String {
+#if canImport(Foundation.NSDateFormatter)
         let dateFormatter = DateFormatter()
         dateFormatter.locale = locale
         dateFormatter.dateStyle = .medium
         dateFormatter.timeStyle = .medium
+        return dateFormatter.string(from: date)
+#else
+        return Date.ISO8601FormatStyle.iso8601.dateTimeSeparator(.space).format(date)
+#endif
+    }
+    
+    /// A localized message describing what error occurred.
+    public func localizedError(for locale: Locale) -> String {
         switch self {
         case .tokenExpired(let date):
-            return .init(localizingKey: "errorExpiredToken", locale: locale, dateFormatter.string(from: date))
+            return .init(
+                localizingKey: "errorExpiredToken",
+                value: "Token is invalid after %@",
+                locale: locale,
+                formatDate(date, locale: locale)
+            )
         case .tokenInvalidBefore(let date):
-            return .init(localizingKey: "errorNotBeforeToken", locale: locale, dateFormatter.string(from: date))
+            return .init(
+                localizingKey: "errorNotBeforeToken",
+                value: "Token is invalid before %@",
+                locale: locale,
+                formatDate(date, locale: locale)
+            )
         case .audienceNotIntended(let audience):
-            return .init(localizingKey: "errorInvalidAudience", locale: locale, audience)
+            return .init(
+                localizingKey: "errorInvalidAudience",
+                value: "Audience \"%@\" is not intended for the token.",
+                locale: locale,
+                audience
+            )
         case .missingRequiredField(let key):
-            return .init(localizingKey: "errorMissingField", locale: locale, key)
+            return .init(
+                localizingKey: "errorMissingField",
+                value: "Required \"%@\" field is missing.",
+                locale: locale,
+                key
+            )
         }
     }
 }

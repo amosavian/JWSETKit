@@ -31,6 +31,11 @@ public struct JSONWebSignatureHeader: Hashable, Codable, Sendable {
     /// Signature of protected header concatenated with payload.
     public var signature: Data
     
+    /// Combination of protected header and unprotected header.
+    public var mergedHeader: JOSEHeader {
+        protected.value.merging(unprotected ?? .init(), uniquingKeysWith: { protected, _ in protected })
+    }
+    
     /// Creates a new JWS header using components.
     ///
     /// - Parameters:

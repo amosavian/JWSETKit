@@ -5,6 +5,23 @@
 //  Created by Amir Abbas Mousavian on 9/16/23.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+
+extension String {
+    init(localizingKey _: String, value: String, locale _: Locale) {
+        self = value
+    }
+    
+    init(localizingKey _: String, value: String, locale: Locale, _ arguments: any CVarArg...) {
+        self.init(format: value, locale: locale, arguments: arguments)
+    }
+    
+    init(localizingKey _: String, value: String, locale: Locale, arguments: [any CVarArg]) {
+        self.init(format: value, locale: locale, arguments: arguments)
+    }
+}
+#else
 import Foundation
 
 private class Decoy {}
@@ -23,24 +40,25 @@ extension Bundle {
 }
 
 extension String {
-    init(localizingKey key: String, locale: Locale) {
+    init(localizingKey key: String, value: String, locale: Locale) {
         let bundle: Bundle
         if locale != .autoupdatingCurrent, locale != .current {
             bundle = Bundle.current.forLocale(locale)
         } else {
             bundle = Bundle.current
         }
-        self = bundle.localizedString(forKey: key, value: "", table: "")
+        self = bundle.localizedString(forKey: key, value: value, table: "")
     }
     
-    init(localizingKey key: String, locale: Locale, _ arguments: any CVarArg...) {
-        self = .init(format: .init(localizingKey: key, locale: locale), arguments: arguments)
+    init(localizingKey key: String, value: String, locale: Locale, _ arguments: any CVarArg...) {
+        self = .init(format: .init(localizingKey: key, value: value, locale: locale), arguments: arguments)
     }
     
-    init(localizingKey key: String, locale: Locale, arguments: [any CVarArg]) {
-        self = .init(format: .init(localizingKey: key, locale: locale), arguments: arguments)
+    init(localizingKey key: String, value: String, locale: Locale, arguments: [any CVarArg]) {
+        self = .init(format: .init(localizingKey: key, value: value, locale: locale), arguments: arguments)
     }
 }
+#endif
 
 extension Locale {
     private var languageIdentifier: String? {
