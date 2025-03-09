@@ -113,7 +113,7 @@ extension SymmetricKey: JSONWebSymmetricDecryptingKey {
     }
 }
 
-extension SymmetricKey: JSONWebSealingKey {
+extension SymmetricKey: JSONWebSymmetricSealingKey {
     public init(_ key: SymmetricKey) throws {
         self = key
     }

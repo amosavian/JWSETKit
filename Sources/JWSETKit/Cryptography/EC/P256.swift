@@ -55,7 +55,11 @@ extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     }
 }
 
-extension Crypto.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(publicKey)
+    }
+}
 
 extension P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public init(algorithm _: some JSONWebAlgorithm) throws {
@@ -96,7 +100,11 @@ extension SecureEnclave.P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPriv
     }
 }
 
-extension Crypto.SecureEnclave.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.SecureEnclave.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(publicKey)
+    }
+}
 
 extension SecureEnclave.P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     var rawRepresentation: Data {

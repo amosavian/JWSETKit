@@ -69,6 +69,101 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
     }
 }
 
+extension X509.Certificate.PrivateKey: Swift.Codable {}
+
+extension Certificate.PrivateKey: JSONWebSigningKey {
+    public var storage: JSONWebValueStorage {
+        (try? jsonWebKey().storage) ?? .init()
+    }
+    
+    public init(algorithm: some JSONWebAlgorithm) throws {
+        switch algorithm {
+        case .ecdsaSignatureP256SHA256:
+            self.init(P256.Signing.PrivateKey())
+        case .ecdsaSignatureP384SHA384:
+            self.init(P384.Signing.PrivateKey())
+        case .ecdsaSignatureP521SHA512:
+            self.init(P521.Signing.PrivateKey())
+        case .eddsaSignature:
+            self.init(Curve25519.Signing.PrivateKey())
+        case .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384, .rsaSignaturePSSSHA512,
+             .rsaSignaturePKCS1v15SHA256, .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512:
+#if canImport(CommonCrypto)
+            let secKey = try SecKey(algorithm: algorithm)
+            try self.init(secKey)
+#elseif canImport(_CryptoExtras)
+            try self.init(_RSA.Signing.PrivateKey(keySize: .bits2048))
+#else
+            #error("Unimplemented")
+#endif
+        default:
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+    }
+    
+    public static func create(storage: JSONWebValueStorage) throws -> Certificate.PrivateKey {
+        let key = AnyJSONWebKey(storage: storage)
+        
+        switch (key.keyType, key.curve) {
+        case (.some(.ellipticCurve), .some(.p256)):
+            return try .init(P256.Signing.PrivateKey.create(storage: storage))
+        case (.some(.ellipticCurve), .some(.p384)):
+            return try .init(P384.Signing.PrivateKey.create(storage: storage))
+        case (.some(.ellipticCurve), .some(.p521)):
+            return try .init(P521.Signing.PrivateKey.create(storage: storage))
+        case (.some(.octetKeyPair), .some(.ed25519)):
+            return try .init(Curve25519.Signing.PrivateKey.create(storage: storage))
+        case (.some(.rsa), _):
+#if canImport(CommonCrypto)
+            let secKey = try SecKey.create(storage: storage)
+            return try Certificate.PrivateKey(secKey)
+#elseif canImport(_CryptoExtras)
+            return try .init(_RSA.Signing.PrivateKey.create(storage: storage))
+#else
+            #error("Unimplemented")
+#endif
+        default:
+            throw JSONWebKeyError.unknownKeyType
+        }
+    }
+    
+    public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
+        try jsonWebKey().signature(data, using: algorithm)
+    }
+    
+    /// Generates a key object from the public key inside certificate.
+    ///
+    /// - Returns: A public key to validate signatures.
+    public func jsonWebKey() throws -> any JSONWebSigningKey {
+        let der = try serializeAsPEM().derBytes
+        let pkcs8 = try PKCS8PrivateKey(derEncoded: der)
+        switch try (pkcs8.keyType, pkcs8.keyCurve) {
+        case (.ellipticCurve, .p256):
+            return try P256.Signing.PrivateKey(derRepresentation: der)
+        case (.ellipticCurve, .p384):
+            return try P384.Signing.PrivateKey(derRepresentation: der)
+        case (.ellipticCurve, .p521):
+            return try P521.Signing.PrivateKey(derRepresentation: der)
+        case (.octetKeyPair, .ed25519):
+            return try Curve25519.Signing.PrivateKey(importing: der, format: .pkcs8)
+        case (.rsa, _):
+#if canImport(CommonCrypto)
+            return try SecKey(derRepresentation: Data(der), keyType: .rsa)
+#elseif canImport(_CryptoExtras)
+            return try _RSA.Signing.PrivateKey(derRepresentation: der)
+#else
+            #error("Unimplemented")
+#endif
+        default:
+            throw JSONWebKeyError.unknownKeyType
+        }
+    }
+    
+    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
+        try publicKey.jsonWebKey().thumbprint(format: format, using: hashFunction)
+    }
+}
+
 extension DERImplicitlyTaggable {
     /// Initializes a DER serializable object from given data.
     ///

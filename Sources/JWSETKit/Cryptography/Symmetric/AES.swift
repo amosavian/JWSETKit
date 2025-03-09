@@ -17,7 +17,7 @@ import CommonCrypto
 
 /// JSON Web Key (JWK) container for AES-GCM keys for encryption/decryption.
 @frozen
-public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
+public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
     /// Symmetric key using for encryption.

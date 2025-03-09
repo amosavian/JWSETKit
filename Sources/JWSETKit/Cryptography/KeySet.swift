@@ -404,7 +404,7 @@ extension JSONWebKey {
             key.publicKey
         case let key as any JSONWebDecryptingKey:
             key.publicKey
-        case is any JSONWebSealingKey:
+        case is any JSONWebSymmetricSealingKey:
             nil
         default:
             self

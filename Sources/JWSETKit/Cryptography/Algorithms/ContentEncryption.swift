@@ -23,7 +23,7 @@ public struct JSONWebContentEncryptionAlgorithm: JSONWebAlgorithm {
 }
 
 extension JSONWebContentEncryptionAlgorithm {
-    private static let keyRegistryClasses: PthreadReadWriteLockedValue<[Self: any JSONWebSealingKey.Type]> = [
+    private static let keyRegistryClasses: PthreadReadWriteLockedValue<[Self: any JSONWebSymmetricSealingKey.Type]> = [
         .aesEncryptionGCM128: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM192: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM256: JSONWebKeyAESGCM.self,
@@ -50,7 +50,7 @@ extension JSONWebContentEncryptionAlgorithm {
     }
     
     /// Returns sealing class appropriate for algorithm.
-    public var keyClass: (any JSONWebSealingKey.Type)? {
+    public var keyClass: (any JSONWebSymmetricSealingKey.Type)? {
         Self.keyRegistryClasses[self]
     }
     
@@ -74,7 +74,7 @@ extension JSONWebContentEncryptionAlgorithm {
         _ algorithm: Self,
         keyClass: KT.Type,
         keyLength: SymmetricKeySize
-    ) where KT: JSONWebSealingKey {
+    ) where KT: JSONWebSymmetricSealingKey {
         keyRegistryClasses[algorithm] = keyClass
         keyLengths[algorithm] = keyLength
     }
@@ -84,7 +84,7 @@ extension JSONWebContentEncryptionAlgorithm {
     /// Generates new random key with minimum key length.
     ///
     /// - Returns: New random key.
-    public func generateRandomKey() throws -> any JSONWebSealingKey {
+    public func generateRandomKey() throws -> any JSONWebSymmetricSealingKey {
         guard let keyClass = keyClass, let keyLength = keyLength else {
             throw JSONWebKeyError.unknownAlgorithm
         }

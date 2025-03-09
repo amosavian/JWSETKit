@@ -100,22 +100,61 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
             if let value = Double(value) {
                 return Date(timeIntervalSince1970: value)
             } else {
-                if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
-                    if let value = try? Date.ISO8601FormatStyle.iso8601.parse(value) {
-                        return value
-                    }
-                } else {
-#if canImport(Foundation.NSISO8601DateFormatter)
-                    if let value = ISO8601DateFormatter().date(from: value) {
-                        return value
-                    }
-#endif
-                }
+                return Date(iso8601: value)
             }
-            return nil
         default:
             return nil
         }
+    }
+    
+    init?(iso8601 value: String) {
+#if canImport(FoundationEssentials)
+        if let value = try? Date.ISO8601FormatStyle.iso8601.parse(value) {
+            self = value
+            return
+        }
+#else
+        if let value = ISO8601DateFormatter().date(from: value) {
+            self = value
+            return
+        }
+#endif
+        return nil
+    }
+    
+    init?(iso8601Date value: String) {
+#if canImport(FoundationEssentials)
+        if let value = try? Date.ISO8601FormatStyle.iso8601.year().month().day().parse(value) {
+            self = value
+            return
+        }
+#else
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = .withFullDate
+        if let value = formatter.date(from: value) {
+            self = value
+            return
+        }
+#endif
+        return nil
+    }
+    
+    var iso8601: String {
+#if canImport(FoundationEssentials)
+        return Date.ISO8601FormatStyle.iso8601.format(self)
+#else
+        return ISO8601DateFormatter().string(from: self)
+#endif
+    }
+    
+    var iso8601Date: String {
+#if canImport(FoundationEssentials)
+        return Date.ISO8601FormatStyle.iso8601.year().month().day().format(self)
+#else
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = .withFullDate
+        return formatter.string(from: self)
+#endif
     }
 }
 

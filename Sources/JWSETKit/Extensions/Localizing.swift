@@ -24,8 +24,6 @@ extension String {
 #else
 import Foundation
 
-private class Decoy {}
-
 extension Bundle {
     func forLocale(_ locale: Locale) -> Bundle {
         if let url = urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: locale.identifier)?.first?.baseURL {
@@ -35,17 +33,15 @@ extension Bundle {
         }
         return .module
     }
-    
-    static let current: Bundle = .init(for: Decoy.self)
 }
 
 extension String {
     init(localizingKey key: String, value: String, locale: Locale) {
         let bundle: Bundle
         if locale != .autoupdatingCurrent, locale != .current {
-            bundle = Bundle.current.forLocale(locale)
+            bundle = Bundle.module.forLocale(locale)
         } else {
-            bundle = Bundle.current
+            bundle = Bundle.module
         }
         self = bundle.localizedString(forKey: key, value: value, table: "")
     }

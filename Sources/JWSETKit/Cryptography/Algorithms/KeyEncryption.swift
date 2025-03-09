@@ -409,7 +409,7 @@ extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     public static var rsaEncryptionOAEPSHA512: Self { "RSA-OAEP-512" }
     
     /// **Key Management**: RSAES-PKCS1-v1.5
-    @available(*, deprecated, message: "This algorithm is intended to be deprecated regarding https://datatracker.ietf.org/doc/draft-ietf-jose-deprecate-none-rsa15//")
+    @available(*, deprecated, message: "This algorithm is intended to be deprecated regarding https://datatracker.ietf.org/doc/draft-ietf-jose-deprecate-none-rsa15/")
     public static var rsaEncryptionPKCS1: Self { "RSA1_5" }
     
     static var unsafeRSAEncryptionPKCS1: Self { "RSA1_5" }

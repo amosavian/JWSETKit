@@ -70,14 +70,6 @@ extension CryptoECPrivateKey {
         return try .init(rawRepresentation: privateKey)
     }
     
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(publicKey)
-    }
-    
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.publicKey == rhs.publicKey
-    }
-    
     public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
         try publicKey.thumbprint(format: format, using: hashFunction)
     }

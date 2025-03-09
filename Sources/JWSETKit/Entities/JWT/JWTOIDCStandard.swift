@@ -273,18 +273,7 @@ extension JSONWebTokenClaims {
             let key = stringKey(keyPath)
             switch keyPath {
             case \.birthdate:
-                if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
-                    let parser = Date.ISO8601FormatStyle.iso8601.year().month().day()
-                    return try? storage[key].flatMap(parser.parse)
-                } else {
-#if canImport(Foundation.NSISO8601DateFormatter)
-                    let formatter = ISO8601DateFormatter()
-                    formatter.formatOptions = [.withFullDate]
-                    return storage[key].flatMap(formatter.date(from:))
-#else
-                    return nil
-#endif
-                }
+                return storage[key].flatMap(Date.init(iso8601Date:))
             default:
                 return storage[key]
             }
@@ -293,16 +282,7 @@ extension JSONWebTokenClaims {
             let key = stringKey(keyPath)
             switch keyPath {
             case \.birthdate:
-                if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
-                    let parser = Date.ISO8601FormatStyle.iso8601.year().month().day()
-                    storage[key] = newValue.map(parser.format)
-                } else {
-#if canImport(Foundation.NSISO8601DateFormatter)
-                    let formatter = ISO8601DateFormatter()
-                    formatter.formatOptions = [.withFullDate]
-                    storage[key] = newValue.map(formatter.string(from:))
-#endif
-                }
+                storage[key] = newValue?.iso8601Date
             default:
                 storage[key] = newValue
             }

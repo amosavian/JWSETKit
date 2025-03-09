@@ -80,7 +80,11 @@ extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
     }
 }
 
-extension Crypto.Curve25519.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.Curve25519.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(publicKey)
+    }
+}
 
 extension Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public init(algorithm _: some JSONWebAlgorithm) throws {

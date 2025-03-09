@@ -113,7 +113,7 @@ public enum JSONWebValidationError: JSONWebError, Sendable {
         dateFormatter.timeStyle = .medium
         return dateFormatter.string(from: date)
 #else
-        return Date.ISO8601FormatStyle.iso8601.dateTimeSeparator(.space).format(date)
+        return date.iso8601
 #endif
     }
     

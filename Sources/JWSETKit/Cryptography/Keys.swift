@@ -321,6 +321,14 @@ extension JSONWebDecryptingKey {
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         try publicKey.encrypt(data, using: algorithm)
     }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.publicKey == rhs.publicKey
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(publicKey)
+    }
 }
 
 /// A JSON Web Key (JWK) able to decrypt cipher-texts using a symmetric key.
@@ -336,13 +344,8 @@ extension JSONWebSymmetricDecryptingKey {
     }
 }
 
-/// A JSON Web Key (JWK) able to encrypt/decrypt plain-texts with authentication-tag.
+/// A JSON Web Key (JWK) able to encrypt plain-texts with authentication-tag.
 public protocol JSONWebSealingKey: JSONWebKey {
-    /// Initializes a key for encryption with given `SymmetricKey`.
-    ///
-    /// - Parameter key: A symmetric cryptographic key.
-    init(_ key: SymmetricKey) throws
-    
     /// Encrypts plain-text data using current key.
     ///
     /// - Parameters:
@@ -356,7 +359,10 @@ public protocol JSONWebSealingKey: JSONWebKey {
         authenticating: AAD?,
         using algorithm: JWA
     ) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm
-    
+}
+
+/// A JSON Web Key (JWK) able to decrypt plain-texts with authentication-tag.
+public protocol JSONWebSealOpeningKey: JSONWebKey {
     /// Decrypts cipher-text data using current key.
     ///
     /// - Parameters:
@@ -366,6 +372,9 @@ public protocol JSONWebSealingKey: JSONWebKey {
     /// - Returns: Cipher-text data with IV and authentication tag.
     func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using algorithm: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm
 }
+
+/// A JSON Web Key (JWK) able to encrypt/decrypt plain-texts with authentication-tag using symmetric key.
+public protocol JSONWebSymmetricSealingKey: JSONWebKeySymmetric, JSONWebSealingKey, JSONWebSealOpeningKey {}
 
 extension JSONWebSealingKey {
     /// Encrypts plain-text data using current key.
@@ -407,7 +416,9 @@ extension JSONWebSealingKey {
     ) throws -> SealedData where D: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
         try seal(data, iv: Data?.none, authenticating: authenticating, using: algorithm)
     }
-    
+}
+
+extension JSONWebSealOpeningKey {
     /// Decrypts cipher-text data using current key.
     ///
     /// - Parameters:
@@ -447,6 +458,16 @@ public protocol JSONWebSigningKey: JSONWebValidatingKey {
     ///   - algorithm: The signing algorithm to use.
     /// - Returns: The digital signature or throws error on failure.
     func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol
+}
+
+extension JSONWebSigningKey {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.publicKey == rhs.publicKey
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(publicKey)
+    }
 }
 
 extension JSONWebSigningKey {
