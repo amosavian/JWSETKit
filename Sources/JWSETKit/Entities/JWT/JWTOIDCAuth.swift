@@ -124,6 +124,7 @@ public struct JSONWebTokenClaimsPublicOIDCAuthParameters: JSONWebContainerParame
 
 extension JSONWebTokenClaims {
     @_documentation(visibility: private)
+    @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -134,6 +135,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
+    @inlinable
     public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters, [String]>) -> [String] {
         get {
             storage[stringKey(keyPath)]

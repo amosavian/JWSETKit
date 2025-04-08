@@ -107,6 +107,7 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
         }
     }
     
+    @usableFromInline
     init?(iso8601 value: String) {
 #if canImport(FoundationEssentials)
         if let value = try? Date.ISO8601FormatStyle.iso8601.parse(value) {
@@ -122,6 +123,7 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
         return nil
     }
     
+    @usableFromInline
     init?(iso8601Date value: String) {
 #if canImport(FoundationEssentials)
         if let value = try? Date.ISO8601FormatStyle.iso8601.year().month().day().parse(value) {
@@ -139,6 +141,7 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
         return nil
     }
     
+    @usableFromInline
     var iso8601: String {
 #if canImport(FoundationEssentials)
         return Date.ISO8601FormatStyle.iso8601.format(self)
@@ -147,6 +150,7 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
 #endif
     }
     
+    @usableFromInline
     var iso8601Date: String {
 #if canImport(FoundationEssentials)
         return Date.ISO8601FormatStyle.iso8601.year().month().day().format(self)

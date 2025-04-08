@@ -248,6 +248,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
+    @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -258,6 +259,7 @@ extension JSONWebTokenClaims {
     }
     
     @_documentation(visibility: private)
+    @inlinable
     public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters, Bool>) -> Bool {
         get {
             storage[stringKey(keyPath)] ?? false

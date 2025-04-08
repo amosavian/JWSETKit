@@ -73,6 +73,7 @@ extension String {
 #endif
     }
     
+    @usableFromInline
     var jsonWebKey: String {
         snakeCased
             .replacingOccurrences(of: "is_", with: "", options: [.anchored])

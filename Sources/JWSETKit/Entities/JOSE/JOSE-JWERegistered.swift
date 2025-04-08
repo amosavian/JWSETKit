@@ -120,6 +120,7 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
 
 extension JOSEHeader {
     @_documentation(visibility: private)
+    @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWERegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]

@@ -418,16 +418,28 @@ extension JSONWebKey {
         if let jwkThumbprint = try? header.key?.thumbprint(format: .jwk, using: SHA256.self), (try? thumbprint(format: .jwk, using: SHA256.self)) == jwkThumbprint {
             return true
         }
-        if let x5t = header.certificateThumbprint, x5t.count == SHA256.byteCount, x5t == (try? thumbprint(format: .spki, using: SHA256.self).data) {
-            return true
-        }
-        if let x5t = header.certificateThumbprint, x5t.count == Insecure.SHA1.byteCount, x5t == (try? thumbprint(format: .spki, using: Insecure.SHA1.self).data) {
+        if let x5t = header.certificateThumbprint, x5t == (try? thumbprint(format: .spki, using: hashFunction(of: x5t)).data) {
             return true
         }
         if let x5t = try? header.certificateChain.first?.thumbprint(format: .spki, using: SHA256.self), x5t == (try? thumbprint(format: .spki, using: SHA256.self)) {
             return true
         }
         return false
+    }
+}
+
+func hashFunction<D: DataProtocol>(of data: D) throws -> any HashFunction.Type {
+    return switch data.count {
+    case SHA256.byteCount:
+        SHA256.self
+    case SHA384.byteCount:
+        SHA384.self
+    case SHA512.byteCount:
+        SHA512.self
+    case Insecure.SHA1.byteCount:
+        Insecure.SHA1.self
+    default:
+        throw CryptoKitError.incorrectParameterSize
     }
 }
 

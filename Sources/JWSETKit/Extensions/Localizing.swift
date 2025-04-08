@@ -57,7 +57,8 @@ extension String {
 #endif
 
 extension Locale {
-    private var languageIdentifier: String? {
+    @inlinable
+    var languageIdentifier: String? {
 #if canImport(Darwin)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             return language.languageCode?.identifier
@@ -69,7 +70,8 @@ extension Locale {
 #endif
     }
     
-    private var countryCode: String? {
+    @inlinable
+    var countryCode: String? {
 #if canImport(Darwin)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             return region?.identifier
@@ -81,7 +83,8 @@ extension Locale {
 #endif
     }
     
-    private var writeScript: String? {
+    @inlinable
+    var writeScript: String? {
 #if canImport(Darwin)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
             return language.script?.identifier
@@ -93,6 +96,7 @@ extension Locale {
 #endif
     }
     
+    @inlinable
     var bcp47: String {
 #if canImport(Darwin)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {
@@ -105,6 +109,7 @@ extension Locale {
 #endif
     }
     
+    @inlinable
     init(bcp47: String) {
 #if canImport(Darwin)
         if #available(macOS 13, iOS 16, tvOS 16, watchOS 9, *) {

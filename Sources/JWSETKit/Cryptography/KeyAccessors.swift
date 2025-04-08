@@ -243,11 +243,13 @@ public struct JSONWebKeyRegisteredParameters {
 }
 
 extension String {
+    @usableFromInline
     static let x5tS256 = "x5t#S256"
 }
 
 extension JSONWebKey {
-    fileprivate func stringKey<T>(_ keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, T>) -> String {
+    @usableFromInline
+    func stringKey<T>(_ keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, T>) -> String {
         if let key = JSONWebKeyRegisteredParameters.keys[keyPath] {
             return key
         }
@@ -255,17 +257,14 @@ extension JSONWebKey {
     }
     
     @_documentation(visibility: private)
+    @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
         storage[stringKey(keyPath)]
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, [String]>) -> [String] {
-        storage[stringKey(keyPath)]
-    }
-    
-    @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, [JSONWebKeyOperation]>) -> [JSONWebKeyOperation] {
+    @inlinable
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, [T]>) -> [T] {
         storage[stringKey(keyPath)]
     }
     
@@ -275,31 +274,31 @@ extension JSONWebKey {
     }
     
     @_documentation(visibility: private)
+    @inlinable
     public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, [Certificate]>) -> [Certificate] {
-        storage[stringKey(keyPath), false]
-            .compactMap {
-                try? .init(derEncoded: $0)
-            }
+        storage[stringKey(keyPath)]
     }
     
     @_documentation(visibility: private)
+    @inlinable
     public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, SymmetricKey?>) -> SymmetricKey? {
-        (storage[stringKey(keyPath), true] as Data?).map(SymmetricKey.init(data:))
+        (storage[stringKey(keyPath)] as Data?).map(SymmetricKey.init(data:))
     }
     
     @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, Data?>) -> Data? {
         switch keyPath {
         case \.certificateThumbprint where storage.contains(key: .x5tS256):
-            return storage[.x5tS256, true]
+            return storage[.x5tS256]
         default:
-            return storage[stringKey(keyPath), true]
+            return storage[stringKey(keyPath)]
         }
     }
 }
 
 extension MutableJSONWebKey {
     @_documentation(visibility: private)
+    @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -310,17 +309,8 @@ extension MutableJSONWebKey {
     }
     
     @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, [String]>) -> [String] {
-        get {
-            storage[stringKey(keyPath)]
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
-        }
-    }
-    
-    @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, [JSONWebKeyOperation]>) -> [JSONWebKeyOperation] {
+    @inlinable
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, [T]>) -> [T] {
         get {
             storage[stringKey(keyPath)]
         }
@@ -340,27 +330,24 @@ extension MutableJSONWebKey {
     }
     
     @_documentation(visibility: private)
+    @inlinable
     public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, [Certificate]>) -> [Certificate] {
         get {
-            storage[stringKey(keyPath), false]
-                .compactMap {
-                    try? .init(derEncoded: $0)
-                }
+            storage[stringKey(keyPath)]
         }
         set {
-            storage[stringKey(keyPath), false] = newValue.compactMap {
-                try? $0.derRepresentation
-            }
+            storage[stringKey(keyPath)] = newValue
         }
     }
     
     @_documentation(visibility: private)
+    @inlinable
     public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, SymmetricKey?>) -> SymmetricKey? {
         get {
-            (storage[stringKey(keyPath), true] as Data?).map(SymmetricKey.init(data:))
+            (storage[stringKey(keyPath)] as Data?).map(SymmetricKey.init(data:))
         }
         set {
-            storage[stringKey(keyPath), true] = newValue?.data
+            storage[stringKey(keyPath)] = newValue?.data
         }
     }
     
@@ -369,17 +356,17 @@ extension MutableJSONWebKey {
         get {
             switch keyPath {
             case \.certificateThumbprint where storage.contains(key: .x5tS256):
-                return storage[.x5tS256, true]
+                return storage[.x5tS256]
             default:
-                return storage[stringKey(keyPath), true]
+                return storage[stringKey(keyPath)]
             }
         }
         set {
             switch keyPath {
             case \.certificateThumbprint where newValue?.count == SHA256.byteCount:
-                storage[.x5tS256, true] = newValue
+                storage[.x5tS256] = newValue
             default:
-                storage[stringKey(keyPath), true] = newValue
+                storage[stringKey(keyPath)] = newValue
             }
         }
     }

@@ -49,6 +49,7 @@ public struct JSONWebTokenClaimsOAuthParameters: JSONWebContainerParameters {
 
 extension JSONWebTokenClaims {
     @_documentation(visibility: private)
+    @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsOAuthParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]

@@ -67,11 +67,13 @@ extension JSONWebContainer {
         }
     }
     
-    private func stringKey<T>(_ keyPath: SendableKeyPath<JSONWebContainerCustomParameters, T>) -> String {
+    @usableFromInline
+    func stringKey<T>(_ keyPath: SendableKeyPath<JSONWebContainerCustomParameters, T>) -> String {
         keyPath.name.jsonWebKey
     }
     
     @_documentation(visibility: private)
+    @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember member: SendableKeyPath<JSONWebContainerCustomParameters, T?>) -> T? {
         get {
             storage[stringKey(member)]
@@ -83,6 +85,7 @@ extension JSONWebContainer {
     
     @_documentation(visibility: private)
     @_disfavoredOverload
+    @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember member: String) -> T? {
         get {
             storage[member.jsonWebKey]

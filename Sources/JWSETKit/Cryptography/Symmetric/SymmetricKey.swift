@@ -25,7 +25,7 @@ extension SymmetricKey: JSONWebKey {
     public var publicKey: SymmetricKey { self }
     
     public static func create(storage: JSONWebValueStorage) throws -> SymmetricKey {
-        guard let key = (storage["k", true] as Data?) else {
+        guard let key = (storage["k"] as Data?) else {
             throw CryptoKitError.incorrectKeySize
         }
         return SymmetricKey(data: key)
@@ -50,6 +50,7 @@ extension SymmetricKey: JSONWebKey {
 }
 
 extension ContiguousBytes {
+    @usableFromInline
     var data: Data {
         withUnsafeBytes { Data($0) }
     }

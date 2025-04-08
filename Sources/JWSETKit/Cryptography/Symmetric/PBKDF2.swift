@@ -47,15 +47,16 @@ extension SymmetricKey {
 
 extension KDF.Insecure.PBKDF2.HashFunction {
     init<H>(_: H.Type) throws where H: HashFunction {
-        if H.self == Insecure.SHA1.self {
+        switch H.self {
+        case is Insecure.SHA1.Type:
             self = .insecureSHA1
-        } else if H.self == SHA256.self {
+        case is SHA256.Type:
             self = .sha256
-        } else if H.self == SHA384.self {
+        case is SHA384.Type:
             self = .sha384
-        } else if H.self == SHA512.self {
+        case is SHA512.Type:
             self = .sha512
-        } else {
+        default:
             throw CryptoKitError.incorrectKeySize
         }
     }

@@ -25,6 +25,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     }
     
     /// Returns value of given key.
+    @inlinable
     public subscript<T: ValueType>(dynamicMember member: String) -> T? {
         get {
             get(key: member, as: T.self)
@@ -35,6 +36,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     }
     
     /// Returns values of given key.
+    @inlinable
     public subscript<T: ValueType>(dynamicMember member: String) -> [T] {
         get {
             self[member]
@@ -45,6 +47,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     }
     
     /// Returns value of given key.
+    @inlinable
     public subscript<T: ValueType>(_ member: String) -> T? {
         get {
             get(key: member, as: T.self)
@@ -55,6 +58,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     }
     
     /// Returns value of given key.
+    @inlinable
     public subscript(_ member: String) -> String? {
         get {
             get(key: member, as: String.self)
@@ -188,8 +192,8 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     }
     
     /// List of all keys that have data.
-    public var storageKeys: [String] {
-        [String](storage.keys)
+    public var storageKeys: some Collection<String> {
+        storage.keys
     }
     
     /// Removes value of given key from storage.
@@ -242,11 +246,13 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
         }
     }
     
-    private func get<T>(key: String, as _: T.Type) -> T? where T: ValueType {
+    @usableFromInline
+    func get<T>(key: String, as _: T.Type) -> T? where T: ValueType {
         JSONWebValueStorage.cast(value: storage[key]?.value, as: T.self)
     }
     
-    private mutating func updateValue<T>(key: String, value: T?) where T: ValueType {
+    @usableFromInline
+    mutating func updateValue<T>(key: String, value: T?) where T: ValueType {
         guard let value = value else {
             remove(key: key)
             return
@@ -260,3 +266,25 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
         }
     }
 }
+
+#if canImport(X509)
+import X509
+
+extension JSONWebValueStorage {
+    /// Returns values of given key decoded using base64.
+    public subscript(_ member: String) -> [Certificate] {
+        get {
+            (self[member] as [String])
+                .compactMap { Data(base64Encoded: $0) }
+                .compactMap {
+                    try? .init(derEncoded: $0)
+                }
+        }
+        set {
+            self[member] = newValue.compactMap {
+                (try? $0.derRepresentation)?.base64EncodedString()
+            }
+        }
+    }
+}
+#endif

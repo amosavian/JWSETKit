@@ -171,6 +171,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
 
 extension JOSEHeader {
     @_documentation(visibility: private)
+    @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, T?>) -> T? {
         get {
             storage[stringKey(keyPath)]
@@ -207,6 +208,7 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
+    @inlinable
     public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [String]>) -> [String] {
         get {
             storage[stringKey(keyPath)]
@@ -230,15 +232,10 @@ extension JOSEHeader {
     @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [Certificate]>) -> [Certificate] {
         get {
-            storage[stringKey(keyPath), false]
-                .compactMap {
-                    try? .init(derEncoded: $0)
-                }
+            storage[stringKey(keyPath)]
         }
         set {
-            storage[stringKey(keyPath), false] = newValue.compactMap {
-                try? $0.derRepresentation
-            }
+            storage[stringKey(keyPath)] = newValue
         }
     }
     
@@ -247,17 +244,17 @@ extension JOSEHeader {
         get {
             switch keyPath {
             case \.certificateThumbprint where storage.contains(key: .x5tS256):
-                return storage[.x5tS256, true]
+                return storage[.x5tS256]
             default:
-                return storage[stringKey(keyPath), true]
+                return storage[stringKey(keyPath)]
             }
         }
         set {
             switch keyPath {
             case \.certificateThumbprint where newValue?.count == SHA256.byteCount:
-                storage[.x5tS256, true] = newValue
+                storage[.x5tS256] = newValue
             default:
-                storage[stringKey(keyPath), true] = newValue
+                storage[stringKey(keyPath)] = newValue
             }
         }
     }

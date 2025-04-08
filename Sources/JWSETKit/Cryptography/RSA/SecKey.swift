@@ -153,6 +153,20 @@ extension SecKey: JSONWebKey {
         }
     }
     
+    public static func == (lhs: SecKey, rhs: SecKey) -> Bool {
+        guard let lhsData = try? lhs.publicKey.externalRepresentation,
+              let rhsData = try? rhs.publicKey.externalRepresentation else {
+            return false
+        }
+        return lhsData == rhsData
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        if let value = try? publicKey.externalRepresentation {
+            hasher.combine(value)
+        }
+    }
+    
     private func jsonWebKey() throws -> any JSONWebKey {
         switch try keyType {
         case .ellipticCurve:

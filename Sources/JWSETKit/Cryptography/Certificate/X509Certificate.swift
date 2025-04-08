@@ -168,11 +168,13 @@ extension DERImplicitlyTaggable {
     /// Initializes a DER serializable object from given data.
     ///
     /// - Parameter derEncoded: DER encoded object.
+    @usableFromInline
     init<D>(derEncoded: D) throws where D: DataProtocol {
         try self.init(derEncoded: [UInt8](derEncoded))
     }
     
     /// DER serialized data representation of object.
+    @usableFromInline
     var derRepresentation: Data {
         get throws {
             var derSerializer = DER.Serializer()
