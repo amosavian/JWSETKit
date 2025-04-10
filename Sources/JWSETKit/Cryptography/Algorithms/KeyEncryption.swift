@@ -149,9 +149,14 @@ extension JSONWebKeyEncryptionAlgorithm {
         Self.keyTypes[self]
     }
     
-    /// Returns private and public class appropriate for algorithm.
-    public var keyClass: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)? {
-        Self.keyRegistryClasses[self]
+    /// Returns private class appropriate for algorithm.
+    public var encryptingKeyClass: (any JSONWebEncryptingKey.Type)? {
+        Self.keyRegistryClasses[self]?.public
+    }
+    
+    /// Returns public class appropriate for algorithm.
+    public var decryptingKeyClass: (any JSONWebDecryptingKey.Type)? {
+        Self.keyRegistryClasses[self]?.private
     }
     
     // Length of key in bits, if applicable.
@@ -184,23 +189,21 @@ extension JSONWebKeyEncryptionAlgorithm {
     /// - Parameters:
     ///   - algorithm: New algorithm name.
     ///   - type: Type of key. Can be symmetric, RSA or Elliptic curve.
-    ///   - publicKeyClass: Public key class.
     ///   - privateKeyClass: Private key class. In case the key is symmetric, it equals to `publicKeyClass`.
     ///   - keyLengthInBits:Key length in bits, if applicable.
     ///   - hashFunction: Hash function of symmetric keys.
     ///   - encryptedKeyHandler: Encrypting content encryption key.
     ///   - decryptionMutating: Prepares key encryption key and content encryption before applying in decryption.
-    public static func register<Public, Private>(
+    public static func register<Private>(
         _ algorithm: Self,
         type: JSONWebKeyType,
-        publicKeyClass: Public.Type,
-        privateKeyClass: Private.Type,
+        decryptingKeyClass: Private.Type,
         keyLengthInBits: Int?,
         hashFunction: (any HashFunction.Type)? = nil,
         encryptedKeyHandler: EncryptedKeyHandler?,
         decryptionMutating: DecryptionMutatorHandler?
-    ) where Public: JSONWebEncryptingKey, Private: JSONWebDecryptingKey {
-        keyRegistryClasses[algorithm] = (publicKeyClass, privateKeyClass)
+    ) where Private: JSONWebDecryptingKey {
+        keyRegistryClasses[algorithm] = (decryptingKeyClass.PublicKey, decryptingKeyClass)
         keyTypes[algorithm] = type
         keyLengths[algorithm] = keyLengthInBits
         hashFunctions[algorithm] = hashFunction
@@ -212,7 +215,7 @@ extension JSONWebKeyEncryptionAlgorithm {
     ///
     /// - Returns: New random key.
     public func generateRandomKey() throws -> any JSONWebDecryptingKey {
-        guard let keyClass = keyClass?.private else {
+        guard let keyClass = decryptingKeyClass else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         return try keyClass.init(algorithm: self)

@@ -46,6 +46,8 @@ extension P521.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {
 extension Crypto.P521.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
 
 extension P521.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+    public typealias PublicKey = P521.Signing.PublicKey
+    
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
@@ -62,6 +64,8 @@ extension Crypto.P521.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {
 }
 
 extension P521.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+    public typealias PublicKey = P521.KeyAgreement.PublicKey
+    
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }

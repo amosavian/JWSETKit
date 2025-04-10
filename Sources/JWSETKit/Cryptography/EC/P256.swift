@@ -46,6 +46,8 @@ extension P256.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {
 extension Crypto.P256.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
 
 extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+    public typealias PublicKey = P256.Signing.PublicKey
+    
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
@@ -62,6 +64,7 @@ extension Crypto.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {
 }
 
 extension P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+    public typealias PublicKey = P256.KeyAgreement.PublicKey
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
@@ -75,6 +78,8 @@ extension P256.KeyAgreement.PrivateKey: CryptoECKeyPortable {}
 extension Crypto.SecureEnclave.P256.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
 
 extension SecureEnclave.P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+    public typealias PublicKey = P256.Signing.PublicKey
+    
     public var storage: JSONWebValueStorage {
         // Keys stored in SecureEnclave are not exportable.
         //
@@ -107,6 +112,8 @@ extension Crypto.SecureEnclave.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swi
 }
 
 extension SecureEnclave.P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+    public typealias PublicKey = P256.KeyAgreement.PublicKey
+    
     var rawRepresentation: Data {
         fatalError("Private Keys in Secure Enclave are not encodable.")
     }

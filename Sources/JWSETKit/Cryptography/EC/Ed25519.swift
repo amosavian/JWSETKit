@@ -71,6 +71,8 @@ extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {}
 extension Crypto.Curve25519.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
 
 extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+    public typealias PublicKey = Curve25519.Signing.PublicKey
+    
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init()
     }
@@ -87,6 +89,8 @@ extension Crypto.Curve25519.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codab
 }
 
 extension Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey {
+    public typealias PublicKey = Curve25519.KeyAgreement.PublicKey
+    
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init()
     }
