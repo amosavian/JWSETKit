@@ -341,7 +341,7 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     }
 }
 
-public func == (lhs: some Sequence<JSONWebKey>, rhs: some Sequence<JSONWebKey>) -> Bool {
+public func == (lhs: some Sequence<any JSONWebKey>, rhs: some Sequence<any JSONWebKey>) -> Bool {
     Set(lhs.map(\.storage)) == Set(rhs.map(\.storage))
 }
 
