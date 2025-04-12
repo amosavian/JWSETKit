@@ -22,6 +22,12 @@ public struct JSONWebSignatureAlgorithm: JSONWebAlgorithm {
     }
 }
 
+extension JSONWebSigningKey {
+    private static var keyPairType: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type) {
+        (PublicKey.self, Self.self)
+    }
+}
+
 extension JSONWebSignatureAlgorithm {
     private static let keyRegistryClasses: PthreadReadWriteLockedValue < [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)]> = [
         .unsafeNone: (JSONWebDirectKey.self, JSONWebDirectKey.self),
@@ -86,9 +92,14 @@ extension JSONWebSignatureAlgorithm {
         Self.curves[self]
     }
     
-    /// Returns private and public class appropriate for algorithm.
-    public var keyClass: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)? {
-        Self.keyRegistryClasses[self]
+    /// Returns private class appropriate for algorithm.
+    public var signingKeyClass: (any JSONWebSigningKey.Type)? {
+        Self.keyRegistryClasses[self]?.private
+    }
+    
+    /// Returns public class appropriate for algorithm.
+    public var validatingKeyClass: (any JSONWebValidatingKey.Type)? {
+        Self.keyRegistryClasses[self]?.public
     }
     
     /// Hash function for signing algorithms.
@@ -107,18 +118,16 @@ extension JSONWebSignatureAlgorithm {
     ///   - algorithm: New algorithm name.
     ///   - type: Type of key. Can be symmetric, RSA or Elliptic curve.
     ///   - curve: Curve if key is elliptic curve.
-    ///   - publicKeyClass: Public key class.
-    ///   - privateKeyClass: Private key class. In case the key is symmetric, it equals to `publicKeyClass`.
+    ///   - signingKeyClass: Private key class. In case the key is symmetric, it equals to `publicKeyClass`.
     ///   - hashFunction: Hash function for signature message digest.
-    public static func register<Public, Private, Hash>(
+    public static func register<Private, Hash>(
         _ algorithm: Self,
         type: JSONWebKeyType,
         curve: JSONWebKeyCurve? = nil,
-        publicKeyClass: Public.Type,
-        privateKeyClass: Private.Type,
+        signingKeyClass: Private.Type,
         hashFunction: Hash.Type
-    ) where Public: JSONWebValidatingKey, Private: JSONWebSigningKey, Hash: HashFunction {
-        keyRegistryClasses[algorithm] = (publicKeyClass, privateKeyClass)
+    ) where Private: JSONWebSigningKey, Hash: HashFunction {
+        keyRegistryClasses[algorithm] = (signingKeyClass.PublicKey, signingKeyClass)
         keyTypes[algorithm] = type
         curves[algorithm] = curve
         hashFunctions[algorithm] = hashFunction
@@ -130,7 +139,7 @@ extension JSONWebSignatureAlgorithm {
     ///
     /// - Returns: New random key.
     public func generateRandomKey() throws -> any JSONWebSigningKey {
-        guard let keyClass = keyClass?.private else {
+        guard let keyClass = signingKeyClass else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         return try keyClass.init(algorithm: self)
