@@ -16,7 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [macos-14, ubuntu-latest]
-        swift: ["6.0", "5.10"]
+        swift: ["6.1", "6.0", "5.10"]
 
     steps:
     - uses: SwiftyLab/setup-swift@latest
