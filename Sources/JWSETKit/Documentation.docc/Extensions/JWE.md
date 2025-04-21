@@ -5,27 +5,80 @@ Use JWE to encrypt a payload.
 ## Overview
 
 JSON Web Encryption (JWE) represents encrypted content using JSON-based 
-data structures RFC7159. The JWE cryptographic mechanismsencrypt 
+data structures RFC7159. The JWE cryptographic mechanisms encrypt 
 and provide integrity protection for an arbitrary sequence of octets.
+
+### Structure of a Compact JWE Token
+
+A JWE in compact serialization consists of five parts separated by dots (`.`):
+
+```
+header.encrypted_key.iv.ciphertext.tag
+```
+
+Each part is Base64URL encoded:
+
+1. **Protected Header**: Contains metadata about encryption algorithms
+2. **Encrypted Key**: Contains the content encryption key (CEK) encrypted with the recipient's key
+3. **Initialization Vector**: Random data used as input to the encryption algorithm
+4. **Ciphertext**: The encrypted payload data
+5. **Authentication Tag**: Ensures data integrity and authenticity
+
+Visualized structure:
+```
+┌─────────────┐  ┌─────────────┐  ┌─────┐  ┌───────────┐  ┌─────┐
+│   Header    │  │ Encrypted   │  │ IV  │  │Ciphertext │  │ Tag │
+│ {           │  │    Key      │  │     │  │           │  │     │
+│  "alg":"RSA1_5"│  (encrypted   │  │     │  │ (encrypted │  │     │
+│  "enc":"A256GCM"│  CEK)       │  │     │  │  data)    │  │     │
+│ }           │  │             │  │     │  │           │  │     │
+└─────────────┘  └─────────────┘  └─────┘  └───────────┘  └─────┘
+       │                │             │          │           │
+       │                │             └──────────┼───────────┘
+       │                │                        │
+       │                │                authenticated encryption
+       │                │                        │
+       │        key encryption                   │
+       │                │                        │
+       └────────────────┼────────────────────────┘
+                        │
+                   recipient key
+```
 
 ## Decoding And Decrypting
 
 To create a new instance from compact or complete serialization,
 
 ``` swift
-let jwe = try JSONWebEncryption(from: jweString)
+do {
+    let jwe = try JSONWebEncryption(from: jweString)
+    // Work with the JWE object
+} catch {
+    print("Failed to parse JWE: \(error)")
+}
 ```
 
-Now it is possible to decrypt data using private key,
+Now it is possible to decrypt data using the appropriate key:
 
 ```swift
-let data = try jwe.decrypt(using: keyEncryptionKey)
+do {
+    let data = try jwe.decrypt(using: keyEncryptionKey)
+    // Process the decrypted data
+} catch {
+    print("Decryption failed: \(error)")
+}
 ```
 
-Decrypted content now can be deserialized. For example if content is JWT claims,
+Decrypted content now can be deserialized. For example if content is JWT claims:
 
 ```swift
-let claims = JSONDecoder().decode(JSONWebTokenClaims.self, from: data)
+do {
+    let claims = try JSONDecoder().decode(JSONWebTokenClaims.self, from: data)
+    // Access the claims
+    let subject = claims.subject
+} catch {
+    print("Failed to decode claims: \(error)")
+}
 ```
 
 ## Encrypting & Encoding

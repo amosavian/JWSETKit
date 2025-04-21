@@ -15,26 +15,39 @@ Authentication Code (MAC) and/or encrypted.
 
 ## Initializing And Encoding
 
-To create a JWT instance from `String` or `Data`,
+To create a JWT instance from `String` or `Data`:
 
 ```swift
-let jwt = try JSONWebToken(from: authorization)
+do {
+    let jwt = try JSONWebToken(from: jwtString)
+    // Work with the parsed JWT
+} catch {
+    // Handle parsing errors
+    print("Failed to parse JWT: \(error)")
+}
 ```
 
 To assign a JWT to [`URLRequest`](https://developer.apple.com/documentation/foundation/urlrequest)'s
-`Authorization` header using ``Foundation/URLRequest/authorizationToken`` ,
+`Authorization` header using ``Foundation/URLRequest/authorizationToken``:
 
 ```swift
 var request = URLRequest(url: URL(string: "https://www.example.com")!)
 request.authorizationToken = jwt
 ```
 
-To convert back a JWT instance to string representation,
+To convert a JWT instance back to its string representation:
 
 ```swift
-let jwtString = try String(jws: jwt)
+do {
+    let jwtString = try String(jws: jwt)
+    // Use jwtString
+} catch {
+    print("Failed to serialize JWT: \(error)")
+}
 ```
-or
+
+Or more simply, using the `description` property (which returns an empty string if serialization fails):
+
 ```swift
 let jwtString = jwt.description
 ```

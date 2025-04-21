@@ -23,7 +23,7 @@ To use JWSETKit, add the following dependency to your Package.swift:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.8.0"))
+    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.24.0"))
 ]
 ```
 
@@ -54,6 +54,15 @@ of JWS.
 Check ``JSONWebEncryption`` documentation for usage, encrypting and decrypting
 payload.
 
+### JSON Web Key (JWK)
+
+Check ``JSONWebKey`` documentation for working with cryptographic keys in JWK format.
+
+### JSON Web Algorithms (JWA)
+
+Check ``JSONWebAlgorithm`` documentation for information on supported algorithms
+and their usage.
+
 ## Topics
 
 ### Essentials
@@ -61,10 +70,21 @@ payload.
 - ``JSONWebToken``
 - ``JSONWebSignature``
 - ``JSONWebEncryption``
+- ``JSONWebKey``
+- ``JSONWebAlgorithm``
+- <doc:5-SecurityGuidelines>
 
 ### Cryptography
 
 - <doc:3-Cryptography>
+- ``JSONWebKeySet``
+- ``AnyJSONWebKey``
+
+### Algorithms
+
+- ``JSONWebSignatureAlgorithm``
+- ``JSONWebKeyEncryptionAlgorithm``
+- ``JSONWebContentEncryptionAlgorithm``
 
 ### Extending
 

@@ -118,7 +118,7 @@ extension JSONWebSignatureAlgorithm {
     ///   - algorithm: New algorithm name.
     ///   - type: Type of key. Can be symmetric, RSA or Elliptic curve.
     ///   - curve: Curve if key is elliptic curve.
-    ///   - signingKeyClass: Private key class. In case the key is symmetric, it equals to `publicKeyClass`.
+    ///   - signingKeyClass: Private key class. In case the key is symmetric, it is same as public key..
     ///   - hashFunction: Hash function for signature message digest.
     public static func register<Private, Hash>(
         _ algorithm: Self,

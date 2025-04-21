@@ -11,7 +11,7 @@ represents a cryptographic key.
 
 The key object can be fetched using ``JSONWebContainer/storage`` property.
 
-See ``JSONWebKey``.
+See ``JSONWebKey`` for more detailed information on working with JWK format keys.
 
 ### Signature Validation
 
@@ -49,6 +49,10 @@ and resulting an authentication tag, which is asymmetric key.
 See ``JSONWebSealingKey``.
 
 ## Keys and Certificates
+
+For a comprehensive guide to key formats, key creation, import/export, and key set management, see ``JSONWebKey``.
+
+For information about supported algorithms and their usage, see ``JSONWebAlgorithm``.
 
 ### Symmetric
 

@@ -13,6 +13,42 @@ with this specification are described in the separate JSON Web
 Algorithms (JWA) specification and an IANA registry defined by that
 specification. 
 
+### Structure of a Compact JWS Token
+
+A JWS consists of three parts separated by dots (`.`):
+
+```
+header.payload.signature
+```
+
+Each part is Base64URL encoded:
+
+1. **Header**: Contains metadata about the token type and signing algorithm
+2. **Payload**: Contains the claims (data)
+3. **Signature**: Verifies the message wasn't changed
+
+Visualized structure:
+```
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│     Header      │     │     Payload     │     │    Signature    │
+│ {               │     │ {               │     │                 │
+│   "alg": "HS256"│     │   "sub": "user" │     │ HMAC-SHA256(    │
+│   "typ": "JWT"  │     │   "iat": 123456 │     │  base64(header) │
+│ }               │     │ }               │     │ + "." +         │
+│                 │     │                 │     │  base64(payload)│
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+        │                       │                        │
+        └───────────────┬───────┘                        │
+                        ▼                                │
+                  signed with key                        │
+                        │                                │
+                        └──────────────────┐             │
+                                           ▼             │
+                                      validated by       │
+                                           │             │
+                                           └─────────────┘
+```
+
 See <doc:4-Keys> to find supported keys for verification and singing.
 
 Supports `HS256`, `HS384` and `HS512` algorithms for signature.
