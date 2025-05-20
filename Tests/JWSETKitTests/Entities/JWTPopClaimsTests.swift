@@ -5,15 +5,14 @@
 //  Created by GitHub Copilot on 5/19/25.
 //
 
+import Crypto
 import Foundation
 import Testing
-import Crypto
 import X509
 @testable import JWSETKit
 
 @Suite
 struct JWTPopClaimsTests {
-    
     // Sample JSON data for various confirmation types
     let jwkConfirmationJSON = """
     {
@@ -151,7 +150,7 @@ struct JWTPopClaimsTests {
             let calculatedThumbprint = try ExampleKeys.publicEC256.thumbprint(format: .spki, using: SHA256.self).data
             #expect(thumbprint == calculatedThumbprint)
         } else {
-            Issue.record( "Expected certificate thumbprint confirmation type")
+            Issue.record("Expected certificate thumbprint confirmation type")
         }
         
         // Test thumbprint validation
@@ -170,7 +169,7 @@ struct JWTPopClaimsTests {
         }
         
         // Verify we have an encrypted key
-        if case .encryptedKey(_) = claims.confirmation {
+        if case .encryptedKey = claims.confirmation {
             // Verify can decrypt the key
             let decrypted = try claims.confirmation?.decryptedKey(using: ExampleKeys.privateRSA2048)
             #expect(try decrypted?.thumbprint(format: .jwk, using: SHA256.self) == ExampleKeys.publicEC256.thumbprint(format: .jwk, using: SHA256.self))

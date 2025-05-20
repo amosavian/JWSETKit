@@ -235,8 +235,8 @@ extension UUID: JSONWebFieldEncodable {
 }
 
 extension Certificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
-    var jsonWebValue: String {
-        try! derRepresentation.base64EncodedString()
+    var jsonWebValue: String? {
+        try? derRepresentation.base64EncodedString()
     }
     
     static func castValue(_ value: Any?) -> Certificate? {

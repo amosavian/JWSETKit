@@ -114,8 +114,8 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     
     public init(from decoder: any Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
-        let keys = try container.decode([AnyJSONWebKey].self, forKey: .keys)
-        self.init(keys.map { $0.specialized() })
+        let keyArray = try container.decode([AnyJSONWebKey].self, forKey: .keys)
+        self.init(keyArray.map { $0.specialized() })
     }
     
     public func encode(to encoder: any Encoder) throws {

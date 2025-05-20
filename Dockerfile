@@ -1,10 +1,8 @@
 FROM swift:6.1
 
 # Add nonroot user
-RUN groupadd -r nonroot && useradd -r -g nonroot nonroot
-
-# Create app directory as root
-RUN mkdir -p /home/nonroot \
+RUN groupadd -r nonroot && useradd -r -g nonroot nonroot \
+&& mkdir -p /home/nonroot \
 && chown -R nonroot:nonroot /home/nonroot \
 && mkdir -p /home/nonroot/src/app \
 && chown -R nonroot:nonroot /home/nonroot/src/app
