@@ -195,7 +195,7 @@ extension String {
     /// - Parameter jws: JWS object to be encoded.
     ///
     /// - Throws: `EncodingError` if encoding fails.
-    public init<Payload: ProtectedWebContainer>(jws: JSONWebSignature<Payload>) throws {
+    public init<Payload: ProtectedWebContainer>(_ jws: JSONWebSignature<Payload>) throws {
         let encoder = JSONEncoder.encoder
         if jws.signatures.first?.protected.base64 == false {
             encoder.userInfo[.jwsEncodedRepresentation] = JSONWebSignatureRepresentation.compactDetached
@@ -215,7 +215,7 @@ extension JSONWebSignature: LosslessStringConvertible, CustomDebugStringConverti
     }
     
     public var description: String {
-        (try? String(jws: self)) ?? ""
+        (try? String(self)) ?? ""
     }
     
     public var debugDescription: String {

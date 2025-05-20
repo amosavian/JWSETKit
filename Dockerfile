@@ -1,4 +1,4 @@
-FROM swift:6.0
+FROM swift:6.1
 
 # Add nonroot user
 RUN groupadd -r nonroot && useradd -r -g nonroot nonroot

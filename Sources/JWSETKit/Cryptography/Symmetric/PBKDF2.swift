@@ -45,6 +45,7 @@ extension SymmetricKey {
     }
 }
 
+#if canImport(_CryptoExtras)
 extension KDF.Insecure.PBKDF2.HashFunction {
     init<H>(_: H.Type) throws where H: HashFunction {
         switch H.self {
@@ -61,3 +62,4 @@ extension KDF.Insecure.PBKDF2.HashFunction {
         }
     }
 }
+#endif

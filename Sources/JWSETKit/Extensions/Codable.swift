@@ -85,14 +85,15 @@ struct AnyCodable: Codable, @unchecked Sendable {
         switch value {
         case nil:
             try container.encodeNil()
-        case let value as any Encodable:
-            try container.encode(value)
         case let value as any JSONWebFieldEncodable:
-            try container.encode(value.jsonWebValue)
+            let value = value.jsonWebValue as any Encodable
+            try container.encode(value)
         case let value as [(any Sendable)?]:
             try container.encode(value.map { AnyCodable($0) })
         case let value as [String: (any Sendable)?]:
             try container.encode(value.mapValues { AnyCodable($0) })
+        case let value as any Encodable:
+            try container.encode(value)
         default:
             let context = EncodingError.Context(codingPath: container.codingPath, debugDescription: "Value cannot be encoded")
             throw EncodingError.invalidValue(value as Any, context)

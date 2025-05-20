@@ -18,23 +18,23 @@ import X509
 /// [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800.html ).
 public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
     /// A JWK representing the confirmation key.
-    case key(AnyJSONWebKey)
-
+    case key(_ key: AnyJSONWebKey)
+    
     /// A JWE object in compact form that contains a JWK as its payload.
-    case encryptedKey(JSONWebEncryption)
-
+    case encryptedKey(_ encryptedKey: JSONWebEncryption)
+    
     /// A JWK Set URL that refers to a resource for a set of JWKs, from which the recipient
     /// can identify the key being used.
     ///
     /// `keyId` may be `nil` if only one matching key is provided in JWKS.
     case url(_ setURL: URL, keyId: String? = nil)
-
+    
     /// Key ID value that matches a key identifier of the referenced key.
     case keyId(_ keyId: String)
-
+    
     /// SHA-256 hash of the key's JWK representation.
     case keyThumbprint(_ thumbprint: Data)
-
+    
     /// SHA-256 hash of the Certificate public key.
     case certificateThumbprint(_ thumbprint: Data)
     
@@ -53,10 +53,23 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
     /// The value should match the `kid` parameter in the confirmation(`cnf`) payload.
     public var keyId: String? {
         switch self {
-        case .keyId(let kid):
-            kid
-        case .url(_, keyId: let kid):
-            kid
+        case .keyId(let keyId):
+            keyId
+        case .url(_, keyId: let keyId):
+            keyId
+        default:
+            nil
+        }
+    }
+    
+    /// JWKS url when the key is provided by `jku`.
+    ///
+    /// - Note: This URL can be used to download keys and initialize ``JSONWebKeySet`` which should be passed
+    ///     to ``matchKey(from:decryptingKeyset:)`` function.
+    public var jwkSetUrl: URL? {
+        switch self {
+        case .url(let url, _):
+            url
         default:
             nil
         }
@@ -69,8 +82,8 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
     /// It's optional, indicating that a POP claim might not always include a key.
     public var key: (any JSONWebValidatingKey)? {
         switch self {
-        case .key(let jwk):
-            jwk.specialized() as? (any JSONWebValidatingKey)
+        case .key(let key):
+            key.specialized() as? (any JSONWebValidatingKey)
         default:
             nil
         }
@@ -120,11 +133,18 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
     /// - Returns: A new `cnf`` claim instance containing the encrypted key.
     ///
     /// - Throws: An error if the encryption process fails.
-    public static func encryptedKey(_ value: any JSONWebKeyExportable, keyEncryptionKey: any JSONWebEncryptingKey) throws -> Self {
+    public static func encryptedKey(
+        _ value: any JSONWebKeyExportable,
+        keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
+        keyEncryptionKey: (any JSONWebKey)?,
+        contentEncryptionAlgorithm: JSONWebContentEncryptionAlgorithm = .aesEncryptionGCM128
+    ) throws -> Self {
         let jwe = try JSONWebEncryption(
-            protected: .init(value: .init()),
+            protected: .init(),
             content: value.exportKey(format: .jwk),
-            keyEncryptionKey: keyEncryptionKey
+            keyEncryptingAlgorithm: keyEncryptingAlgorithm,
+            keyEncryptionKey: keyEncryptionKey,
+            contentEncryptionAlgorithm: contentEncryptionAlgorithm
         )
         return .encryptedKey(jwe)
     }
@@ -150,9 +170,9 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
                 throw DecodingError.dataCorruptedError(forKey: .jkt, in: container, debugDescription: "Base64 is invalid.")
             }
             self = .certificateThumbprint(jktData)
+        } else {
+            self = try .keyId(container.decode(String.self, forKey: .kid))
         }
-        
-        self = try .keyId(container.decode(String.self, forKey: .kid))
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -224,6 +244,57 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
             }
         default:
             break
+        }
+    }
+    
+    /// Attempts to resolve and return a validating key based on the proof-of-possession claim.
+    ///
+    /// This method inspects the current confirmation (`cnf`) claim and tries to find a matching
+    /// validating key from the provided key sets. It supports all confirmation types, including
+    /// direct key, encrypted key, key set URL, key ID, and thumbprints.
+    ///
+    /// - Parameters:
+    ///   - keySet: An optional `JSONWebKeySet` containing candidate keys for matching by key ID, URL, or thumbprint.
+    ///   - decryptingKeyset: An optional `JSONWebKeySet` containing private keys for decrypting an encrypted key.
+    /// - Returns: A matching key conforming to `JSONWebValidatingKey` if found.
+    /// - Throws: `JSONWebKeyError.keyNotFound` if no matching key is found, or errors from decryption or decoding.
+    public func matchKey(from keySet: JSONWebKeySet = .init(), decryptingKeyset: JSONWebKeySet? = nil) throws -> any JSONWebValidatingKey {
+        let key: (any JSONWebKey)?
+        switchcase: switch self {
+        case .key(let value):
+            key = value.specialized()
+        case .encryptedKey(let jwe):
+            guard let decryptingKeyset else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            key = try JSONDecoder().decode(AnyJSONWebKey.self, from: jwe.decrypt(using: decryptingKeyset))
+        case .url(_, let keyId):
+            if let keyId {
+                key = keySet[keyId: keyId]
+            } else if keySet.count == 1 {
+                key = keySet.first
+            } else {
+                key = nil
+            }
+        case .keyId(let keyId):
+            key = keySet[keyId: keyId]
+        case .keyThumbprint(let thumbprint):
+            key = keySet[thumbprint: thumbprint]
+        case .certificateThumbprint(let thumbprint):
+            for item in keySet {
+                if try item.thumbprint(format: .spki, using: SHA256.self) == thumbprint {
+                    key = item
+                    break switchcase
+                }
+            }
+            key = nil
+        }
+        if let key = key as? (any JSONWebValidatingKey) {
+            return key
+        } else if let key, let result = AnyJSONWebKey(key).specialized() as? (any JSONWebValidatingKey) {
+            return result
+        } else {
+            throw JSONWebKeyError.keyNotFound
         }
     }
 }

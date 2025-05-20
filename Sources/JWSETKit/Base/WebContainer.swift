@@ -37,9 +37,9 @@ extension JSONWebContainer {
     /// Initializes container with filled data.
     ///
     /// - Parameter initializer: Setter of fields.
-    public init(_ initializer: (_ container: inout Self) -> Void) throws {
+    public init(_ initializer: (_ container: inout Self) throws -> Void) throws {
         try self.init(storage: .init())
-        initializer(&self)
+        try initializer(&self)
     }
     
     public init(from decoder: any Decoder) throws {

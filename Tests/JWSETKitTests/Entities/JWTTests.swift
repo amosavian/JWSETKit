@@ -24,7 +24,7 @@ struct JWTTests {
     @Test
     func testEncode() throws {
         let jwt = try JSONWebToken(from: jwtString)
-        #expect(try String(jws: jwt) == jwtString)
+        #expect(try String(jwt) == jwtString)
         #expect(jwt.description == jwtString)
     }
     

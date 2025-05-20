@@ -84,7 +84,7 @@ extension Certificate.PrivateKey: JSONWebSigningKey {
             self.init(P384.Signing.PrivateKey())
         case .ecdsaSignatureP521SHA512:
             self.init(P521.Signing.PrivateKey())
-        case .eddsaSignature:
+        case .eddsaSignature, .eddsa25519Signature:
             self.init(Curve25519.Signing.PrivateKey())
         case .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384, .rsaSignaturePSSSHA512,
              .rsaSignaturePKCS1v15SHA256, .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512:

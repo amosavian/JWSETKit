@@ -11,7 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-extension DataProtocol {
+extension RandomAccessCollection where Self.Element == UInt8 {
     /// Returns a URL-safe Base-64 encoded `Data`.
     ///
     /// - returns: The URL-safe Base-64 encoded data.
@@ -46,7 +46,7 @@ extension Swift.UInt8: Swift.ExpressibleByUnicodeScalarLiteral {
     }
 }
 
-extension Data {
+extension RandomAccessCollection where Self.Element == UInt8, Self: RangeReplaceableCollection {
     /// Initialize a `Data` from a URL-safe Base-64, UTF-8 encoded `Data`.
     ///
     /// Returns nil when the input is not recognized as valid Base-64.
@@ -69,8 +69,7 @@ extension Data {
         guard let value = Data(base64Encoded: .init(base64Encoded), options: [.ignoreUnknownCharacters]) else {
             return nil
         }
-        self.init()
-        self = value
+        self.init(value)
     }
     
     /// Initialize a `Data` from a URL-safe Base-64 encoded String using the given options.
@@ -80,6 +79,6 @@ extension Data {
     @inlinable
     public init?(urlBase64Encoded: some StringProtocol) {
         guard let value = Data(urlBase64Encoded: urlBase64Encoded.utf8) else { return nil }
-        self = value
+        self.init(value)
     }
 }

@@ -38,6 +38,7 @@ extension JSONWebSignatureAlgorithm {
         .ecdsaSignatureP384SHA384: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
         .ecdsaSignatureP521SHA512: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
         .eddsaSignature: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
+        .eddsa25519Signature: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
         .rsaSignaturePSSSHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaSignaturePSSSHA384: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaSignaturePSSSHA512: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
@@ -55,6 +56,7 @@ extension JSONWebSignatureAlgorithm {
         .ecdsaSignatureP384SHA384: .ellipticCurve,
         .ecdsaSignatureP521SHA512: .ellipticCurve,
         .eddsaSignature: .octetKeyPair,
+        .eddsa25519Signature: .octetKeyPair,
         .rsaSignaturePSSSHA256: .rsa,
         .rsaSignaturePSSSHA384: .rsa,
         .rsaSignaturePSSSHA512: .rsa,
@@ -65,7 +67,8 @@ extension JSONWebSignatureAlgorithm {
     
     private static let curves: PthreadReadWriteLockedValue<[Self: JSONWebKeyCurve]> = [
         .ecdsaSignatureP256SHA256: .p256, .ecdsaSignatureP384SHA384: .p384,
-        .ecdsaSignatureP521SHA512: .p521, .eddsaSignature: .ed25519,
+        .ecdsaSignatureP521SHA512: .p521,
+        .eddsaSignature: .ed25519, .eddsa25519Signature: .ed25519,
     ]
     
     private static let hashFunctions: PthreadReadWriteLockedValue<[Self: any HashFunction.Type]> = [
@@ -76,6 +79,7 @@ extension JSONWebSignatureAlgorithm {
         .ecdsaSignatureP384SHA384: SHA384.self,
         .ecdsaSignatureP521SHA512: SHA512.self,
         .eddsaSignature: SHA256.self,
+        .eddsa25519Signature: SHA256.self,
         .rsaSignaturePSSSHA256: SHA256.self,
         .rsaSignaturePSSSHA384: SHA384.self,
         .rsaSignaturePSSSHA512: SHA512.self,
@@ -188,8 +192,15 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     /// **Signature**: ECDSA using P-256 and SHA-256.
     public static var ecdsaSignatureP256SHA256: Self { "ES256" }
     
-    /// **Signature**: EdDSA signature algorithms
+    /// **Signature**: EdDSA signature algorithms.
+    ///
+    /// - Important: Only Ed25519 is supported.
+    /// - Warning: This key is deprecated in [draft-ietf-jose-fully-specified-algorithms](https://datatracker.ietf.org/doc/draft-ietf-jose-fully-specified-algorithms/13/)
+    ///     and is available for compatibility reason. Please use ``eddsa25519Signature`` instead when possible.
     public static var eddsaSignature: Self { "EdDSA" }
+        
+    /// **Signature**: EdDSA using Ed25519 curve signature algorithms
+    public static var eddsa25519Signature: Self { "Ed25519" }
     
     /// **Signature**: ECDSA using P-384 and SHA-384.
     public static var ecdsaSignatureP384SHA384: Self { "ES384" }

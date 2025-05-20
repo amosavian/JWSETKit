@@ -130,7 +130,6 @@ extension SymmetricKey: JSONWebSymmetricSealingKey {
     private func key(_ algorithm: some JSONWebAlgorithm) throws -> any JSONWebSymmetricSealingKey {
         guard let keyClass = (algorithm as? JSONWebContentEncryptionAlgorithm)?.keyClass else {
             throw JSONWebKeyError.unknownAlgorithm
-            
         }
         return try keyClass.init(self)
     }
@@ -143,3 +142,7 @@ extension SymmetricKey: JSONWebSymmetricSealingKey {
         try key(algorithm).open(data, authenticating: authenticating, using: algorithm)
     }
 }
+
+#if !canImport(CryptoKit)
+extension SymmetricKey: @unchecked Sendable {}
+#endif

@@ -182,6 +182,17 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
+    @inlinable
+    public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [T]>) -> [T] {
+        get {
+            storage[stringKey(keyPath)]
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue
+        }
+    }
+    
+    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, Bool>) -> Bool {
         get {
             switch keyPath {
@@ -208,17 +219,6 @@ extension JOSEHeader {
     }
     
     @_documentation(visibility: private)
-    @inlinable
-    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [String]>) -> [String] {
-        get {
-            storage[stringKey(keyPath)]
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
-        }
-    }
-    
-    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, (any JSONWebAlgorithm)?>) -> (any JSONWebAlgorithm)? {
         get {
             guard let value: String = storage[stringKey(keyPath)] else { return nil }
@@ -226,16 +226,6 @@ extension JOSEHeader {
         }
         set {
             storage[stringKey(keyPath)] = newValue?.rawValue
-        }
-    }
-    
-    @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [Certificate]>) -> [Certificate] {
-        get {
-            storage[stringKey(keyPath)]
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
         }
     }
     

@@ -10,6 +10,8 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
+import Crypto
+import X509
 
 protocol JSONWebFieldEncodable {
     associatedtype JSONWebFieldValueType: Codable & Hashable & Sendable
@@ -18,10 +20,6 @@ protocol JSONWebFieldEncodable {
 
 protocol JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self?
-}
-
-protocol JSONWebFieldDeserializable: Decodable {
-    static func deseralize(data: Data) throws -> Self
 }
 
 extension Optional: JSONWebFieldEncodable where Wrapped: JSONWebFieldEncodable {
@@ -39,7 +37,7 @@ extension Optional: JSONWebFieldDecodable where Wrapped: JSONWebFieldDecodable {
 extension Bool: JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Bool? {
         switch value {
-        case let value as Bool:
+        case let value as Self:
             return value
         case let value as String:
             return Bool(value)
@@ -51,34 +49,31 @@ extension Bool: JSONWebFieldDecodable {
     }
 }
 
-extension Data: JSONWebFieldEncodable, JSONWebFieldDecodable {
+extension JSONWebFieldEncodable where Self: RandomAccessCollection, Self.Element == UInt8 {
     var jsonWebValue: String {
         // Default encoding for data is `Base64URL`.
         urlBase64EncodedString()
     }
-    
+}
+
+extension JSONWebFieldDecodable where Self: DataProtocol & RangeReplaceableCollection {
     static func castValue(_ value: Any?) -> Self? {
         switch value {
-        case let value as Data:
+        case let value as Self:
             return value
         case let value as String:
-            return Data(urlBase64Encoded: value)
+            return Self(urlBase64Encoded: value)
+        case let value as any Collection<UInt8>:
+            return Self(value)
         default:
             return nil
         }
     }
 }
 
-extension [UInt8]: JSONWebFieldEncodable, JSONWebFieldDecodable {
-    var jsonWebValue: String {
-        // Default encoding for data is `Base64URL`.
-        urlBase64EncodedString()
-    }
-    
-    static func castValue(_ value: Any?) -> Self? {
-        Data.castValue(value).map([UInt8].init)
-    }
-}
+extension Data: JSONWebFieldEncodable, JSONWebFieldDecodable {}
+
+extension [UInt8]: JSONWebFieldEncodable, JSONWebFieldDecodable {}
 
 extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
     var jsonWebValue: Int {
@@ -91,13 +86,13 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self? {
         switch value {
         case let value as any BinaryInteger:
-            return Date(timeIntervalSince1970: Double(value))
+            return Date(timeIntervalSince1970: TimeInterval(value))
         case let value as any BinaryFloatingPoint:
-            return Date(timeIntervalSince1970: Double(value))
+            return Date(timeIntervalSince1970: TimeInterval(value))
         case let value as Date:
             return value
         case let value as String:
-            if let value = Double(value) {
+            if let value = TimeInterval(value) {
                 return Date(timeIntervalSince1970: value)
             } else {
                 return Date(iso8601: value)
@@ -185,7 +180,7 @@ extension Locale: JSONWebFieldEncodable, JSONWebFieldDecodable {
     
     static func castValue(_ value: Any?) -> Self? {
         switch value {
-        case let value as Locale:
+        case let value as Self:
             return value
         case let value as String:
             return Locale(bcp47: value)
@@ -203,7 +198,7 @@ extension TimeZone: JSONWebFieldEncodable, JSONWebFieldDecodable {
     
     static func castValue(_ value: Any?) -> Self? {
         switch value {
-        case let value as TimeZone:
+        case let value as Self:
             return value
         case let value as String:
             return TimeZone(identifier: value)
@@ -220,7 +215,7 @@ extension URL: JSONWebFieldEncodable, JSONWebFieldDecodable {
     
     static func castValue(_ value: Any?) -> Self? {
         switch value {
-        case let value as URL:
+        case let value as Self:
             return value
         case let value as String:
             return URL(string: value)
@@ -236,5 +231,49 @@ extension UUID: JSONWebFieldEncodable {
         // using lower-case letters.
         // The NSUUID class and UUID struct use upper-case letters when formatting.
         uuidString.lowercased()
+    }
+}
+
+extension Certificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
+    var jsonWebValue: String {
+        try! derRepresentation.base64EncodedString()
+    }
+    
+    static func castValue(_ value: Any?) -> Certificate? {
+        switch value {
+        case let value as Self:
+            return value
+        case let value as Data:
+            return try? .init(derEncoded: value)
+        case let value as String:
+            guard let value = Data(urlBase64Encoded: value) else {
+                return nil
+            }
+            return try? .init(derEncoded: value)
+        default:
+            return nil
+        }
+    }
+}
+
+extension SymmetricKey: JSONWebFieldEncodable, JSONWebFieldDecodable {
+    var jsonWebValue: String {
+        data.urlBase64EncodedString()
+    }
+    
+    static func castValue(_ value: Any?) -> SymmetricKey? {
+        switch value {
+        case let value as Self:
+            return value
+        case let value as Data:
+            return .init(data: value)
+        case let value as String:
+            guard let value = Data(urlBase64Encoded: value) else {
+                return nil
+            }
+            return .init(data: value)
+        default:
+            return nil
+        }
     }
 }

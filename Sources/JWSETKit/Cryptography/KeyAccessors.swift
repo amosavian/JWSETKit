@@ -274,18 +274,6 @@ extension JSONWebKey {
     }
     
     @_documentation(visibility: private)
-    @inlinable
-    public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, [Certificate]>) -> [Certificate] {
-        storage[stringKey(keyPath)]
-    }
-    
-    @_documentation(visibility: private)
-    @inlinable
-    public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, SymmetricKey?>) -> SymmetricKey? {
-        (storage[stringKey(keyPath)] as Data?).map(SymmetricKey.init(data:))
-    }
-    
-    @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, Data?>) -> Data? {
         switch keyPath {
         case \.certificateThumbprint where storage.contains(key: .x5tS256):
@@ -326,28 +314,6 @@ extension MutableJSONWebKey {
         }
         set {
             storage[stringKey(keyPath)] = newValue?.rawValue
-        }
-    }
-    
-    @_documentation(visibility: private)
-    @inlinable
-    public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, [Certificate]>) -> [Certificate] {
-        get {
-            storage[stringKey(keyPath)]
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
-        }
-    }
-    
-    @_documentation(visibility: private)
-    @inlinable
-    public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, SymmetricKey?>) -> SymmetricKey? {
-        get {
-            (storage[stringKey(keyPath)] as Data?).map(SymmetricKey.init(data:))
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue?.data
         }
     }
     

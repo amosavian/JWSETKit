@@ -266,25 +266,3 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
         }
     }
 }
-
-#if canImport(X509)
-import X509
-
-extension JSONWebValueStorage {
-    /// Returns values of given key decoded using base64.
-    public subscript(_ member: String) -> [Certificate] {
-        get {
-            (self[member] as [String])
-                .compactMap { Data(base64Encoded: $0) }
-                .compactMap {
-                    try? .init(derEncoded: $0)
-                }
-        }
-        set {
-            self[member] = newValue.compactMap {
-                (try? $0.derRepresentation)?.base64EncodedString()
-            }
-        }
-    }
-}
-#endif

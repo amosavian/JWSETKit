@@ -16,6 +16,10 @@ extension Data {
         var int = value
         self.init(bytes: &int, count: MemoryLayout<T>.size)
     }
+    
+    static func random(length: Int) -> Data {
+        Data((0 ..< length).map { _ in UInt8.random(in: 0 ... 255) })
+    }
 }
 
 extension DataProtocol {

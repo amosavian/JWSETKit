@@ -240,9 +240,6 @@ extension JSONWebTokenClaims {
             storage[stringKey(keyPath, locale: locale)]
         }
         set {
-            guard JSONWebTokenClaimsPublicOIDCStandardParameters.localizableKeys.contains(keyPath) else {
-                return
-            }
             storage[stringKey(keyPath, force: true, locale: locale)] = newValue
         }
     }

@@ -340,7 +340,7 @@ extension String {
     /// Encodes JWE to compact representation.
     /// - Parameter jwe: JWE to be encoded.
     /// - Throws: Encoding error.
-    public init(jwe: JSONWebEncryption) throws {
+    public init(_ jwe: JSONWebEncryption) throws {
         let encoder = JSONEncoder.encoder
         encoder.userInfo[.jwsEncodedRepresentation] = JSONWebEncryptionRepresentation.compact
         self = try String(String(decoding: encoder.encode(jwe), as: UTF8.self).dropFirst().dropLast())
@@ -361,14 +361,14 @@ extension ProtectedWebContainer {
 
 extension JSONWebEncryption: LosslessStringConvertible, CustomDebugStringConvertible {
     public init?(_ description: String) {
-        guard let jws = try? JSONWebEncryption(from: description) else {
+        guard let jwe = try? JSONWebEncryption(from: description) else {
             return nil
         }
-        self = jws
+        self = jwe
     }
     
     public var description: String {
-        (try? String(jwe: self)) ?? ""
+        (try? String(self)) ?? ""
     }
     
     public var debugDescription: String {

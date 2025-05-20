@@ -280,12 +280,19 @@ extension JSONWebKeyEncryptionAlgorithm {
             iterations = pbes2Count
         } else {
             // Default iterations count for PBES2 regarding OWASP 2023 recommendation.
-            iterations = SymmetricKey.defaultPBES2IterationCount[(keyEncryptingAlgorithm.keyLength ?? 128) / 2] ?? 1000
+            iterations = SymmetricKey.defaultPBES2IterationCount[(keyEncryptingAlgorithm.keyLength ?? 128) / 2, default: 600_000]
             header.pbes2Count = iterations
         }
-        let salt = Data(keyEncryptingAlgorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
+        let pbes2Salt: Data
+        if let salt = header.pbes2Salt {
+            pbes2Salt = salt
+        } else {
+            pbes2Salt = Data.random(length: 16)
+            header.pbes2Salt = pbes2Salt
+        }
+        let kdfSalt = Data(keyEncryptingAlgorithm.rawValue.utf8) + [0x00] + pbes2Salt
         let key = try SymmetricKey.passwordBased2DerivedSymmetricKey(
-            password: password, salt: salt, iterations: iterations,
+            password: password, salt: kdfSalt, iterations: iterations,
             length: keyEncryptingAlgorithm.keyLength.map { $0 / 8 }, hashFunction: keyEncryptingAlgorithm.hashFunction.unsafelyUnwrapped
         )
         return try key.encrypt(cekData, using: keyEncryptingAlgorithm)

@@ -155,7 +155,8 @@ extension SecKey: JSONWebKey {
     
     public static func == (lhs: SecKey, rhs: SecKey) -> Bool {
         guard let lhsData = try? lhs.publicKey.externalRepresentation,
-              let rhsData = try? rhs.publicKey.externalRepresentation else {
+              let rhsData = try? rhs.publicKey.externalRepresentation
+        else {
             return false
         }
         return lhsData == rhsData

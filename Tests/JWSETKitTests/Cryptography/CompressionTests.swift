@@ -47,8 +47,7 @@ struct CompressionTests {
     @Test
     func compressionDecompression() throws {
         let length = Int.random(in: (1 << 17) ... (1 << 20)) // 128KB to 1MB
-        let random = (0 ..< length)
-            .map { _ in UInt8.random(in: 0 ... 255) }
+        let random = Data.random(length: length)
             .urlBase64EncodedData()
         for algorithm in JSONWebCompressionAlgorithm.registeredAlgorithms {
             guard let compressor = algorithm.compressor else { continue }

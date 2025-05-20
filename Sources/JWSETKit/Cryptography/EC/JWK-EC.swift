@@ -164,10 +164,6 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendabl
         try signingKey.signature(data, using: algorithm)
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try publicKey.verifySignature(signature, for: data, using: algorithm)
-    }
-    
     public func sharedSecretFromKeyAgreement(with publicKeyShare: JSONWebECPublicKey) throws -> SharedSecret {
         // swiftformat:disable:next redundantSelf
         switch (self.keyType, self.curve) {
