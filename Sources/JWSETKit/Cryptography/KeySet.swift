@@ -93,10 +93,7 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
             },
             uniquingKeysWith: { first, second in
                 // Prefer private key over public one!
-                
-                // Both RSA and ECC has `"d"` parameter with different meaning,
-                // but checking one of them for the sake of null check is OK.
-                second.privateKey != nil ? second : first
+                second.isAsymmetricPrivateKey ? second : first
             }
         )
     }

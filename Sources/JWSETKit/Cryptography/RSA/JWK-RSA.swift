@@ -24,7 +24,7 @@ import CryptoSwift
 
 /// JSON Web Key (JWK) container for RSA public keys.
 @frozen
-public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebValidatingKey, JSONWebEncryptingKey, Sendable {
+public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWebValidatingKey, JSONWebEncryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
     public var derRepresentation: Data {
@@ -108,7 +108,7 @@ extension JSONWebRSAPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
 }
 
 /// JWK container for RSA private keys.
-public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWebDecryptingKey, Sendable {
+public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWebSigningKey, JSONWebDecryptingKey, Sendable {
     @frozen
     public struct KeySize {
         public let bitCount: Int
@@ -192,13 +192,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebSigningKey, JSONWe
     }
     
     public func validate() throws {
-        let fields: [SendableKeyPath<Self, Data?>] = [
-            \Self.modulus, \Self.exponent,
-            \Self.firstPrimeFactor, \Self.secondPrimeFactor,
-            \Self.privateExponent, \Self.firstCRTCoefficient,
-            \Self.firstFactorCRTExponent, \Self.secondFactorCRTExponent,
-        ]
-        try checkRequiredFields(fields)
+        try checkRequiredFields("n", "e", "d", "p", "q", "dp", "dq")
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
@@ -366,7 +360,7 @@ enum RSAHelper {
 #if canImport(CryptoSwift)
 extension CryptoSwift.RSA: Swift.Hashable, Swift.Codable {}
 
-extension CryptoSwift.RSA: JSONWebDecryptingKey {
+extension CryptoSwift.RSA: JSONWebDecryptingKey, JSONWebKeyRSAType {
     public var publicKey: CryptoSwift.RSA {
         Self(n: n, e: e)
     }

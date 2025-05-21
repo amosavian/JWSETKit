@@ -243,7 +243,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         _: JSONWebContentEncryptionAlgorithm,
         _ cekData: Data
     ) throws -> Data {
-        guard let kek = keyEncryptionKey?.keyValue else {
+        guard let kek = keyEncryptionKey.map(AnyJSONWebKey.init)?.keyValue else {
             throw JSONWebKeyError.keyNotFound
         }
         let nonce: Data
@@ -272,7 +272,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         _: JSONWebContentEncryptionAlgorithm,
         _ cekData: Data
     ) throws -> Data {
-        guard let password = keyEncryptionKey?.keyValue?.data else {
+        guard let kek = keyEncryptionKey, let password = AnyJSONWebKey(kek).keyValue?.data else {
             throw JSONWebKeyError.keyNotFound
         }
         let iterations: Int
@@ -317,11 +317,13 @@ extension JSONWebKeyEncryptionAlgorithm {
             let ephemeralKey = JSONWebECPublicKey(storage: headerEphemeralKey.storage)
             let staticKey = JSONWebECPrivateKey(storage: kek.storage)
             secret = try staticKey.sharedSecretFromKeyAgreement(with: ephemeralKey)
-        } else {
-            let ephemeralKey = try JSONWebECPrivateKey(curve: kek.curve ?? .empty)
+        } else if let curve = kek.curve {
+            let ephemeralKey = try JSONWebECPrivateKey(curve: curve)
             let staticKey = JSONWebECPublicKey(storage: kek.storage)
             header.ephemeralPublicKey = .init(ephemeralKey.publicKey)
             secret = try ephemeralKey.sharedSecretFromKeyAgreement(with: staticKey)
+        } else {
+            throw JSONWebKeyError.unknownKeyType
         }
         let symmetricKey = try secret.concatDerivedSymmetricKey(
             algorithm: keyEncryptingAlgorithm,
@@ -341,7 +343,7 @@ extension JSONWebKeyEncryptionAlgorithm {
 
 extension JSONWebKeyEncryptionAlgorithm {
     fileprivate static func directDecryptionMutator(_: JOSEHeader, _ kek: inout any JSONWebKey, _ cek: inout Data) throws {
-        guard let encryptedKeyData = kek.keyValue?.data else {
+        guard let encryptedKeyData = AnyJSONWebKey(kek).keyValue?.data else {
             throw JSONWebKeyError.unknownKeyType
         }
         kek = try JSONWebDirectKey()
@@ -355,7 +357,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         guard let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.keyNotFound
         }
-        guard let password = kek.keyValue?.data else {
+        guard let password = AnyJSONWebKey(kek).keyValue?.data else {
             throw JSONWebKeyError.keyNotFound
         }
         guard let iterations = header.pbes2Count else {

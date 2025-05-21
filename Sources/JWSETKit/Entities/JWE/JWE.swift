@@ -140,7 +140,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             self.recipients = []
         default:
             cek = try contentEncryptionKey ?? contentEncryptionAlgorithm.generateRandomKey()
-            guard let cekData = cek.keyValue?.data else {
+            guard let cekData = AnyJSONWebKey(cek).keyValue?.data else {
                 throw JSONWebKeyError.keyNotFound
             }
             let mutatedEncryptedKey = try handler(&header, keyEncryptingAlgorithm, keyEncryptionKey, contentEncryptionAlgorithm, cekData)
@@ -222,7 +222,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             self.recipients = []
         default:
             cek = try contentEncryptionKey ?? contentEncryptionAlgorithm.generateRandomKey()
-            guard let cekData = cek.keyValue?.data else {
+            guard let cekData = AnyJSONWebKey(cek).keyValue?.data else {
                 throw JSONWebKeyError.keyNotFound
             }
             var modifiedHeader = mergedHeader

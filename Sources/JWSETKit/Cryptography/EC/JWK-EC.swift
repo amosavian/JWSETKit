@@ -14,7 +14,7 @@ import Crypto
 
 /// JSON Web Key (JWK) container for different types of Elliptic-Curve public keys consists of P-256, P-384, P-521, Ed25519.
 @frozen
-public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebValidatingKey, Sendable {
+public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWebValidatingKey, Sendable {
     public var storage: JSONWebValueStorage
     
     var signingKey: any JSONWebValidatingKey {
@@ -110,7 +110,7 @@ extension JSONWebECPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
 }
 
 /// JWK container for different types of Elliptic-Curve private keys consists of P-256, P-384, P-521, Ed25519.
-public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebSigningKey, Sendable {
+public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWebSigningKey, Sendable {
     public var storage: JSONWebValueStorage
     
     public var publicKey: JSONWebECPublicKey {
@@ -226,7 +226,7 @@ enum ECHelper {
     
     static func ecWebKey(data: Data, keyLength: Int, isPrivateKey: Bool) throws -> any JSONWebKey {
         let components = try ecComponents(data, keyLength: keyLength)
-        var key = AnyJSONWebKey()
+        var key: some (MutableJSONWebKey & JSONWebKeyCurveType) = AnyJSONWebKey()
 
         guard !components.isEmpty else {
             throw JSONWebKeyError.unknownKeyType

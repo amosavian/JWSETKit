@@ -17,7 +17,7 @@ import SwiftASN1
 
 extension Security.SecKey: Swift.Codable {}
 
-extension SecKey: JSONWebKey {
+extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
     public var storage: JSONWebValueStorage {
         if let storage = try? jsonWebKey().storage {
             return storage
@@ -102,11 +102,12 @@ extension SecKey: JSONWebKey {
         }
         switch type {
         case .ellipticCurve:
+            let ecKey: some (MutableJSONWebKey & JSONWebKeyCurveType) = key
             guard let xCoordinate = key.xCoordinate, let yCoordinate = key.yCoordinate else {
                 throw CryptoKitError.incorrectKeySize
             }
             return try Self.createECFromComponents(
-                [xCoordinate, yCoordinate, key.privateKey].compactMap { $0 })
+                [xCoordinate, yCoordinate, ecKey.privateKey].compactMap { $0 })
         case .rsa:
             let pkcs1 = try RSAHelper.pkcs1Representation(key)
             return try SecKey(derRepresentation: pkcs1, keyType: .rsa)

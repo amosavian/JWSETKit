@@ -139,6 +139,16 @@ extension JSONWebValueStorage {
 }
 
 extension JSONWebKey {
+    var isAsymmetricPrivateKey: Bool {
+        if self is any JSONWebSigningKey || self is any JSONWebDecryptingKey {
+            return true
+        }
+        
+        // In case the key is not specialized we try to guess by parameters directly.
+        // Both RSA and ECC has `"d"` parameter with different meaning.
+        return storage.contains(key: "d") || storage.contains(key: "priv") || storage.contains(key: "seed")
+    }
+    
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         self = try Self.create(storage: container.decode(JSONWebValueStorage.self))
@@ -160,25 +170,25 @@ extension JSONWebKey {
         }
         switch keyType {
         case .rsa:
-            try checkRequiredFields(\.modulus, \.exponent)
+            try checkRequiredFields("n", "e")
         case .ellipticCurve:
-            try checkRequiredFields(\.xCoordinate, \.yCoordinate)
+            try checkRequiredFields("x", "y")
         case .octetKeyPair:
-            try checkRequiredFields(\.xCoordinate)
+            try checkRequiredFields("x")
         case .symmetric:
-            try checkRequiredFields(\.keyValue)
+            try checkRequiredFields("k")
         default:
             break
         }
     }
     
-    func checkRequiredFields<T>(_ fields: SendableKeyPath<Self, T?>...) throws {
+    func checkRequiredFields(_ fields: String...) throws {
         try checkRequiredFields(fields)
     }
     
-    func checkRequiredFields<T>(_ fields: [SendableKeyPath<Self, T?>]) throws {
+    func checkRequiredFields(_ fields: [String]) throws {
         for field in fields {
-            if self[keyPath: field] == nil {
+            if !storage.contains(key: field) {
                 throw JSONWebKeyError.keyNotFound
             }
         }
@@ -195,6 +205,8 @@ extension JSONWebKey {
             "x", "y",
             // Symmetric keys
             "k",
+            // Algorithm key pair
+            "pub",
         ]
         let thumbprintStorage = storage
             .filter(thumbprintKeys.contains)
@@ -332,9 +344,7 @@ extension JSONWebDecryptingKey {
 }
 
 /// A JSON Web Key (JWK) able to decrypt cipher-texts using a symmetric key.
-public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey, JSONWebKeySymmetric where PublicKey == Self {
-    init(_ key: SymmetricKey) throws
-}
+public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey, JSONWebKeySymmetric where PublicKey == Self {}
 
 extension JSONWebSymmetricDecryptingKey {
     public var publicKey: Self { self }
@@ -485,7 +495,7 @@ public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey, JSONWebKeySymmetr
 ///
 /// - Note: To create a key able to do operations (sign, verify, encrypt, decrypt) use `specialized()` method.
 @frozen
-public struct AnyJSONWebKey: MutableJSONWebKey, Sendable {
+public struct AnyJSONWebKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWebKeyCurveType, JSONWebKeySymmetric, JSONWebKeyAlgorithmKeyPairType, Sendable {
     public var storage: JSONWebValueStorage
     
     public static func create(storage: JSONWebValueStorage) throws -> AnyJSONWebKey {
@@ -504,6 +514,12 @@ public struct AnyJSONWebKey: MutableJSONWebKey, Sendable {
     /// - Parameter key: Key to wrap.
     public init(_ key: any JSONWebKey) {
         self.storage = key.storage
+    }
+    
+    public init(_ key: SymmetricKey) throws {
+        self.storage = .init()
+        self.keyType = .symmetric
+        self.keyValue = key
     }
     
     init() {

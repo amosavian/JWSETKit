@@ -90,6 +90,7 @@ enum JSONWebKeyRSASpecializer: JSONWebKeySpecializer {
 
 enum JSONWebKeyEllipticCurveSpecializer: JSONWebKeySpecializer {
     static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
+        let key: some (MutableJSONWebKey & JSONWebKeyCurveType) = key
         guard key.keyType == .ellipticCurve else { return nil }
         guard let curve = key.curve else { return nil }
         switch curve {
@@ -124,6 +125,7 @@ enum JSONWebKeyEllipticCurveSpecializer: JSONWebKeySpecializer {
 
 enum JSONWebKeyCurve25519Specializer: JSONWebKeySpecializer {
     static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
+        let key: some (MutableJSONWebKey & JSONWebKeyCurveType) = key
         guard key.keyType == .octetKeyPair else { return nil }
         guard let curve = key.curve else { return nil }
         switch curve {
@@ -184,7 +186,7 @@ enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
     static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
         switch format {
         case .raw:
-            return try AnyJSONWebKey(storage: SymmetricKey(importing: key, format: .raw).storage).specialized()
+            return try AnyJSONWebKey(SymmetricKey(importing: key, format: .raw)).specialized()
         case .pkcs8, .spki, .jwk:
             return nil
         }

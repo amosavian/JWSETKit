@@ -14,7 +14,7 @@ import Crypto
 
 extension Crypto.SymmetricKey: Swift.Hashable, Swift.Codable {}
 
-extension SymmetricKey: JSONWebKey {
+extension SymmetricKey: JSONWebKeySymmetric {
     public var storage: JSONWebValueStorage {
         var result = AnyJSONWebKey()
         result.keyType = .symmetric

@@ -19,7 +19,7 @@ import _CryptoExtras
 
 extension X509.Certificate.PublicKey: Swift.Codable {}
 
-extension Certificate.PublicKey: JSONWebValidatingKey {
+extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWebKeyCurveType {
     public var storage: JSONWebValueStorage {
         (try? jsonWebKey().storage) ?? .init()
     }
@@ -71,7 +71,7 @@ extension Certificate.PublicKey: JSONWebValidatingKey {
 
 extension X509.Certificate.PrivateKey: Swift.Codable {}
 
-extension Certificate.PrivateKey: JSONWebSigningKey {
+extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebKeyCurveType {
     public var storage: JSONWebValueStorage {
         (try? jsonWebKey().storage) ?? .init()
     }

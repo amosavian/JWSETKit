@@ -12,7 +12,7 @@ import Foundation
 #endif
 import Crypto
 
-protocol CryptoECPublicKey: JSONWebKey {
+protocol CryptoECPublicKey: JSONWebKeyCurveType {
     static var curve: JSONWebKeyCurve { get }
     var rawRepresentation: Data { get }
     init(rawRepresentation: Data) throws
@@ -46,7 +46,7 @@ extension CryptoECPublicKey {
     }
 }
 
-protocol CryptoECPrivateKey: JSONWebKey {
+protocol CryptoECPrivateKey: JSONWebKeyCurveType {
     associatedtype PublicKey: CryptoECPublicKey
     
     /// Public key.
@@ -57,13 +57,13 @@ protocol CryptoECPrivateKey: JSONWebKey {
 
 extension CryptoECPrivateKey {
     public var storage: JSONWebValueStorage {
-        var result = AnyJSONWebKey(storage: publicKey.storage)
+        var result: some (MutableJSONWebKey & JSONWebKeyCurveType) = AnyJSONWebKey(storage: publicKey.storage)
         result.privateKey = rawRepresentation
         return result.storage
     }
     
     public static func create(storage: JSONWebValueStorage) throws -> Self {
-        let keyData = AnyJSONWebKey(storage: storage)
+        let keyData: some (MutableJSONWebKey & JSONWebKeyCurveType) = AnyJSONWebKey(storage: storage)
         guard let privateKey = keyData.privateKey, !privateKey.isEmpty else {
             throw CryptoKitError.incorrectKeySize
         }
