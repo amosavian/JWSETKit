@@ -89,7 +89,8 @@ extension SecureEnclave.P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPriv
     }
     
     var rawRepresentation: Data {
-        fatalError("Private Keys in Secure Enclave are not encodable.")
+        assertionFailure("Private Keys in Secure Enclave are not encodable.")
+        return publicKey.rawRepresentation
     }
     
     public init(algorithm _: some JSONWebAlgorithm) throws {
@@ -115,7 +116,8 @@ extension SecureEnclave.P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public typealias PublicKey = P256.KeyAgreement.PublicKey
     
     var rawRepresentation: Data {
-        fatalError("Private Keys in Secure Enclave are not encodable.")
+        assertionFailure("Private Keys in Secure Enclave are not encodable.")
+        return publicKey.rawRepresentation
     }
     
     init(rawRepresentation _: Data) throws {

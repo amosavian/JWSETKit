@@ -16,7 +16,7 @@ import Crypto
 /// describe the digital signature or MAC applied to the JWS Protected Header
 /// and the JWS Payload and optionally additional properties of the JWS.
 @frozen
-public struct JOSEHeader: JSONWebContainer {
+public struct JOSEHeader: MutableJSONWebContainer, Sendable {
     public var storage: JSONWebValueStorage
     
     /// Initializes a new JOSE header with given key/values.
@@ -42,10 +42,6 @@ public struct JOSEHeader: JSONWebContainer {
         self.algorithm = algorithm
         self.type = type
         self.keyId = keyId
-    }
-    
-    public static func create(storage: JSONWebValueStorage) throws -> JOSEHeader {
-        .init(storage: storage)
     }
     
     public func merging(_ other: JOSEHeader, uniquingKeysWith combine: (JSONWebValueStorage.Value, JSONWebValueStorage.Value) throws -> JSONWebValueStorage.Value) rethrows -> JOSEHeader {

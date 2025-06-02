@@ -19,16 +19,15 @@ extension _CryptoExtras._RSA.Signing.PublicKey: Swift.Hashable, Swift.Equatable,
 
 extension _RSA.Signing.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
-        // `pkcs1DERRepresentation` is always a valid ASN1 object and it should not fail.
-        try! RSAHelper.rsaWebKey(pkcs1: pkcs1DERRepresentation).storage
+        (try? RSAHelper.rsaWebKey(pkcs1: pkcs1DERRepresentation).storage) ?? .init()
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> _RSA.Signing.PublicKey {
+    public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
         guard let modulus = key.modulus, let exponent = key.exponent else {
             throw CryptoKitError.incorrectParameterSize
         }
-        return try .init(n: modulus, e: exponent)
+        try self.init(n: modulus, e: exponent)
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
@@ -78,11 +77,10 @@ extension _CryptoExtras._RSA.Signing.PrivateKey: Swift.Hashable, Swift.Equatable
 extension _RSA.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
         get {
-            // `derRepresentation` is always a valid ASN1 object and it should not fail.
-            try! RSAHelper.rsaWebKey(pkcs1: derRepresentation).storage
+            (try? RSAHelper.rsaWebKey(pkcs1: derRepresentation).storage) ?? .init()
         }
         set {
-            if let value = try? Self.create(storage: newValue) {
+            if let value = try? Self(storage: newValue) {
                 self = value
             }
         }
@@ -92,12 +90,12 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType {
         try self.init(keySize: .init(bitCount: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount))
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> _RSA.Signing.PrivateKey {
+    public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
         guard let modulus = key.modulus, let exponent = key.exponent, let privateExponent = key.privateExponent, let p = key.firstPrimeFactor, let q = key.secondPrimeFactor else {
             throw CryptoKitError.incorrectParameterSize
         }
-        return try .init(n: modulus, e: exponent, d: privateExponent, p: p, q: q)
+        try self.init(n: modulus, e: exponent, d: privateExponent, p: p, q: q)
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
@@ -152,22 +150,21 @@ extension _CryptoExtras._RSA.Encryption.PublicKey: Swift.Hashable, Swift.Equatab
 extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
         get {
-            // `pkcs1DERRepresentation` is always a valid ASN1 object and it should not fail.
-            try! RSAHelper.rsaWebKey(pkcs1: pkcs1DERRepresentation).storage
+            (try? RSAHelper.rsaWebKey(pkcs1: pkcs1DERRepresentation).storage) ?? .init()
         }
         set {
-            if let value = try? Self.create(storage: newValue) {
+            if let value = try? Self(storage: newValue) {
                 self = value
             }
         }
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> _RSA.Encryption.PublicKey {
+    public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
         guard let modulus = key.modulus, let exponent = key.exponent else {
             throw CryptoKitError.incorrectParameterSize
         }
-        return try .init(n: modulus, e: exponent)
+        try self.init(n: modulus, e: exponent)
     }
     
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
@@ -188,11 +185,10 @@ extension _CryptoExtras._RSA.Encryption.PrivateKey: Swift.Hashable, Swift.Equata
 extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
         get {
-            // `derRepresentation` is always a valid ASN1 object and it should not fail.
-            try! RSAHelper.rsaWebKey(pkcs1: derRepresentation).storage
+            (try? RSAHelper.rsaWebKey(pkcs1: derRepresentation).storage) ?? .init()
         }
         set {
-            if let value = try? Self.create(storage: newValue) {
+            if let value = try? Self(storage: newValue) {
                 self = value
             }
         }
@@ -202,12 +198,12 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey, JSONWebKeyRSAType {
         try self.init(keySize: .bits2048)
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> _RSA.Encryption.PrivateKey {
+    public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
         guard let modulus = key.modulus, let exponent = key.exponent, let privateExponent = key.privateExponent, let p = key.firstPrimeFactor, let q = key.secondPrimeFactor else {
             throw CryptoKitError.incorrectParameterSize
         }
-        return try .init(n: modulus, e: exponent, d: privateExponent, p: p, q: q)
+        try self.init(n: modulus, e: exponent, d: privateExponent, p: p, q: q)
     }
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {

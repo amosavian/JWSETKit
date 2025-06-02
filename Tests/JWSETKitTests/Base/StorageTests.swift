@@ -55,7 +55,7 @@ struct StorageTests {
         try #require(keys.count == 2)
         #expect(keys[0].keyType == .ellipticCurve)
         #expect(
-            try P256.Signing.PublicKey.create(storage: keys[0].storage).rawRepresentation
+            try P256.Signing.PublicKey(from: keys[0]).rawRepresentation
                 == "MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D7gS2XpJFbZiItSs3m9+9Ue6GnvHw/GW2ZZaVtszggXIw==".decoded
         )
         #expect(keys[1].keyType == .rsa)

@@ -19,7 +19,7 @@ extension Security.SecCertificate: Swift.Codable {}
 
 extension SecCertificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
-        var key = AnyJSONWebKey(storage: (try? publicKey.storage) ?? .init())
+        var key = (try? AnyJSONWebKey(publicKey)) ?? .init()
         if let certificate = try? Certificate(self) {
             key.certificateChain = [certificate]
         }
@@ -28,14 +28,6 @@ extension SecCertificate: JSONWebValidatingKey {
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         try publicKey.verifySignature(signature, for: data, using: algorithm)
-    }
-    
-    public static func create(storage: JSONWebValueStorage) throws -> Self {
-        let key = AnyJSONWebKey(storage: storage)
-        guard let certificate = key.certificateChain.first, let result = try SecCertificate.makeWithCertificate(certificate) as? Self else {
-            throw JSONWebKeyError.keyNotFound
-        }
-        return result
     }
     
     /// Retrieves the public key for certificate.
@@ -53,6 +45,16 @@ extension SecCertificate: JSONWebValidatingKey {
     }
 }
 
+extension JSONWebContainer where Self: SecCertificate {
+    public init(storage: JSONWebValueStorage) throws {
+        let key = AnyJSONWebKey(storage: storage)
+        guard let certificate = key.certificateChain.first, let result = try SecCertificate.makeWithCertificate(certificate) as? Self else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        self = result
+    }
+}
+
 extension SecCertificate: Expirable {
     public func verifyDate(_ currentDate: Date) throws {
         try Certificate(self).verifyDate(currentDate)
@@ -63,7 +65,9 @@ extension Security.SecTrust: Swift.Codable {}
 
 extension SecTrust: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
-        var key = AnyJSONWebKey(storage: (try? certificateChain.first?.publicKey.storage) ?? .init())
+        guard var key = (try? certificateChain.first?.publicKey).map(AnyJSONWebKey.init) else {
+            return .init()
+        }
         key.certificateChain = (try? certificateChain.compactMap(Certificate.init)) ?? []
         return key.storage
     }
@@ -90,7 +94,13 @@ extension SecTrust: JSONWebValidatingKey {
         SecTrustCopyKey(self)
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> Self {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try publicKey?.verifySignature(signature, for: data, using: algorithm)
+    }
+}
+
+extension JSONWebContainer where Self: SecTrust {
+    public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
         let certificates = try key.certificateChain.map(SecCertificate.makeWithCertificate)
         var result: SecTrust?
@@ -98,11 +108,7 @@ extension SecTrust: JSONWebValidatingKey {
         guard let result = result as? Self else {
             throw JSONWebKeyError.keyNotFound
         }
-        return result
-    }
-    
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try publicKey?.verifySignature(signature, for: data, using: algorithm)
+        self = result
     }
 }
 

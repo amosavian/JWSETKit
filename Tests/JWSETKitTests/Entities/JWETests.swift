@@ -10,8 +10,6 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
-extension Crypto.SymmetricKey: @unchecked Swift.Sendable {}
-
 @Suite
 struct JWETests {
     @Test

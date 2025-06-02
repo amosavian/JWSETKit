@@ -12,15 +12,11 @@ import Foundation
 #endif
 
 /// Claims and payload in a JWT.
-public struct JSONWebTokenClaims: JSONWebContainer {
+public struct JSONWebTokenClaims: MutableJSONWebContainer, Sendable {
     public var storage: JSONWebValueStorage
     
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
-    }
-    
-    public static func create(storage: JSONWebValueStorage) throws -> JSONWebTokenClaims {
-        .init(storage: storage)
     }
 }
 

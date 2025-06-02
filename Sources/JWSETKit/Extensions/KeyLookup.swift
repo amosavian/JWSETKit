@@ -54,12 +54,15 @@ extension AnyKeyPath {
 }
 
 extension String {
+#if canImport(Foundation.NSRegularExpression)
+    // The pattern is valid and it never fails.
+    private static let regex = try! NSRegularExpression(pattern: "([a-z0-9])([A-Z])", options: [])
+#endif
+
     var snakeCased: String {
 #if canImport(Foundation.NSRegularExpression)
-        // The pattern is valid and it never fails.
-        let regex = try! NSRegularExpression(pattern: "([a-z0-9])([A-Z])", options: [])
         let range = NSRange(startIndex..., in: self)
-        return regex.stringByReplacingMatches(in: self, options: [], range: range, withTemplate: "$1_$2").lowercased()
+        return Self.regex.stringByReplacingMatches(in: self, options: [], range: range, withTemplate: "$1_$2").lowercased()
 #else
         var result = ""
         for (index, char) in enumerated() {

@@ -31,10 +31,6 @@ struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey {
         self.storage = .init()
     }
     
-    static func create(storage: JSONWebValueStorage) throws -> JSONWebDirectKey {
-        Self(storage: storage)
-    }
-    
     func encrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         Data(data)
     }

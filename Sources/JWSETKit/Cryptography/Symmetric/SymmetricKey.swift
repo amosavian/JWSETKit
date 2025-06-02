@@ -24,22 +24,15 @@ extension SymmetricKey: JSONWebKeySymmetric {
     
     public var publicKey: SymmetricKey { self }
     
-    public static func create(storage: JSONWebValueStorage) throws -> SymmetricKey {
-        guard let key = (storage["k"] as Data?) else {
-            throw CryptoKitError.incorrectKeySize
-        }
-        return SymmetricKey(data: key)
-    }
-    
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
-    public init(storage: JSONWebValueStorage) {
+    public init(storage: JSONWebValueStorage) throws {
         guard let data = AnyJSONWebKey(storage: storage).keyValue else {
-            self.init(size: .bits128)
-            return
+            throw CryptoKitError.incorrectParameterSize
         }
         self.init(data: data)
+        try validate()
     }
     
     public func hash(into hasher: inout Hasher) {
@@ -143,4 +136,4 @@ extension SymmetricKey: JSONWebSymmetricSealingKey {
     }
 }
 
-extension SymmetricKey: @unchecked Sendable {}
+extension SymmetricKey: @unchecked Swift.Sendable {}

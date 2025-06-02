@@ -78,8 +78,6 @@ extension JSONWebSignatureAlgorithm {
         .ecdsaSignatureP256SHA256: SHA256.self,
         .ecdsaSignatureP384SHA384: SHA384.self,
         .ecdsaSignatureP521SHA512: SHA512.self,
-        .eddsaSignature: SHA256.self,
-        .eddsa25519Signature: SHA256.self,
         .rsaSignaturePSSSHA256: SHA256.self,
         .rsaSignaturePSSSHA384: SHA384.self,
         .rsaSignaturePSSSHA512: SHA512.self,
@@ -123,13 +121,13 @@ extension JSONWebSignatureAlgorithm {
     ///   - type: Type of key. Can be symmetric, RSA or Elliptic curve.
     ///   - curve: Curve if key is elliptic curve.
     ///   - signingKeyClass: Private key class. In case the key is symmetric, it is same as public key..
-    ///   - hashFunction: Hash function for signature message digest.
+    ///   - hashFunction: Hash function for signature message digest, if the algorithm needs digested data.
     public static func register<Private, Hash>(
         _ algorithm: Self,
         type: JSONWebKeyType,
         curve: JSONWebKeyCurve? = nil,
         signingKeyClass: Private.Type,
-        hashFunction: Hash.Type
+        hashFunction: Hash.Type?
     ) where Private: JSONWebSigningKey, Hash: HashFunction {
         keyRegistryClasses[algorithm] = (signingKeyClass.PublicKey, signingKeyClass)
         keyTypes[algorithm] = type

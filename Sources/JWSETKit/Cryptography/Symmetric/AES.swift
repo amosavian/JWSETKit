@@ -31,10 +31,6 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, J
         }
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyAESGCM {
-        .init(storage: storage)
-    }
-    
     public init(algorithm: some JSONWebAlgorithm) throws {
         switch algorithm {
         case .aesEncryptionGCM128, .aesGCM128KeyWrap:
@@ -51,8 +47,9 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, J
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
-    public init(storage: JSONWebValueStorage) {
+    public init(storage: JSONWebValueStorage) throws {
         self.storage = storage
+        try validate()
     }
     
     /// Initializes a AES-GCM key for encryption.
@@ -117,16 +114,13 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
             throw JSONWebKeyError.unknownAlgorithm
         }
     }
-
-    public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyAESKW {
-        .init(storage: storage)
-    }
     
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
-    public init(storage: JSONWebValueStorage) {
+    public init(storage: JSONWebValueStorage) throws {
         self.storage = storage
+        try validate()
     }
     
     /// Returns a new AES-KW with random key.

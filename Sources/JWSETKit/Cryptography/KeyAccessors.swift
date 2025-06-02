@@ -192,7 +192,7 @@ public struct JSONWebKeyRegisteredParameters {
     /// Use of this Header Parameter is OPTIONAL.
     public var certificateThumbprint: Data?
     
-    fileprivate static let keys: [SendablePartialKeyPath<Self>: String] = [
+    public static let keys: [SendablePartialKeyPath<Self>: String] = [
         \.keyType: "kty", \.keyUsage: "use", \.keyOperations: "key_ops",
         \.algorithm: "alg", \.curve: "crv", \.keyId: "kid",
         \.certificateURL: "x5u", \.certificateChain: "x5c", \.certificateThumbprint: "x5t",
@@ -226,7 +226,7 @@ public struct JSONWebKeyRegisteredRSAParameters {
     /// RSA private key first CRT coefficient.
     public var firstCRTCoefficient: Data?
     
-    fileprivate static let keys: [SendablePartialKeyPath<Self>: String] = [
+    public static let keys: [SendablePartialKeyPath<Self>: String] = [
         \.modulus: "n", \.exponent: "e",
         \.privateExponent: "d", \.firstPrimeFactor: "p", \.secondPrimeFactor: "q",
         \.firstFactorCRTExponent: "dp", \.secondFactorCRTExponent: "dq",
@@ -245,7 +245,7 @@ public struct JSONWebKeyRegisteredCurveParameters {
     /// ECC Private Key.
     public var privateKey: Data?
     
-    fileprivate static let keys: [SendablePartialKeyPath<Self>: String] = [
+    public static let keys: [SendablePartialKeyPath<Self>: String] = [
         \.xCoordinate: "x", \.yCoordinate: "y",
         \.privateKey: "d",
     ]
@@ -256,7 +256,7 @@ public struct JSONWebKeyRegisteredSymmetricParameters {
     /// Symmetric Key Value.
     public var keyValue: SymmetricKey?
     
-    fileprivate static let keys: [SendablePartialKeyPath<Self>: String] = [
+    public static let keys: [SendablePartialKeyPath<Self>: String] = [
         \.keyValue: "k",
     ]
 }
@@ -264,7 +264,7 @@ public struct JSONWebKeyRegisteredSymmetricParameters {
 /// Registered JSON Web Key (JWK) for Algorithm Key Pair (AKP) tokens.
 public struct JSONWebKeyRegisteredAKPParameters {
     /// Public Key Value.
-    public var publicKey: Data?
+    public var publicKeyData: Data?
     
     /// Private Key Value.
     public var privateKey: Data?
@@ -272,8 +272,8 @@ public struct JSONWebKeyRegisteredAKPParameters {
     /// Seed used to derive keys for an algorithm
     public var seed: Data?
     
-    fileprivate static let keys: [SendablePartialKeyPath<Self>: String] = [
-        \.publicKey: "pub", \.privateKey: "priv", \.seed: "seed",
+    public static let keys: [SendablePartialKeyPath<Self>: String] = [
+        \.publicKeyData: "pub", \.privateKey: "priv", \.seed: "seed",
     ]
 }
 

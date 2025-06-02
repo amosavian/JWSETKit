@@ -22,16 +22,13 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
     
     public var leaf: Certificate {
         get throws {
-            try Certificate.create(storage: storage)
+            try Certificate(from: self)
         }
     }
     
-    public init(storage: JSONWebValueStorage) {
+    public init(storage: JSONWebValueStorage) throws {
         self.storage = storage
-    }
-    
-    public static func create(storage: JSONWebValueStorage) throws -> JSONWebCertificateChain {
-        .init(storage: storage)
+        try validate()
     }
     
     public func validate() throws {

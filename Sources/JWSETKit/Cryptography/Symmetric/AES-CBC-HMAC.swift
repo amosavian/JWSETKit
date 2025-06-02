@@ -64,15 +64,12 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSymmetricSealingKe
         self.init(size: .bits256)
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyAESCBCHMAC {
-        .init(storage: storage)
-    }
-    
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
-    public init(storage: JSONWebValueStorage) {
+    public init(storage: JSONWebValueStorage) throws {
         self.storage = storage
+        try validate()
     }
     
     /// Returns a new AES-CBC with HMAC with random key.

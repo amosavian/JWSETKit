@@ -30,17 +30,18 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
     public var derRepresentation: Data {
         get throws {
 #if canImport(CommonCrypto)
-            return try SecKey.create(storage: storage).exportKey(format: .spki)
+            return try SecKey(from: self).exportKey(format: .spki)
 #elseif canImport(_CryptoExtras)
-            return try _RSA.Signing.PublicKey.create(storage: storage).exportKey(format: .spki)
+            return try _RSA.Signing.PublicKey(from: self).exportKey(format: .spki)
 #else
             #error("Unimplemented")
 #endif
         }
     }
     
-    public init(storage: JSONWebValueStorage) {
+    public init(storage: JSONWebValueStorage) throws {
         self.storage = storage
+        try validate()
     }
     
     public init<D>(derRepresentation: D) throws where D: DataProtocol {
@@ -53,15 +54,11 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
 #endif
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> JSONWebRSAPublicKey {
-        .init(storage: storage)
-    }
-    
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
 #if canImport(CommonCrypto)
-        return try SecKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
+        return try SecKey(from: self).verifySignature(signature, for: data, using: algorithm)
 #elseif canImport(_CryptoExtras)
-        return try _RSA.Signing.PublicKey.create(storage: storage).verifySignature(signature, for: data, using: algorithm)
+        return try _RSA.Signing.PublicKey(from: self).verifySignature(signature, for: data, using: algorithm)
 #else
         #error("Unimplemented")
 #endif
@@ -69,12 +66,12 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
     
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
 #if canImport(CommonCrypto)
-        return try SecKey.create(storage: storage).encrypt(data, using: algorithm)
+        return try SecKey(from: self).encrypt(data, using: algorithm)
 #elseif canImport(CryptoSwift) && canImport(_CryptoExtras)
         if algorithm == .unsafeRSAEncryptionPKCS1 {
-            return try CryptoSwift.RSA.create(storage: storage).encrypt(data, using: algorithm)
+            return try CryptoSwift.RSA(from: self).encrypt(data, using: algorithm)
         } else {
-            return try _RSA.Encryption.PublicKey.create(storage: storage).encrypt(data, using: algorithm)
+            return try _RSA.Encryption.PublicKey(from: self).encrypt(data, using: algorithm)
         }
 #else
         #error("Unimplemented")
@@ -86,7 +83,7 @@ extension JSONWebRSAPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .spki:
-            self = try .init(derRepresentation: key)
+            try self.init(derRepresentation: key)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
             try validate()
@@ -137,22 +134,22 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
     public var storage: JSONWebValueStorage
     
     public var publicKey: JSONWebRSAPublicKey {
-        var result = JSONWebRSAPublicKey(storage: storage)
+        var result = AnyJSONWebKey(storage: storage)
         result.privateExponent = nil
         result.firstPrimeFactor = nil
         result.secondPrimeFactor = nil
         result.firstFactorCRTExponent = nil
         result.secondFactorCRTExponent = nil
         result.firstCRTCoefficient = nil
-        return result
+        return try! .init(from: result)
     }
     
     public var derRepresentation: Data {
         get throws {
 #if canImport(CommonCrypto)
-            return try SecKey.create(storage: storage).exportKey(format: .pkcs8)
+            return try SecKey(from: self).exportKey(format: .pkcs8)
 #elseif canImport(_CryptoExtras)
-            return try _RSA.Signing.PublicKey.create(storage: storage).exportKey(format: .pkcs8)
+            return try _RSA.Signing.PublicKey(from: self).exportKey(format: .pkcs8)
 #else
             #error("Unimplemented")
 #endif
@@ -173,8 +170,9 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
 #endif
     }
     
-    public init(storage: JSONWebValueStorage) {
+    public init(storage: JSONWebValueStorage) throws {
         self.storage = storage
+        try validate()
     }
     
     public init<D>(derRepresentation: D) throws where D: DataProtocol {
@@ -187,19 +185,15 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
 #endif
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> JSONWebRSAPrivateKey {
-        .init(storage: storage)
-    }
-    
     public func validate() throws {
         try checkRequiredFields("n", "e", "d", "p", "q", "dp", "dq")
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
 #if canImport(CommonCrypto)
-        return try SecKey.create(storage: storage).signature(data, using: algorithm)
+        return try SecKey(from: self).signature(data, using: algorithm)
 #elseif canImport(_CryptoExtras)
-        return try _RSA.Signing.PrivateKey.create(storage: storage).signature(data, using: algorithm)
+        return try _RSA.Signing.PrivateKey(from: self).signature(data, using: algorithm)
 #else
         #error("Unimplemented")
 #endif
@@ -207,12 +201,12 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
 #if canImport(CommonCrypto)
-        return try SecKey.create(storage: storage).decrypt(data, using: algorithm)
+        return try SecKey(from: self).decrypt(data, using: algorithm)
 #elseif canImport(CryptoSwift) && canImport(_CryptoExtras)
         if algorithm == .unsafeRSAEncryptionPKCS1 {
-            return try CryptoSwift.RSA.create(storage: storage).decrypt(data, using: algorithm)
+            return try CryptoSwift.RSA(from: self).decrypt(data, using: algorithm)
         } else {
-            return try _RSA.Encryption.PrivateKey.create(storage: storage).decrypt(data, using: algorithm)
+            return try _RSA.Encryption.PrivateKey(from: self).decrypt(data, using: algorithm)
         }
 #else
         #error("Unimplemented")
@@ -224,7 +218,7 @@ extension JSONWebRSAPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .pkcs8:
-            self = try .init(derRepresentation: key)
+            try self.init(derRepresentation: key)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
             try validate()
@@ -348,11 +342,11 @@ enum RSAHelper {
             key.firstFactorCRTExponent = components[6]
             key.secondFactorCRTExponent = components[7]
             key.firstCRTCoefficient = components[8]
-            return JSONWebRSAPrivateKey(storage: key.storage)
+            return try JSONWebRSAPrivateKey(key)
         } else {
             key.modulus = components[0]
             key.exponent = components[1]
-            return JSONWebRSAPublicKey(storage: key.storage)
+            return try JSONWebRSAPublicKey(key)
         }
     }
 }
@@ -377,7 +371,7 @@ extension CryptoSwift.RSA: JSONWebDecryptingKey, JSONWebKeyRSAType {
         }
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> Self {
+    public convenience init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
         guard let modulus = key.modulus, let exponent = key.exponent else {
             throw CryptoKitError.incorrectParameterSize
@@ -386,7 +380,7 @@ extension CryptoSwift.RSA: JSONWebDecryptingKey, JSONWebKeyRSAType {
            let prime1 = key.firstPrimeFactor,
            let prime2 = key.secondPrimeFactor
         {
-            return try self.init(
+            try self.init(
                 n: .init(modulus),
                 e: .init(exponent),
                 d: .init(privateExponent),
@@ -394,7 +388,7 @@ extension CryptoSwift.RSA: JSONWebDecryptingKey, JSONWebKeyRSAType {
                 q: .init(prime2)
             )
         } else {
-            return self.init(n: .init(modulus), e: .init(exponent))
+            self.init(n: .init(modulus), e: .init(exponent))
         }
     }
     

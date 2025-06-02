@@ -112,7 +112,7 @@ extension AES.GCM.SealedBox {
     /// - Parameters:
     ///   - sealedBox: Container for your data.
     public init(_ sealedData: SealedData) throws {
-        self = try .init(
+        try self.init(
             nonce: .init(data: sealedData.nonce),
             ciphertext: sealedData.ciphertext,
             tag: sealedData.tag
@@ -126,7 +126,7 @@ extension ChaChaPoly.SealedBox {
     /// - Parameters:
     ///   - sealedBox: Container for your data.
     public init(_ sealedData: SealedData) throws {
-        self = try .init(
+        try self.init(
             nonce: .init(data: sealedData.nonce),
             ciphertext: sealedData.ciphertext,
             tag: sealedData.tag

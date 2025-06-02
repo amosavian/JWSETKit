@@ -21,16 +21,13 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWe
         get throws {
             // swiftformat:disable:next redundantSelf
             try Self.signingType(self.curve)
-                .create(storage: storage)
+                .init(from: self)
         }
     }
     
-    public init(storage: JSONWebValueStorage) {
+    public init(storage: JSONWebValueStorage) throws {
         self.storage = storage
-    }
-    
-    public static func create(storage: JSONWebValueStorage) throws -> JSONWebECPublicKey {
-        .init(storage: storage)
+        try validate()
     }
     
     static func signingType(_ curve: JSONWebKeyCurve?) throws -> any JSONWebValidatingKey.Type {
@@ -84,7 +81,7 @@ extension JSONWebKeyImportable {
         guard let type = try keyFinder(curve) as? any JSONWebKeyImportable.Type else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        try self = Self.create(storage: type.init(importing: key, format: format).storage)
+        try self = Self(from: type.init(importing: key, format: format))
     }
 }
 
@@ -114,7 +111,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
     public var storage: JSONWebValueStorage
     
     public var publicKey: JSONWebECPublicKey {
-        var result = JSONWebECPublicKey(storage: storage)
+        var result = try! JSONWebECPublicKey(from: self)
         result.privateKey = nil
         return result
     }
@@ -123,12 +120,13 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
         get throws {
             // swiftformat:disable:next redundantSelf
             try Self.signingType(self.curve)
-                .create(storage: storage)
+                .init(from: self)
         }
     }
     
-    public init(storage: JSONWebValueStorage) {
+    public init(storage: JSONWebValueStorage) throws {
         self.storage = storage
+        try validate()
     }
     
     public init(algorithm: some JSONWebAlgorithm) throws {
@@ -156,10 +154,6 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
         }
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> JSONWebECPrivateKey {
-        .init(storage: storage)
-    }
-    
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         try signingKey.signature(data, using: algorithm)
     }
@@ -168,17 +162,17 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
         // swiftformat:disable:next redundantSelf
         switch (self.keyType, self.curve) {
         case (JSONWebKeyType.ellipticCurve, .p256):
-            return try P256.KeyAgreement.PrivateKey.create(storage: storage)
-                .sharedSecretFromKeyAgreement(with: .create(storage: publicKeyShare.storage))
+            return try P256.KeyAgreement.PrivateKey(from: self)
+                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
         case (JSONWebKeyType.ellipticCurve, .p384):
-            return try P384.KeyAgreement.PrivateKey.create(storage: storage)
-                .sharedSecretFromKeyAgreement(with: .create(storage: publicKeyShare.storage))
+            return try P384.KeyAgreement.PrivateKey(from: self)
+                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
         case (JSONWebKeyType.ellipticCurve, .p521):
-            return try P521.KeyAgreement.PrivateKey.create(storage: storage)
-                .sharedSecretFromKeyAgreement(with: .create(storage: publicKeyShare.storage))
+            return try P521.KeyAgreement.PrivateKey(from: self)
+                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
         case (JSONWebKeyType.ellipticCurve, .x25519), (JSONWebKeyType.octetKeyPair, .x25519):
-            return try Curve25519.KeyAgreement.PrivateKey.create(storage: storage)
-                .sharedSecretFromKeyAgreement(with: .create(storage: publicKeyShare.storage))
+            return try Curve25519.KeyAgreement.PrivateKey(from: self)
+                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -239,12 +233,12 @@ enum ECHelper {
         case (2, false):
             key.xCoordinate = components[0]
             key.yCoordinate = components[1]
-            return JSONWebECPublicKey(storage: key.storage)
+            return try JSONWebECPublicKey(from: key)
         case (3, true):
             key.xCoordinate = components[0]
             key.yCoordinate = components[1]
             key.privateKey = components[2]
-            return JSONWebECPrivateKey(storage: key.storage)
+            return try JSONWebECPrivateKey(from: key)
         default:
             throw JSONWebKeyError.unknownKeyType
         }

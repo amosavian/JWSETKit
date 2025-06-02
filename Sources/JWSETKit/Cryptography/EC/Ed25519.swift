@@ -25,12 +25,12 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey {
         return result.storage
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> Self {
+    public init(storage: JSONWebValueStorage) throws {
         let keyData = AnyJSONWebKey(storage: storage)
         guard let x = keyData.xCoordinate, !x.isEmpty else {
             throw CryptoKitError.incorrectKeySize
         }
-        return try .init(rawRepresentation: x)
+        try self.init(rawRepresentation: x)
     }
 }
 
@@ -47,12 +47,12 @@ extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
         return result.storage
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> Self {
+    public init(storage: JSONWebValueStorage) throws {
         let keyData = AnyJSONWebKey(storage: storage)
         guard let x = keyData.xCoordinate, !x.isEmpty else {
             throw CryptoKitError.incorrectKeySize
         }
-        return try .init(rawRepresentation: x)
+        try self.init(rawRepresentation: x)
     }
 }
 

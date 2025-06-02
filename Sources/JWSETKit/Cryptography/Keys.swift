@@ -15,27 +15,14 @@ import Crypto
 /// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159](https://www.rfc-editor.org/rfc/rfc7159)
 /// data structure that represents a cryptographic key.
 @dynamicMemberLookup
-public protocol JSONWebKey: Swift.Codable, Swift.Hashable, Expirable {
-    /// Storage of container values.
-    var storage: JSONWebValueStorage { get }
-    
-    /// Returns a new concrete key using json data.
-    ///
-    /// - Parameter storage: Storage of key-values.
-    ///
-    /// - Returns: A new instance of current class.
-    static func create(storage: JSONWebValueStorage) throws -> Self
-    
-    /// Validates contents and required fields if applicable.
-    func validate() throws
-    
+public protocol JSONWebKey: JSONWebContainer, Expirable {
     /// Creates a thumbprint of current key specified in [RFC7638](https://www.rfc-editor.org/rfc/rfc7638).
     ///
     /// Valid formats for public keys are `spki` and `jwk`.  SPKI thumbprints are used in SSL-pinning.
     ///
     /// While it is possible to create a thumbprint for private keys, it is typically not useful to do so,
     /// as the thumbprint is a cryptographic hash of the key, and the private key contains all the information
-    /// needed to compute the thumbprint. It is possible by passing `pkcs8` or `jwk` as format.
+    /// needed to compute the thumbprint. The public key is used to compute the thumbprint if private key is passed.
     ///
     /// - Important: A hash of a symmetric key has the potential to leak information about
     ///     the key value.  Thus, the JWK Thumbprint of a symmetric key should
@@ -58,7 +45,7 @@ public protocol JSONWebKey: Swift.Codable, Swift.Hashable, Expirable {
     ///
     /// While it is possible to create a thumbprint for private keys, it is typically not useful to do so,
     /// as the thumbprint is a cryptographic hash of the key, and the private key contains all the information
-    /// needed to compute the thumbprint. It is possible by passing `pkcs8` or `jwk` as format.
+    /// needed to compute the thumbprint. The public key is used to compute the thumbprint if private key is passed.
     ///
     /// - Important: A hash of a symmetric key has the potential to leak information about
     ///     the key value.  Thus, the JWK Thumbprint of a symmetric key should
@@ -123,10 +110,7 @@ public func == <LHS: JSONWebKey, RHS: JSONWebKey>(lhs: LHS, rhs: RHS) -> Bool {
 /// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159]
 /// data structure that represents a cryptographic key.
 @dynamicMemberLookup
-public protocol MutableJSONWebKey: JSONWebKey {
-    /// Storage of container values.
-    var storage: JSONWebValueStorage { get set }
-}
+public protocol MutableJSONWebKey: JSONWebKey, MutableJSONWebContainer {}
 
 extension JSONWebValueStorage {
     fileprivate func normalizedField(_ key: String, blockSize _: Int? = nil) -> Self {
@@ -151,7 +135,12 @@ extension JSONWebKey {
     
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
-        self = try Self.create(storage: container.decode(JSONWebValueStorage.self))
+        self = try Self(storage: container.decode(JSONWebValueStorage.self))
+    }
+    
+    @available(*, deprecated, renamed: "init(storage:)", message: "Use `init(storage:)` instead")
+    public static func create(from storage: JSONWebValueStorage) throws -> Self {
+        try Self(storage: storage)
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -164,10 +153,6 @@ extension JSONWebKey {
         guard let keyType = self.keyType else {
             throw JSONWebKeyError.unknownKeyType
         }
-        // swiftformat:disable:next redundantSelf
-        if let revoked = self.revoked {
-            throw JSONWebValidationError.tokenExpired(expiry: revoked.time ?? .init())
-        }
         switch keyType {
         case .rsa:
             try checkRequiredFields("n", "e")
@@ -177,6 +162,8 @@ extension JSONWebKey {
             try checkRequiredFields("x")
         case .symmetric:
             try checkRequiredFields("k")
+        case .algorithmKeyPair:
+            try checkRequiredFields("pub")
         default:
             break
         }
@@ -234,15 +221,9 @@ extension JSONWebKey {
             }
             let spki = try self.exportKey(format: .spki)
             return H.hash(data: spki)
-        case .pkcs8:
-            guard let self = key as? (any JSONWebKeyExportable) else {
-                throw JSONWebKeyError.operationNotAllowed
-            }
-            let spki = try self.exportKey(format: .pkcs8)
-            return H.hash(data: spki)
         case .jwk:
             return try jwkThumbprint(using: hashFunction)
-        case .raw:
+        case .pkcs8, .raw:
             throw JSONWebKeyError.operationNotAllowed
         }
     }
@@ -275,9 +256,9 @@ extension MutableJSONWebKey {
     public mutating func populateKeyIdIfNeeded() {
         // swiftformat:disable:next redundantSelf
         guard self.keyId?.isEmpty ?? true else { return }
-        guard let thumprintUrn = try? thumbprintUri(format: .jwk, using: SHA256.self) else { return }
+        guard let thumbprintUrn = try? thumbprintUri(format: .jwk, using: SHA256.self) else { return }
         // swiftformat:disable:next redundantSelf
-        self.keyId = thumprintUrn
+        self.keyId = thumbprintUrn
     }
 }
 
@@ -498,13 +479,10 @@ public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey, JSONWebKeySymmetr
 public struct AnyJSONWebKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWebKeyCurveType, JSONWebKeySymmetric, JSONWebKeyAlgorithmKeyPairType, Sendable {
     public var storage: JSONWebValueStorage
     
-    public static func create(storage: JSONWebValueStorage) throws -> AnyJSONWebKey {
-        AnyJSONWebKey(storage: storage)
-    }
-    
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
+    @inlinable
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
     }
@@ -512,6 +490,7 @@ public struct AnyJSONWebKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWebKeyCur
     /// A type-erased JWK value.
     ///
     /// - Parameter key: Key to wrap.
+    @inlinable
     public init(_ key: any JSONWebKey) {
         self.storage = key.storage
     }
@@ -522,8 +501,21 @@ public struct AnyJSONWebKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWebKeyCur
         self.keyValue = key
     }
     
+    @inlinable
     init() {
         self.storage = .init()
+    }
+}
+
+extension JSONWebKey {
+    @inlinable
+    public init(from key: any JSONWebKey) throws {
+        try self.init(storage: key.storage)
+    }
+    
+    @inlinable
+    public init(_ key: AnyJSONWebKey) throws {
+        try self.init(storage: key.storage)
     }
 }
 

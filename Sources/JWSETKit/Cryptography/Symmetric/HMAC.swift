@@ -30,15 +30,12 @@ public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetr
         }
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> JSONWebKeyHMAC {
-        .init(storage: storage)
-    }
-    
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
-    public init(storage: JSONWebValueStorage) {
+    public init(storage: JSONWebValueStorage) throws {
         self.storage = storage
+        try validate()
     }
     
     /// Returns a new HMAC key with given symmetric key.

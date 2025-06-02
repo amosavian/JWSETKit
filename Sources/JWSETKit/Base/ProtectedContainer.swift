@@ -127,9 +127,23 @@ public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
 /// This container preserves original data to keep consistency of signature as re-encoding payload
 /// may change sorting.
 @frozen
-public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProtectedWebContainer, Codable {
+public struct ProtectedJSONWebContainer<Container: JSONWebContainer & Sendable>: TypedProtectedWebContainer, JSONWebContainer, Sendable {
     private var _protected: Data
     private var _value: Container
+    
+    public var storage: JSONWebValueStorage {
+        @inlinable
+        get {
+            value.storage
+        }
+        set {
+            guard let value = try? Container(storage: newValue) else {
+                assertionFailure("Invalid storage provided")
+                return
+            }
+            self.value = value
+        }
+    }
     
     /// Serialized protected data of JOSE.
     public var encoded: Data {
@@ -138,13 +152,14 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
         }
         set {
             _protected = newValue
-            if newValue.isEmpty {
-                _value.storage = .init()
-                return
-            }
             do {
-                _value = try JSONDecoder().decode(Container.self, from: newValue)
+                _value = if !newValue.isEmpty {
+                    try JSONDecoder().decode(Container.self, from: newValue)
+                } else {
+                    try .init(storage: .init())
+                }
             } catch {
+                assertionFailure("Invalid protected data provided: \(error)")
                 _protected = .init()
             }
         }
@@ -171,6 +186,10 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer>: TypedProte
                 }
             }
         }
+    }
+    
+    public init(storage: JSONWebValueStorage) throws {
+        try self.init(value: .init(storage: storage))
     }
     
     /// Initialized protected container from a JOSE data.

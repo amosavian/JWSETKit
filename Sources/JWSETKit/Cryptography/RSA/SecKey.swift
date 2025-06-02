@@ -61,13 +61,6 @@ extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
         }
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> Self {
-        guard let result = try createKeyFromComponents(.init(storage: storage)) as? Self else {
-            throw JSONWebKeyError.unknownKeyType
-        }
-        return result
-    }
-    
     fileprivate static func createPairKey(type: JSONWebKeyType, bits length: Int) throws -> SecKey {
         let keyType: CFString
         switch type {
@@ -96,7 +89,7 @@ extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
         }
     }
     
-    private static func createKeyFromComponents(_ key: AnyJSONWebKey) throws -> SecKey {
+    fileprivate static func createKeyFromComponents(_ key: AnyJSONWebKey) throws -> SecKey {
         guard let type = key.keyType else {
             throw JSONWebKeyError.unknownKeyType
         }
@@ -182,6 +175,15 @@ extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
     
     private static func createECFromComponents(_ components: [Data]) throws -> SecKey {
         try SecKey(derRepresentation: Data([0x04]) + components.joined(), keyType: .ellipticCurve)
+    }
+}
+
+extension JSONWebContainer where Self: SecKey {
+    public init(storage: JSONWebValueStorage) throws {
+        guard let result = try Self.createKeyFromComponents(.init(storage: storage)) as? Self else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+        self = result
     }
 }
 
@@ -351,9 +353,9 @@ extension SecKey: JSONWebKeyExportable {
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
         switch try (format, keyType, isPrivateKey) {
         case (_, .ellipticCurve, false):
-            return try JSONWebECPublicKey(storage: storage).exportKey(format: format)
+            return try JSONWebECPublicKey(from: self).exportKey(format: format)
         case (_, .ellipticCurve, true):
-            return try JSONWebECPrivateKey(storage: storage).exportKey(format: format)
+            return try JSONWebECPrivateKey(from: self).exportKey(format: format)
         case (.spki, .rsa, false):
             return try SubjectPublicKeyInfo(pkcs1: externalRepresentation).derRepresentation
         case (.pkcs8, .rsa, true):

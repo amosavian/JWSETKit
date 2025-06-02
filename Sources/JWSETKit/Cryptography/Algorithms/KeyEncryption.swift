@@ -314,12 +314,12 @@ extension JSONWebKeyEncryptionAlgorithm {
         
         let secret: SharedSecret
         if let headerEphemeralKey = header.ephemeralPublicKey {
-            let ephemeralKey = JSONWebECPublicKey(storage: headerEphemeralKey.storage)
-            let staticKey = JSONWebECPrivateKey(storage: kek.storage)
+            let ephemeralKey = try JSONWebECPublicKey(headerEphemeralKey)
+            let staticKey = try JSONWebECPrivateKey(from: kek)
             secret = try staticKey.sharedSecretFromKeyAgreement(with: ephemeralKey)
         } else if let curve = kek.curve {
             let ephemeralKey = try JSONWebECPrivateKey(curve: curve)
-            let staticKey = JSONWebECPublicKey(storage: kek.storage)
+            let staticKey = try JSONWebECPublicKey(from: kek)
             header.ephemeralPublicKey = .init(ephemeralKey.publicKey)
             secret = try ephemeralKey.sharedSecretFromKeyAgreement(with: staticKey)
         } else {
@@ -387,8 +387,8 @@ extension JSONWebKeyEncryptionAlgorithm {
             throw JSONWebKeyError.keyNotFound
         }
         
-        let privateKey = JSONWebECPrivateKey(storage: kek.storage)
-        let secret = try privateKey.sharedSecretFromKeyAgreement(with: .init(storage: epk.storage))
+        let privateKey = try JSONWebECPrivateKey(from: kek)
+        let secret = try privateKey.sharedSecretFromKeyAgreement(with: .init(epk))
         
         let symmetricKey = try secret.concatDerivedSymmetricKey(
             algorithm: algorithm,

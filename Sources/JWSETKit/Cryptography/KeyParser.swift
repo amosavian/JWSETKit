@@ -68,9 +68,9 @@ enum JSONWebKeyRSASpecializer: JSONWebKeySpecializer {
     static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
         guard key.keyType == .rsa else { return nil }
         if key.privateExponent != nil {
-            return try JSONWebRSAPrivateKey.create(storage: key.storage)
+            return try JSONWebRSAPrivateKey(key)
         } else {
-            return try JSONWebRSAPublicKey.create(storage: key.storage)
+            return try JSONWebRSAPublicKey(key)
         }
     }
     
@@ -96,9 +96,9 @@ enum JSONWebKeyEllipticCurveSpecializer: JSONWebKeySpecializer {
         switch curve {
         case .p256, .p384, .p521:
             if key.privateKey != nil {
-                return try JSONWebECPrivateKey.create(storage: key.storage)
+                return try JSONWebECPrivateKey(from: key)
             } else {
-                return try JSONWebECPublicKey.create(storage: key.storage)
+                return try JSONWebECPublicKey(from: key)
             }
         default:
             return nil
@@ -131,9 +131,9 @@ enum JSONWebKeyCurve25519Specializer: JSONWebKeySpecializer {
         switch curve {
         case .ed25519, .x25519:
             if key.privateKey != nil {
-                return try JSONWebECPrivateKey.create(storage: key.storage)
+                return try JSONWebECPrivateKey(from: key)
             } else {
-                return try JSONWebECPublicKey.create(storage: key.storage)
+                return try JSONWebECPublicKey(from: key)
             }
         default:
             return nil
@@ -167,19 +167,19 @@ enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
         
         switch key.algorithm ?? JSONWebSignatureAlgorithm("") {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
-            return try JSONWebKeyAESGCM.create(storage: key.storage)
+            return try JSONWebKeyAESGCM(key)
         case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256:
-            return try JSONWebKeyAESKW.create(storage: key.storage)
+            return try JSONWebKeyAESKW(key)
         case .aesEncryptionCBC128SHA256, .aesEncryptionCBC192SHA384, .aesEncryptionCBC256SHA512:
-            return try JSONWebKeyAESCBCHMAC.create(storage: key.storage)
+            return try JSONWebKeyAESCBCHMAC(key)
         case .hmacSHA256:
-            return try JSONWebKeyHMAC<SHA256>.create(storage: key.storage)
+            return try JSONWebKeyHMAC<SHA256>(key)
         case .hmacSHA384:
-            return try JSONWebKeyHMAC<SHA384>.create(storage: key.storage)
+            return try JSONWebKeyHMAC<SHA384>(key)
         case .hmacSHA512:
-            return try JSONWebKeyHMAC<SHA512>.create(storage: key.storage)
+            return try JSONWebKeyHMAC<SHA512>(key)
         default:
-            return try SymmetricKey.create(storage: key.storage)
+            return try SymmetricKey(key)
         }
     }
     
@@ -196,7 +196,7 @@ enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
 enum JSONWebKeyCertificateChainSpecializer: JSONWebKeySpecializer {
     static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
         if !key.certificateChain.isEmpty {
-            return try JSONWebCertificateChain.create(storage: key.storage)
+            return try JSONWebCertificateChain(key)
         }
         return nil
     }

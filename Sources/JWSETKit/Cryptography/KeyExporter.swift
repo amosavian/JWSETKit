@@ -81,7 +81,7 @@ extension JSONWebKeyExportable {
     }
 }
 
-public protocol JSONWebKeySymmetric: JSONWebKeyImportable, JSONWebKeyExportable {
+public protocol JSONWebKeySymmetric: JSONWebKeyImportable, JSONWebKeyExportable, Hashable {
     init(_ key: SymmetricKey) throws
 }
 
@@ -111,6 +111,15 @@ extension JSONWebKeySymmetric {
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.keyValue == rhs.keyValue
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        // swiftformat:disable:next redundantSelf
+        hasher.combine(self.keyValue?.data)
     }
 }
 

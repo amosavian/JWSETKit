@@ -24,24 +24,24 @@ extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWe
         (try? jsonWebKey().storage) ?? .init()
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> Certificate.PublicKey {
+    public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
         
         switch (key.keyType, key.curve) {
         case (.some(.ellipticCurve), .some(.p256)):
-            return try .init(P256.Signing.PublicKey.create(storage: storage))
+            try self.init(P256.Signing.PublicKey(key))
         case (.some(.ellipticCurve), .some(.p384)):
-            return try .init(P384.Signing.PublicKey.create(storage: storage))
+            try self.init(P384.Signing.PublicKey(key))
         case (.some(.ellipticCurve), .some(.p521)):
-            return try .init(P521.Signing.PublicKey.create(storage: storage))
+            try self.init(P521.Signing.PublicKey(key))
         case (.some(.octetKeyPair), .some(.ed25519)):
-            return try .init(Curve25519.Signing.PublicKey.create(storage: storage))
+            try self.init(Curve25519.Signing.PublicKey(key))
         case (.some(.rsa), _):
 #if canImport(CommonCrypto)
-            let der = try SecKey.create(storage: storage).externalRepresentation
-            return try .init(derEncoded: der)
+            let der = try SecKey(key).externalRepresentation
+            try self.init(derEncoded: der)
 #elseif canImport(_CryptoExtras)
-            return try .init(_RSA.Signing.PublicKey.create(storage: storage))
+            try self.init(_RSA.Signing.PublicKey(key))
 #else
             #error("Unimplemented")
 #endif
@@ -101,24 +101,24 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
         }
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> Certificate.PrivateKey {
+    public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
         
         switch (key.keyType, key.curve) {
         case (.some(.ellipticCurve), .some(.p256)):
-            return try .init(P256.Signing.PrivateKey.create(storage: storage))
+            try self.init(P256.Signing.PrivateKey(key))
         case (.some(.ellipticCurve), .some(.p384)):
-            return try .init(P384.Signing.PrivateKey.create(storage: storage))
+            try self.init(P384.Signing.PrivateKey(key))
         case (.some(.ellipticCurve), .some(.p521)):
-            return try .init(P521.Signing.PrivateKey.create(storage: storage))
+            try self.init(P521.Signing.PrivateKey(key))
         case (.some(.octetKeyPair), .some(.ed25519)):
-            return try .init(Curve25519.Signing.PrivateKey.create(storage: storage))
+            try self.init(Curve25519.Signing.PrivateKey(key))
         case (.some(.rsa), _):
 #if canImport(CommonCrypto)
-            let secKey = try SecKey.create(storage: storage)
-            return try Certificate.PrivateKey(secKey)
+            let secKey = try SecKey(key)
+            try self.init(secKey)
 #elseif canImport(_CryptoExtras)
-            return try .init(_RSA.Signing.PrivateKey.create(storage: storage))
+            try self.init(_RSA.Signing.PrivateKey(key))
 #else
             #error("Unimplemented")
 #endif
@@ -188,17 +188,17 @@ extension X509.Certificate: Swift.Codable {}
 
 extension Certificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
-        var key = AnyJSONWebKey(storage: publicKey.storage)
+        var key = AnyJSONWebKey(publicKey)
         key.certificateChain = [self]
         return key.storage
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> Certificate {
+    public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
         guard let certificate = key.certificateChain.first else {
             throw JSONWebKeyError.keyNotFound
         }
-        return certificate
+        self = certificate
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {

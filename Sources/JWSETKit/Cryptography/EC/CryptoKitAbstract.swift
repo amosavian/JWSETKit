@@ -29,12 +29,12 @@ extension CryptoECPublicKey {
         return result.storage
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> Self {
+    public init(storage: JSONWebValueStorage) throws {
         let keyData = AnyJSONWebKey(storage: storage)
         guard let x = keyData.xCoordinate, !x.isEmpty, let y = keyData.yCoordinate, y.count == x.count else {
             throw CryptoKitError.incorrectKeySize
         }
-        return try .init(rawRepresentation: x + y)
+        try self.init(rawRepresentation: x + y)
     }
     
     public func hash(into hasher: inout Hasher) {
@@ -57,17 +57,17 @@ protocol CryptoECPrivateKey: JSONWebKeyCurveType {
 
 extension CryptoECPrivateKey {
     public var storage: JSONWebValueStorage {
-        var result: some (MutableJSONWebKey & JSONWebKeyCurveType) = AnyJSONWebKey(storage: publicKey.storage)
+        var result: some (MutableJSONWebKey & JSONWebKeyCurveType) = AnyJSONWebKey(publicKey)
         result.privateKey = rawRepresentation
         return result.storage
     }
     
-    public static func create(storage: JSONWebValueStorage) throws -> Self {
+    public init(storage: JSONWebValueStorage) throws {
         let keyData: some (MutableJSONWebKey & JSONWebKeyCurveType) = AnyJSONWebKey(storage: storage)
         guard let privateKey = keyData.privateKey, !privateKey.isEmpty else {
             throw CryptoKitError.incorrectKeySize
         }
-        return try .init(rawRepresentation: privateKey)
+        try self.init(rawRepresentation: privateKey)
     }
     
     public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
