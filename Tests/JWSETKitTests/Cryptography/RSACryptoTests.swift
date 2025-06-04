@@ -54,13 +54,13 @@ struct RSACryptoTests {
     let plaintext = Data("The quick brown fox jumps over the lazy dog.".utf8)
     
     @Test
-    func testPKCS8Init() throws {
+    func pKCS8Init() throws {
         #expect(throws: Never.self) { try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER) }
         #expect(throws: Never.self) { try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER) }
     }
     
     @Test
-    func testEncrypt_RSA2048_OAEP_SHA1() throws {
+    func encrypt_RSA2048_OAEP_SHA1() throws {
         let publicKey = try _RSA.Encryption.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Encryption.PrivateKey(derRepresentation: privateKeyDER)
         
@@ -73,7 +73,7 @@ struct RSACryptoTests {
     }
     
     @Test
-    func testEncrypt_RSA2048_OAEP_SHA256() throws {
+    func encrypt_RSA2048_OAEP_SHA256() throws {
         let publicKey = try _RSA.Encryption.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Encryption.PrivateKey(derRepresentation: privateKeyDER)
         
@@ -86,7 +86,7 @@ struct RSACryptoTests {
     }
     
     @Test
-    func testSigning_RSA2048_PKCS1_SHA256() throws {
+    func signing_RSA2048_PKCS1_SHA256() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
         
@@ -98,7 +98,7 @@ struct RSACryptoTests {
     }
     
     @Test
-    func testSigning_RSA2048_PKCS1_SHA384() throws {
+    func signing_RSA2048_PKCS1_SHA384() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
         
@@ -110,7 +110,7 @@ struct RSACryptoTests {
     }
     
     @Test
-    func testSigning_RSA2048_PKCS1_SHA512() throws {
+    func signing_RSA2048_PKCS1_SHA512() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
         
@@ -122,7 +122,7 @@ struct RSACryptoTests {
     }
     
     @Test
-    func testSigning_RSA2048_PSS_SHA256() throws {
+    func signing_RSA2048_PSS_SHA256() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
         
@@ -134,7 +134,7 @@ struct RSACryptoTests {
     }
     
     @Test
-    func testSigning_RSA2048_PSS_SHA384() throws {
+    func signing_RSA2048_PSS_SHA384() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
         
@@ -146,7 +146,7 @@ struct RSACryptoTests {
     }
     
     @Test
-    func testSigning_RSA2048_PSS_SHA512() throws {
+    func signing_RSA2048_PSS_SHA512() throws {
         let publicKey = try _RSA.Signing.PublicKey(derRepresentation: publicKeyDER)
         let privateKey = try _RSA.Signing.PrivateKey(derRepresentation: privateKeyDER)
         
@@ -158,7 +158,7 @@ struct RSACryptoTests {
     }
     
     @Test
-    func testSigning_RSA3072_PSS_SHA256() throws {
+    func signing_RSA3072_PSS_SHA256() throws {
         let privateKey = try _RSA.Signing.PrivateKey(keySize: .bits3072)
         let publicKey = privateKey.publicKey
         
@@ -170,7 +170,7 @@ struct RSACryptoTests {
     }
     
     @Test
-    func testSigning_RSA4096_PSS_SHA256() throws {
+    func signing_RSA4096_PSS_SHA256() throws {
         let privateKey = try _RSA.Signing.PrivateKey(keySize: .bits4096)
         let publicKey = privateKey.publicKey
         

@@ -12,7 +12,7 @@ import Testing
 @Suite
 struct LocalizingTests {
     @Test
-    func testErrorLocalizing() throws {
+    func errorLocalizing() throws {
 #if canImport(Darwin)
         let date = Date(timeIntervalSince1970: 0)
         

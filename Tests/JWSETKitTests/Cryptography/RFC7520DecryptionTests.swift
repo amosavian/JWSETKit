@@ -21,7 +21,7 @@ struct RFC7520DecryptionTests {
     """
     
     @Test
-    func testDecryptCompact_RSA_v1_5() throws {
+    func decryptCompact_RSA_v1_5() throws {
         let jweString = """
         eyJhbGciOiJSU0ExXzUiLCJraWQiOiJmcm9kby5iYWdnaW5zQGhvYmJpdG9uLm\
         V4YW1wbGUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0\
@@ -52,7 +52,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptFlatJSON_RSA_v1_5() throws {
+    func decryptFlatJSON_RSA_v1_5() throws {
         let jweString = """
         {
           "protected": "eyJhbGciOiJSU0ExXzUiLCJraWQiOiJmcm9kby5iYWdnaW\
@@ -84,7 +84,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptCompleteJSON_RSA_v1_5() throws {
+    func decryptCompleteJSON_RSA_v1_5() throws {
         let jweString = """
         {
           "recipients": [
@@ -120,7 +120,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptCompact_RSA_OAEP() throws {
+    func decryptCompact_RSA_OAEP() throws {
         let jweString = """
         eyJhbGciOiJSU0EtT0FFUCIsImtpZCI6InNhbXdpc2UuZ2FtZ2VlQGhvYmJpdG\
         9uLmV4YW1wbGUiLCJlbmMiOiJBMjU2R0NNIn0\
@@ -156,7 +156,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptCompact_PBES2() throws {
+    func decryptCompact_PBES2() throws {
         let jweString = """
         eyJhbGciOiJQQkVTMi1IUzUxMitBMjU2S1ciLCJwMnMiOiI4UTFTemluYXNSM3\
         hjaFl6NlpaY0hBIiwicDJjIjo4MTkyLCJjdHkiOiJqd2stc2V0K2pzb24iLCJl\
@@ -209,7 +209,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptCompact_ECDH_ES_AESKW() throws {
+    func decryptCompact_ECDH_ES_AESKW() throws {
         let jweString = """
         eyJhbGciOiJFQ0RILUVTK0ExMjhLVyIsImtpZCI6InBlcmVncmluLnRvb2tAdH\
         Vja2Jvcm91Z2guZXhhbXBsZSIsImVwayI6eyJrdHkiOiJFQyIsImNydiI6IlAt\
@@ -238,7 +238,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptCompact_ECDH_ES_AESCBC() throws {
+    func decryptCompact_ECDH_ES_AESCBC() throws {
         let jweString = """
         eyJhbGciOiJFQ0RILUVTIiwia2lkIjoibWVyaWFkb2MuYnJhbmR5YnVja0BidW\
         NrbGFuZC5leGFtcGxlIiwiZXBrIjp7Imt0eSI6IkVDIiwiY3J2IjoiUC0yNTYi\
@@ -278,7 +278,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptCompact_Direct_AESGCM() throws {
+    func decryptCompact_Direct_AESGCM() throws {
         let jweString = """
         eyJhbGciOiJkaXIiLCJraWQiOiI3N2M3ZTJiOC02ZTEzLTQ1Y2YtODY3Mi02MT\
         diNWI0NTI0M2EiLCJlbmMiOiJBMTI4R0NNIn0\
@@ -312,7 +312,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptCompact_AESGCMKW() throws {
+    func decryptCompact_AESGCMKW() throws {
         let jweString = """
         eyJhbGciOiJBMjU2R0NNS1ciLCJraWQiOiIxOGVjMDhlMS1iZmE5LTRkOTUtYj\
         IwNS0yYjRkZDFkNDMyMWQiLCJ0YWciOiJrZlBkdVZRM1QzSDZ2bmV3dC0ta3N3\
@@ -340,7 +340,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptCompact_AESKW() throws {
+    func decryptCompact_AESKW() throws {
         let jweString = """
         eyJhbGciOiJBMTI4S1ciLCJraWQiOiI4MWIyMDk2NS04MzMyLTQzZDktYTQ2OC\
         04MjE2MGFkOTFhYzgiLCJlbmMiOiJBMTI4R0NNIn0\
@@ -365,7 +365,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test // (.disabled(if: JSONWebCompressionAlgorithm.registeredAlgorithms.isEmpty))
-    func testDecryptCompact_AESKW_Deflate() throws {
+    func decryptCompact_AESKW_Deflate() throws {
         let jweString = """
         eyJhbGciOiJBMTI4S1ciLCJraWQiOiI4MWIyMDk2NS04MzMyLTQzZDktYTQ2OC\
         04MjE2MGFkOTFhYzgiLCJlbmMiOiJBMTI4R0NNIiwiemlwIjoiREVGIn0\
@@ -388,7 +388,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptFlatJSON_AES_KW_AAD() throws {
+    func decryptFlatJSON_AES_KW_AAD() throws {
         let jweString = """
         {
           "protected": "eyJhbGciOiJBMTI4S1ciLCJraWQiOiI4MWIyMDk2NS04Mz\
@@ -418,7 +418,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptFlatJSON_AES_KW_PartialUnprotectedHeader() throws {
+    func decryptFlatJSON_AES_KW_PartialUnprotectedHeader() throws {
         let jweString = """
         {
           "protected": "eyJlbmMiOiJBMTI4R0NNIn0",
@@ -445,7 +445,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptFlatJSON_AES_KW_UnprotectedHeader() throws {
+    func decryptFlatJSON_AES_KW_UnprotectedHeader() throws {
         let jweString = """
         {
           "unprotected": {
@@ -472,7 +472,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDecryptMultipleRecipients() throws {
+    func decryptMultipleRecipients() throws {
         let jweString = """
         {
           "recipients": [
@@ -552,7 +552,7 @@ struct RFC7520DecryptionTests {
     }
     
     @Test
-    func testDescryptNestedJWS() throws {
+    func descryptNestedJWS() throws {
         let jweString = """
         eyJhbGciOiJSU0EtT0FFUCIsImN0eSI6IkpXVCIsImVuYyI6IkExMjhHQ00ifQ\
         .\

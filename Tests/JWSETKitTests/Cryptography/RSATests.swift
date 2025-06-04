@@ -55,21 +55,21 @@ struct RSATests {
     let plaintext = Data("The quick brown fox jumps over the lazy dog.".utf8)
     
     @Test
-    func testPKCS8Init() throws {
+    func pKCS8Init() throws {
         #expect(throws: Never.self) { try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER) }
         #expect(throws: Never.self) { try JSONWebRSAPublicKey(derRepresentation: publicKeyDER) }
     }
     
 #if canImport(CommonCrypto)
     @Test
-    func testSecKeyInit() throws {
+    func secKeyInit() throws {
         #expect(throws: Never.self) { try SecKey(derRepresentation: publicKeyDER, keyType: .rsa) }
         #expect(throws: Never.self) { try SecKey(derRepresentation: privateKeyDER, keyType: .rsa) }
     }
 #endif
     
     @Test
-    func testEncrypt_RSA2048_OAEP_SHA1() throws {
+    func encrypt_RSA2048_OAEP_SHA1() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
         let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
         
@@ -82,7 +82,7 @@ struct RSATests {
     }
     
     @Test
-    func testEncrypt_RSA2048_OAEP_SHA256() throws {
+    func encrypt_RSA2048_OAEP_SHA256() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
         let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
         
@@ -96,7 +96,7 @@ struct RSATests {
     
 #if canImport(CommonCrypto)
     @Test
-    func testEcrypt_RSA2048_OAEP_SHA384() throws {
+    func ecrypt_RSA2048_OAEP_SHA384() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
         let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
         
@@ -109,7 +109,7 @@ struct RSATests {
     }
     
     @Test
-    func testEncrypt_RSA2048_OAEP_SHA512() throws {
+    func encrypt_RSA2048_OAEP_SHA512() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
         let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
         
@@ -123,7 +123,7 @@ struct RSATests {
 #endif
     
     @Test
-    func testSigning_RSA2048_PKCS1_SHA256() throws {
+    func signing_RSA2048_PKCS1_SHA256() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
         let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
         
@@ -135,7 +135,7 @@ struct RSATests {
     }
     
     @Test
-    func testSigning_RSA2048_PKCS1_SHA384() throws {
+    func signing_RSA2048_PKCS1_SHA384() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
         let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
         
@@ -147,7 +147,7 @@ struct RSATests {
     }
     
     @Test
-    func testSigning_RSA2048_PKCS1_SHA512() throws {
+    func signing_RSA2048_PKCS1_SHA512() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
         let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
         
@@ -159,7 +159,7 @@ struct RSATests {
     }
     
     @Test
-    func testSigning_RSA2048_PSS_SHA256() throws {
+    func signing_RSA2048_PSS_SHA256() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
         let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
 
@@ -171,7 +171,7 @@ struct RSATests {
     }
     
     @Test
-    func testSigning_RSA2048_PSS_SHA384() throws {
+    func signing_RSA2048_PSS_SHA384() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
         let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
 
@@ -183,7 +183,7 @@ struct RSATests {
     }
     
     @Test
-    func testSigning_RSA2048_PSS_SHA512() throws {
+    func signing_RSA2048_PSS_SHA512() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
         let privateKey = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
 
@@ -195,7 +195,7 @@ struct RSATests {
     }
     
     @Test
-    func testSigning_RSA3072_PSS_SHA256() throws {
+    func signing_RSA3072_PSS_SHA256() throws {
         let privateKey = try JSONWebRSAPrivateKey(keySize: .bits3072)
         let publicKey = privateKey.publicKey
         
@@ -207,7 +207,7 @@ struct RSATests {
     }
     
     @Test
-    func testSigning_RSA4096_PSS_SHA256() throws {
+    func signing_RSA4096_PSS_SHA256() throws {
         let privateKey = try JSONWebRSAPrivateKey(keySize: .bits4096)
         let publicKey = privateKey.publicKey
         

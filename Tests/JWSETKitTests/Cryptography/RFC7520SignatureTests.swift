@@ -22,7 +22,7 @@ struct RFC7520SignatureTests {
     """
     
     @Test
-    func testSignatureSignRS256() throws {
+    func signatureSignRS256() throws {
         let jwsString = """
         eyJhbGciOiJSUzI1NiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
         hhbXBsZSJ9\
@@ -42,7 +42,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testSignatureVerifyRS256() throws {
+    func signatureVerifyRS256() throws {
         let jwsString = """
         eyJhbGciOiJSUzI1NiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
         hhbXBsZSJ9\
@@ -59,7 +59,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testSignatureSignPS384() throws {
+    func signatureSignPS384() throws {
         let jwsString = """
         eyJhbGciOiJQUzM4NCIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
         hhbXBsZSJ9\
@@ -71,7 +71,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testSignatureVerifyPS384() throws {
+    func signatureVerifyPS384() throws {
         let jwsString = """
         eyJhbGciOiJQUzM4NCIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
         hhbXBsZSJ9\
@@ -88,7 +88,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testSignatureSignES521() throws {
+    func signatureSignES521() throws {
         let jwsString = """
         eyJhbGciOiJFUzUxMiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
         hhbXBsZSJ9\
@@ -100,7 +100,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testSignatureVerifyES521() throws {
+    func signatureVerifyES521() throws {
         let jwsString = """
         eyJhbGciOiJFUzUxMiIsImtpZCI6ImJpbGJvLmJhZ2dpbnNAaG9iYml0b24uZX\
         hhbXBsZSJ9\
@@ -114,7 +114,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testSignatureSignHS256() throws {
+    func signatureSignHS256() throws {
         let jwsString = """
         eyJhbGciOiJIUzI1NiIsImtpZCI6IjAxOGMwYWU1LTRkOWItNDcxYi1iZmQ2LW\
         VlZjMxNGJjNzAzNyJ9\
@@ -129,7 +129,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testSignatureVerifyHS256() throws {
+    func signatureVerifyHS256() throws {
         let jwsString = """
         eyJhbGciOiJIUzI1NiIsImtpZCI6IjAxOGMwYWU1LTRkOWItNDcxYi1iZmQ2LW\
         VlZjMxNGJjNzAzNyJ9\
@@ -141,7 +141,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testSignatureDeteched() throws {
+    func signatureDeteched() throws {
         let jwsString = """
         eyJhbGciOiJIUzI1NiIsImtpZCI6IjAxOGMwYWU1LTRkOWItNDcxYi1iZmQ2LW\
         VlZjMxNGJjNzAzNyJ9\
@@ -164,7 +164,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testSignatureUnprotectedHeader() throws {
+    func signatureUnprotectedHeader() throws {
         let jws = try JWS(signatures: [
             .init(protected: "eyJhbGciOiJIUzI1NiJ9".decoded,
                   unprotected: .init { $0.keyId = "018c0ae5-4d9b-471b-bfd6-eef314bc7037" },
@@ -187,7 +187,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testSignatureProtectedContentOnly() throws {
+    func signatureProtectedContentOnly() throws {
         let jws = try JWS(signatures: [
             .init(protected: JOSEHeader(),
                   unprotected: .init {
@@ -215,7 +215,7 @@ struct RFC7520SignatureTests {
     }
     
     @Test
-    func testMultipleSignatures() throws {
+    func multipleSignatures() throws {
         let jwsString = """
         {
              "payload": "\(payload)",

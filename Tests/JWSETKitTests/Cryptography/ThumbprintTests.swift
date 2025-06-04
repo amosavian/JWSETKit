@@ -31,14 +31,14 @@ struct ThumbprintTests {
     """.utf8)
     
     @Test
-    func testJWKThumbprint() throws {
+    func jwkThumbprint() throws {
         let key = try JSONWebRSAPublicKey(importing: keyData, format: .jwk)
         let thumbprint = try key.thumbprint(format: .jwk, using: SHA256.self)
         #expect(thumbprint.data == Data(urlBase64Encoded: "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"))
     }
     
     @Test
-    func testJWKAmbiguousThumbprint() throws {
+    func jwkAmbiguousThumbprint() throws {
         var key = try JSONWebRSAPublicKey(importing: keyData, format: .jwk)
         key.exponent = Data([0x00, 0x01, 0x00, 0x01])
         let thumbprint = try key.thumbprint(format: .jwk, using: SHA256.self)
@@ -46,14 +46,14 @@ struct ThumbprintTests {
     }
     
     @Test
-    func testSPKIThumbprint() throws {
+    func spkiThumbprint() throws {
         let key = try JSONWebRSAPublicKey(importing: keyData, format: .jwk)
         let thumbprint = try key.thumbprint(format: .spki, using: SHA256.self)
         #expect(thumbprint.data == Data(urlBase64Encoded: "rTIyDPbFltiEsFOBulc6uo3dV0m03o9KI6efmondrrI"))
     }
     
     @Test
-    func testJWK_URI_Thumbprint() throws {
+    func jwk_URI_Thumbprint() throws {
         let key = try JSONWebRSAPublicKey(importing: keyData, format: .jwk)
         let uri = try key.thumbprintUri(format: .jwk, using: SHA256.self)
         #expect(uri == "urn:ietf:params:oauth:jwk-thumbprint:sha-256:NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs")
@@ -61,7 +61,7 @@ struct ThumbprintTests {
     
 #if canImport(CommonCrypto)
     @Test
-    func testECDSAThumbprint() throws {
+    func ecdsaThumbprint() throws {
         let secECKey = try SecKey(algorithm: .ecdsaSignatureP256SHA256)
         let ecKey = try P256.Signing.PrivateKey(derRepresentation: secECKey.exportKey(format: .pkcs8))
         let pkcs8 = try secECKey.exportKey(format: .pkcs8)

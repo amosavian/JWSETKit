@@ -20,7 +20,7 @@ extension JSONEncoder {
 }
 
 /// Data value that must be protected by JWS.
-public protocol ProtectedWebContainer: Hashable, Encodable, CustomDebugStringConvertible, Sendable {
+public protocol ProtectedWebContainer: Hashable, Codable, CustomDebugStringConvertible, Sendable {
     /// Signed data.
     var encoded: Data { get set }
     
@@ -62,6 +62,11 @@ extension ProtectedWebContainer {
             throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "Protected is not a valid bas64url."))
         }
         return protected
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let encoded = try Self.decodeProtected(from: decoder)
+        try self.init(encoded: encoded)
     }
     
     public func encode(to encoder: any Encoder) throws {
@@ -127,7 +132,7 @@ public struct ProtectedDataWebContainer: ProtectedWebContainer, Codable {
 /// This container preserves original data to keep consistency of signature as re-encoding payload
 /// may change sorting.
 @frozen
-public struct ProtectedJSONWebContainer<Container: JSONWebContainer & Sendable>: TypedProtectedWebContainer, JSONWebContainer, Sendable {
+public struct ProtectedJSONWebContainer<Container: JSONWebContainer & Sendable>: TypedProtectedWebContainer, MutableJSONWebContainer, Codable, Hashable, Sendable {
     private var _protected: Data
     private var _value: Container
     
@@ -211,9 +216,21 @@ public struct ProtectedJSONWebContainer<Container: JSONWebContainer & Sendable>:
     }
     
     public init(from decoder: any Decoder) throws {
-        let protected = try Self.decodeProtected(from: decoder)
-        self._protected = protected
-        self._value = try JSONDecoder().decode(Container.self, from: protected)
+        let encoded = try Self.decodeProtected(from: decoder)
+        try self.init(encoded: encoded)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(encoded.urlBase64EncodedString())
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(encoded)
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.encoded == rhs.encoded
     }
     
     public func validate() throws {

@@ -14,7 +14,7 @@ struct JWTTests {
     let jwtString = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiYXVkIjoiZ29vZ2xlLmNvbSIsIm5hbWUiOiJKb2huIERvZSIsImlhdCI6MTUxNjIzOTAyMiwibmJmIjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyNDkwMjJ9.vGoQSvaLlU1lh_rsJT-vCPG6DNe_a9rHeJiezXRswKQ"
     
     @Test
-    func testDecode() throws {
+    func decode() throws {
         let jwt = try JSONWebToken(from: jwtString)
         #expect(jwt.signatures.first?.protected.algorithm == .hmacSHA256)
         #expect(jwt.payload.value.issuedAt == Date(timeIntervalSince1970: 1_516_239_022))
@@ -22,7 +22,7 @@ struct JWTTests {
     }
     
     @Test
-    func testEncode() throws {
+    func encode() throws {
         let jwt = try JSONWebToken(from: jwtString)
         #expect(try String(jwt) == jwtString)
         #expect(jwt.description == jwtString)
@@ -40,7 +40,7 @@ struct JWTTests {
     }
     
     @Test
-    func testVerify() throws {
+    func verify() throws {
         let jwt = try JSONWebToken(from: jwtString)
         #expect(throws: Never.self) { try jwt.verifyDate(.init(timeIntervalSince1970: 1_516_239_024)) }
         #expect(throws: JSONWebValidationError.self) { try jwt.verifyDate(.init(timeIntervalSince1970: 1_516_239_021)) }
@@ -51,7 +51,7 @@ struct JWTTests {
 
 #if canImport(Foundation.NSURLSession)
     @Test
-    func testAuthorization() throws {
+    func authorization() throws {
         let jwt = try JSONWebToken(from: jwtString)
         var request = URLRequest(url: .init(string: "https://www.example.com/")!)
         request.authorizationToken = jwt

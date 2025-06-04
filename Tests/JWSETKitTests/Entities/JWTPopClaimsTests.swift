@@ -45,7 +45,7 @@ struct JWTPopClaimsTests {
     """
     
     @Test
-    func testDecodeKeyConfirmation() throws {
+    func decodeKeyConfirmation() throws {
         let claims = try JSONDecoder().decode(JSONWebTokenClaims.self, from: Data(jwkConfirmationJSON.utf8))
         
         try #require(claims.confirmation != nil)
@@ -56,7 +56,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testDecodeKeyIDConfirmation() throws {
+    func decodeKeyIDConfirmation() throws {
         let claims = try JSONDecoder().decode(JSONWebTokenClaims.self, from: Data(kidConfirmationJSON.utf8))
         
         try #require(claims.confirmation != nil)
@@ -64,7 +64,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testDecodeJKUConfirmation() throws {
+    func decodeJKUConfirmation() throws {
         let claims = try JSONDecoder().decode(JSONWebTokenClaims.self, from: Data(jkuConfirmationJSON.utf8))
         
         #expect(claims.confirmation != nil)
@@ -73,7 +73,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testCreateKeyConfirmation() throws {
+    func createKeyConfirmation() throws {
         // Create claims with a key confirmation
         let claims = try JSONWebTokenClaims {
             $0.confirmation = .key(ExampleKeys.publicEC256)
@@ -94,7 +94,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testThumbprintConfirmation() throws {
+    func thumbprintConfirmation() throws {
         // Create a key thumbprint confirmation
         let claims = try JSONWebTokenClaims {
             $0.confirmation = try .keyThumbprint(ExampleKeys.publicEC256)
@@ -113,7 +113,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testNegativeThumbprintValidation() throws {
+    func negativeThumbprintValidation() throws {
         // Create claims with a thumbprint for EC256 key
         let claims = try JSONWebTokenClaims {
             $0.confirmation = try .keyThumbprint(ExampleKeys.publicEC256)
@@ -137,7 +137,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testCertificateThumbprintConfirmation() throws {
+    func certificateThumbprintConfirmation() throws {
         // This test requires a valid Certificate instance, which might not be available in this example
         // For testing purposes, we'll use the public key's SPKI thumbprint instead
         
@@ -158,7 +158,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testEncryptedKeyConfirmation() throws {
+    func encryptedKeyConfirmation() throws {
         // Create an encrypted key confirmation
         let claims = try JSONWebTokenClaims {
             $0.confirmation = try .encryptedKey(
@@ -200,7 +200,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testMatchKeyWithEmptyKeySet() throws {
+    func matchKeyWithEmptyKeySet() throws {
         // Create claims with key confirmation
         let claims = try JSONWebTokenClaims {
             $0.confirmation = .keyId("test-key-id")
@@ -214,7 +214,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testIncorrectKeyIDMatching() throws {
+    func incorrectKeyIDMatching() throws {
         // Create a key set with our test key
         let keySet = JSONWebKeySet(keys: [ExampleKeys.privateEC384, ExampleKeys.publicRSA2048])
         
@@ -232,7 +232,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testKeyIDAccessor() throws {
+    func keyIDAccessor() throws {
         // Test the keyId accessor for different confirmation types
         
         // For keyId
@@ -255,7 +255,7 @@ struct JWTPopClaimsTests {
     }
     
     @Test
-    func testJWKSetUrl() throws {
+    func jWKSetUrl() throws {
         let testUrl = URL(string: "https://example.com/jwks.json")!
         
         let claims = try JSONWebTokenClaims {

@@ -30,7 +30,7 @@ struct JWTRegisteredClaimsTests {
     """
     
     @Test
-    func testDecodeClaims() throws {
+    func decodeClaims() throws {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
         
@@ -60,7 +60,7 @@ struct JWTRegisteredClaimsTests {
     }
     
     @Test
-    func testEncodeClaims() throws {
+    func encodeClaims() throws {
         var claims = JSONWebTokenClaims(storage: .init())
         claims.issuerURL = URL(string: "https://self-issued.me")
         claims.subject = "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"

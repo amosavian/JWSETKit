@@ -11,7 +11,7 @@ import Testing
 
 struct Base64Tests {
     @Test
-    func testDecode() throws {
+    func decode() throws {
         let encoded = "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
         let value = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}"
         #expect(Data(urlBase64Encoded: encoded) == Data(value.utf8))
@@ -22,7 +22,7 @@ struct Base64Tests {
     }
     
     @Test
-    func testEncode() throws {
+    func encode() throws {
         let encoded = "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
         let value = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}"
         #expect(Data(value.utf8).urlBase64EncodedData() == Data(encoded.utf8))

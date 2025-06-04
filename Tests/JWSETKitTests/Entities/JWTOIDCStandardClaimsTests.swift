@@ -41,7 +41,7 @@ struct JWTOIDCStandardClaimsTests {
     """
     
     @Test
-    func testEncodeParams() throws {
+    func encodeParams() throws {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
         
@@ -70,7 +70,7 @@ struct JWTOIDCStandardClaimsTests {
     }
     
     @Test
-    func testDecodeParams() throws {
+    func decodeParams() throws {
         let formatter = ISO8601DateFormatter()
         formatter.formatOptions = .withFullDate
         
@@ -105,7 +105,7 @@ struct JWTOIDCStandardClaimsTests {
     }
     
     @Test
-    func testLocalized() throws {
+    func localized() throws {
         var claims = JSONWebTokenClaims(storage: .init())
         let enLocale = Locale(identifier: "en")
         let faLocale = Locale(identifier: "fa")

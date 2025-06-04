@@ -102,7 +102,7 @@ struct JWKSetTests {
     """.utf8)
     
     @Test
-    func testDecode() throws {
+    func decode() throws {
         let jwks = try JSONDecoder().decode(JSONWebKeySet.self, from: jwksData)
         try #require(jwks.count == 2)
         #expect(jwks.publicKeyset[0] is (any JSONWebValidatingKey))
@@ -125,7 +125,7 @@ struct JWKSetTests {
     }
     
     @Test
-    func testEncode() throws {
+    func encode() throws {
         let jwks = try JSONDecoder().decode(JSONWebKeySet.self, from: jwksData)
         _ = try JSONEncoder().encode(jwks)
     }

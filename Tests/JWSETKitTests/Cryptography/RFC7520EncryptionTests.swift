@@ -21,7 +21,7 @@ struct RFC7520EncryptionTests {
     """
     
     @Test
-    func testEncrypt_RSA_v1_5() throws {
+    func encrypt_RSA_v1_5() throws {
         let header = "eyJhbGciOiJSU0ExXzUiLCJraWQiOiJmcm9kby5iYWdnaW5zQGhvYmJpdG9uLmV4YW1wbGUiLCJlbmMiOiJBMTI4Q0JDLUhTMjU2In0".decoded
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
@@ -49,7 +49,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test
-    func testEncrypt_RSA_OAEP() throws {
+    func encrypt_RSA_OAEP() throws {
         let header = "eyJhbGciOiJSU0EtT0FFUCIsImtpZCI6InNhbXdpc2UuZ2FtZ2VlQGhvYmJpdG9uLmV4YW1wbGUiLCJlbmMiOiJBMjU2R0NNIn0".decoded
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
@@ -76,7 +76,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test
-    func testEncrypt_PBES2() throws {
+    func encrypt_PBES2() throws {
         let plainText = """
         {"keys":[{\
         "kty":"oct",\
@@ -135,7 +135,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test
-    func testEncrypt_ECDH_ES_AESKW() throws {
+    func encrypt_ECDH_ES_AESKW() throws {
         let header = """
         eyJhbGciOiJFQ0RILUVTK0ExMjhLVyIsImtpZCI6InBlcmVncmluLnRvb2tAdH\
         Vja2Jvcm91Z2guZXhhbXBsZSIsImVwayI6eyJrdHkiOiJFQyIsImNydiI6IlAt\
@@ -170,7 +170,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test
-    func testEncrypt_ECDH_ES_AESCBC() throws {
+    func encrypt_ECDH_ES_AESCBC() throws {
         let kek = """
         {
           "kty": "EC",
@@ -216,7 +216,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test
-    func testEncrypt_Direct_AESGCM() throws {
+    func encrypt_Direct_AESGCM() throws {
         let key = try JSONWebKeyAESGCM(
             importing: "XctOhJAkA-pD9Lh7ZgW_2A".decoded,
             format: .raw
@@ -251,7 +251,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test
-    func testEncrypt_AESGCMKW() throws {
+    func encrypt_AESGCMKW() throws {
         let header = """
         eyJhbGciOiJBMjU2R0NNS1ciLCJraWQiOiIxOGVjMDhlMS1iZmE5LTRkOTUtYj\
         IwNS0yYjRkZDFkNDMyMWQiLCJ0YWciOiJrZlBkdVZRM1QzSDZ2bmV3dC0ta3N3\
@@ -285,7 +285,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test
-    func testEncrypt_AESKW() throws {
+    func encrypt_AESKW() throws {
         let header = """
         eyJhbGciOiJBMTI4S1ciLCJraWQiOiI4MWIyMDk2NS04MzMyLTQzZDktYTQ2OC\
         04MjE2MGFkOTFhYzgiLCJlbmMiOiJBMTI4R0NNIn0
@@ -316,7 +316,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test // (.disabled(if: JSONWebCompressionAlgorithm.registeredAlgorithms.isEmpty))
-    func testEncrypt_AESKW_Deflate() throws {
+    func encrypt_AESKW_Deflate() throws {
         let header = """
         eyJhbGciOiJBMTI4S1ciLCJraWQiOiI4MWIyMDk2NS04MzMyLTQzZDktYTQ2OC\
         04MjE2MGFkOTFhYzgiLCJlbmMiOiJBMTI4R0NNIiwiemlwIjoiREVGIn0
@@ -346,7 +346,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test
-    func testEncrypt_AES_KW_AAD() throws {
+    func encrypt_AES_KW_AAD() throws {
         let aad = """
         WyJ2Y2FyZCIsW1sidmVyc2lvbiIse30sInRleHQiLCI0LjAiXSxbImZuIix7fS\
         widGV4dCIsIk1lcmlhZG9jIEJyYW5keWJ1Y2siXSxbIm4iLHt9LCJ0ZXh0Iixb\
@@ -384,7 +384,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test
-    func testEncrypt_AES_KW_PartialUnprotectedHeader() throws {
+    func encrypt_AES_KW_PartialUnprotectedHeader() throws {
         let header = "eyJlbmMiOiJBMTI4R0NNIn0".decoded
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),
@@ -415,7 +415,7 @@ struct RFC7520EncryptionTests {
     }
     
     @Test
-    func testEncrypt_AES_KW_UnprotectedHeader() throws {
+    func encrypt_AES_KW_UnprotectedHeader() throws {
         let header = "".decoded
         let jwe = try JSONWebEncryption(
             protected: .init(encoded: header),

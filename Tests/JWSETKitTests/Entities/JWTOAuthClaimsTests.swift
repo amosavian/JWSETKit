@@ -19,7 +19,7 @@ struct JWTOAuthClaimsTests {
     """
     
     @Test
-    func testEncodeParams() throws {
+    func encodeParams() throws {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JSONWebTokenClaims.self, from: .init(testClaims.utf8))
         
@@ -30,7 +30,7 @@ struct JWTOAuthClaimsTests {
     }
     
     @Test
-    func testDecodeParams() throws {
+    func decodeParams() throws {
         var claims = JSONWebTokenClaims(storage: .init())
         claims.clientID = "s6BhdRkqt3"
         claims.scopes = ["openid", "profile", "reademail"]

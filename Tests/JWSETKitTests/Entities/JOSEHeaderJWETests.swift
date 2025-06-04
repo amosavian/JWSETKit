@@ -18,7 +18,7 @@ struct JOSEHeaderJWETests {
     }
     """
     @Test
-    func testEncodeParams() throws {
+    func encodeParams() throws {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JOSEHeader.self, from: .init(testClaims.utf8))
         
@@ -27,7 +27,7 @@ struct JOSEHeaderJWETests {
     }
     
     @Test
-    func testDecodeParams() throws {
+    func decodeParams() throws {
         var claims = JOSEHeader(storage: .init())
         
         claims.encryptionAlgorithm = .aesEncryptionGCM128

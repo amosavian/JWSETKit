@@ -47,7 +47,7 @@ struct JOSEHeaderJWSTests {
     }()
     
     @Test
-    func testEncodeParams() throws {
+    func encodeParams() throws {
         let decoder = JSONDecoder()
         let claims = try decoder.decode(JOSEHeader.self, from: .init(testClaims.utf8))
         
@@ -64,7 +64,7 @@ struct JOSEHeaderJWSTests {
     }
     
     @Test
-    func testDecodeParams() throws {
+    func decodeParams() throws {
         var claims = JOSEHeader(storage: .init())
         
         claims.algorithm = .hmacSHA256

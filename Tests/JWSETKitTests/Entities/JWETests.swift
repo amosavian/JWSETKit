@@ -13,7 +13,7 @@ import Testing
 @Suite
 struct JWETests {
     @Test
-    func testDecode() throws {
+    func decode() throws {
         let jwe = try JSONWebEncryption(from: RSA_OAEP_GCM.jweString)
         
         var header = JOSEHeader()
@@ -37,7 +37,7 @@ struct JWETests {
     }
     
     @Test
-    func testDecrypt_RSA_OAEP_AES_GCM() throws {
+    func decrypt_RSA_OAEP_AES_GCM() throws {
         let jwe = try JSONWebEncryption(from: RSA_OAEP_GCM.jweString)
         
         guard let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm) else {
@@ -66,7 +66,7 @@ struct JWETests {
     }
     
     @Test
-    func testDecrypt_AESKW_CBC() throws {
+    func decrypt_AESKW_CBC() throws {
         let jwe = try JSONWebEncryption(from: AESKW_CBC.jweString)
         
         guard let algorithm = JSONWebKeyEncryptionAlgorithm(jwe.header.protected.algorithm) else {
@@ -81,7 +81,7 @@ struct JWETests {
     }
     
     @Test
-    func testEncrypt_Direct() throws {
+    func encrypt_Direct() throws {
         let jwe = try JSONWebEncryption(
             content: Direct.plainData,
             keyEncryptingAlgorithm: .direct,
@@ -95,7 +95,7 @@ struct JWETests {
     }
     
     @Test
-    func testEncrypt_RSA_OAEP_AES_GCM() throws {
+    func encrypt_RSA_OAEP_AES_GCM() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_OAEP_GCM.plainData,
             keyEncryptingAlgorithm: .rsaEncryptionOAEPSHA256,
@@ -108,7 +108,7 @@ struct JWETests {
     }
 
     @Test
-    func testEncryptWithCEK_RSA_OAEP_AES_GCM() throws {
+    func encryptWithCEK_RSA_OAEP_AES_GCM() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_OAEP_GCM.plainData,
             keyEncryptingAlgorithm: .rsaEncryptionOAEP,
@@ -122,7 +122,7 @@ struct JWETests {
     }
     
     @Test
-    func testEncryptWithCEK_RSA_OAEP_SHA256_AES_GCM() throws {
+    func encryptWithCEK_RSA_OAEP_SHA256_AES_GCM() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_OAEP_GCM.plainData,
             keyEncryptingAlgorithm: .rsaEncryptionOAEPSHA256,
@@ -136,7 +136,7 @@ struct JWETests {
     }
     
     @Test
-    func testEncrypt_RSA_PKCS1_5_CBC() throws {
+    func encrypt_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_PKCS1_5_CBC.plainData,
             keyEncryptingAlgorithm: .unsafeRSAEncryptionPKCS1,
@@ -149,7 +149,7 @@ struct JWETests {
     }
 
     @Test
-    func testEncryptWithCEK_RSA_PKCS1_5_CBC() throws {
+    func encryptWithCEK_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: RSA_PKCS1_5_CBC.plainData,
             keyEncryptingAlgorithm: .unsafeRSAEncryptionPKCS1,
@@ -163,7 +163,7 @@ struct JWETests {
     }
     
     @Test
-    func testEncrypt_AESKW_CBC() throws {
+    func encrypt_AESKW_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: AESKW_CBC.plainData,
             keyEncryptingAlgorithm: .aesKeyWrap256,
@@ -176,7 +176,7 @@ struct JWETests {
     }
 
     @Test
-    func testEncrypt_AESGCMKW_CBC() throws {
+    func encrypt_AESGCMKW_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: AESGCMKW_CBC.plainData,
             keyEncryptingAlgorithm: .aesGCM128KeyWrap,
@@ -190,7 +190,7 @@ struct JWETests {
     }
     
     @Test
-    func testEncrypt_PBES2_GCM() throws {
+    func encrypt_PBES2_GCM() throws {
         let jwe = try JSONWebEncryption(
             content: PBES2_GCM.plainData,
             keyEncryptingAlgorithm: .pbes2hmac256,
@@ -204,7 +204,7 @@ struct JWETests {
     }
     
     @Test
-    func testEncrypt_ECDH_ES_CBC() throws {
+    func encrypt_ECDH_ES_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: ECDH_ES.plainData,
             keyEncryptingAlgorithm: .ecdhEphemeralStatic,
@@ -217,7 +217,7 @@ struct JWETests {
     }
     
     @Test
-    func testEncrypt_ECDH_ES_GCM() throws {
+    func encrypt_ECDH_ES_GCM() throws {
         let jwe = try JSONWebEncryption(
             content: ECDH_ES.plainData,
             keyEncryptingAlgorithm: .ecdhEphemeralStatic,
@@ -230,7 +230,7 @@ struct JWETests {
     }
     
     @Test
-    func testEncrypt_ECDH_ES_KW_CBC() throws {
+    func encrypt_ECDH_ES_KW_CBC() throws {
         let jwe = try JSONWebEncryption(
             content: ECDH_ES_KW.plainData,
             keyEncryptingAlgorithm: .ecdhEphemeralStaticAESKeyWrap128,
