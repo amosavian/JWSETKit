@@ -20,17 +20,6 @@ import CommonCrypto
 public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
-    /// Symmetric key using for encryption.
-    public var symmetricKey: SymmetricKey {
-        get throws {
-            // swiftformat:disable:next redundantSelf
-            guard let keyValue = self.keyValue else {
-                throw CryptoKitError.incorrectKeySize
-            }
-            return keyValue
-        }
-    }
-    
     public init(algorithm: some JSONWebAlgorithm) throws {
         switch algorithm {
         case .aesEncryptionGCM128, .aesGCM128KeyWrap:
@@ -63,27 +52,27 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, J
     
     public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using _: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
         if let authenticating {
-            return try .init(AES.GCM.seal(data, using: symmetricKey, nonce: iv.map(AES.GCM.Nonce.init(data:)), authenticating: authenticating))
+            return try .init(AES.GCM.seal(data, using: .init(self), nonce: iv.map(AES.GCM.Nonce.init(data:)), authenticating: authenticating))
         } else {
-            return try .init(AES.GCM.seal(data, using: symmetricKey, nonce: iv.map(AES.GCM.Nonce.init(data:))))
+            return try .init(AES.GCM.seal(data, using: .init(self), nonce: iv.map(AES.GCM.Nonce.init(data:))))
         }
     }
     
     public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using _: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {
         if let authenticating {
-            return try AES.GCM.open(.init(data), using: symmetricKey, authenticating: authenticating)
+            return try AES.GCM.open(.init(data), using: .init(self), authenticating: authenticating)
         } else {
-            return try AES.GCM.open(.init(data), using: symmetricKey)
+            return try AES.GCM.open(.init(data), using: .init(self))
         }
     }
     
     public func encrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        let sealed = try AES.GCM.seal(data, using: symmetricKey)
+        let sealed = try AES.GCM.seal(data, using: .init(self))
         return sealed.combined ?? sealed.ciphertext
     }
     
     public func decrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        try AES.GCM.open(.init(combined: data), using: symmetricKey)
+        try AES.GCM.open(.init(combined: data), using: .init(self))
     }
 }
 
@@ -91,17 +80,6 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, J
 public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
-    /// Symmetric key using for encryption.
-    public var symmetricKey: SymmetricKey {
-        get throws {
-            // swiftformat:disable:next redundantSelf
-            guard let keyValue = self.keyValue else {
-                throw CryptoKitError.incorrectKeySize
-            }
-            return SymmetricKey(data: keyValue)
-        }
-    }
-
     public init(algorithm: some JSONWebAlgorithm) throws {
         switch algorithm {
         case .aesKeyWrap128:
@@ -151,24 +129,24 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
     
     public func unwrap<D>(_ data: D) throws -> SymmetricKey where D: DataProtocol {
         if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            return try AES.KeyWrap.unwrap(data, using: symmetricKey)
+            return try AES.KeyWrap.unwrap(data, using: .init(self))
         } else {
 #if canImport(CommonCrypto)
-            return try symmetricKey.ccUnwrapKey(data)
+            return try SymmetricKey(self).ccUnwrapKey(data)
 #else
-            return try AES.KeyWrap.unwrap(data, using: symmetricKey)
+            return try AES.KeyWrap.unwrap(data, using: .init(self))
 #endif
         }
     }
     
     public func wrap(_ key: SymmetricKey) throws -> Data {
         if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            return try AES.KeyWrap.wrap(key, using: symmetricKey)
+            return try AES.KeyWrap.wrap(key, using: .init(self))
         } else {
 #if canImport(CommonCrypto)
-            return try symmetricKey.ccWrapKey(key)
+            return try SymmetricKey(self).ccWrapKey(key)
 #else
-            return try AES.KeyWrap.wrap(key, using: symmetricKey)
+            return try AES.KeyWrap.wrap(key, using: .init(self))
 #endif
         }
     }

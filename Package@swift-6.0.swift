@@ -5,7 +5,6 @@ import PackageDescription
 
 extension [Platform] {
     static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS, .visionOS]
-    static let nonDarwin: [Platform] = [.linux, .android, .windows, .wasi, .openbsd]
 }
 
 let package = Package(
@@ -48,8 +47,8 @@ let package = Package(
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "Crypto", package: "swift-crypto"),
                 // Linux support
-                .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
-                .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: .nonDarwin)),
+                .product(name: "_CryptoExtras", package: "swift-crypto"),
+                .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: [.linux, .windows, .openbsd])),
                 .byName(name: "Czlib"),
             ],
             resources: [

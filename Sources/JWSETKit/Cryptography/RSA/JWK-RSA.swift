@@ -73,6 +73,8 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
         } else {
             return try _RSA.Encryption.PublicKey(from: self).encrypt(data, using: algorithm)
         }
+#elseif canImport(_CryptoExtras)
+        return try _RSA.Encryption.PublicKey(from: self).encrypt(data, using: algorithm)
 #else
         #error("Unimplemented")
 #endif
@@ -208,6 +210,8 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
         } else {
             return try _RSA.Encryption.PrivateKey(from: self).decrypt(data, using: algorithm)
         }
+#elseif canImport(_CryptoExtras)
+        return try _RSA.Encryption.PrivateKey(from: self).decrypt(data, using: algorithm)
 #else
         #error("Unimplemented")
 #endif

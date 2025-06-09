@@ -82,7 +82,22 @@ extension JSONWebKeyExportable {
 }
 
 public protocol JSONWebKeySymmetric: JSONWebKeyImportable, JSONWebKeyExportable, Hashable {
+    /// Initializes key from the given symmetric key.
     init(_ key: SymmetricKey) throws
+}
+
+extension SymmetricKey {
+    /// Initializes a symmetric key from the given JSON Web Key.
+    ///
+    /// - Parameter key: The JSON Web Key to initialize the symmetric key from.
+    /// - Throws: If the key cannot be initialized from the JSON Web Key.
+    public init(_ key: some JSONWebKeySymmetric) throws {
+        // swiftformat:disable:next redundantSelf
+        guard let keyValue = key.keyValue else {
+            throw CryptoKitError.incorrectKeySize
+        }
+        self = keyValue
+    }
 }
 
 extension JSONWebKeySymmetric {

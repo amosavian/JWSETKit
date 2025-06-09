@@ -22,8 +22,6 @@ extension SymmetricKey: JSONWebKeySymmetric {
         return result.storage
     }
     
-    public var publicKey: SymmetricKey { self }
-    
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.

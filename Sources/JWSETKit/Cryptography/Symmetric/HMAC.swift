@@ -19,17 +19,6 @@ public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetr
     
     public var storage: JSONWebValueStorage
     
-    /// A symmetric cryptographic key.
-    public var symmetricKey: SymmetricKey {
-        get throws {
-            // swiftformat:disable:next redundantSelf
-            guard let keyValue = self.keyValue else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            return SymmetricKey(data: keyValue)
-        }
-    }
-    
     /// Returns a new concrete key using json data.
     ///
     /// - Parameter storage: Storage of key-values.
@@ -53,14 +42,14 @@ public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetr
     }
     
     public func signature<D: DataProtocol>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data {
-        var hmac = try HMAC<H>(key: symmetricKey)
+        var hmac = try HMAC<H>(key: .init(self))
         hmac.update(data: data)
         let mac = hmac.finalize()
         return Data(mac)
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        let isValid = try HMAC<H>.isValidAuthenticationCode(Data(signature), authenticating: data, using: symmetricKey)
+        let isValid = try HMAC<H>.isValidAuthenticationCode(Data(signature), authenticating: data, using: .init(self))
         guard isValid else {
             throw CryptoKitError.authenticationFailure
         }

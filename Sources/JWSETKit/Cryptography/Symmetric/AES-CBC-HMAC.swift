@@ -20,36 +20,32 @@ import _CryptoExtras
 public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSymmetricSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
-    /// Symmetric key using for encryption.
-    public var symmetricKey: SymmetricKey {
-        get throws {
-            // swiftformat:disable:next redundantSelf
-            guard let keyValue = self.keyValue else {
-                throw CryptoKitError.incorrectKeySize
-            }
-            return keyValue
-        }
-    }
-    
     public var ivLength: Int { 16 }
     
     public var tagLength: Int {
-        ((try? symmetricKey.bitCount) ?? 0) / 16
+        ((try? SymmetricKey(self).bitCount) ?? 0) / 16
+    }
+    
+    fileprivate var keyData: Data {
+        get throws {
+            guard let keyData: Data = self["k"] else {
+                throw CryptoKitError.incorrectParameterSize
+            }
+            return keyData
+        }
     }
     
     /// AES-CBC symmetric key using for encryption.
     public var aesSymmetricKey: SymmetricKey {
         get throws {
-            let key = try symmetricKey.data
-            return SymmetricKey(data: key.suffix(key.count / 2))
+            try SymmetricKey(data: keyData.suffix(keyData.count / 2))
         }
     }
     
     /// HMAC symmetric key using for encryption.
     public var hmacSymmetricKey: SymmetricKey {
         get throws {
-            let key = try symmetricKey.data
-            return SymmetricKey(data: key.prefix(key.count / 2))
+            try SymmetricKey(data: keyData.prefix(keyData.count / 2))
         }
     }
     
@@ -100,8 +96,10 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSymmetricSealingKe
         }
 #if canImport(CommonCrypto)
         let ciphertext = try aesSymmetricKey.ccCrypt(operation: .aesCBC(decrypt: false), iv: iv, data: data)
-#else
+#elseif canImport(_CryptoExtras)
         let ciphertext = try AES._CBC.encrypt(data, using: aesSymmetricKey, iv: .init(ivBytes: iv))
+#else
+        #error("Unimplemented")
 #endif
         let authenticated = authenticating.map { Data($0) } ?? .init()
         let tag = try hmac(authenticated + iv + ciphertext + authenticated.cbcTagLengthOctetHexData())
@@ -117,8 +115,10 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSymmetricSealingKe
         
 #if canImport(CommonCrypto)
         return try aesSymmetricKey.ccCrypt(operation: .aesCBC(decrypt: true), iv: data.nonce, data: data.ciphertext)
-#else
+#elseif canImport(_CryptoExtras)
         return try AES._CBC.decrypt(data.ciphertext, using: aesSymmetricKey, iv: .init(ivBytes: data.nonce))
+#else
+        #error("Unimplemented")
 #endif
     }
     
@@ -131,17 +131,18 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSymmetricSealingKe
     }
     
     private func hmac(_ data: Data) throws -> Data {
-        switch try symmetricKey.bitCount / 8 {
-        case SHA256.byteCount:
-            var hmac = try HMAC<SHA256>(key: hmacSymmetricKey)
+        let hmacSymmetricKey = try hmacSymmetricKey
+        switch hmacSymmetricKey.bitCount {
+        case SymmetricKeySize.bits128.bitCount:
+            var hmac = HMAC<SHA256>(key: hmacSymmetricKey)
             hmac.update(data: data)
             return Data(hmac.finalize())
-        case SHA384.byteCount:
-            var hmac = try HMAC<SHA384>(key: hmacSymmetricKey)
+        case SymmetricKeySize.bits192.bitCount:
+            var hmac = HMAC<SHA384>(key: hmacSymmetricKey)
             hmac.update(data: data)
             return Data(hmac.finalize())
-        case SHA512.byteCount:
-            var hmac = try HMAC<SHA512>(key: hmacSymmetricKey)
+        case SymmetricKeySize.bits256.bitCount:
+            var hmac = HMAC<SHA512>(key: hmacSymmetricKey)
             hmac.update(data: data)
             return Data(hmac.finalize())
         default:

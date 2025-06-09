@@ -62,49 +62,57 @@ public protocol JSONWebKey: JSONWebContainer, Expirable {
     func thumbprintUri<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> String where H: HashFunction
 }
 
+private func isEqualKey(_ lhs: (any JSONWebKey)?, _ rhs: (any JSONWebKey)?) -> Bool {
+    guard let lhsThumbprint = try? lhs?.thumbprint(format: .jwk, using: SHA256.self),
+          let rhsThumbprint = try? rhs?.thumbprint(format: .jwk, using: SHA256.self) else {
+        return lhs == nil && rhs == nil
+    }
+    return lhsThumbprint == rhsThumbprint
+}
+
 @_documentation(visibility: private)
 public func == <RHS: JSONWebKey>(lhs: any JSONWebKey, rhs: RHS) -> Bool {
-    lhs.storage == rhs.storage
+    isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
 public func == <RHS: JSONWebKey>(lhs: (any JSONWebKey)?, rhs: RHS) -> Bool {
-    lhs?.storage == rhs.storage
+    isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
 public func == <RHS: JSONWebKey>(lhs: any JSONWebKey, rhs: RHS?) -> Bool {
-    lhs.storage == rhs?.storage
+    isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
 public func == <RHS: JSONWebKey>(lhs: (any JSONWebKey)?, rhs: RHS?) -> Bool {
-    lhs?.storage == rhs?.storage
+    isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
 public func == <LHS: JSONWebKey>(lhs: LHS, rhs: any JSONWebKey) -> Bool {
-    lhs.storage == rhs.storage
+    isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
 public func == <LHS: JSONWebKey>(lhs: LHS, rhs: (any JSONWebKey)?) -> Bool {
-    lhs.storage == rhs?.storage
+    isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
 public func == <LHS: JSONWebKey>(lhs: LHS?, rhs: any JSONWebKey) -> Bool {
-    lhs?.storage == rhs.storage
+    isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
 public func == <LHS: JSONWebKey>(lhs: LHS?, rhs: (any JSONWebKey)?) -> Bool {
-    lhs?.storage == rhs?.storage
+    isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
 public func == <LHS: JSONWebKey, RHS: JSONWebKey>(lhs: LHS, rhs: RHS) -> Bool {
-    lhs.storage == rhs.storage
+    isEqualKey(lhs, rhs)
 }
 
 /// A JSON Web Key (JWK) is a JavaScript Object Notation (JSON) [RFC7159]
@@ -468,9 +476,7 @@ extension JSONWebSigningKey {
 }
 
 /// A JSON Web Key (JWK) able to generate a signature using a symmetric key.
-public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey, JSONWebKeySymmetric {
-    init(_ key: SymmetricKey) throws
-}
+public protocol JSONWebSymmetricSigningKey: JSONWebSigningKey, JSONWebKeySymmetric {}
 
 /// A type-erased general container for a JSON Web Key (JWK).
 ///
