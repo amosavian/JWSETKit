@@ -58,7 +58,7 @@ extension SymmetricKey: JSONWebSymmetricSigningKey {
         if let size = AnyJSONWebAlgorithm(algorithm.rawValue).keyLength {
             self.init(size: .init(bitCount: size))
         } else {
-            self.init(size: .bits128)
+            self.init(size: .bits256)
         }
     }
     

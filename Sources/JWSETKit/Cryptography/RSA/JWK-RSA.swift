@@ -18,9 +18,6 @@ import CommonCrypto
 #if canImport(_CryptoExtras)
 import _CryptoExtras
 #endif
-#if canImport(CryptoSwift)
-import CryptoSwift
-#endif
 
 /// JSON Web Key (JWK) container for RSA public keys.
 @frozen
@@ -67,14 +64,13 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
 #if canImport(CommonCrypto)
         return try SecKey(from: self).encrypt(data, using: algorithm)
-#elseif canImport(CryptoSwift) && canImport(_CryptoExtras)
-        if algorithm == .unsafeRSAEncryptionPKCS1 {
-            return try CryptoSwift.RSA(from: self).encrypt(data, using: algorithm)
-        } else {
-            return try _RSA.Encryption.PublicKey(from: self).encrypt(data, using: algorithm)
-        }
 #elseif canImport(_CryptoExtras)
-        return try _RSA.Encryption.PublicKey(from: self).encrypt(data, using: algorithm)
+        switch algorithm {
+        case .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256:
+            return try _RSA.Encryption.PublicKey(from: self).encrypt(data, using: algorithm)
+        default:
+            return try BoringSSLRSAPublicKey(from: self).encrypt(data, using: algorithm)
+        }
 #else
         #error("Unimplemented")
 #endif
@@ -204,14 +200,13 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
 #if canImport(CommonCrypto)
         return try SecKey(from: self).decrypt(data, using: algorithm)
-#elseif canImport(CryptoSwift) && canImport(_CryptoExtras)
-        if algorithm == .unsafeRSAEncryptionPKCS1 {
-            return try CryptoSwift.RSA(from: self).decrypt(data, using: algorithm)
-        } else {
-            return try _RSA.Encryption.PrivateKey(from: self).decrypt(data, using: algorithm)
-        }
 #elseif canImport(_CryptoExtras)
-        return try _RSA.Encryption.PrivateKey(from: self).decrypt(data, using: algorithm)
+        switch algorithm {
+        case .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256:
+            return try _RSA.Encryption.PrivateKey(from: self).decrypt(data, using: algorithm)
+        default:
+            return try BoringSSLRSAPrivateKey(from: self).decrypt(data, using: algorithm)
+        }
 #else
         #error("Unimplemented")
 #endif
@@ -354,79 +349,3 @@ enum RSAHelper {
         }
     }
 }
-
-#if canImport(CryptoSwift)
-extension CryptoSwift.RSA: Swift.Hashable, Swift.Codable {}
-
-extension CryptoSwift.RSA: JSONWebDecryptingKey, JSONWebKeyRSAType {
-    public var publicKey: CryptoSwift.RSA {
-        Self(n: n, e: e)
-    }
-        
-    public var storage: JSONWebValueStorage {
-        do {
-            if d != nil {
-                return try _RSA.Encryption.PrivateKey(derRepresentation: externalRepresentation()).storage
-            } else {
-                return try _RSA.Encryption.PublicKey(n: n.serialize(), e: e.serialize()).storage
-            }
-        } catch {
-            return .init()
-        }
-    }
-    
-    public convenience init(storage: JSONWebValueStorage) throws {
-        let key = AnyJSONWebKey(storage: storage)
-        guard let modulus = key.modulus, let exponent = key.exponent else {
-            throw CryptoKitError.incorrectParameterSize
-        }
-        if let privateExponent = key.privateExponent,
-           let prime1 = key.firstPrimeFactor,
-           let prime2 = key.secondPrimeFactor
-        {
-            try self.init(
-                n: .init(modulus),
-                e: .init(exponent),
-                d: .init(privateExponent),
-                p: .init(prime1),
-                q: .init(prime2)
-            )
-        } else {
-            self.init(n: .init(modulus), e: .init(exponent))
-        }
-    }
-    
-    public convenience init(algorithm _: some JSONWebAlgorithm) throws {
-        try self.init(keySize: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount)
-    }
-    
-    public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        guard algorithm == .unsafeRSAEncryptionPKCS1 else {
-            throw CryptoKitError.incorrectParameterSize
-        }
-        return try .init(encrypt([UInt8](data), variant: .pksc1v15))
-    }
-    
-    public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        guard algorithm == .unsafeRSAEncryptionPKCS1 else {
-            throw CryptoKitError.incorrectParameterSize
-        }
-        let rawDecrypted = try decrypt([UInt8](data), variant: .raw)
-        // CryptoSwift only asserts padding and does not throw error. We check the padding manually.
-        guard !rawDecrypted.isEmpty, rawDecrypted.starts(with: [0x02]) else {
-            throw CryptoKitError.incorrectParameterSize
-        }
-        let decrypted = Padding.eme_pkcs1v15.remove(from: [0x00] + rawDecrypted, blockSize: keySizeBytes)
-        return .init(decrypted)
-    }
-    
-    public static func == (lhs: CryptoSwift.RSA, rhs: CryptoSwift.RSA) -> Bool {
-        (try? lhs.publicKey.externalRepresentation()) == (try? rhs.publicKey.externalRepresentation())
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(n)
-        hasher.combine(e)
-    }
-}
-#endif

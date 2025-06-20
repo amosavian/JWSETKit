@@ -266,14 +266,11 @@ public struct JSONWebKeyRegisteredAKPParameters {
     /// Public Key Value.
     public var publicKeyData: Data?
     
-    /// Private Key Value.
-    public var privateKey: Data?
-    
     /// Seed used to derive keys for an algorithm
     public var seed: Data?
     
     public static let keys: [SendablePartialKeyPath<Self>: String] = [
-        \.publicKeyData: "pub", \.privateKey: "priv", \.seed: "seed",
+        \.publicKeyData: "pub", \.seed: "priv",
     ]
 }
 

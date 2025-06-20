@@ -72,28 +72,28 @@ extension SharedSecret {
     }
 }
 
-extension Data {
+extension MutableDataProtocol {
     fileprivate func trim(bitCount: Int) -> Self {
         var result = self
         if bitCount.isMultiple(of: 8) {
-            result.count = bitCount / 8
-            return result
+            result.removeLast(count - bitCount / 8)
         } else {
-            result.count = bitCount / 8 + 1
-            result[result.count - 1] &= ~(0xFF >> (UInt(bitCount) % 8))
+            result.removeLast(count - bitCount / 8 - 1)
+            result[result.index(before: result.endIndex)] &= ~(0xFF >> (UInt(bitCount) % 8))
         }
         
         return result
     }
 }
 
-extension DataProtocol {
+extension RandomAccessCollection where Self.Element == UInt8 {
     fileprivate var lengthBytes: Data {
         Data(value: UInt32(count).bigEndian)
     }
 }
 
 extension HashFunction {
+    @inlinable
     mutating func update<T>(_ value: T) {
         withUnsafeBytes(of: value) {
             self.update(bufferPointer: $0)

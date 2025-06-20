@@ -5,6 +5,7 @@ import PackageDescription
 
 extension [Platform] {
     static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS, .visionOS]
+    static let nonDarwin: [Platform] = [.linux, .windows, .android, .wasi, .openbsd]
 }
 
 let package = Package(
@@ -27,7 +28,6 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMajor(from: "1.3.2")),
         .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.12.3")),
         .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.10.0")),
-        .package(url: "https://github.com/krzyzanowskim/CryptoSwift.git", .upToNextMajor(from: "1.8.4")),
     ],
     targets: [
         .systemLibrary(
@@ -47,9 +47,8 @@ let package = Package(
                 .product(name: "X509", package: "swift-certificates"),
                 .product(name: "Crypto", package: "swift-crypto"),
                 // Linux support
-                .product(name: "_CryptoExtras", package: "swift-crypto"),
-                .product(name: "CryptoSwift", package: "CryptoSwift", condition: .when(platforms: [.linux, .windows, .openbsd])),
-                .byName(name: "Czlib"),
+                .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
+                .byName(name: "Czlib", condition: .when(platforms: .nonDarwin)),
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy"),

@@ -78,7 +78,6 @@ extension RandomAccessCollection where Self.Element == UInt8, Self: RangeReplace
     /// - parameter urlBase64Encoded: The string to parse.
     @inlinable
     public init?(urlBase64Encoded: some StringProtocol) {
-        guard let value = Data(urlBase64Encoded: urlBase64Encoded.utf8) else { return nil }
-        self.init(value)
+        self.init(urlBase64Encoded: urlBase64Encoded.utf8)
     }
 }

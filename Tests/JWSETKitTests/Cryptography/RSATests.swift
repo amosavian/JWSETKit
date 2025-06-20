@@ -94,7 +94,6 @@ struct RSATests {
         #expect(ciphertext.count == 2048 / 8)
     }
     
-#if canImport(CommonCrypto)
     @Test
     func ecrypt_RSA2048_OAEP_SHA384() throws {
         let publicKey = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
@@ -120,7 +119,6 @@ struct RSATests {
         #expect(plaintext != ciphertext)
         #expect(ciphertext.count == 2048 / 8)
     }
-#endif
     
     @Test
     func signing_RSA2048_PKCS1_SHA256() throws {

@@ -148,8 +148,22 @@ extension JSONWebKeyType {
     public static let octetKeyPair: Self = "OKP"
     
     /// The Algorithm Key Pair (AKP) Type is used to express Public and Private Keys for use with Algorithms.
-    /// See [draft-ietf-cose-dilithium-06](https://datatracker.ietf.org/doc/html/draft-ietf-cose-dilithium-06) .
+    /// See [draft-ietf-cose-dilithium-09](https://datatracker.ietf.org/doc/html/draft-ietf-cose-dilithium-09) .
     public static let algorithmKeyPair: Self = "AKP"
+}
+
+extension JSONWebKeyType {
+    private static let requiredFields: PthreadReadWriteLockedValue<[Self: [String]]> = [
+        .ellipticCurve: ["x", "y"],
+        .rsa: ["n", "e"],
+        .symmetric: ["k"],
+        .octetKeyPair: ["x"],
+        .algorithmKeyPair: ["pub"],
+    ]
+    
+    var requiredFields: [String] {
+        Self.requiredFields[self] ?? []
+    }
 }
 
 /// JSON EC Curves.
@@ -203,7 +217,7 @@ extension JSONWebKeyCurve {
     /// Ed-25519 for signing curve.
     public static let ed25519: Self = "Ed25519"
     
-    /// Ed-25519 for Diffie-Hellman curve.
+    /// X-25519 for Diffie-Hellman curve.
     public static let x25519: Self = "X25519"
 }
 

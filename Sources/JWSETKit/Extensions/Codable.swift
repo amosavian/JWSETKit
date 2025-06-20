@@ -5,38 +5,6 @@
 //  Created by Amir Abbas Mousavian on 1/22/25.
 //
 
-struct AnyEncodable: Encodable {
-    private let encodeClosure: (any Encoder) throws -> Void
-
-    init<T: Encodable>(_ value: T) {
-        self.encodeClosure = value.encode
-    }
-
-    func encode(to encoder: any Encoder) throws {
-        try encodeClosure(encoder)
-    }
-}
-
-extension Array where Element == any Encodable {
-    func encodable() -> AnyEncodable {
-        var encodableDict = [AnyEncodable]()
-        for value in self {
-            encodableDict.append(.init(value))
-        }
-        return AnyEncodable(encodableDict)
-    }
-}
-
-extension Dictionary where Key == String, Value == any Encodable {
-    func encodable() -> AnyEncodable {
-        var encodableDict = [String: AnyEncodable]()
-        for (key, value) in self {
-            encodableDict[key] = AnyEncodable(value)
-        }
-        return AnyEncodable(encodableDict)
-    }
-}
-
 @usableFromInline
 @frozen
 struct AnyCodable: Codable, @unchecked Sendable {

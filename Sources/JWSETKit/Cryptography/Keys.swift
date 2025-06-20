@@ -64,7 +64,8 @@ public protocol JSONWebKey: JSONWebContainer, Expirable {
 
 private func isEqualKey(_ lhs: (any JSONWebKey)?, _ rhs: (any JSONWebKey)?) -> Bool {
     guard let lhsThumbprint = try? lhs?.thumbprint(format: .jwk, using: SHA256.self),
-          let rhsThumbprint = try? rhs?.thumbprint(format: .jwk, using: SHA256.self) else {
+          let rhsThumbprint = try? rhs?.thumbprint(format: .jwk, using: SHA256.self)
+    else {
         return lhs == nil && rhs == nil
     }
     return lhsThumbprint == rhsThumbprint
@@ -161,20 +162,7 @@ extension JSONWebKey {
         guard let keyType = self.keyType else {
             throw JSONWebKeyError.unknownKeyType
         }
-        switch keyType {
-        case .rsa:
-            try checkRequiredFields("n", "e")
-        case .ellipticCurve:
-            try checkRequiredFields("x", "y")
-        case .octetKeyPair:
-            try checkRequiredFields("x")
-        case .symmetric:
-            try checkRequiredFields("k")
-        case .algorithmKeyPair:
-            try checkRequiredFields("pub")
-        default:
-            break
-        }
+        try checkRequiredFields(keyType.requiredFields)
     }
     
     func checkRequiredFields(_ fields: String...) throws {
@@ -189,21 +177,15 @@ extension JSONWebKey {
         }
     }
     
-    private func jwkThumbprint<H>(using _: H.Type) throws -> H.Digest where H: HashFunction {
+    private static func jwkThumbprint<H>(of key: any JSONWebKey, using _: H.Type) throws -> H.Digest where H: HashFunction {
+        // swiftformat:disable:next redundantSelf
+        let keyFields = Set(key.keyType?.requiredFields ?? [])
         // Public key required values.
-        let thumbprintKeys: Set<String> = [
+        let thumbprintKeys: Set<String> = Set([
             // Algorithm-specific keys
             "kty", "crv",
-            // RSA keys
-            "n", "e",
-            // EC/OKP keys
-            "x", "y",
-            // Symmetric keys
-            "k",
-            // Algorithm key pair
-            "pub",
-        ]
-        let thumbprintStorage = storage
+        ]).union(keyFields)
+        let thumbprintStorage = key.storage
             .filter(thumbprintKeys.contains)
             .normalizedField("e")
         let encoder = JSONEncoder()
@@ -230,7 +212,7 @@ extension JSONWebKey {
             let spki = try self.exportKey(format: .spki)
             return H.hash(data: spki)
         case .jwk:
-            return try jwkThumbprint(using: hashFunction)
+            return try Self.jwkThumbprint(of: key, using: hashFunction)
         case .pkcs8, .raw:
             throw JSONWebKeyError.operationNotAllowed
         }
@@ -339,7 +321,7 @@ extension JSONWebSymmetricDecryptingKey {
     public var publicKey: Self { self }
     
     public init() throws {
-        try self.init(.init(size: .bits128))
+        try self.init(.init(size: .bits256))
     }
 }
 

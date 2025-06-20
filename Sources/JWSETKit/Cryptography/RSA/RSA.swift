@@ -19,7 +19,15 @@ extension _CryptoExtras._RSA.Signing.PublicKey: Swift.Hashable, Swift.Equatable,
 
 extension _RSA.Signing.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
-        (try? RSAHelper.rsaWebKey(pkcs1: pkcs1DERRepresentation).storage) ?? .init()
+        guard let primitives = try? getKeyPrimitives() else {
+            assertionFailure("Invalid RSA key.")
+            return .init()
+        }
+        var result = AnyJSONWebKey()
+        result.keyType = .rsa
+        result.modulus = primitives.modulus
+        result.exponent = primitives.publicExponent
+        return result.storage
     }
     
     public init(storage: JSONWebValueStorage) throws {
@@ -76,14 +84,7 @@ extension _CryptoExtras._RSA.Signing.PrivateKey: Swift.Hashable, Swift.Equatable
 
 extension _RSA.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
-        get {
-            (try? RSAHelper.rsaWebKey(pkcs1: derRepresentation).storage) ?? .init()
-        }
-        set {
-            if let value = try? Self(storage: newValue) {
-                self = value
-            }
-        }
+        (try? RSAHelper.rsaWebKey(pkcs1: derRepresentation).storage) ?? .init()
     }
     
     public init(algorithm _: some JSONWebAlgorithm) throws {
@@ -149,14 +150,15 @@ extension _CryptoExtras._RSA.Encryption.PublicKey: Swift.Hashable, Swift.Equatab
 
 extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
-        get {
-            (try? RSAHelper.rsaWebKey(pkcs1: pkcs1DERRepresentation).storage) ?? .init()
+        guard let primitives = try? getKeyPrimitives() else {
+            assertionFailure("Invalid RSA key.")
+            return .init()
         }
-        set {
-            if let value = try? Self(storage: newValue) {
-                self = value
-            }
-        }
+        var result = AnyJSONWebKey()
+        result.keyType = .rsa
+        result.modulus = primitives.modulus
+        result.exponent = primitives.publicExponent
+        return result.storage
     }
     
     public init(storage: JSONWebValueStorage) throws {
@@ -184,14 +186,7 @@ extension _CryptoExtras._RSA.Encryption.PrivateKey: Swift.Hashable, Swift.Equata
 
 extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
-        get {
-            (try? RSAHelper.rsaWebKey(pkcs1: derRepresentation).storage) ?? .init()
-        }
-        set {
-            if let value = try? Self(storage: newValue) {
-                self = value
-            }
-        }
+        (try? RSAHelper.rsaWebKey(pkcs1: derRepresentation).storage) ?? .init()
     }
     
     public init(algorithm _: some JSONWebAlgorithm) throws {
