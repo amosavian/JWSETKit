@@ -46,11 +46,7 @@ extension CryptoECPublicKey {
     }
 }
 
-protocol CryptoECPrivateKey: JSONWebKeyCurveType {
-    associatedtype PublicKey: CryptoECPublicKey
-    
-    /// Public key.
-    var publicKey: PublicKey { get }
+protocol CryptoECPrivateKey: JSONWebKeyCurveType, JSONWebPrivateKey where PublicKey: CryptoECPublicKey {
     var rawRepresentation: Data { get }
     init(rawRepresentation: Data) throws
 }

@@ -105,14 +105,6 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType {
         }
         return try signature(for: hashFunction.hash(data: data), padding: algorithm.rsaPadding).rawRepresentation
     }
-    
-    public static func == (lhs: _RSA.Signing.PrivateKey, rhs: _RSA.Signing.PrivateKey) -> Bool {
-        lhs.publicKey == rhs.publicKey
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(publicKey)
-    }
 }
 
 extension _CryptoExtras._RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
@@ -203,14 +195,6 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey, JSONWebKeyRSAType {
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         try decrypt(data, padding: algorithm.rsaEncryptionPadding)
-    }
-    
-    public static func == (lhs: _RSA.Encryption.PrivateKey, rhs: _RSA.Encryption.PrivateKey) -> Bool {
-        lhs.publicKey == rhs.publicKey
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(publicKey)
     }
 }
 

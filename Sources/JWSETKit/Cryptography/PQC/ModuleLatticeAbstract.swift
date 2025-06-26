@@ -44,9 +44,7 @@ extension CryptoModuleLatticePublicKey {
     }
 }
 
-protocol CryptoModuleLatticePrivateKey: JSONWebKey, Hashable {
-    associatedtype PublicKey: CryptoModuleLatticePublicKey
-    var publicKey: PublicKey { get }
+protocol CryptoModuleLatticePrivateKey: JSONWebKey, JSONWebPrivateKey, Hashable where PublicKey: CryptoModuleLatticePublicKey {
     var seedRepresentation: Data { get }
     init() throws
     init(seedRepresentation: some DataProtocol) throws

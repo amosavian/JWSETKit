@@ -48,8 +48,8 @@ extension BoringSSLRSAPublicKey: JSONWebEncryptingKey {
         let (n, e) = getKeyPrimitives()
         var result = AnyJSONWebKey()
         result.keyType = .rsa
-        result.modulus = n.data
-        result.exponent = e.data
+        result.modulus = n
+        result.exponent = e
         return result.storage
     }
     
@@ -81,14 +81,14 @@ extension BoringSSLRSAPrivateKey: JSONWebDecryptingKey {
         let (n, e, d, p, q, dp, dq, qi) = getKeyPrimitives()
         var result = AnyJSONWebKey()
         result.keyType = .rsa
-        result.modulus = n.data
-        result.exponent = e.data
-        result.privateExponent = d.data
-        result.firstPrimeFactor = p.data
-        result.secondPrimeFactor = q.data
-        result.firstCRTCoefficient = dp.data
-        result.secondFactorCRTExponent = dq.data
-        result.firstCRTCoefficient = qi.data
+        result.modulus = n
+        result.exponent = e
+        result.privateExponent = d
+        result.firstPrimeFactor = p
+        result.secondPrimeFactor = q
+        result.firstCRTCoefficient = dp
+        result.secondFactorCRTExponent = dq
+        result.firstCRTCoefficient = qi
         return result.storage
     }
     
@@ -106,14 +106,6 @@ extension BoringSSLRSAPrivateKey: JSONWebDecryptingKey {
 
     func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         try decrypt(data, padding: .init(algorithm: algorithm))
-    }
-
-    static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.publicKey == rhs.publicKey
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(publicKey)
     }
 }
 

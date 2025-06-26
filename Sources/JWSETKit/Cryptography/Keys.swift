@@ -133,7 +133,7 @@ extension JSONWebValueStorage {
 
 extension JSONWebKey {
     var isAsymmetricPrivateKey: Bool {
-        if self is any JSONWebSigningKey || self is any JSONWebDecryptingKey {
+        if self is any JSONWebPrivateKey {
             return true
         }
         
@@ -270,6 +270,26 @@ extension SHA512Digest: NamedDigest {
     public static let identifier = "sha-512"
 }
 
+/// Private key of an asymmetric cryptography algorithm.
+public protocol JSONWebPrivateKey<PublicKey>: JSONWebKey {
+    associatedtype PublicKey: JSONWebKey
+    
+    /// Public key.
+    var publicKey: PublicKey { get }
+}
+
+extension JSONWebPrivateKey where Self: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.publicKey == rhs.publicKey
+    }
+}
+ 
+extension JSONWebPrivateKey where Self: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(publicKey)
+    }
+}
+
 /// A JSON Web Key (JWK) able to encrypt plain-texts.
 public protocol JSONWebEncryptingKey: JSONWebKey {
     /// Encrypts plain-text data using current key.
@@ -282,12 +302,7 @@ public protocol JSONWebEncryptingKey: JSONWebKey {
 }
 
 /// A JSON Web Key (JWK) able to decrypt cipher-texts.
-public protocol JSONWebDecryptingKey: JSONWebEncryptingKey {
-    associatedtype PublicKey: JSONWebEncryptingKey
-    
-    /// Public key.
-    var publicKey: PublicKey { get }
-    
+public protocol JSONWebDecryptingKey: JSONWebEncryptingKey, JSONWebPrivateKey where PublicKey: JSONWebEncryptingKey {
     /// Generates new random key.
     init(algorithm: some JSONWebAlgorithm) throws
     
@@ -304,20 +319,12 @@ extension JSONWebDecryptingKey {
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
         try publicKey.encrypt(data, using: algorithm)
     }
-    
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.publicKey == rhs.publicKey
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(publicKey)
-    }
 }
 
 /// A JSON Web Key (JWK) able to decrypt cipher-texts using a symmetric key.
 public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey, JSONWebKeySymmetric where PublicKey == Self {}
 
-extension JSONWebSymmetricDecryptingKey {
+extension JSONWebKeySymmetric where Self: JSONWebPrivateKey {
     public var publicKey: Self { self }
     
     public init() throws {
@@ -423,12 +430,7 @@ public protocol JSONWebValidatingKey: JSONWebKey {
 }
 
 /// A JSON Web Key (JWK) able to generate a signature.
-public protocol JSONWebSigningKey: JSONWebValidatingKey {
-    associatedtype PublicKey: JSONWebValidatingKey
-    
-    /// Public key.
-    var publicKey: PublicKey { get }
-    
+public protocol JSONWebSigningKey: JSONWebValidatingKey, JSONWebPrivateKey where PublicKey: JSONWebValidatingKey {
     /// Generates new random key.
     init(algorithm: some JSONWebAlgorithm) throws
     
@@ -439,16 +441,6 @@ public protocol JSONWebSigningKey: JSONWebValidatingKey {
     ///   - algorithm: The signing algorithm to use.
     /// - Returns: The digital signature or throws error on failure.
     func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol
-}
-
-extension JSONWebSigningKey {
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.publicKey == rhs.publicKey
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(publicKey)
-    }
 }
 
 extension JSONWebSigningKey {

@@ -316,7 +316,7 @@ extension [ASN1ObjectIdentifier] {
 }
 
 extension ASN1ObjectIdentifier.AlgorithmIdentifier {
-    static let rsaOAEP: ASN1ObjectIdentifier = [1, 2, 840, 11_3549, 1, 1, 7]
+    static let rsaOAEP: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 1, 1, 7]
     static let idMFG1: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 1, 1, 8]
     static let idPSpecified: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 1, 1, 9]
     static let idX25519: ASN1ObjectIdentifier = [1, 3, 101, 110]
@@ -394,7 +394,6 @@ extension RFC5480AlgorithmIdentifier {
     static func maskGenFunction1<H: HashFunction>(_ hashFunction: H.Type) throws -> Self {
         try .init(algorithm: .AlgorithmIdentifier.idMFG1, parameters: .digestIdentifier(hashFunction))
     }
-    
 }
 
 extension RFC5480AlgorithmIdentifier {
@@ -751,7 +750,7 @@ struct ModuleLatticePrivateKey: DERParseable, DERSerializable, Hashable, Sendabl
             guard let seed = node.content.primitive else {
                 throw CryptoKitASN1Error.unexpectedFieldType
             }
-            guard seed.count == 32 else {
+            guard seed.count == 32 || seed.count == 64 else {
                 throw CryptoKitASN1Error.unsupportedFieldLength
             }
             try self.init(seed: .init(seed))
