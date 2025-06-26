@@ -42,13 +42,18 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
     }
     
     public init<D>(derRepresentation: D) throws where D: DataProtocol {
+        var key: AnyJSONWebKey
 #if canImport(CommonCrypto)
-        self.storage = try SecKey(derRepresentation: Data(derRepresentation), keyType: .rsa).storage
+        key = try .init(SecKey(derRepresentation: Data(derRepresentation), keyType: .rsa))
 #elseif canImport(_CryptoExtras)
-        self.storage = try _RSA.Signing.PublicKey(derRepresentation: derRepresentation).storage
+        key = try .init(_RSA.Signing.PublicKey(derRepresentation: derRepresentation))
 #else
         #error("Unimplemented")
 #endif
+        if let spki = try? SubjectPublicKeyInfo(derEncoded: derRepresentation) {
+            key.algorithm = spki.algorithmIdentifier.jsonWebAlgorithm
+        }
+        self.storage = key.storage
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
@@ -84,7 +89,6 @@ extension JSONWebRSAPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
             try self.init(derRepresentation: key)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
-            try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
@@ -174,17 +178,26 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
     }
     
     public init<D>(derRepresentation: D) throws where D: DataProtocol {
+        var key: AnyJSONWebKey
 #if canImport(CommonCrypto)
-        self.storage = try SecKey(derRepresentation: Data(derRepresentation), keyType: .rsa).storage
+        key = try .init(SecKey(derRepresentation: Data(derRepresentation), keyType: .rsa))
 #elseif canImport(_CryptoExtras)
-        self.storage = try _RSA.Signing.PrivateKey(derRepresentation: derRepresentation).storage
+        key = try .init(_RSA.Signing.PrivateKey(derRepresentation: derRepresentation))
 #else
         #error("Unimplemented")
 #endif
+        if let pkcs8 = try? PKCS8PrivateKey(derEncoded: derRepresentation) {
+            key.algorithm = pkcs8.algorithmIdentifier.jsonWebAlgorithm
+        }
+        self.storage = key.storage
     }
     
     public func validate() throws {
-        try checkRequiredFields("n", "e", "d", "p", "q", "dp", "dq")
+        // swiftformat:disable:next redundantSelf
+        guard let keyType = self.keyType else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+        try checkRequiredFields(keyType.requiredFields + ["d", "p", "q", "dp", "dq"])
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
@@ -220,7 +233,6 @@ extension JSONWebRSAPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
             try self.init(derRepresentation: key)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
-            try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

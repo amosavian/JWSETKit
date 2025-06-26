@@ -57,7 +57,7 @@ extension CryptoModuleLatticePrivateKey {
         var result = AnyJSONWebKey()
         result.keyType = .algorithmKeyPair
         result.algorithm = Self.PublicKey.algorithm
-        result.publicKeyData = publicKey.publicKeyData
+        result.publicKeyData = publicKey.rawRepresentation
         result.seed = seedRepresentation
         return result.storage
     }

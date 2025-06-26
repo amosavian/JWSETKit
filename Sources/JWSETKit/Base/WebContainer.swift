@@ -48,6 +48,7 @@ extension JSONWebContainer {
         self = try Self(storage: .init())
         let container = try decoder.singleValueContainer()
         try self.init(storage: container.decode(JSONWebValueStorage.self))
+        try validate()
     }
     
     public func encode(to encoder: any Encoder) throws {

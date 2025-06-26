@@ -171,7 +171,7 @@ struct BoringSSLRSAPrivateKey: Sendable {
     init(
         n: some ContiguousBytes,
         e: some ContiguousBytes,
-        d: some ContiguousBytes,
+        d: some ContiguousBytes
     ) throws {
         self.backing = try Backing(n: n, e: e, d: d)
     }
@@ -345,7 +345,7 @@ extension BoringSSLRSAPrivateKey {
         fileprivate init(
             n: some ContiguousBytes,
             e: some ContiguousBytes,
-            d: some ContiguousBytes,
+            d: some ContiguousBytes
         ) throws {
             self.pointer = CCryptoBoringSSL_EVP_PKEY_new()
             let n = try ArbitraryPrecisionInteger(bytes: n)

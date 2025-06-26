@@ -64,98 +64,169 @@ public protocol JSONWebKeySpecializer {
     static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol
 }
 
-enum JSONWebKeyRSASpecializer: JSONWebKeySpecializer {
-    static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
-        guard key.keyType == .rsa else { return nil }
-        if key.privateExponent != nil {
-            return try JSONWebRSAPrivateKey(key)
+protocol JSONWebKeySpecializerByType: JSONWebKeySpecializer {
+    static var supportedKeyTypes: [JSONWebKeyType] { get }
+    
+    static var supportedKeyCurves: [JSONWebKeyCurve]? { get }
+    
+    static var supportedAlgorithms: [any JSONWebAlgorithm]? { get }
+    
+    static var objectIdentifierGroup: String? { get }
+    
+    static var publicKeyType: (any (JSONWebKeyImportable & JSONWebKeyExportable).Type)? { get }
+    
+    static var privateKeyType: (any (JSONWebKeyImportable & JSONWebKeyExportable).Type)? { get }
+    
+    static var privateKeyParameter: String { get }
+}
+
+extension JSONWebKeySpecializerByType {
+    public static var supportedKeyCurves: [JSONWebKeyCurve]? { nil }
+    static var supportedAlgorithms: [any JSONWebAlgorithm]? { nil }
+    static var objectIdentifierGroup: String? { nil }
+    
+    static var asn1OIDGroup: ASN1ObjectIdentifier? {
+        if let objectIdentifierGroup = objectIdentifierGroup,
+           let oidGroup = try? ASN1ObjectIdentifier(dotRepresentation: objectIdentifierGroup)
+        {
+            return oidGroup
+        }
+        return nil
+    }
+}
+
+extension JSONWebKeySpecializerByType {
+    static func derKeyContainer<D>(key: D, format: JSONWebKeyFormat) throws -> (any DERKeyContainer)? where D: DataProtocol {
+        switch format {
+        case .pkcs8:
+            try PKCS8PrivateKey(derEncoded: key)
+        case .spki:
+            try SubjectPublicKeyInfo(derEncoded: key)
+        default:
+            nil
+        }
+    }
+    
+    public static func derDeserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
+        guard let derContainer = try derKeyContainer(key: key, format: format) else {
+            return nil
+        }
+        guard try supportedKeyTypes.contains(derContainer.keyType) else { return nil }
+        if let curve = derContainer.keyCurve {
+            guard supportedKeyCurves?.contains(curve) ?? false else { return nil }
+        }
+        
+        switch format {
+        case .pkcs8:
+            guard let privateKeyType = privateKeyType else { return nil }
+            return try privateKeyType.init(importing: key, format: format)
+        case .spki:
+            guard let publicKeyType = publicKeyType else { return nil }
+            return try publicKeyType.init(importing: key, format: format)
+        default:
+            return nil
+        }
+    }
+    
+    public static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
+        guard let keyType = key.keyType, supportedKeyTypes.contains(keyType) else { return nil }
+        if let curve = key.curve {
+            guard supportedKeyCurves?.contains(curve) ?? false else { return nil }
+        }
+        
+        if let supportedAlgorithms = supportedAlgorithms, let algorithm = key.algorithm {
+            guard supportedAlgorithms.contains(where: { $0.rawValue == algorithm.rawValue }) else {
+                return nil
+            }
+        }
+        
+        if key.storage.contains(key: privateKeyParameter) {
+            guard let privateKeyType = privateKeyType else { return nil }
+            return try privateKeyType.init(key)
+        } else if let publicKeyType = publicKeyType {
+            return try publicKeyType.init(key)
         } else {
-            return try JSONWebRSAPublicKey(key)
+            return nil
         }
     }
     
-    static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
+    public static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
+        guard let derContainer = try derKeyContainer(key: key, format: format) else {
+            return nil
+        }
+        guard try supportedKeyTypes.contains(derContainer.keyType) else { return nil }
+        if let curve = derContainer.keyCurve {
+            guard supportedKeyCurves?.contains(curve) ?? false else { return nil }
+        }
+        
+        if let objectIdentifierGroup = asn1OIDGroup {
+            guard derContainer.algorithmIdentifier.algorithm.oidComponents.starts(with: objectIdentifierGroup.oidComponents) else {
+                return nil
+            }
+        }
+        
         switch format {
         case .pkcs8:
-            guard try PKCS8PrivateKey(derEncoded: key).keyType == .rsa else { return nil }
-            return try JSONWebRSAPrivateKey(importing: key, format: format)
+            guard let privateKeyType = privateKeyType else { return nil }
+            return try privateKeyType.init(importing: key, format: format)
         case .spki:
-            guard try SubjectPublicKeyInfo(derEncoded: key).keyType == .rsa else { return nil }
-            return try JSONWebRSAPublicKey(importing: key, format: format)
+            guard let publicKeyType = publicKeyType else { return nil }
+            return try publicKeyType.init(importing: key, format: format)
         default:
             return nil
         }
     }
 }
 
-enum JSONWebKeyEllipticCurveSpecializer: JSONWebKeySpecializer {
-    static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
-        let key: some (MutableJSONWebKey & JSONWebKeyCurveType) = key
-        guard key.keyType == .ellipticCurve else { return nil }
-        guard let curve = key.curve else { return nil }
-        switch curve {
-        case .p256, .p384, .p521:
-            if key.privateKey != nil {
-                return try JSONWebECPrivateKey(from: key)
-            } else {
-                return try JSONWebECPublicKey(from: key)
-            }
-        default:
-            return nil
-        }
-    }
+enum JSONWebKeyRSASpecializer: JSONWebKeySpecializerByType {
+    static let supportedKeyTypes: [JSONWebKeyType] = [.rsa]
     
-    static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
-        switch format {
-        case .pkcs8:
-            let pkcs8 = try PKCS8PrivateKey(derEncoded: key)
-            guard try pkcs8.keyType == .ellipticCurve else { return nil }
-            guard pkcs8.keyCurve != nil else { return nil }
-            return try JSONWebECPrivateKey(importing: key, format: format)
-        case .spki:
-            let spki = try SubjectPublicKeyInfo(derEncoded: key)
-            guard try spki.keyType == .ellipticCurve else { return nil }
-            guard spki.keyCurve != nil else { return nil }
-            return try JSONWebECPublicKey(importing: key, format: format)
-        default:
-            return nil
-        }
-    }
+    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebRSAPublicKey.self
+    
+    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebRSAPrivateKey.self
+    
+    static let privateKeyParameter: String = "d"
 }
 
-enum JSONWebKeyCurve25519Specializer: JSONWebKeySpecializer {
-    static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
-        let key: some (MutableJSONWebKey & JSONWebKeyCurveType) = key
-        guard key.keyType == .octetKeyPair else { return nil }
-        guard let curve = key.curve else { return nil }
-        switch curve {
-        case .ed25519, .x25519:
-            if key.privateKey != nil {
-                return try JSONWebECPrivateKey(from: key)
-            } else {
-                return try JSONWebECPublicKey(from: key)
-            }
-        default:
-            return nil
-        }
-    }
+enum JSONWebKeyEllipticCurveSpecializer: JSONWebKeySpecializerByType {
+    static let supportedKeyTypes: [JSONWebKeyType] = [.ellipticCurve]
     
-    static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
-        switch format {
-        case .pkcs8:
-            let pkcs8 = try PKCS8PrivateKey(derEncoded: key)
-            guard try pkcs8.keyType == .octetKeyPair else { return nil }
-            guard pkcs8.keyCurve == .ed25519 else { return nil }
-            return try JSONWebECPrivateKey(importing: key, format: format)
-        case .spki:
-            let spki = try SubjectPublicKeyInfo(derEncoded: key)
-            guard try spki.keyType == .octetKeyPair else { return nil }
-            guard spki.keyCurve == .ed25519 else { return nil }
-            return try JSONWebECPublicKey(importing: key, format: format)
-        default:
-            return nil
-        }
-    }
+    static let supportedKeyCurves: [JSONWebKeyCurve]? = [.p256, .p384, .p521]
+    
+    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebECPublicKey.self
+    
+    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebECPrivateKey.self
+    
+    static let privateKeyParameter: String = "d"
+}
+
+enum JSONWebKeyCurve25519Specializer: JSONWebKeySpecializerByType {
+    static let supportedKeyTypes: [JSONWebKeyType] = [.octetKeyPair]
+    
+    static let supportedKeyCurves: [JSONWebKeyCurve]? = [.ed25519, .x25519]
+    
+    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebECPublicKey.self
+    
+    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebECPrivateKey.self
+    
+    static let privateKeyParameter: String = "d"
+}
+
+enum JSONWebKeyAlgorithmKeyPairSigningSpecializer: JSONWebKeySpecializerByType {
+    static let supportedKeyTypes: [JSONWebKeyType] = [.algorithmKeyPair]
+    
+    static let supportedAlgorithms: [any JSONWebAlgorithm]? = [
+        .mldsa65Signature,
+        .mldsa87Signature,
+    ]
+    
+    static let objectIdentifiers: [ASN1ObjectIdentifier]? = .AlgorithmIdentifier.moduleLatticeDSAs
+    
+    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebMLDSAPublicKey.self
+    
+    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebMLDSAPrivateKey.self
+    
+    static let privateKeyParameter: String = "priv"
 }
 
 enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
@@ -165,7 +236,7 @@ enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
             throw CryptoKitError.incorrectKeySize
         }
         
-        switch key.algorithm ?? JSONWebSignatureAlgorithm("") {
+        switch key.algorithm ?? .unsafeNone {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
             return try JSONWebKeyAESGCM(key)
         case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256:
@@ -212,6 +283,7 @@ extension AnyJSONWebKey {
         JSONWebKeyEllipticCurveSpecializer.self,
         JSONWebKeyCurve25519Specializer.self,
         JSONWebKeyCertificateChainSpecializer.self,
+        JSONWebKeyAlgorithmKeyPairSigningSpecializer.self,
         JSONWebKeySymmetricSpecializer.self,
     ]
     

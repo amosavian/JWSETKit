@@ -43,7 +43,7 @@ To use JWSETKit, add the following dependency to your Package.swift:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.19.0"))
+    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.24.0"))
 ]
 ```
 
@@ -81,45 +81,56 @@ For detailed usage and API documentation, check [the documentation][docs].
 
 #### Signature/HMAC
 
-|       | JWSETKit           | [jwt-kit]          | [JOSESwift]        | Auth0's [JWTDecode] |
-|:------|:------------------:|:------------------:|:------------------:|:-------------------:|
-| HS256 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| HS384 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| HS512 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| RS256 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| RS384 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| RS512 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| ES256 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| ES384 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| ES512 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| PS256 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| PS384 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| PS512 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| PS512 | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| EdDSA | :white_check_mark: | :white_check_mark: | :x:                | :x:                 |
-| E256K | :x:                | :x:                | :x:                | :x:                 |
+|           | JWSETKit           | [jwt-kit]          | [JOSESwift]        | Auth0's [JWTDecode] |
+|:----------|:------------------:|:------------------:|:------------------:|:-------------------:|
+| HS256     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| HS384     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| HS512     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| RS256     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| RS384     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| RS512     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| ES256     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| ES384     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| ES512     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| PS256     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| PS384     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| PS512     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| PS512     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
+| EdDSA     | :white_check_mark: | :white_check_mark: | :x:                | :x:                 |
+| Ed25519   | :white_check_mark: | :x:                | :x:                | :x:                 |
+| Ed448     | :x:                | :x:                | :x:                | :x:                 |
+| E256K     | :x:                | :x:                | :x:                | :x:                 |
+| ML-DSA-44 | :x:                | :x:                | :x:                | :x:                 |
+| ML-DSA-65 | :x:                | :x:                | :x:                | :x:                 |
+| ML-DSA-87 | :x:                | :x:                | :x:                | :x:                 |
 
 #### Key Encryption
 
-|                    | JWSETKit           | [JOSESwift]        |
-|:-------------------|:------------------:|:------------------:|
-| RSA1_5             | :white_check_mark: | :white_check_mark: |
-| RSA-OAEP           | :white_check_mark: | :white_check_mark: |
-| RSA-OAEP-256       | :white_check_mark: | :white_check_mark: |
-| A128KW             | :white_check_mark: | :white_check_mark: |
-| A192KW             | :white_check_mark: | :white_check_mark: |
-| A256KW             | :white_check_mark: | :white_check_mark: |
-| dir                | :white_check_mark: | :white_check_mark: |
-| ECDH-ES            | :white_check_mark: | :x:                |
-| ECDH-ES+A128KW     | :white_check_mark: | :x:                |
-| ECDH-ES+A192KW     | :white_check_mark: | :x:                |
-| ECDH-ES+A256KW     | :white_check_mark: | :x:                |
-| A128GCMKW          | :white_check_mark: | :x:                |
-| A192GCMKW          | :white_check_mark: | :x:                |
-| A256GCMKW          | :white_check_mark: | :x:                |
-| PBES2-HS256+A128KW | :white_check_mark: | :x:                |
-| PBES2-HS384+A192KW | :white_check_mark: | :x:                |
-| PBES2-HS512+A256KW | :white_check_mark: | :x:                |
+|                        | JWSETKit           | [JOSESwift]        |
+|:-----------------------|:------------------:|:------------------:|
+| RSA1_5                 | :white_check_mark: | :white_check_mark: |
+| RSA-OAEP               | :white_check_mark: | :white_check_mark: |
+| RSA-OAEP-256           | :white_check_mark: | :white_check_mark: |
+| A128KW                 | :white_check_mark: | :white_check_mark: |
+| A192KW                 | :white_check_mark: | :white_check_mark: |
+| A256KW                 | :white_check_mark: | :white_check_mark: |
+| dir                    | :white_check_mark: | :white_check_mark: |
+| ECDH-ES                | :white_check_mark: | :white_check_mark: |
+| ECDH-ES+A128KW         | :white_check_mark: | :white_check_mark: |
+| ECDH-ES+A192KW         | :white_check_mark: | :white_check_mark: |
+| ECDH-ES+A256KW         | :white_check_mark: | :white_check_mark: |
+| A128GCMKW              | :white_check_mark: | :x:                |
+| A192GCMKW              | :white_check_mark: | :x:                |
+| A256GCMKW              | :white_check_mark: | :x:                |
+| PBES2-HS256+A128KW     | :white_check_mark: | :x:                |
+| PBES2-HS384+A192KW     | :white_check_mark: | :x:                |
+| HPKE-0 (P256)          | :x:                | :x:                |
+| HPKE-1 (P384)          | :x:                | :x:                |
+| HPKE-2 (P521)          | :x:                | :x:                |
+| HPKE-3 (X25519)        | :x:                | :x:                |
+| HPKE-4 (X25519/ChaCha) | :x:                | :x:                |
+| HPKE-5 (X448)          | :x:                | :x:                |
+| HPKE-6 (X448/ChaCha)   | :x:                | :x:                |
 
 #### Content Encryption
 
@@ -128,9 +139,9 @@ For detailed usage and API documentation, check [the documentation][docs].
 | A128CBC-HS256 | :white_check_mark: | :white_check_mark: |
 | A192CBC-HS384 | :white_check_mark: | :white_check_mark: |
 | A256CBC-HS512 | :white_check_mark: | :white_check_mark: |
-| A128GCM       | :white_check_mark: | :x:                |
-| A192GCM       | :white_check_mark: | :x:                |
-| A256GCM       | :white_check_mark: | :x:                |
+| A128GCM       | :white_check_mark: | :white_check_mark: |
+| A192GCM       | :white_check_mark: | :white_check_mark: |
+| A256GCM       | :white_check_mark: | :white_check_mark: |
 
 
 [swift-workflow-badge]: https://github.com/amosavian/JWSETKit/actions/workflows/swift.yml/badge.svg

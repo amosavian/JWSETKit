@@ -92,7 +92,6 @@ extension JSONWebECPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
             try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.publicRawCurve, keyFinder: Self.signingType)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
-            try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }
@@ -170,12 +169,20 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
         case (JSONWebKeyType.ellipticCurve, .p521):
             return try P521.KeyAgreement.PrivateKey(from: self)
                 .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
-        case (JSONWebKeyType.ellipticCurve, .x25519), (JSONWebKeyType.octetKeyPair, .x25519):
+        case (JSONWebKeyType.octetKeyPair, .x25519):
             return try Curve25519.KeyAgreement.PrivateKey(from: self)
                 .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
         default:
             throw JSONWebKeyError.unknownKeyType
         }
+    }
+    
+    public func validate() throws {
+        // swiftformat:disable:next redundantSelf
+        guard let keyType = self.keyType else {
+            throw JSONWebKeyError.unknownKeyType
+        }
+        try checkRequiredFields(keyType.requiredFields + ["d"])
     }
 }
 

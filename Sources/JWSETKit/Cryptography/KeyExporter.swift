@@ -106,7 +106,6 @@ extension JSONWebKeySymmetric {
             try self.init(.init(data: key.asContiguousBytes))
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
-            try validate()
         default:
             throw JSONWebKeyError.invalidKeyFormat
         }

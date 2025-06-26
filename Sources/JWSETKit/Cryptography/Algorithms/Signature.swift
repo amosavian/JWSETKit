@@ -45,6 +45,8 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaSignaturePKCS1v15SHA384: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaSignaturePKCS1v15SHA512: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
+        .mldsa65Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
+        .mldsa87Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
     ]
     
     private static let keyTypes: PthreadReadWriteLockedValue<[Self: JSONWebKeyType]> = [
@@ -63,6 +65,8 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA256: .rsa,
         .rsaSignaturePKCS1v15SHA384: .rsa,
         .rsaSignaturePKCS1v15SHA512: .rsa,
+        .mldsa65Signature: .algorithmKeyPair,
+        .mldsa87Signature: .algorithmKeyPair,
     ]
     
     private static let curves: PthreadReadWriteLockedValue<[Self: JSONWebKeyCurve]> = [
@@ -205,4 +209,10 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     
     /// **Signature**: ECDSA using P-521 and SHA-512.
     public static var ecdsaSignatureP521SHA512: Self { "ES512" }
+    
+    /// **Signature**: ML-DSA-65 as described in FIPS 204.
+    static var mldsa65Signature: Self { "ML-DSA-65" }
+    
+    /// **Signature**: ML-DSA-87 as described in FIPS 204.
+    static var mldsa87Signature: Self { "ML-DSA-87" }
 }
