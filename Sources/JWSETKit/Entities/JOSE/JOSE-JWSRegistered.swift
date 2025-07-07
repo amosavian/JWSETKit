@@ -15,7 +15,6 @@ import X509
 
 /// Registered parameters of JOSE header in [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515.html ) .
 public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
-    public typealias Container = JOSEHeader
     /// The "`alg`" (algorithm) Header Parameter identifies the cryptographic algorithm used to secure the JWS.
     ///
     /// The JWS Signature value is not valid if the "`alg`" value does not represent

@@ -10,7 +10,6 @@ in order to access the claim.
 
 ```swift
 struct JSONWebTokenClaimsJwkParameters: JSONWebContainerParameters {
-    typealias Container = JOSEHeader
     var subJsonWebToken: (any JsonWebKey)?
 
     // Key lookup to convert claim to string key.
@@ -57,8 +56,6 @@ then extend `DPoP` to support defined
 
 ``` swift
 public struct DPoPRegisteredParameters: JSONWebContainerParameters {
-    public typealias Container = DPoPClaims
-    
     public var jwtId: String?
     public var httpMethod: String?
     public var httpURL: URL?

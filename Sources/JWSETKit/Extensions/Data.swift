@@ -11,6 +11,10 @@ import FoundationEssentials
 import Foundation
 #endif
 
+#if swift(<6.2)
+typealias SendableMetatype = Any
+#endif
+
 extension Data {
     init<T>(value: T) where T: FixedWidthInteger {
         var int = value

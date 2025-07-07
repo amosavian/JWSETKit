@@ -134,4 +134,6 @@ extension SymmetricKey: JSONWebSymmetricSealingKey {
     }
 }
 
+#if !canImport(CryptoKit)
 extension SymmetricKey: @unchecked Swift.Sendable {}
+#endif

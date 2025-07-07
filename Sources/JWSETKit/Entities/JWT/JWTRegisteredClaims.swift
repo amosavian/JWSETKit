@@ -13,7 +13,6 @@ import Foundation
 
 /// JWT Registered Claims Regarding [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519.html)
 public struct JSONWebTokenClaimsRegisteredParameters: JSONWebContainerParameters {
-    public typealias Container = JSONWebTokenClaims
     /// The "`aud`" (audience) claim identifies the recipients that the JWT is intended for.
     ///
     /// Each principal intended to process the JWT MUST identify itself with a value in the audience claim.

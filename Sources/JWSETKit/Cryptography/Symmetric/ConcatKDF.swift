@@ -12,38 +12,40 @@ import Foundation
 #endif
 import Crypto
 
-extension SymmetricKey {
-    /// Concatenation Key Derivation Function regarding NIST SP800-56Ar2 section 5.8.1.
+extension SharedSecret {
+    /// Derives a symmetric encryption key from the secret using NIST SP800-56Ar2 section 5.8.1
+    /// derivation.
     ///
     /// - Parameters:
-    ///  - secret: The secret key.
-    ///  - hashFunction: The hash function to use.
-    ///  - params: The parameters to concatenate .
-    public static func concatDerivedSymmetricKey<H>(
-        parameters: [any DataProtocol],
-        hashFunction: H.Type,
-        keySize: Int
-    ) throws -> SymmetricKey where H: HashFunction {
+    ///   - hashFunction: The hash function to use for key derivation.
+    ///   - otherInfo: The other information to use for key derivation.
+    ///   - outputByteCount: The length in bytes of resulting symmetric key.
+    ///
+    /// - Returns: The derived symmetric key.
+    public func concatDerivedSymmetricKey<H, OI>(
+        using hashFunction: H.Type,
+        otherInfo: OI,
+        outputByteCount keySize: Int
+    ) -> SymmetricKey where H: HashFunction, OI: DataProtocol {
         let hashSize = hashFunction.Digest.byteCount * 8
         let iterations = (keySize / hashSize) + (!keySize.isMultiple(of: hashSize) ? 1 : 0)
         
         let derivedKey = (1 ... iterations).reduce(Data()) { partialResult, counter in
-            var hash = hashFunction.init()
+            var hash = H()
             hash.update(UInt32(counter).bigEndian)
-            parameters.forEach { hash.update(data: $0) }
+            withUnsafeBytes { hash.update(bufferPointer: $0) }
+            hash.update(data: otherInfo)
             return partialResult + hash.finalize().data
         }
         return .init(data: derivedKey.trim(bitCount: keySize))
     }
-}
-
-extension SharedSecret {
+    
     func concatDerivedSymmetricKey<H, APU, APV>(
+        using hashFunction: H.Type,
         algorithm: JSONWebKeyEncryptionAlgorithm,
         contentEncryptionAlgorithm: JSONWebContentEncryptionAlgorithm?,
         apu: APU,
-        apv: APV,
-        hashFunction: H.Type
+        apv: APV
     ) throws -> SymmetricKey where H: HashFunction, APU: DataProtocol, APV: DataProtocol {
         let algorithmID: String
         let keySize: Int
@@ -58,16 +60,15 @@ extension SharedSecret {
             keySize = contentKeySize
         }
         let algorithm = Data(algorithmID.utf8)
-        return try SymmetricKey.concatDerivedSymmetricKey(
-            parameters: [
-                data,
+        return concatDerivedSymmetricKey(
+            using: hashFunction,
+            otherInfo: Data([
                 algorithm.lengthBytes, algorithm,
-                apu.lengthBytes, apu,
-                apv.lengthBytes, apv,
-                Data(value: UInt32(keySize).bigEndian), // suppPubInfo
-            ],
-            hashFunction: hashFunction,
-            keySize: keySize
+                apu.lengthBytes, Data(apu),
+                apv.lengthBytes, Data(apv),
+                Data(value: UInt32(keySize).bigEndian), // <- suppPubInfo
+            ].joined()),
+            outputByteCount: keySize
         )
     }
 }

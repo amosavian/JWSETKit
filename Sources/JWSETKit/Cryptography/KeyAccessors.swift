@@ -64,7 +64,7 @@ public struct JSONWebKeyRevocation: Codable, Hashable, Sendable {
 }
 
 /// Registered JSON Web Key (JWK) general tokens in [RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517).
-public struct JSONWebKeyRegisteredParameters {
+public struct JSONWebKeyRegisteredParameters: JSONWebContainerParameters {
     /// The "`kty`" (key type) parameter identifies the cryptographic algorithm family
     /// used with the key, such as "RSA" or "EC".
     ///
@@ -201,7 +201,7 @@ public struct JSONWebKeyRegisteredParameters {
 }
 
 /// Registered JSON Web Key (JWK) RSA tokens in [RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517).
-public struct JSONWebKeyRegisteredRSAParameters {
+public struct JSONWebKeyRegisteredRSAParameters: JSONWebContainerParameters {
     /// RSA Public key modulus.
     public var modulus: Data?
     
@@ -235,7 +235,7 @@ public struct JSONWebKeyRegisteredRSAParameters {
 }
 
 /// Registered JSON Web Key (JWK) EC/Ed tokens in [RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517).
-public struct JSONWebKeyRegisteredCurveParameters {
+public struct JSONWebKeyRegisteredCurveParameters: JSONWebContainerParameters {
     /// ECC public key X coordinate component or the public key of key pair.
     public var xCoordinate: Data?
     
@@ -252,7 +252,7 @@ public struct JSONWebKeyRegisteredCurveParameters {
 }
 
 /// Registered JSON Web Key (JWK) symmetric tokens in [RFC 7517](https://datatracker.ietf.org/doc/html/rfc7517).
-public struct JSONWebKeyRegisteredSymmetricParameters {
+public struct JSONWebKeyRegisteredSymmetricParameters: JSONWebContainerParameters {
     /// Symmetric Key Value.
     public var keyValue: SymmetricKey?
     
@@ -262,7 +262,7 @@ public struct JSONWebKeyRegisteredSymmetricParameters {
 }
 
 /// Registered JSON Web Key (JWK) for Algorithm Key Pair (AKP) tokens.
-public struct JSONWebKeyRegisteredAKPParameters {
+public struct JSONWebKeyRegisteredAKPParameters: JSONWebContainerParameters {
     /// Public Key Value.
     public var publicKeyData: Data?
     
@@ -286,14 +286,6 @@ public protocol JSONWebKeyCurveType: JSONWebKey {}
 public protocol JSONWebKeyAlgorithmKeyPairType: JSONWebKey {}
 
 extension JSONWebKey {
-    @usableFromInline
-    func stringKey<T>(_ keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, T>) -> String {
-        if let key = JSONWebKeyRegisteredParameters.keys[keyPath] {
-            return key
-        }
-        return keyPath.name.jsonWebKey
-    }
-    
     @_documentation(visibility: private)
     @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, T?>) -> T? {
@@ -377,14 +369,6 @@ extension MutableJSONWebKey {
 }
 
 extension JSONWebKeyRSAType {
-    @usableFromInline
-    func stringKey<T>(_ keyPath: SendableKeyPath<JSONWebKeyRegisteredRSAParameters, T>) -> String {
-        if let key = JSONWebKeyRegisteredRSAParameters.keys[keyPath] {
-            return key
-        }
-        return keyPath.name.jsonWebKey
-    }
-    
     @_documentation(visibility: private)
     @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredRSAParameters, T?>) -> T? {
@@ -406,14 +390,6 @@ extension JSONWebKeyRSAType where Self: MutableJSONWebKey {
 }
 
 extension JSONWebKeyCurveType {
-    @usableFromInline
-    func stringKey<T>(_ keyPath: SendableKeyPath<JSONWebKeyRegisteredCurveParameters, T>) -> String {
-        if let key = JSONWebKeyRegisteredCurveParameters.keys[keyPath] {
-            return key
-        }
-        return keyPath.name.jsonWebKey
-    }
-    
     @_documentation(visibility: private)
     @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredCurveParameters, T?>) -> T? {
@@ -435,14 +411,6 @@ extension JSONWebKeyCurveType where Self: MutableJSONWebKey {
 }
 
 extension JSONWebKeySymmetric {
-    @usableFromInline
-    func stringKey<T>(_ keyPath: SendableKeyPath<JSONWebKeyRegisteredSymmetricParameters, T>) -> String {
-        if let key = JSONWebKeyRegisteredSymmetricParameters.keys[keyPath] {
-            return key
-        }
-        return keyPath.name.jsonWebKey
-    }
-    
     @_documentation(visibility: private)
     @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredSymmetricParameters, T?>) -> T? {
@@ -464,14 +432,6 @@ extension JSONWebKeySymmetric where Self: MutableJSONWebKey {
 }
 
 extension JSONWebKeyAlgorithmKeyPairType {
-    @usableFromInline
-    func stringKey<T>(_ keyPath: SendableKeyPath<JSONWebKeyRegisteredAKPParameters, T>) -> String {
-        if let key = JSONWebKeyRegisteredAKPParameters.keys[keyPath] {
-            return key
-        }
-        return keyPath.name.jsonWebKey
-    }
-    
     @_documentation(visibility: private)
     @inlinable
     public subscript<T: JSONWebValueStorage.ValueType>(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredAKPParameters, T?>) -> T? {

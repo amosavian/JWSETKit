@@ -73,9 +73,9 @@ protocol JSONWebKeySpecializerByType: JSONWebKeySpecializer {
     
     static var objectIdentifierGroup: String? { get }
     
-    static var publicKeyType: (any (JSONWebKeyImportable & JSONWebKeyExportable).Type)? { get }
+    static var publicKeyType: (any (JSONWebKeyImportable & JSONWebKeyExportable & SendableMetatype).Type)? { get }
     
-    static var privateKeyType: (any (JSONWebKeyImportable & JSONWebKeyExportable).Type)? { get }
+    static var privateKeyType: (any (JSONWebKeyImportable & JSONWebKeyExportable & SendableMetatype).Type)? { get }
     
     static var privateKeyParameter: String { get }
 }
@@ -181,9 +181,9 @@ extension JSONWebKeySpecializerByType {
 enum JSONWebKeyRSASpecializer: JSONWebKeySpecializerByType {
     static let supportedKeyTypes: [JSONWebKeyType] = [.rsa]
     
-    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebRSAPublicKey.self
+    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable & SendableMetatype).Type)? = JSONWebRSAPublicKey.self
     
-    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebRSAPrivateKey.self
+    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable & SendableMetatype).Type)? = JSONWebRSAPrivateKey.self
     
     static let privateKeyParameter: String = "d"
 }
@@ -193,9 +193,9 @@ enum JSONWebKeyEllipticCurveSpecializer: JSONWebKeySpecializerByType {
     
     static let supportedKeyCurves: [JSONWebKeyCurve]? = [.p256, .p384, .p521]
     
-    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebECPublicKey.self
+    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable & SendableMetatype).Type)? = JSONWebECPublicKey.self
     
-    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebECPrivateKey.self
+    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable & SendableMetatype).Type)? = JSONWebECPrivateKey.self
     
     static let privateKeyParameter: String = "d"
 }
@@ -205,9 +205,9 @@ enum JSONWebKeyCurve25519Specializer: JSONWebKeySpecializerByType {
     
     static let supportedKeyCurves: [JSONWebKeyCurve]? = [.ed25519, .x25519]
     
-    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebECPublicKey.self
+    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable & SendableMetatype).Type)? = JSONWebECPublicKey.self
     
-    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebECPrivateKey.self
+    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable & SendableMetatype).Type)? = JSONWebECPrivateKey.self
     
     static let privateKeyParameter: String = "d"
 }
@@ -222,9 +222,9 @@ enum JSONWebKeyAlgorithmKeyPairSigningSpecializer: JSONWebKeySpecializerByType {
     
     static let objectIdentifiers: [ASN1ObjectIdentifier]? = .AlgorithmIdentifier.moduleLatticeDSAs
     
-    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebMLDSAPublicKey.self
+    static let publicKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable & SendableMetatype).Type)? = JSONWebMLDSAPublicKey.self
     
-    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable).Type)? = JSONWebMLDSAPrivateKey.self
+    static let privateKeyType: (any (JSONWebKeyExportable & JSONWebKeyImportable & SendableMetatype).Type)? = JSONWebMLDSAPrivateKey.self
     
     static let privateKeyParameter: String = "priv"
 }
@@ -241,8 +241,12 @@ enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
             return try JSONWebKeyAESGCM(key)
         case .aesKeyWrap128, .aesKeyWrap192, .aesKeyWrap256:
             return try JSONWebKeyAESKW(key)
-        case .aesEncryptionCBC128SHA256, .aesEncryptionCBC192SHA384, .aesEncryptionCBC256SHA512:
-            return try JSONWebKeyAESCBCHMAC(key)
+        case .aesEncryptionCBC128SHA256:
+            return try JSONWebKeyAESCBCHMAC<SHA256>(key)
+        case .aesEncryptionCBC192SHA384:
+            return try JSONWebKeyAESCBCHMAC<SHA384>(key)
+        case .aesEncryptionCBC256SHA512:
+            return try JSONWebKeyAESCBCHMAC<SHA512>(key)
         case .hmacSHA256:
             return try JSONWebKeyHMAC<SHA256>(key)
         case .hmacSHA384:

@@ -17,7 +17,7 @@ import _CryptoExtras
 
 /// JSON Web Key (JWK) container for AES-CBC keys for encryption/decryption with HMAC authentication.
 @frozen
-public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSymmetricSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
+public struct JSONWebKeyAESCBCHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetricSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
     public var ivLength: Int { 16 }
@@ -57,7 +57,7 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSymmetricSealingKe
     }
     
     public init() throws {
-        self.init(size: .bits256)
+        self.init(size: .init(bitCount: H.Digest.byteCount * 8 / 2))
     }
     
     /// Returns a new concrete key using json data.
@@ -131,23 +131,9 @@ public struct JSONWebKeyAESCBCHMAC: MutableJSONWebKey, JSONWebSymmetricSealingKe
     }
     
     private func hmac(_ data: Data) throws -> Data {
-        let hmacSymmetricKey = try hmacSymmetricKey
-        switch hmacSymmetricKey.bitCount {
-        case SymmetricKeySize.bits128.bitCount:
-            var hmac = HMAC<SHA256>(key: hmacSymmetricKey)
-            hmac.update(data: data)
-            return Data(hmac.finalize())
-        case SymmetricKeySize.bits192.bitCount:
-            var hmac = HMAC<SHA384>(key: hmacSymmetricKey)
-            hmac.update(data: data)
-            return Data(hmac.finalize())
-        case SymmetricKeySize.bits256.bitCount:
-            var hmac = HMAC<SHA512>(key: hmacSymmetricKey)
-            hmac.update(data: data)
-            return Data(hmac.finalize())
-        default:
-            throw CryptoKitError.incorrectKeySize
-        }
+        var hmac = try HMAC<H>(key: hmacSymmetricKey)
+        hmac.update(data: data)
+        return Data(hmac.finalize())
     }
 }
 

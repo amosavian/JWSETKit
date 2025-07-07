@@ -609,17 +609,6 @@ extension ArbitraryPrecisionInteger {
 
         return try _backing.withUnsafeMutableBignumPointer(body)
     }
-    
-    @usableFromInline static func _compare(
-        lhs: ArbitraryPrecisionInteger,
-        rhs: ArbitraryPrecisionInteger
-    ) -> CInt {
-        lhs.withUnsafeBignumPointer { lhsPtr in
-            rhs.withUnsafeBignumPointer { rhsPtr in
-                CCryptoBoringSSL_BN_cmp(lhsPtr, rhsPtr)
-            }
-        }
-    }
 }
 
 @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)

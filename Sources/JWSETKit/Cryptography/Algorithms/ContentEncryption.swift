@@ -27,9 +27,9 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionGCM128: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM192: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM256: JSONWebKeyAESGCM.self,
-        .aesEncryptionCBC128SHA256: JSONWebKeyAESCBCHMAC.self,
-        .aesEncryptionCBC192SHA384: JSONWebKeyAESCBCHMAC.self,
-        .aesEncryptionCBC256SHA512: JSONWebKeyAESCBCHMAC.self,
+        .aesEncryptionCBC128SHA256: JSONWebKeyAESCBCHMAC<SHA256>.self,
+        .aesEncryptionCBC192SHA384: JSONWebKeyAESCBCHMAC<SHA384>.self,
+        .aesEncryptionCBC256SHA512: JSONWebKeyAESCBCHMAC<SHA512>.self,
     ]
     
     private static let keyLengths: PthreadReadWriteLockedValue<[Self: SymmetricKeySize]> = [

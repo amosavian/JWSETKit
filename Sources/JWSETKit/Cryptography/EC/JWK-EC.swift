@@ -30,6 +30,11 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWe
         try validate()
     }
     
+    public init(from key: JSONWebECPrivateKey) {
+        self.storage = key.storage
+        self.privateKey = nil
+    }
+    
     static func signingType(_ curve: JSONWebKeyCurve?) throws -> any JSONWebValidatingKey.Type {
         switch curve {
         case .p256:
@@ -110,9 +115,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
     public var storage: JSONWebValueStorage
     
     public var publicKey: JSONWebECPublicKey {
-        var result = try! JSONWebECPublicKey(from: self)
-        result.privateKey = nil
-        return result
+        JSONWebECPublicKey(from: self)
     }
     
     var signingKey: any JSONWebSigningKey {

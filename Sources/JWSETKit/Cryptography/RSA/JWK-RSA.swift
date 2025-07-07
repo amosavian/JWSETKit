@@ -41,6 +41,16 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
         try validate()
     }
     
+    public init(from key: JSONWebRSAPrivateKey) {
+        self.storage = key.storage
+        self.privateExponent = nil
+        self.firstPrimeFactor = nil
+        self.secondPrimeFactor = nil
+        self.firstFactorCRTExponent = nil
+        self.secondFactorCRTExponent = nil
+        self.firstCRTCoefficient = nil
+    }
+    
     public init<D>(derRepresentation: D) throws where D: DataProtocol {
         var key: AnyJSONWebKey
 #if canImport(CommonCrypto)
@@ -136,14 +146,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
     public var storage: JSONWebValueStorage
     
     public var publicKey: JSONWebRSAPublicKey {
-        var result = AnyJSONWebKey(storage: storage)
-        result.privateExponent = nil
-        result.firstPrimeFactor = nil
-        result.secondPrimeFactor = nil
-        result.firstFactorCRTExponent = nil
-        result.secondFactorCRTExponent = nil
-        result.firstCRTCoefficient = nil
-        return try! .init(from: result)
+        JSONWebRSAPublicKey(from: self)
     }
     
     public var derRepresentation: Data {

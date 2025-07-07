@@ -301,8 +301,6 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
 
 /// Claims registered in [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800.html)
 public struct JSONWebTokenClaimsPopParameters: JSONWebContainerParameters {
-    public typealias Container = JSONWebTokenClaims
-    
     /// The "cnf" claim is used in the JWT to contain members used to
     /// identify the proof-of-possession key.  Other members of the "cnf"
     /// object may be defined because a proof-of-possession key may not be

@@ -91,7 +91,6 @@ in order to access the claim.
 
 ```swift
 struct JSONWebTokenClaimsJwkParameters: JSONWebContainerParameters {
-    typealias Container = JOSEHeader
     var subJsonWebToken: (any JsonWebKey)?
 
     // Key lookup to convert claim to string key.

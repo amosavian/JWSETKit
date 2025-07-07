@@ -51,10 +51,16 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, J
     }
     
     public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using _: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
-        if let authenticating {
-            return try .init(AES.GCM.seal(data, using: .init(self), nonce: iv.map(AES.GCM.Nonce.init(data:)), authenticating: authenticating))
+        let nonce: AES.GCM.Nonce?
+        if let iv {
+            nonce = try .init(data: iv)
         } else {
-            return try .init(AES.GCM.seal(data, using: .init(self), nonce: iv.map(AES.GCM.Nonce.init(data:))))
+            nonce = nil
+        }
+        if let authenticating {
+            return try .init(AES.GCM.seal(data, using: .init(self), nonce: nonce, authenticating: authenticating))
+        } else {
+            return try .init(AES.GCM.seal(data, using: .init(self), nonce: nonce))
         }
     }
     
@@ -81,16 +87,10 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
     public var storage: JSONWebValueStorage
     
     public init(algorithm: some JSONWebAlgorithm) throws {
-        switch algorithm {
-        case .aesKeyWrap128:
-            self.init(.bits128)
-        case .aesKeyWrap192:
-            self.init(.bits192)
-        case .aesKeyWrap256:
-            self.init(.bits256)
-        default:
+        guard let size = AnyJSONWebAlgorithm(algorithm)?.keyLength else {
             throw JSONWebKeyError.unknownAlgorithm
         }
+        self.init(SymmetricKeySize(bitCount: size))
     }
     
     /// Returns a new concrete key using json data.
@@ -106,8 +106,13 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
     /// - Parameter keySize: Size of random key in bits.
     public init(_ keySize: SymmetricKeySize) {
         self.storage = .init()
-        self.algorithm = .aesKeyWrap(bitCount: keySize.bitCount)
-        self.keyValue = SymmetricKey(size: keySize)
+        if [.bits128, .bits192, .bits256].contains(keySize) {
+            self.algorithm = .aesKeyWrap(bitCount: keySize.bitCount)
+            self.keyValue = SymmetricKey(size: keySize)
+        } else {
+            self.algorithm = .aesKeyWrap256
+            self.keyValue = SymmetricKey(size: .bits256)
+        }
     }
     
     /// Initializes a AES-GCM key for encryption.
@@ -115,7 +120,11 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
     /// - Parameter key: A symmetric cryptographic key.
     public init(_ key: SymmetricKey) throws {
         self.storage = .init()
-        self.algorithm = .aesKeyWrap(bitCount: key.bitCount)
+        if [128, 192, 256].contains(key.bitCount) {
+            self.algorithm = .aesKeyWrap(bitCount: key.bitCount)
+        } else {
+            throw CryptoKitError.incorrectParameterSize
+        }
         self.keyValue = key
     }
     
@@ -149,5 +158,15 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
             return try AES.KeyWrap.wrap(key, using: .init(self))
 #endif
         }
+    }
+}
+
+extension Crypto.SymmetricKeySize: Swift.Hashable, Swift.Equatable {
+    public static func == (lhs: Crypto.SymmetricKeySize, rhs: Crypto.SymmetricKeySize) -> Bool {
+        lhs.bitCount == rhs.bitCount
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(bitCount)
     }
 }

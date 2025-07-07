@@ -30,6 +30,11 @@ package struct JSONWebMLDSAPublicKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyP
         try validate()
     }
     
+    public init(from key: JSONWebMLDSAPrivateKey) {
+        self.storage = key.storage
+        self.seed = nil
+    }
+    
     public init(derRepresentation: some DataProtocol) throws {
         try self.init(importing: derRepresentation, format: .spki)
     }
@@ -77,9 +82,7 @@ package struct JSONWebMLDSAPrivateKey: MutableJSONWebKey, JSONWebKeyAlgorithmKey
     public var storage: JSONWebValueStorage
     
     public var publicKey: JSONWebMLDSAPublicKey {
-        var result = try! JSONWebMLDSAPublicKey(storage: storage)
-        result.seed = nil
-        return result
+        JSONWebMLDSAPublicKey(from: self)
     }
     
     var signingKey: any JSONWebSigningKey {

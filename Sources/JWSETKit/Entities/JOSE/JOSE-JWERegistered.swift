@@ -14,7 +14,6 @@ import Crypto
 
 /// Registered parameters of JOSE header in [RFC 7516](https://www.rfc-editor.org/rfc/rfc7516.html ).
 public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
-    public typealias Container = JOSEHeader
     /// The "`enc`" (encryption algorithm) Header Parameter identifies
     /// the content encryption algorithm used to perform authenticated encryption
     /// on the plaintext to produce the ciphertext and the Authentication Tag.

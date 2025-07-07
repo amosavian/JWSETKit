@@ -326,11 +326,11 @@ extension JSONWebKeyEncryptionAlgorithm {
             throw JSONWebKeyError.unknownKeyType
         }
         let symmetricKey = try secret.concatDerivedSymmetricKey(
+            using: hashFunction,
             algorithm: keyEncryptingAlgorithm,
             contentEncryptionAlgorithm: header.encryptionAlgorithm,
             apu: header.agreementPartyUInfo ?? .init(),
-            apv: header.agreementPartyVInfo ?? .init(),
-            hashFunction: hashFunction
+            apv: header.agreementPartyVInfo ?? .init()
         )
         if keyEncryptingAlgorithm == .ecdhEphemeralStatic {
             return symmetricKey.data
@@ -391,11 +391,11 @@ extension JSONWebKeyEncryptionAlgorithm {
         let secret = try privateKey.sharedSecretFromKeyAgreement(with: .init(epk))
         
         let symmetricKey = try secret.concatDerivedSymmetricKey(
+            using: hashFunction,
             algorithm: algorithm,
             contentEncryptionAlgorithm: header.encryptionAlgorithm,
             apu: header.agreementPartyUInfo ?? .init(),
-            apv: header.agreementPartyVInfo ?? .init(),
-            hashFunction: hashFunction
+            apv: header.agreementPartyVInfo ?? .init()
         )
         if algorithm == .ecdhEphemeralStatic {
             kek = try JSONWebDirectKey()

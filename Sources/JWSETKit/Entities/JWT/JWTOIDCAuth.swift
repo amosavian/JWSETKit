@@ -13,7 +13,6 @@ import Foundation
 
 /// Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
 public struct JSONWebTokenClaimsPublicOIDCAuthParameters: JSONWebContainerParameters {
-    public typealias Container = JSONWebTokenClaims
     /// Time when the End-User authentication occurred.
     ///
     /// Its value is a JSON number representing the number of seconds from

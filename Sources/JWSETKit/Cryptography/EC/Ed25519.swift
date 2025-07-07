@@ -11,6 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import SwiftASN1
 
 extension Crypto.Curve25519.Signing.PublicKey: Swift.Hashable, Swift.Codable {}
 
@@ -64,9 +65,13 @@ extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
     }
 }
 
-extension Curve25519.Signing.PublicKey: CryptoEdKeyPortable {}
+extension Curve25519.Signing.PublicKey: CryptoEdKeyPortable {
+    static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .ed25519 }
+}
 
-extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {}
+extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {
+    static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .x25519 }
+}
 
 extension Crypto.Curve25519.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
 
@@ -96,13 +101,17 @@ extension Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     }
 }
 
-extension Curve25519.Signing.PrivateKey: CryptoEdKeyPortable {}
+extension Curve25519.Signing.PrivateKey: CryptoEdKeyPortable {
+    static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .ed25519 }
+}
 
-extension Curve25519.KeyAgreement.PrivateKey: CryptoEdKeyPortable {}
+extension Curve25519.KeyAgreement.PrivateKey: CryptoEdKeyPortable {
+    static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .x25519 }
+}
 
 protocol CryptoEdKeyPortable: JSONWebKeyImportable, JSONWebKeyExportable {
+    static var algorithmIdentifier: RFC5480AlgorithmIdentifier { get }
     var rawRepresentation: Data { get }
-    
     init<D>(rawRepresentation data: D) throws where D: ContiguousBytes
 }
 
@@ -111,6 +120,26 @@ extension CryptoEdKeyPortable {
         switch format {
         case .raw:
             try self.init(rawRepresentation: key.asContiguousBytes)
+        case .spki where Self.self is (any CryptoECPublicKey.Type):
+            let spki = try SubjectPublicKeyInfo(derEncoded: key)
+            guard spki.algorithmIdentifier == Self.algorithmIdentifier else {
+                throw CryptoKitASN1Error.invalidObjectIdentifier
+            }
+            guard spki.key.bytes.count == spki.algorithmIdentifier.jsonWebAlgorithm?.curve?.coordinateSize else {
+                throw CryptoKitError.incorrectKeySize
+            }
+            self = try .init(rawRepresentation: spki.key.bytes)
+        case .pkcs8 where Self.self is (any CryptoECPrivateKey.Type):
+            let pkcs8 = try PKCS8PrivateKey(derEncoded: key)
+            guard pkcs8.algorithmIdentifier == Self.algorithmIdentifier,
+                  let privateKey = (pkcs8.privateKey as? ASN1OctetString)?.bytes
+            else {
+                throw JSONWebKeyError.invalidKeyFormat
+            }
+            guard privateKey.count == pkcs8.algorithmIdentifier.jsonWebAlgorithm?.curve?.coordinateSize else {
+                throw CryptoKitError.incorrectKeySize
+            }
+            self = try .init(rawRepresentation: privateKey)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
@@ -122,6 +151,16 @@ extension CryptoEdKeyPortable {
         switch format {
         case .raw:
             return rawRepresentation
+        case .spki where self is (any CryptoECPublicKey):
+            return try SubjectPublicKeyInfo(
+                algorithmIdentifier: Self.algorithmIdentifier,
+                key: [UInt8](rawRepresentation)
+            ).derRepresentation
+        case .pkcs8 where self is (any CryptoECPrivateKey):
+            return try PKCS8PrivateKey(
+                algorithm: Self.algorithmIdentifier,
+                privateKey: [UInt8](rawRepresentation)
+            ).derRepresentation
         case .jwk:
             return try jwkRepresentation
         default:

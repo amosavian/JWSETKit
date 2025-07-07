@@ -12,9 +12,7 @@ import Foundation
 #endif
 
 @_documentation(visibility: private)
-public protocol JSONWebContainerParameters<Container> {
-    associatedtype Container: JSONWebContainer
-    
+public protocol JSONWebContainerParameters {
     static var keys: [SendablePartialKeyPath<Self>: String] { get }
     static var localizableKeys: [SendablePartialKeyPath<Self>] { get }
 }
@@ -25,9 +23,14 @@ extension JSONWebContainerParameters {
 
 extension JSONWebContainer {
     @_documentation(visibility: private)
-    public func stringKey<P: JSONWebContainerParameters<Self>, T>(_ keyPath: SendableKeyPath<P, T>, force: Bool = false, locale: Locale? = nil) -> String {
+    public func stringKey<P: JSONWebContainerParameters, T>(_ keyPath: SendableKeyPath<P, T>) -> String {
+        P.keys[keyPath] ?? keyPath.name.jsonWebKey
+    }
+    
+    @_documentation(visibility: private)
+    public func stringKey<P: JSONWebContainerParameters, T>(_ keyPath: SendableKeyPath<P, T>, force: Bool = false, locale: Locale) -> String {
         let key = P.keys[keyPath] ?? keyPath.name.jsonWebKey
-        guard P.localizableKeys.contains(keyPath), let locale else { return key }
+        guard P.localizableKeys.contains(keyPath) else { return key }
         if force {
             return "\(key)#\(locale.bcp47)"
         } else {

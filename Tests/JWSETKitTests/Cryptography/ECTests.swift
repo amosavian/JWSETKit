@@ -92,4 +92,34 @@ struct ECTests {
         let signature = try ExampleKeys.privateEd25519.signature(plaintext, using: .eddsaSignature)
         try ExampleKeys.publicEd25519.verifySignature(signature, for: plaintext, using: .eddsaSignature)
     }
+    
+    @Test
+    func eddsaPublicDecodeSPKI() throws {
+        let key = "MCowBQYDK2VwAyEAGb9ECWmEzf6FQbrBZ9w7lshQhqowtrbLDFw4rXAxZuE=".decoded
+        #expect(try JSONWebECPublicKey(importing: key, format: .spki).keyType == .octetKeyPair)
+        #expect(throws: Never.self) {
+            try Curve25519.Signing.PublicKey(importing: key, format: .spki)
+        }
+    }
+    
+    @Test
+    func eddsaPrivateDecodePKCS8() throws {
+        let key = "MC4CAQAwBQYDK2VwBCIEINTuctv5E1hK1bbY8fdp+K06/nwoy/HU++CXqI9EdVhC".decoded
+        #expect(try JSONWebECPrivateKey(importing: key, format: .pkcs8).keyType == .octetKeyPair)
+        #expect(throws: Never.self) {
+            try Curve25519.Signing.PrivateKey(importing: key, format: .pkcs8)
+        }
+    }
+    
+    @Test
+    func eddsaPrivateDecodePKCS8v2() throws {
+        let key = """
+        MHICAQEwBQYDK2VwBCIEINTuctv5E1hK1bbY8fdp+K06/nwoy/HU++CXqI9EdVhC\
+        oB8wHQYKKoZIhvcNAQkJFDEPDA1DdXJkbGUgQ2hhaXJzgSEAGb9ECWmEzf6FQbrB\
+        Z9w7lshQhqowtrbLDFw4rXAxZuE=
+        """.decoded
+        #expect(throws: Never.self) {
+            try Curve25519.Signing.PrivateKey(importing: key, format: .pkcs8)
+        }
+    }
 }

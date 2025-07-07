@@ -71,7 +71,6 @@ public struct JSONWebAddress: Hashable, Codable, Sendable {
 
 /// Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
 public struct JSONWebTokenClaimsPublicOIDCStandardParameters: JSONWebContainerParameters {
-    public typealias Container = JSONWebTokenClaims
     /// End-User's full name in displayable form including all name parts, possibly including titles and suffixes,
     /// ordered according to the End-User's locale and preferences.
     public var name: String?
