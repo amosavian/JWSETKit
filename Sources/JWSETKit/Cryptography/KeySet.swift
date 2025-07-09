@@ -51,7 +51,7 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     /// an order of preference among them, although applications of JWK Sets
     /// can choose to assign a meaning to the order for their purposes, if desired.
     public var keys: [any JSONWebKey] {
-        Array(keySet.values)
+        keySet.values.elements
     }
     
     public var publicKeyset: JSONWebKeySet {

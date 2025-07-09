@@ -24,11 +24,11 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-collections.git", .upToNextMinor(from: "1.1.0")),
-        .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMajor(from: "1.3.2")),
+        .package(url: "https://github.com/apple/swift-collections.git", .upToNextMinor(from: "1.2.0")),
+        .package(url: "https://github.com/apple/swift-asn1.git", .upToNextMajor(from: "1.4.0")),
         .package(url: "https://github.com/apple/swift-crypto.git", .upToNextMajor(from: "3.12.3")),
         .package(url: "https://github.com/apple/swift-certificates", .upToNextMajor(from: "1.10.0")),
-        .package(url: "https://github.com/swiftlang/swift-testing.git", .upToNextMajor(from: "0.10.0")),
+        .package(url: "https://github.com/swiftlang/swift-testing.git", .upToNextMajor(from: "0.11.0")),
     ],
     targets: [
         .systemLibrary(

@@ -128,7 +128,15 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
-        try jsonWebKey().signature(data, using: algorithm)
+        switch algorithm {
+        case .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384, .rsaSignaturePSSSHA512:
+            try jsonWebKey().signature(data, using: algorithm)
+        default:
+            try Data(
+                sign(bytes: data, signatureAlgorithm: .init(algorithm))
+                    .rawRepresentation
+            )
+        }
     }
     
     /// Generates a key object from the public key inside certificate.
@@ -161,6 +169,26 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
     
     public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
         try publicKey.jsonWebKey().thumbprint(format: format, using: hashFunction)
+    }
+}
+
+extension Certificate.SignatureAlgorithm {
+    private static let mappings: [JSONWebSignatureAlgorithm: Self] = [
+        .ecdsaSignatureP256SHA256: .ecdsaWithSHA256,
+        .ecdsaSignatureP384SHA384: .ecdsaWithSHA384,
+        .ecdsaSignatureP521SHA512: .ecdsaWithSHA512,
+        .eddsaSignature: .ed25519,
+        .eddsa25519Signature: .ed25519,
+        .rsaSignaturePKCS1v15SHA256: .sha256WithRSAEncryption,
+        .rsaSignaturePKCS1v15SHA384: .sha384WithRSAEncryption,
+        .rsaSignaturePKCS1v15SHA512: .sha512WithRSAEncryption,
+    ]
+    
+    init(_ algorithm: some JSONWebAlgorithm) throws {
+        guard let result = Self.mappings[.init(algorithm).unsafelyUnwrapped] else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        self = result
     }
 }
 
