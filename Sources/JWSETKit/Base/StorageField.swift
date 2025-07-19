@@ -11,7 +11,6 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
-import X509
 
 protocol JSONWebFieldEncodable {
     associatedtype JSONWebFieldValueType: Codable & Hashable & Sendable
@@ -234,28 +233,6 @@ extension UUID: JSONWebFieldEncodable {
     }
 }
 
-extension Certificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
-    var jsonWebValue: String? {
-        try? derRepresentation.base64EncodedString()
-    }
-    
-    static func castValue(_ value: Any?) -> Certificate? {
-        switch value {
-        case let value as Self:
-            return value
-        case let value as Data:
-            return try? .init(derEncoded: value)
-        case let value as String:
-            guard let value = Data(urlBase64Encoded: value) else {
-                return nil
-            }
-            return try? .init(derEncoded: value)
-        default:
-            return nil
-        }
-    }
-}
-
 extension SymmetricKey: JSONWebFieldEncodable, JSONWebFieldDecodable {
     var jsonWebValue: String {
         data.urlBase64EncodedString()
@@ -277,3 +254,57 @@ extension SymmetricKey: JSONWebFieldEncodable, JSONWebFieldDecodable {
         }
     }
 }
+
+#if canImport(X509)
+import X509
+
+extension Certificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
+    var jsonWebValue: String? {
+        try? derRepresentation.base64EncodedString()
+    }
+    
+    static func castValue(_ value: Any?) -> Certificate? {
+        switch value {
+        case let value as Self:
+            return value
+        case let value as Data:
+            return try? .init(derEncoded: value)
+        case let value as String:
+            guard let value = Data(urlBase64Encoded: value) else {
+                return nil
+            }
+            return try? .init(derEncoded: value)
+        default:
+            return nil
+        }
+    }
+}
+#endif
+
+#if canImport(CommonCrypto)
+import CommonCrypto
+
+extension SecCertificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
+    @usableFromInline
+    var jsonWebValue: String? {
+        derRepresentation.base64EncodedString()
+    }
+    
+    @usableFromInline
+    static func castValue(_ value: Any?) -> Self? {
+        switch value {
+        case let value as String:
+            guard let value = Data(urlBase64Encoded: value) else {
+                return nil
+            }
+            return try? .init(derEncoded: value)
+        case let value as Data:
+            return try? .init(derEncoded: value)
+        case let value as Self:
+            return value
+        default:
+            return nil
+        }
+    }
+}
+#endif

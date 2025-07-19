@@ -10,7 +10,6 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import _CryptoExtras
 import Crypto
 
 /// JSON Web Key (JWK) container for different types of Post-Quantum public keys consists of MLDSA-65 and MLDSA-87.

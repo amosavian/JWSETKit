@@ -5,6 +5,11 @@
 //  Created by Amir Abbas Mousavian on 9/12/23.
 //
 
+#if canImport(X509)
+import X509
+#if canImport(_CryptoExtras)
+import _CryptoExtras
+#endif
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -12,10 +17,6 @@ import Foundation
 #endif
 import Crypto
 import SwiftASN1
-import X509
-#if canImport(_CryptoExtras)
-import _CryptoExtras
-#endif
 
 extension X509.Certificate.PublicKey: Swift.Codable {}
 
@@ -192,26 +193,6 @@ extension Certificate.SignatureAlgorithm {
     }
 }
 
-extension DERImplicitlyTaggable {
-    /// Initializes a DER serializable object from given data.
-    ///
-    /// - Parameter derEncoded: DER encoded object.
-    @usableFromInline
-    init<D>(derEncoded: D) throws where D: DataProtocol {
-        try self.init(derEncoded: [UInt8](derEncoded))
-    }
-    
-    /// DER serialized data representation of object.
-    @usableFromInline
-    var derRepresentation: Data {
-        get throws {
-            var derSerializer = DER.Serializer()
-            try serialize(into: &derSerializer)
-            return Data(derSerializer.serializedBytes)
-        }
-    }
-}
-
 extension X509.Certificate: Swift.Codable {}
 
 extension Certificate: JSONWebValidatingKey {
@@ -244,3 +225,4 @@ extension Certificate: Expirable {
         }
     }
 }
+#endif

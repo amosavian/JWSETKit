@@ -11,7 +11,12 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+#if canImport(X509)
 import X509
+#endif
+#if canImport(CommonCrypto)
+import CommonCrypto
+#endif
 
 /// The properties of the revocation.
 public struct JSONWebKeyRevocation: Codable, Hashable, Sendable {
@@ -58,7 +63,7 @@ public struct JSONWebKeyRevocation: Codable, Hashable, Sendable {
     
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encodeIfPresent((time?.timeIntervalSince1970).map(Int.init), forKey: .revokedAt)
+        try container.encodeIfPresent(time?.jsonWebValue, forKey: .revokedAt)
         try container.encodeIfPresent(reason, forKey: .reason)
     }
 }
@@ -172,7 +177,7 @@ public struct JSONWebKeyRegisteredParameters: JSONWebContainerParameters {
     ///
     /// Use of this Header Parameter is OPTIONAL.
     public var certificateURL: URL?
-    
+
     /// The "x5c" (X.509 certificate chain) Header Parameter contains
     /// the X.509 public key certificate or certificate chain [RFC5280] corresponding
     /// to the key used to digitally sign the JWS.
@@ -180,7 +185,7 @@ public struct JSONWebKeyRegisteredParameters: JSONWebContainerParameters {
     /// The certificate or certificate chain is represented as a JSON array of certificate value strings.
     /// Each string in the array is a `base64-encoded` (Section 4 of [RFC4648]
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
-    public var certificateChain: [Certificate]
+    public var certificateChain: [CertificateType]
     
     /// The "`x5t`"/"`x5t#S256`" (X.509 certificate SHA-1/256 thumbprint)
     /// Header Parameter is a `base64url-encoded` SHA-1/256 thumbprint
@@ -312,6 +317,14 @@ extension JSONWebKey {
             return storage[stringKey(keyPath)]
         }
     }
+    
+#if canImport(CommonCrypto)
+    @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
+        guard let value: [String] = storage[stringKey(keyPath)] else { return [] }
+        return value.compactMap(SecCertificate.castValue)
+    }
+#endif
 }
 
 extension MutableJSONWebKey {
@@ -366,6 +379,34 @@ extension MutableJSONWebKey {
             }
         }
     }
+    
+    @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [Data]>) -> [Data] {
+        get {
+            storage[stringKey(keyPath)]
+        }
+        set {
+            switch keyPath {
+            case \.certificateChain:
+                storage[stringKey(keyPath)] = newValue.map { $0.base64EncodedString() }
+            default:
+                storage[stringKey(keyPath)] = newValue
+            }
+        }
+    }
+    
+#if canImport(CommonCrypto)
+    @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
+        get {
+            guard let value: [String] = storage[stringKey(keyPath)] else { return [] }
+            return value.compactMap(SecCertificate.castValue)
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue
+        }
+    }
+#endif
 }
 
 extension JSONWebKeyRSAType {

@@ -183,7 +183,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     
     public static func == (lhs: JSONWebValueStorage, rhs: JSONWebValueStorage) -> Bool {
         let encoder = JSONEncoder()
-        encoder.outputFormatting = .sortedKeys
+        encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         encoder.dateEncodingStrategy = .millisecondsSince1970
         encoder.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "Inf", negativeInfinity: "-Inf", nan: "NaN")
         let lhs = try? encoder.encode(lhs)

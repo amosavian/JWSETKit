@@ -418,9 +418,11 @@ extension JSONWebKey {
         if let x5t = header.certificateThumbprint, x5t == (try? thumbprint(format: .spki, using: hashFunction(of: x5t)).data) {
             return true
         }
+#if canImport(X509) || canImport(CommonCrypto)
         if let x5t = try? header.certificateChain.first?.thumbprint(format: .spki, using: SHA256.self), x5t == (try? thumbprint(format: .spki, using: SHA256.self)) {
             return true
         }
+#endif
         return false
     }
 }

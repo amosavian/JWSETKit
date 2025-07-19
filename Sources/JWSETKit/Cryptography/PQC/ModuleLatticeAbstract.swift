@@ -14,7 +14,7 @@ import Crypto
 
 protocol CryptoModuleLatticePublicKey: JSONWebKey, Hashable {
     static var algorithm: any JSONWebAlgorithm { get }
-    init(rawRepresentation: some DataProtocol) throws
+    init<D>(rawRepresentation: D) throws where D: DataProtocol
     var rawRepresentation: Data { get }
 }
 
@@ -47,7 +47,7 @@ extension CryptoModuleLatticePublicKey {
 protocol CryptoModuleLatticePrivateKey: JSONWebKey, JSONWebPrivateKey, Hashable where PublicKey: CryptoModuleLatticePublicKey {
     var seedRepresentation: Data { get }
     init() throws
-    init(seedRepresentation: some DataProtocol) throws
+    init<D>(seedRepresentation: D) throws where D: DataProtocol
 }
 
 extension CryptoModuleLatticePrivateKey {
@@ -93,7 +93,11 @@ extension CryptoModuleLatticePortable where Self: CryptoModuleLatticePublicKey {
     }
 }
 
-extension CryptoModuleLatticePortable where Self: CryptoModuleLatticePrivateKey {
+extension CryptoModuleLatticePortable where Self: CryptoModuleLatticePrivateKey, Self.PublicKey: CryptoModuleLatticePortable {
+    static var algorithmIdentifier: RFC5480AlgorithmIdentifier {
+        PublicKey.algorithmIdentifier
+    }
+    
     init<D>(internalImporting key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw:

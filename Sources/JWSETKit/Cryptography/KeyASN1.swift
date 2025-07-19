@@ -5,8 +5,33 @@
 //  Created by Amir Abbas Mousavian on 6/19/25.
 //
 
+#if canImport(FoundationEssentials)
+import FoundationEssentials
+#else
+import Foundation
+#endif
 import Crypto
 import SwiftASN1
+
+extension DERImplicitlyTaggable {
+    /// Initializes a DER serializable object from given data.
+    ///
+    /// - Parameter derEncoded: DER encoded object.
+    @usableFromInline
+    init<D>(derEncoded: D) throws where D: DataProtocol {
+        try self.init(derEncoded: [UInt8](derEncoded))
+    }
+    
+    /// DER serialized data representation of object.
+    @usableFromInline
+    var derRepresentation: Data {
+        get throws {
+            var derSerializer = DER.Serializer()
+            try serialize(into: &derSerializer)
+            return Data(derSerializer.serializedBytes)
+        }
+    }
+}
 
 protocol DERKeyContainer {
     var algorithmIdentifier: RFC5480AlgorithmIdentifier { get }
@@ -72,13 +97,13 @@ extension RFC5480AlgorithmIdentifier {
         .rsaEncryptionSHA256: .rsaSignaturePKCS1v15SHA256,
         .rsaEncryptionSHA384: .rsaSignaturePKCS1v15SHA384,
         .rsaEncryptionSHA512: .rsaSignaturePKCS1v15SHA512,
-        .rsaPSSSHA256: .rsaSignaturePSSSHA256,
-        .rsaPSSSHA384: .rsaSignaturePSSSHA384,
-        .rsaPSSSHA512: .rsaSignaturePSSSHA512,
-        .rsaOAEP: .rsaEncryptionOAEP,
-        .rsaOAEPSHA256: .rsaEncryptionOAEPSHA256,
-        .rsaOAEPSHA384: .rsaEncryptionOAEPSHA384,
-        .rsaOAEPSHA512: .rsaEncryptionOAEPSHA512,
+        .rsaPSS(SHA256.self): .rsaSignaturePSSSHA256,
+        .rsaPSS(SHA384.self): .rsaSignaturePSSSHA384,
+        .rsaPSS(SHA512.self): .rsaSignaturePSSSHA512,
+        .rsaOAEP(Insecure.SHA1.self): .rsaEncryptionOAEP,
+        .rsaOAEP(SHA256.self): .rsaEncryptionOAEPSHA256,
+        .rsaOAEP(SHA384.self): .rsaEncryptionOAEPSHA384,
+        .rsaOAEP(SHA512.self): .rsaEncryptionOAEPSHA512,
         .ecdsaP256: .ecdsaSignatureP256SHA256,
         .ecdsaP384: .ecdsaSignatureP384SHA384,
         .ecdsaP521: .ecdsaSignatureP521SHA512,
@@ -258,7 +283,7 @@ struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable, Sendable {
     }
     
     static func == (lhs: RFC5480AlgorithmIdentifier, rhs: RFC5480AlgorithmIdentifier) -> Bool {
-        lhs.algorithm == rhs.algorithm && ((lhs.parameters?.isEqual(to: rhs.parameters)) ?? true)
+        (try? lhs.derRepresentation) == (try? rhs.derRepresentation)
     }
     
     func hash(into hasher: inout Hasher) {
@@ -443,56 +468,22 @@ extension RFC5480AlgorithmIdentifier {
         parameters: nil
     )
     
-    static let rsaOAEP = RFC5480AlgorithmIdentifier(
-        algorithm: .AlgorithmIdentifier.rsaOAEP,
-        parameters: RFC5480AlgorithmIdentifier(
-            algorithm: .AlgorithmIdentifier.pSpecified,
-            parameters: (try? RSAOAEPParams(hashFunction: Insecure.SHA1.self)).unsafelyUnwrapped
+    static func rsaOAEP<H>(_ hashFunction: H.Type) -> Self where H: HashFunction {
+        RFC5480AlgorithmIdentifier(
+            algorithm: .AlgorithmIdentifier.rsaOAEP,
+            parameters: RFC5480AlgorithmIdentifier(
+                algorithm: .AlgorithmIdentifier.pSpecified,
+                parameters: (try? RSAOAEPParams(hashFunction: hashFunction)).unsafelyUnwrapped
+            )
         )
-    )
+    }
     
-    static let rsaOAEPSHA256 = RFC5480AlgorithmIdentifier(
-        algorithm: .AlgorithmIdentifier.rsaOAEP,
-        parameters: RFC5480AlgorithmIdentifier(
-            algorithm: .AlgorithmIdentifier.pSpecified,
-            parameters: (try? RSAOAEPParams(hashFunction: SHA256.self)).unsafelyUnwrapped
+    static func rsaPSS<H>(_ hashFunction: H.Type) -> Self where H: HashFunction {
+        RFC5480AlgorithmIdentifier(
+            algorithm: .AlgorithmIdentifier.rsaPSS,
+            parameters: (try? RSASSAPSSParams(hashFunction: hashFunction)).unsafelyUnwrapped
         )
-    )
-    
-    static let rsaOAEPSHA384 = RFC5480AlgorithmIdentifier(
-        algorithm: .AlgorithmIdentifier.rsaOAEP,
-        parameters: RFC5480AlgorithmIdentifier(
-            algorithm: .AlgorithmIdentifier.pSpecified,
-            parameters: (try? RSAOAEPParams(hashFunction: SHA384.self)).unsafelyUnwrapped
-        )
-    )
-    
-    static let rsaOAEPSHA512 = RFC5480AlgorithmIdentifier(
-        algorithm: .AlgorithmIdentifier.rsaOAEP,
-        parameters: RFC5480AlgorithmIdentifier(
-            algorithm: .AlgorithmIdentifier.pSpecified,
-            parameters: (try? RSAOAEPParams(hashFunction: SHA512.self)).unsafelyUnwrapped
-        )
-    )
-    static let rsaPSSSHA1 = RFC5480AlgorithmIdentifier(
-        algorithm: .AlgorithmIdentifier.rsaPSS,
-        parameters: (try? RSASSAPSSParams(hashFunction: Insecure.SHA1.self)).unsafelyUnwrapped
-    )
-    
-    static let rsaPSSSHA256 = RFC5480AlgorithmIdentifier(
-        algorithm: .AlgorithmIdentifier.rsaPSS,
-        parameters: (try? RSASSAPSSParams(hashFunction: SHA256.self)).unsafelyUnwrapped
-    )
-    
-    static let rsaPSSSHA384 = RFC5480AlgorithmIdentifier(
-        algorithm: .AlgorithmIdentifier.rsaPSS,
-        parameters: (try? RSASSAPSSParams(hashFunction: SHA384.self)).unsafelyUnwrapped
-    )
-    
-    static let rsaPSSSHA512 = RFC5480AlgorithmIdentifier(
-        algorithm: .AlgorithmIdentifier.rsaPSS,
-        parameters: (try? RSASSAPSSParams(hashFunction: SHA512.self)).unsafelyUnwrapped
-    )
+    }
     
     static let mldsa44 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mldsa44,
@@ -820,8 +811,9 @@ struct PKCS8PrivateKey: DERImplicitlyTaggable {
             let encodedAlgorithm = try RFC5480AlgorithmIdentifier(derEncoded: &nodes)
             let privateKeyBytes = try ASN1OctetString(derEncoded: &nodes)
             
-            // We ignore the attributes
-            _ = try DER.optionalExplicitlyTagged(&nodes, tagNumber: 0, tagClass: .contextSpecific) { _ in }
+            _ = try DER.optionalExplicitlyTagged(&nodes, tagNumber: 0, tagClass: .contextSpecific) { _ in
+                // We ignore the attributes
+            }
             
             if version == 1 {
                 // We ignore the public key

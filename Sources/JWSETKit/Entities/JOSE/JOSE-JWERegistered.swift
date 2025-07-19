@@ -70,7 +70,7 @@ public struct JoseHeaderJWERegisteredParameters: JSONWebContainerParameters {
     /// `base64url-encoded` representation of the 96-bit IV value used for the
     /// key encryption operation.
     ///
-    /// This Header Parameter MUST be present andMUST be understood and
+    /// This Header Parameter MUST be present and MUST be understood and
     /// processed by implementations when these algorithms are used.
     public var initialVector: Data?
     

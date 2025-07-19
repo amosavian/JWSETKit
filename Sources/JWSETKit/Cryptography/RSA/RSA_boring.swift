@@ -97,7 +97,21 @@ extension BoringSSLRSAPrivateKey: JSONWebDecryptingKey {
         guard let modulus = key.modulus, let exponent = key.exponent, let privateExponent = key.privateExponent else {
             throw CryptoKitError.incorrectParameterSize
         }
-        try self.init(n: modulus, e: exponent, d: privateExponent)
+        if let firstPrimeFactor = key.firstPrimeFactor,
+           let secondPrimeFactor = key.secondPrimeFactor,
+           let firstFactorCRTExponent = key.firstFactorCRTExponent,
+           let secondFactorCRTExponent = key.secondFactorCRTExponent,
+           let firstCRTCoefficient = key.firstCRTCoefficient
+        {
+            try self.init(
+                n: modulus, e: exponent, d: privateExponent,
+                p: firstPrimeFactor, q: secondPrimeFactor,
+                dmp1: firstFactorCRTExponent, dmq1: secondFactorCRTExponent,
+                iqmp: firstCRTCoefficient
+            )
+        } else {
+            try self.init(n: modulus, e: exponent, d: privateExponent)
+        }
     }
 
     init(algorithm _: some JSONWebAlgorithm) throws {
@@ -166,6 +180,19 @@ struct BoringSSLRSAPrivateKey: Sendable {
         d: some ContiguousBytes
     ) throws {
         self.backing = try Backing(n: n, e: e, d: d)
+    }
+    
+    init(
+        n: some ContiguousBytes,
+        e: some ContiguousBytes,
+        d: some ContiguousBytes,
+        p: some ContiguousBytes,
+        q: some ContiguousBytes,
+        dmp1: some ContiguousBytes,
+        dmq1: some ContiguousBytes,
+        iqmp: some ContiguousBytes
+    ) throws {
+        self.backing = try Backing(n: n, e: e, d: d, p: p, q: q, dmp1: dmp1, dmq1: dmq1, iqmp: iqmp)
     }
 
     init(_ other: BoringSSLRSAPrivateKey) throws {
@@ -349,6 +376,49 @@ extension BoringSSLRSAPrivateKey {
                     e.withUnsafeBignumPointer { e in
                         d.withUnsafeBignumPointer { d in
                             CCryptoBoringSSL_RSA_new_private_key_no_crt(n, e, d)
+                        }
+                    }
+                })
+            else { throw CryptoKitError.internalBoringSSLError() }
+            CCryptoBoringSSL_EVP_PKEY_assign_RSA(pointer, rsaPtr)
+        }
+        
+        fileprivate init(
+            n: some ContiguousBytes,
+            e: some ContiguousBytes,
+            d: some ContiguousBytes,
+            p: some ContiguousBytes,
+            q: some ContiguousBytes,
+            dmp1: some ContiguousBytes,
+            dmq1: some ContiguousBytes,
+            iqmp: some ContiguousBytes
+        ) throws {
+            self.pointer = CCryptoBoringSSL_EVP_PKEY_new()
+            let n = try ArbitraryPrecisionInteger(bytes: n)
+            let e = try ArbitraryPrecisionInteger(bytes: e)
+            let d = try ArbitraryPrecisionInteger(bytes: d)
+            let p = try ArbitraryPrecisionInteger(bytes: p)
+            let q = try ArbitraryPrecisionInteger(bytes: q)
+            let dmp1 = try ArbitraryPrecisionInteger(bytes: dmp1)
+            let dmq1 = try ArbitraryPrecisionInteger(bytes: dmq1)
+            let iqmp = try ArbitraryPrecisionInteger(bytes: iqmp)
+            
+            // Create BoringSSL RSA key.
+            guard
+                let rsaPtr = n.withUnsafeBignumPointer({ n in
+                    e.withUnsafeBignumPointer { e in
+                        d.withUnsafeBignumPointer { d in
+                            p.withUnsafeBignumPointer { p in
+                                q.withUnsafeBignumPointer { q in
+                                    dmp1.withUnsafeBignumPointer { dmp1 in
+                                        dmq1.withUnsafeBignumPointer { dmq1 in
+                                            iqmp.withUnsafeBignumPointer { iqmp in
+                                                CCryptoBoringSSL_RSA_new_private_key(n, e, d, p, q, dmp1, dmq1, iqmp)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 })
@@ -601,10 +671,10 @@ extension ArbitraryPrecisionInteger {
 
     package mutating func withUnsafeMutableBignumPointer<T>(
         _ body: (UnsafeMutablePointer<BIGNUM>) throws -> T
-    ) rethrows -> T {
+    ) throws -> T {
         if !isKnownUniquelyReferenced(&_backing) {
             // Failing to CoW is a fatal error here.
-            _backing = try! BackingStorage(copying: _backing)
+            _backing = try BackingStorage(copying: _backing)
         }
 
         return try _backing.withUnsafeMutableBignumPointer(body)

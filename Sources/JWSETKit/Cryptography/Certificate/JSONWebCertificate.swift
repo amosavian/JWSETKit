@@ -11,8 +11,22 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+#if canImport(X509)
 import X509
+#endif
+#if canImport(CommonCrypto)
+import CommonCrypto
+#endif
 
+#if canImport(X509)
+public typealias CertificateType = Certificate
+#elseif canImport(CommonCrypto)
+public typealias CertificateType = SecCertificate
+#else
+public typealias CertificateType = Data
+#endif
+
+#if canImport(X509) || canImport(CommonCrypto)
 /// JSON Web Key (JWK) container for X509 Certificate chain.
 ///
 /// - Important: Only `x5c` is supported. Loading from `x5u` is not supported now.
@@ -20,9 +34,9 @@ import X509
 public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, Sendable {
     public var storage: JSONWebValueStorage
     
-    public var leaf: Certificate {
+    public var leaf: CertificateType {
         get throws {
-            try Certificate(from: self)
+            try .init(from: self)
         }
     }
     
@@ -52,7 +66,9 @@ extension JSONWebCertificateChain: Expirable {
         try leaf.verifyDate(currentDate)
     }
 }
+#endif
 
+#if canImport(X509)
 extension Verifier {
     public mutating func validate(
         chain: JSONWebCertificateChain,
@@ -69,3 +85,4 @@ extension Verifier {
         }
     }
 }
+#endif

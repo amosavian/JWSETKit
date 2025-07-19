@@ -43,7 +43,16 @@ To use JWSETKit, add the following dependency to your Package.swift:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.24.0"))
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "0.24.0")
+]
+```
+
+From Swift 6.1 onwards, X509 support is not enabled by default to reduce dependencies,
+If you want to have support of X509 from [swift-certificates](https://github.com/apple/swift-certificates) library:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "0.24.0", traits: ["X509"])
 ]
 ```
 

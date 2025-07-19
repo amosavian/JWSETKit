@@ -11,7 +11,12 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+#if canImport(X509)
 import X509
+#endif
+#if canImport(CommonCrypto)
+import CommonCrypto
+#endif
 
 /// Registered parameters of JOSE header in [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515.html ) .
 public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
@@ -78,7 +83,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     /// The certificate or certificate chain is represented as a JSON array of certificate value strings.
     /// Each string in the array is a `base64-encoded` (Section 4 of [RFC4648]
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
-    public var certificateChain: [Certificate]
+    public var certificateChain: [CertificateType]
     
     /// The "`x5t`"/"`x5t#S256`" (X.509 certificate SHA-1/256 thumbprint)
     /// Header Parameter is a `base64url-encoded` SHA-1/256 thumbprint
@@ -247,4 +252,32 @@ extension JOSEHeader {
             }
         }
     }
+    
+    @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [Data]>) -> [Data] {
+        get {
+            storage[stringKey(keyPath)]
+        }
+        set {
+            switch keyPath {
+            case \.certificateChain:
+                storage[stringKey(keyPath)] = newValue.map { $0.base64EncodedString() }
+            default:
+                storage[stringKey(keyPath)] = newValue
+            }
+        }
+    }
+    
+#if canImport(CommonCrypto)
+    @_documentation(visibility: private)
+    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
+        get {
+            guard let value: [String] = storage[stringKey(keyPath)] else { return [] }
+            return value.compactMap(SecCertificate.castValue)
+        }
+        set {
+            storage[stringKey(keyPath)] = newValue
+        }
+    }
+#endif
 }

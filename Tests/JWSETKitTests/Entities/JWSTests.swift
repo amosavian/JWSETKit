@@ -8,7 +8,6 @@
 import Crypto
 import Foundation
 import Testing
-import X509
 @testable import JWSETKit
 
 @Suite

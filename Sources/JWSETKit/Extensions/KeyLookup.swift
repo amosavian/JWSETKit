@@ -59,7 +59,7 @@ extension AnyKeyPath {
 extension String {
 #if canImport(Foundation.NSRegularExpression)
     // The pattern is valid and it never fails.
-    private static let regex = try! NSRegularExpression(pattern: "([a-z0-9])([A-Z])", options: [])
+    private static let regex = (try? NSRegularExpression(pattern: "([a-z0-9])([A-Z])", options: [])).unsafelyUnwrapped
 #endif
 
     var snakeCased: String {

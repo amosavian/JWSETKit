@@ -1,11 +1,12 @@
-// swift-tools-version: 5.10
+// swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
 
 extension [Platform] {
-    static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS, .custom("visionos")]
+    static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS, .visionOS]
     static let nonDarwin: [Platform] = [.linux, .windows, .android, .wasi, .openbsd]
+    static let nonWasm: [Platform] = darwin + [.linux, .windows, .android, .openbsd]
 }
 
 let package = Package(
@@ -23,12 +24,15 @@ let package = Package(
             targets: ["JWSETKit"]
         ),
     ],
+    traits: [
+        "X509",
+        .default(enabledTraits: []),
+    ],
     dependencies: [
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.12.3"),
         .package(url: "https://github.com/apple/swift-certificates", from: "1.11.0"),
-        .package(url: "https://github.com/swiftlang/swift-testing.git", exact: "0.10.0"),
     ],
     targets: [
         .systemLibrary(
@@ -46,21 +50,19 @@ let package = Package(
                 .product(name: "Collections", package: "swift-collections"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "Crypto", package: "swift-crypto"),
-                .product(name: "X509", package: "swift-certificates"),
+                .product(name: "X509", package: "swift-certificates", condition: .when(platforms: .nonWasm, traits: ["X509"])),
                 // Linux support
                 .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .byName(name: "Czlib", condition: .when(platforms: .nonDarwin)),
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy"),
-            ]
+            ],
+            swiftSettings: [.enableUpcomingFeature("ExistentialAny")]
         ),
         .testTarget(
             name: "JWSETKitTests",
-            dependencies: [
-                "JWSETKit",
-                .product(name: "Testing", package: "swift-testing"),
-            ]
+            dependencies: ["JWSETKit"]
         ),
     ]
 )
