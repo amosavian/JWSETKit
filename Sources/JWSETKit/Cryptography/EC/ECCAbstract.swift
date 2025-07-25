@@ -12,10 +12,8 @@ import Foundation
 #endif
 import Crypto
 
-protocol CryptoECPublicKey: JSONWebKeyCurveType {
+protocol CryptoECPublicKey: JSONWebKeyCurveType, JSONWebKeyRawRepresentable {
     static var curve: JSONWebKeyCurve { get }
-    var rawRepresentation: Data { get }
-    init(rawRepresentation: Data) throws
 }
 
 extension CryptoECPublicKey {
@@ -36,17 +34,9 @@ extension CryptoECPublicKey {
         }
         try self.init(rawRepresentation: x + y)
     }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(rawRepresentation)
-    }
-    
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.rawRepresentation == rhs.rawRepresentation
-    }
 }
 
-protocol CryptoECPrivateKey: JSONWebKeyCurveType, JSONWebPrivateKey where PublicKey: CryptoECPublicKey {
+protocol CryptoECPrivateKey: JSONWebKeyCurveType, JSONWebPrivateKey, Hashable where PublicKey: CryptoECPublicKey {
     var rawRepresentation: Data { get }
     init(rawRepresentation: Data) throws
 }

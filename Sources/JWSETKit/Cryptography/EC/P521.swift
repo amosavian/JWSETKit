@@ -14,8 +14,11 @@ import Crypto
 
 extension Crypto.P521.Signing.PublicKey: Swift.Hashable, Swift.Codable {}
 
-extension P521.Signing.PublicKey: CryptoECPublicKey {
+extension P521.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentified {
     static var curve: JSONWebKeyCurve { .p521 }
+    public static var algorithm: any JSONWebAlgorithm { .ecdsaSignatureP521SHA512 }
+    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .ecdsaP521 }
+
 }
 
 extension Crypto.P521.KeyAgreement.PublicKey: Swift.Hashable, Swift.Codable {}
@@ -45,15 +48,18 @@ extension P521.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {
 
 extension Crypto.P521.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
 
-extension P521.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+extension P521.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentified, CryptoECPrivateKey {
     public typealias PublicKey = P521.Signing.PublicKey
     
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
     
-    public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
-        try signature(for: SHA512.hash(data: data)).rawRepresentation
+    public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
+        guard let hashFunction = algorithm.hashFunction else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        return try signature(for: hashFunction.hash(data: data)).rawRepresentation
     }
 }
 

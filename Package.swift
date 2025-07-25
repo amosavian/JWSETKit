@@ -4,8 +4,9 @@
 import PackageDescription
 
 extension [Platform] {
-    static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS, .custom("visionos")]
-    static let nonDarwin: [Platform] = [.linux, .windows, .android, .wasi, .openbsd]
+    static let darwin: [Platform] = [.macOS, .macCatalyst, .iOS, .tvOS, .watchOS]
+    static let nonWasm: [Platform] = [.linux, .windows, .android, .openbsd]
+    static let nonDarwin: [Platform] = nonWasm + [.wasi]
 }
 
 let package = Package(
@@ -26,7 +27,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.2.0"),
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.4.0"),
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.12.3"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.13.2"),
         .package(url: "https://github.com/apple/swift-certificates", from: "1.11.0"),
         .package(url: "https://github.com/swiftlang/swift-testing.git", exact: "0.10.0"),
     ],

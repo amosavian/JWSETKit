@@ -64,7 +64,7 @@ extension JSONWebContentEncryptionAlgorithm {
         .init(keyRegistryClasses.keys)
     }
     
-    /// Registers a new symmeric key for JWE content encryption.
+    /// Registers a new symmetric key for JWE content encryption.
     ///
     /// - Parameters:
     ///   - algorithm: New algorithm name.

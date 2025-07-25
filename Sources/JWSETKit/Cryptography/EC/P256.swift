@@ -14,7 +14,9 @@ import Crypto
 
 extension Crypto.P256.Signing.PublicKey: Swift.Hashable, Swift.Codable {}
 
-extension P256.Signing.PublicKey: CryptoECPublicKey {
+extension P256.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentified {
+    public static var algorithm: any JSONWebAlgorithm { .ecdsaSignatureP256SHA256 }
+    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .ecdsaP256 }
     static var curve: JSONWebKeyCurve { .p256 }
 }
 
@@ -45,15 +47,18 @@ extension P256.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {
 
 extension Crypto.P256.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
 
-extension P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+extension P256.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentified, CryptoECPrivateKey {
     public typealias PublicKey = P256.Signing.PublicKey
     
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
     }
     
-    public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
-        try signature(for: SHA256.hash(data: data)).rawRepresentation
+    public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
+        guard let hashFunction = algorithm.hashFunction else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        return try signature(for: hashFunction.hash(data: data)).rawRepresentation
     }
 }
 
@@ -77,7 +82,7 @@ extension P256.KeyAgreement.PrivateKey: CryptoECKeyPortable {}
 #if canImport(Darwin)
 extension Crypto.SecureEnclave.P256.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
 
-extension SecureEnclave.P256.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey {
+extension SecureEnclave.P256.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentified, CryptoECPrivateKey {
     public typealias PublicKey = P256.Signing.PublicKey
     
     public var storage: JSONWebValueStorage {

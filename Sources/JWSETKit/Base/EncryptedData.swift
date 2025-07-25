@@ -92,7 +92,7 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     ///
     /// - Parameters:
     ///   - sealedBox: Container for your data.
-    public init<D>(data: D, nonceLength: Int, tagLength: Int) throws where D: DataProtocol {
+    public init<D>(combined data: D, nonceLength: Int, tagLength: Int) throws where D: DataProtocol {
         guard nonceLength > 0, tagLength > 0, data.count >= nonceLength + tagLength else {
             throw CryptoKitError.incorrectParameterSize
         }

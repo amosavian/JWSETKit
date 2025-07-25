@@ -127,7 +127,7 @@ public struct JSONWebKeyAESCBCHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebS
     }
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        try open(.init(data: data, nonceLength: ivLength, tagLength: tagLength), using: algorithm)
+        try open(.init(combined: data, nonceLength: ivLength, tagLength: tagLength), using: algorithm)
     }
     
     private func hmac(_ data: Data) throws -> Data {

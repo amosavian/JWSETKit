@@ -93,7 +93,7 @@ extension SymmetricKey: JSONWebSymmetricDecryptingKey {
         
         switch algorithm {
         case .aesEncryptionGCM128, .aesEncryptionGCM192, .aesEncryptionGCM256:
-            return try JSONWebKeyAESGCM(self).open(.init(data: data, nonceLength: 12, tagLength: 16), using: algorithm)
+            return try JSONWebKeyAESGCM(self).open(.init(combined: data, nonceLength: 12, tagLength: 16), using: algorithm)
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }

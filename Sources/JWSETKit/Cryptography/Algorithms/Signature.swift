@@ -210,6 +210,9 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     /// **Signature**: ECDSA using P-521 and SHA-512.
     public static var ecdsaSignatureP521SHA512: Self { "ES512" }
     
+    /// **Signature**: ML-DSA-44 as described in FIPS 204.
+    static var mldsa44Signature: Self { "ML-DSA-44" }
+    
     /// **Signature**: ML-DSA-65 as described in FIPS 204.
     static var mldsa65Signature: Self { "ML-DSA-65" }
     
