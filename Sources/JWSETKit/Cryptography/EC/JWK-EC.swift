@@ -275,7 +275,7 @@ extension JSONWebECPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
 @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
 extension JSONWebECPrivateKey: HPKEDiffieHellmanPrivateKeyGeneration {
     public init() {
-        try! self.init(curve: .p256)
+        self = (try? .init(curve: .p256)).unsafelyUnwrapped
     }
 }
 

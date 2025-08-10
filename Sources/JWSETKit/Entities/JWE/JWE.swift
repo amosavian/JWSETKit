@@ -279,6 +279,35 @@ public struct JSONWebEncryption: Hashable, Sendable {
         try self.init(from: Data(string.utf8))
     }
     
+    fileprivate func decryptContentEncryptionKey(_ combinedHeader: JOSEHeader, _ key: any JSONWebKey, _ algorithm: JSONWebKeyEncryptionAlgorithm, _ targetEncryptedKey: Data?) throws -> any JSONWebSealOpeningKey {
+        var targetEncryptedKey = targetEncryptedKey ?? .init()
+        switch combinedHeader.encryptionAlgorithm {
+        case .integrated:
+            if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
+                guard let privateKey = key as? (any HPKEDiffieHellmanPrivateKey) else {
+                    throw JSONWebKeyError.unknownKeyType
+                }
+                let hpke = try HPKE.Recipient(
+                    privateKey: privateKey,
+                    ciphersuite: .init(algorithm: algorithm),
+                    info: .init(),
+                    encapsulatedKey: targetEncryptedKey
+                )
+                return JSONWebHPKERecipient(recipient: hpke)
+            } else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
+        default:
+            var decryptingKey = key
+            try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &targetEncryptedKey)
+            guard let decryptingKey = decryptingKey as? (any JSONWebDecryptingKey) else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            let cekData = try decryptingKey.decrypt(targetEncryptedKey, using: algorithm)
+            return SymmetricKey(data: cekData)
+        }
+    }
+    
     /// Decrypts encrypted data, using given private key.
     ///
     /// - Important: For `PBES2` algorithms, provide password using
@@ -295,40 +324,13 @@ public struct JSONWebEncryption: Hashable, Sendable {
             throw JSONWebKeyError.unknownAlgorithm
         }
         
-        var targetEncryptedKey = recipient?.encryptedKey ?? .init()
         guard let algorithm = combinedHeader.algorithm?.specialized() as? JSONWebKeyEncryptionAlgorithm else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         
         let authenticatingData = header.protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
-        let content: Data
-        let cek: any JSONWebSealOpeningKey
-        switch combinedHeader.encryptionAlgorithm {
-        case .integrated:
-            if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
-                guard let privateKey = key as? (any HPKEDiffieHellmanPrivateKey) else {
-                    throw JSONWebKeyError.unknownKeyType
-                }
-                let hpke = try HPKE.Recipient(
-                    privateKey: privateKey,
-                    ciphersuite: .init(algorithm: algorithm),
-                    info: .init(),
-                    encapsulatedKey: targetEncryptedKey
-                )
-                cek = JSONWebHPKERecipient(recipient: hpke)
-            } else {
-                throw JSONWebKeyError.unknownAlgorithm
-            }
-        default:
-            var decryptingKey = key
-            try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &targetEncryptedKey)
-            guard let decryptingKey = decryptingKey as? (any JSONWebDecryptingKey) else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            let cekData = try decryptingKey.decrypt(targetEncryptedKey, using: algorithm)
-            cek = SymmetricKey(data: cekData)
-        }
-        content = try cek.open(sealed, authenticating: authenticatingData, using: contentEncAlgorithm)
+        let cek = try decryptContentEncryptionKey(combinedHeader, key, algorithm, recipient?.encryptedKey)
+        let content = try cek.open(sealed, authenticating: authenticatingData, using: contentEncAlgorithm)
         if let compressionAlgorithm = combinedHeader.compressionAlgorithm {
             guard let compressor = compressionAlgorithm.compressor else {
                 throw JSONWebKeyError.unknownAlgorithm

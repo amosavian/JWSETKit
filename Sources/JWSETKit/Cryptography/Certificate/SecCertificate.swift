@@ -244,7 +244,9 @@ private struct InternalTBSCertificate: DERParseable, Sendable {
             _ /* signature */ = nodes.next()
             _ /* issuer */ = nodes.next()
             let validity = try Validity(derEncoded: &nodes)
-            while nodes.next() != nil {}
+            while nodes.next() != nil {
+                // Ignore remaining fields
+            }
             return .init(validity: validity)
         }
     }
@@ -263,7 +265,9 @@ private struct InternalCertificate: DERParseable, Sendable {
                 throw ASN1Error.invalidASN1Object(reason: "Invalid certificate object, insufficient ASN.1 nodes")
             }
             let tbsCertificate = try InternalTBSCertificate(derEncoded: tbsCertificateNode)
-            while nodes.next() != nil {}
+            while nodes.next() != nil {
+                // Ignore remaining fields
+            }
             return .init(tbsCertificate: tbsCertificate)
         }
     }

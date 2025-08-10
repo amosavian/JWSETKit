@@ -203,27 +203,27 @@ extension JSONWebKeyEncryptionAlgorithm {
     /// Cipher suite for JOSE-HPKE using the DHKEM(P-256, HKDF-SHA256) KEM, the HKDF-SHA256 KDF
     /// and the AES-128-GCM AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
-    static let hpkeP256SHA256AESGCM128: Self = "HPKE-0"
+    static let hpkeP256SHA256AESGCM128: Self = .internalHpkeP256SHA256AESGCM128
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(P-384, HKDF-SHA384) KEM, the HKDF-SHA384 KDF,
     /// and the AES-256-GCM AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
-    static let hpkeP384SHA384AESGCM256: Self = "HPKE-1"
+    static let hpkeP384SHA384AESGCM256: Self = .internalHpkeP384SHA384AESGCM256
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(P-521, HKDF-SHA512) KEM, the HKDF-SHA512 KDF,
     /// and the AES-256-GCM AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
-    static let hpkeP521SHA512AESGCM256: Self = "HPKE-2"
+    static let hpkeP521SHA512AESGCM256: Self = .internalHpkeP521SHA512AESGCM256
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(X25519, HKDF-SHA256) KEM, the HKDF-SHA256 KDF,
     /// and the AES-128-GCM AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
-    static let hpkeCurve25519SHA256AESGCM128: Self = "HPKE-3"
+    static let hpkeCurve25519SHA256AESGCM128: Self = .internalHpkeCurve25519SHA256AESGCM128
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(X25519, HKDF-SHA256) KEM, the HKDF-SHA256 KDF,
     /// and the ChaCha20Poly1305 AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
-    static let hpkeCurve25519SHA256ChachaPoly: Self = "HPKE-4"
+    static let hpkeCurve25519SHA256ChachaPoly: Self = .internalHpkeCurve25519SHA256ChachaPoly
     
     // These are for internal registration use.
     static let internalHpkeP256SHA256AESGCM128: Self = "HPKE-0"
@@ -235,25 +235,25 @@ extension JSONWebKeyEncryptionAlgorithm {
     /// Cipher suite for JOSE-HPKE using the DHKEM(P-256, HKDF-SHA256) KEM, the HKDF-SHA256 KDF
     /// and the AES-128-GCM AEAD
     @available(*, unavailable, renamed: "hpkeP256SHA256AESGCM128")
-    static let hpke0: Self = "HPKE-0"
+    static let hpke0: Self = .internalHpkeP256SHA256AESGCM128
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(P-384, HKDF-SHA384) KEM, the HKDF-SHA384 KDF,
     /// and the AES-256-GCM AEAD
     @available(*, unavailable, renamed: "hpkeP384SHA384AESGCM256")
-    static let hpke1: Self = "HPKE-1"
+    static let hpke1: Self = .internalHpkeP384SHA384AESGCM256
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(P-521, HKDF-SHA512) KEM, the HKDF-SHA512 KDF,
     /// and the AES-256-GCM AEAD
     @available(*, unavailable, renamed: "hpkeP521SHA512AESGCM256")
-    static let hpke2: Self = "HPKE-2"
+    static let hpke2: Self = .internalHpkeP521SHA512AESGCM256
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(X25519, HKDF-SHA256) KEM, the HKDF-SHA256 KDF,
     /// and the AES-128-GCM AEAD
     @available(*, unavailable, renamed: "hpkeCurve25519SHA256AESGCM128")
-    static let hpke3: Self = "HPKE-3"
+    static let hpke3: Self = .internalHpkeCurve25519SHA256AESGCM128
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(X448, HKDF-SHA512) KEM, the HKDF-SHA512 KDF,
     /// and the AES-256-GCM AEAD
     @available(*, unavailable, renamed: "hpkeCurve25519SHA256ChachaPoly")
-    static let hpke4: Self = "HPKE-4"
+    static let hpke4: Self = .internalHpkeCurve25519SHA256ChachaPoly
 }

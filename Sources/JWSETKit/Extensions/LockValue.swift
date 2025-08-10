@@ -248,10 +248,14 @@ public final class SingleThreadLock<Value>: Locking, @unchecked Sendable {
     }
     
     @inlinable
-    public func lock(_: LockContextEmpty) {}
+    public func lock(_: LockContextEmpty) {
+        // No lock is needed
+    }
     
     @inlinable
-    public func unlock() {}
+    public func unlock() {
+        // No lock is needed
+    }
     
     public func withLock<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R {
         lock(context)
