@@ -115,7 +115,7 @@ extension SecTrust: JSONWebValidatingKey {
             return .init()
         }
 #if canImport(X509)
-        key.certificateChain = certificateChain.compactMap(\.x509)
+        key.certificateChain = certificateChain.map { $0.x509 }
 #else
         key.certificateChain = certificateChain
 #endif
