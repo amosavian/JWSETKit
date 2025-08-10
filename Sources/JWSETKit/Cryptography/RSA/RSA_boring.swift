@@ -140,7 +140,7 @@ extension BoringSSLRSAPrivateKey: JSONWebDecryptingKey {
 import CCryptoBoringSSL
 import CCryptoBoringSSLShims
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 extension CryptoKitError {
     /// A helper function that packs the value of `ERR_get_error` into the internal error field.
     @usableFromInline
@@ -149,7 +149,7 @@ extension CryptoKitError {
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 struct BoringSSLRSAPublicKey: Sendable {
     private var backing: Backing
 
@@ -170,7 +170,7 @@ struct BoringSSLRSAPublicKey: Sendable {
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 struct BoringSSLRSAPrivateKey: Sendable {
     private var backing: Backing
 
@@ -212,23 +212,23 @@ struct BoringSSLRSAPrivateKey: Sendable {
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 extension BoringSSLRSAPrivateKey {
     func decrypt<D: DataProtocol>(_ data: D, padding: RSAEncryptionPadding) throws -> Data {
         try backing.decrypt(data, padding: padding)
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 extension BoringSSLRSAPublicKey {
     func encrypt<D: DataProtocol>(_ data: D, padding: RSAEncryptionPadding) throws -> Data {
         try backing.encrypt(data, padding: padding)
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 extension BoringSSLRSAPublicKey {
-    @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+    @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
     fileprivate final class Backing: @unchecked Sendable {
         private let pointer: OpaquePointer
 
@@ -347,9 +347,9 @@ extension BoringSSLRSAPublicKey {
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 extension BoringSSLRSAPrivateKey {
-    @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+    @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
     fileprivate final class Backing: @unchecked Sendable {
         private let pointer: OpaquePointer
         
@@ -534,7 +534,7 @@ extension BoringSSLRSAPrivateKey {
 /// A wrapper around the OpenSSL BIGNUM object that is appropriately lifetime managed,
 /// and that provides better Swift types for this object.
 @usableFromInline
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 package struct ArbitraryPrecisionInteger {
     private var _backing: BackingStorage
 
@@ -560,9 +560,9 @@ package struct ArbitraryPrecisionInteger {
 
 // MARK: - BackingStorage
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 extension ArbitraryPrecisionInteger {
-    @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+    @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
     fileprivate final class BackingStorage {
         private var _backing: BIGNUM
 
@@ -606,7 +606,7 @@ extension ArbitraryPrecisionInteger {
 
 // MARK: - Extra initializers
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 extension ArbitraryPrecisionInteger {
     @usableFromInline
     package init<Bytes: ContiguousBytes>(bytes: Bytes) throws {
@@ -622,7 +622,7 @@ extension ArbitraryPrecisionInteger {
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 extension ArbitraryPrecisionInteger.BackingStorage {
     convenience init<Bytes: ContiguousBytes>(bytes: Bytes) throws {
         self.init()
@@ -659,7 +659,7 @@ extension ArbitraryPrecisionInteger.BackingStorage {
 
 // MARK: - Pointer helpers
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 extension ArbitraryPrecisionInteger {
     package func withUnsafeBignumPointer<T>(
         _ body: (UnsafePointer<BIGNUM>) throws -> T
@@ -681,7 +681,7 @@ extension ArbitraryPrecisionInteger {
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
+@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, *)
 extension ArbitraryPrecisionInteger.BackingStorage {
     func withUnsafeBignumPointer<T>(_ body: (UnsafePointer<BIGNUM>) throws -> T) rethrows -> T {
         try body(&_backing)

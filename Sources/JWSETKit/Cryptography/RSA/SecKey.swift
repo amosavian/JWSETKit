@@ -188,17 +188,26 @@ extension JSONWebContainer where Self: SecKey {
 }
 
 extension SecKey: JSONWebValidatingKey {
-    fileprivate static let signingAlgorithms: [JSONWebSignatureAlgorithm: SecKeyAlgorithm] = [
-        .ecdsaSignatureP256SHA256: .ecdsaSignatureRFC4754,
-        .ecdsaSignatureP384SHA384: .ecdsaSignatureRFC4754,
-        .ecdsaSignatureP521SHA512: .ecdsaSignatureRFC4754,
-        .rsaSignaturePKCS1v15SHA256: .rsaSignatureDigestPKCS1v15SHA256,
-        .rsaSignaturePKCS1v15SHA384: .rsaSignatureDigestPKCS1v15SHA384,
-        .rsaSignaturePKCS1v15SHA512: .rsaSignatureDigestPKCS1v15SHA512,
-        .rsaSignaturePSSSHA256: .rsaSignatureDigestPSSSHA256,
-        .rsaSignaturePSSSHA384: .rsaSignatureDigestPSSSHA384,
-        .rsaSignaturePSSSHA512: .rsaSignatureDigestPSSSHA512,
-    ]
+    fileprivate static let signingAlgorithms: [JSONWebSignatureAlgorithm: SecKeyAlgorithm] = {
+        var result: [JSONWebSignatureAlgorithm: SecKeyAlgorithm] = [
+            .rsaSignaturePKCS1v15SHA256: .rsaSignatureDigestPKCS1v15SHA256,
+            .rsaSignaturePKCS1v15SHA384: .rsaSignatureDigestPKCS1v15SHA384,
+            .rsaSignaturePKCS1v15SHA512: .rsaSignatureDigestPKCS1v15SHA512,
+            .rsaSignaturePSSSHA256: .rsaSignatureDigestPSSSHA256,
+            .rsaSignaturePSSSHA384: .rsaSignatureDigestPSSSHA384,
+            .rsaSignaturePSSSHA512: .rsaSignatureDigestPSSSHA512,
+        ]
+        if #available(macOS 14, iOS 17, tvOS 17, watchOS 10, *) {
+            result[.ecdsaSignatureP256SHA256] = .ecdsaSignatureDigestRFC4754SHA256
+            result[.ecdsaSignatureP384SHA384] = .ecdsaSignatureDigestRFC4754SHA384
+            result[.ecdsaSignatureP521SHA512] = .ecdsaSignatureDigestRFC4754SHA512
+        } else {
+            result[.ecdsaSignatureP256SHA256] = .ecdsaSignatureRFC4754
+            result[.ecdsaSignatureP384SHA384] = .ecdsaSignatureRFC4754
+            result[.ecdsaSignatureP521SHA512] = .ecdsaSignatureRFC4754
+        }
+        return result
+    }()
 
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         guard let secAlgorithm = Self.signingAlgorithms[algorithm], let hashFunction = algorithm.hashFunction else {

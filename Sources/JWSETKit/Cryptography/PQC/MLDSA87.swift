@@ -45,15 +45,15 @@ extension SecureEnclave.MLDSA87.PrivateKey: JSONWebSigningKey {
         publicKey.storage
     }
     
-    public init(algorithm: some JSONWebAlgorithm) throws {
+    public init(algorithm _: some JSONWebAlgorithm) throws {
         try self.init()
     }
     
-    public init(storage: JSONWebValueStorage) throws {
+    public init(storage _: JSONWebValueStorage) throws {
         throw JSONWebKeyError.operationNotAllowed
     }
     
-    public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D : DataProtocol {
+    public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         try signature(for: data)
     }
 }

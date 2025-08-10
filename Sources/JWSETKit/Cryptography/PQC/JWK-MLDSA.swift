@@ -41,10 +41,10 @@ package struct JSONWebMLDSAPublicKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyP
     static func validatingType(_ algorithm: (any JSONWebAlgorithm)?) throws -> any (JSONWebValidatingKey & JSONWebKeyImportable).Type {
         switch algorithm ?? JSONWebSignatureAlgorithm.unsafeNone {
 #if canImport(CryptoKit) && swift(>=6.2)
-         case .mldsa65Signature:
-             return MLDSA65.PublicKey.self
-         case .mldsa87Signature:
-             return MLDSA87.PublicKey.self
+        case .mldsa65Signature:
+            return MLDSA65.PublicKey.self
+        case .mldsa87Signature:
+            return MLDSA87.PublicKey.self
 #endif
         default:
             throw JSONWebKeyError.unknownKeyType
@@ -111,10 +111,10 @@ package struct JSONWebMLDSAPrivateKey: MutableJSONWebKey, JSONWebKeyAlgorithmKey
     static func signingType(_ algorithm: (any JSONWebAlgorithm)?) throws -> any (JSONWebSigningKey & JSONWebKeyImportable).Type {
         switch algorithm ?? JSONWebSignatureAlgorithm.unsafeNone {
 #if canImport(CryptoKit) && swift(>=6.2)
-         case .mldsa65Signature:
-             return MLDSA65.PrivateKey.self
-         case .mldsa87Signature:
-             return MLDSA87.PrivateKey.self
+        case .mldsa65Signature:
+            return MLDSA65.PrivateKey.self
+        case .mldsa87Signature:
+            return MLDSA87.PrivateKey.self
 #endif
         default:
             throw JSONWebKeyError.unknownKeyType

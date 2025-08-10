@@ -18,7 +18,6 @@ extension P521.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentifi
     static var curve: JSONWebKeyCurve { .p521 }
     public static var algorithm: any JSONWebAlgorithm { .ecdsaSignatureP521SHA512 }
     public static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .ecdsaP521 }
-
 }
 
 extension Crypto.P521.KeyAgreement.PublicKey: Swift.Hashable, Swift.Codable {}

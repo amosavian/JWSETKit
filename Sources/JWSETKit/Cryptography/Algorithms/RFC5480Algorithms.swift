@@ -133,7 +133,7 @@ extension RFC5480AlgorithmIdentifier {
         jsonWebAlgorithm?.curve
     }
     
-    private static let algorithms: PthreadReadWriteLockedValue<[Self: any JSONWebAlgorithm]> = [
+    private static let algorithms: AtomicValue<[Self: any JSONWebAlgorithm]> = [
         .rsaEncryption: .unsafeRSAEncryptionPKCS1,
         .rsaEncryptionSHA256: .rsaSignaturePKCS1v15SHA256,
         .rsaEncryptionSHA384: .rsaSignaturePKCS1v15SHA384,
@@ -169,7 +169,7 @@ extension RFC5480AlgorithmIdentifier {
         _ algorithm: Self,
         jsonWebAlgorithm: some JSONWebAlgorithm
     ) {
-        Self.algorithms[algorithm] = jsonWebAlgorithm
+        algorithms[algorithm] = jsonWebAlgorithm
     }
     
     init?(_ jsonWebAlgorithm: any JSONWebAlgorithm) {
@@ -297,7 +297,7 @@ extension RFC5480AlgorithmIdentifier {
         parameters: nil
     )
     
-    public static func rsaEncryption<H>(_ hashFunction: (H.Type)? = nil) -> Self where H: HashFunction {
+    public static func rsaEncryption<H>(_: (H.Type)? = nil) -> Self where H: HashFunction {
         switch H.self {
         case is SHA256.Type:
             rsaEncryptionSHA256

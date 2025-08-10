@@ -13,7 +13,7 @@ import Foundation
 import Crypto
 
 protocol CryptoModuleLatticePublicKey: JSONWebKey, JSONWebKeyRawRepresentable, JSONWebKeyAlgorithmIdentified, JSONWebKeyImportable, JSONWebKeyExportable {
-    func isValidSignature<S, D>(signature: S, for data: D) -> Bool where S : DataProtocol, D : DataProtocol
+    func isValidSignature<S, D>(signature: S, for data: D) -> Bool where S: DataProtocol, D: DataProtocol
 }
 
 extension CryptoModuleLatticePublicKey {
@@ -33,7 +33,7 @@ extension CryptoModuleLatticePublicKey {
         try self.init(rawRepresentation: publicKey)
     }
     
-    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S : DataProtocol, D : DataProtocol {
+    public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         if !isValidSignature(signature: signature, for: data) {
             throw CryptoKitError.authenticationFailure
         }
@@ -42,11 +42,11 @@ extension CryptoModuleLatticePublicKey {
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
         return switch format {
         case .raw:
-            self.rawRepresentation
+            rawRepresentation
         case .spki where !(self is any JSONWebPrivateKey):
             try SubjectPublicKeyInfo(
                 algorithmIdentifier: Self.algorithmIdentifier,
-                key: [UInt8](self.rawRepresentation)
+                key: [UInt8](rawRepresentation)
             ).derRepresentation
         case .pkcs8:
             throw JSONWebKeyError.operationNotAllowed
@@ -62,7 +62,7 @@ protocol CryptoModuleLatticePrivateKey: JSONWebPrivateKey, JSONWebKeyImportable,
     var seedRepresentation: Data { get }
     init() throws
     init<D>(seedRepresentation: D, publicKey: PublicKey?) throws where D: DataProtocol
-    func signature<D>(for data: D) throws -> Data where D : DataProtocol
+    func signature<D>(for data: D) throws -> Data where D: DataProtocol
 }
 
 extension CryptoModuleLatticePrivateKey {
@@ -109,20 +109,20 @@ extension CryptoModuleLatticePrivateKey {
         }
     }
     
-    public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D : DataProtocol {
+    public func signature<D>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         try signature(for: data)
     }
     
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
         return switch format {
         case .raw:
-            self.seedRepresentation
+            seedRepresentation
         case .spki:
             throw JSONWebKeyError.operationNotAllowed
         case .pkcs8:
             try PKCS8PrivateKey(
                 algorithm: Self.algorithmIdentifier,
-                privateKey: ModuleLatticePrivateKey(seed: .init(self.seedRepresentation))
+                privateKey: ModuleLatticePrivateKey(seed: .init(seedRepresentation))
             ).derRepresentation
         case .jwk:
             try jwkRepresentation

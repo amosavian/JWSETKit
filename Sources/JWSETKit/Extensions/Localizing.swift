@@ -28,7 +28,7 @@ extension Bundle {
     func forLocale(_ locale: Locale) -> Bundle {
         if let url = urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: locale.identifier)?.first?.baseURL {
             return Bundle(url: url) ?? .module
-        } else if let url = Bundle.module.urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: locale.languageCode)?.first?.baseURL {
+        } else if let url = Bundle.module.urls(forResourcesWithExtension: "stringsdict", subdirectory: nil, localization: locale.languageIdentifier)?.first?.baseURL {
             return Bundle(url: url) ?? .module
         }
         return .module

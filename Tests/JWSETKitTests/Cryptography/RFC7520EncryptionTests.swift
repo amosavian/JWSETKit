@@ -28,7 +28,6 @@ struct RFC7520EncryptionTests {
             unprotected: nil,
             nonce: "bbd5sTkYwhAIqfHsx8DayA".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.rsa1_5EncPublicKey.key,
             contentEncryptionKey: SymmetricKey(data: "3qyTVhIWt5juqZUCpfRqpvauwB956MEJL2Rt-8qXKSo".decoded)
         )
@@ -56,7 +55,6 @@ struct RFC7520EncryptionTests {
             unprotected: nil,
             nonce: "-nBoKLH0YkLZPSI9".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.rsaOAEPEncPublicKey.key,
             contentEncryptionKey: SymmetricKey(data: "mYMfsggkTAm0TbvtlFh2hyoXnbEzJQjMxmgLN3d8xXA".decoded)
         )
@@ -111,7 +109,6 @@ struct RFC7520EncryptionTests {
             unprotected: nil,
             nonce: "VBiCzVHNoLiR3F4V82uoTQ".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: pbkdf2Key,
             contentEncryptionKey: SymmetricKey(data: "uwsjJXaBK407Qaf0_zpcpmr1Cs0CC50hIUEyGNEt3m0".decoded)
         )
@@ -149,7 +146,6 @@ struct RFC7520EncryptionTests {
             unprotected: nil,
             nonce: "mH-G2zVqgztUtnW_".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.ecdhPrivateKey.key,
             contentEncryptionKey: SymmetricKey(data: "Nou2ueKlP70ZXDbq9UrRwg".decoded)
         )
@@ -194,7 +190,6 @@ struct RFC7520EncryptionTests {
             unprotected: nil,
             nonce: "yc9N8v5sYyv3iGQT926IUg".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: kek.key,
             contentEncryptionKey: SymmetricKey(data: "hzHdlfQIAEehb8Hrd_mFRhKsKLEzPfshfXs9l6areCc".decoded)
         )
@@ -230,7 +225,6 @@ struct RFC7520EncryptionTests {
             unprotected: nil,
             nonce: "refa467QzzKx6QAB".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: nil,
             contentEncryptionKey: key
         )
@@ -263,7 +257,6 @@ struct RFC7520EncryptionTests {
             unprotected: nil,
             nonce: "gz6NjyEFNm_vm8Gj6FwoFQ".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapGCMSymmetricKey.key,
             contentEncryptionKey: SymmetricKey(data: "UWxARpat23nL9ReIj4WG3D1ee9I4r-Mv5QLuFXdy_rE".decoded)
         )
@@ -295,7 +288,6 @@ struct RFC7520EncryptionTests {
             unprotected: nil,
             nonce: "Qx0pmsDa8KnJc9Jo".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapSymmetricKey.key,
             contentEncryptionKey: SymmetricKey(data: "aY5_Ghmk9KxWPBLu_glx1w".decoded)
         )
@@ -326,7 +318,6 @@ struct RFC7520EncryptionTests {
             unprotected: nil,
             nonce: "p9pUq6XHY0jfEZIl".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapSymmetricKey.key,
             contentEncryptionKey: SymmetricKey(data: "hC-MpLZSuwWv8sexS6ydfw".decoded)
         )
@@ -394,7 +385,6 @@ struct RFC7520EncryptionTests {
             },
             nonce: "WgEJsDS9bkoXQ3nR".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapSymmetricKey.key,
             contentEncryptionKey: SymmetricKey(data: "WDgEptBmQs9ouUvArz6x6g".decoded)
         )
@@ -426,7 +416,6 @@ struct RFC7520EncryptionTests {
             },
             nonce: "YihBoVOGsR1l7jCD".decoded,
             content: plainText.data,
-            additionalAuthenticatedData: nil,
             keyEncryptionKey: RFC7520ExampleKeys.keyWrapSymmetricKey.key,
             contentEncryptionKey: SymmetricKey(data: "KBooAFl30QPV3vkcZlXnzQ".decoded)
         )

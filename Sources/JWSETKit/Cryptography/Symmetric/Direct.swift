@@ -12,7 +12,7 @@ import Foundation
 #endif
 import Crypto
 
-struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey {
+struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey, JSONWebSymmetricSealingKey {
     let storage: JSONWebValueStorage
     
     var publicKey: Self {
@@ -20,6 +20,10 @@ struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey {
     }
     
     init(algorithm _: some JSONWebAlgorithm) throws {
+        self.init(storage: .init())
+    }
+    
+    init(_: SymmetricKey) throws {
         self.init(storage: .init())
     }
     
@@ -47,5 +51,13 @@ struct JSONWebDirectKey: JSONWebDecryptingKey, JSONWebSigningKey {
     
     func signature<D>(_: D, using _: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         .init()
+    }
+    
+    func seal<D, IV, AAD, JWA>(_ data: D, iv _: IV?, authenticating _: AAD?, using _: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
+        try .init(combined: data, nonceLength: 0, tagLength: 0)
+    }
+    
+    func open<AAD, JWA>(_ data: SealedData, authenticating _: AAD?, using _: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {
+        data.ciphertext
     }
 }

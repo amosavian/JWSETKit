@@ -284,7 +284,7 @@ enum JSONWebKeyCertificateChainSpecializer: JSONWebKeySpecializer {
 }
 
 extension AnyJSONWebKey {
-    static let specializers: PthreadReadWriteLockedValue<[any JSONWebKeySpecializer.Type]> = [
+    static let specializers: AtomicValue<[any JSONWebKeySpecializer.Type]> = [
         JSONWebKeyRSASpecializer.self,
         JSONWebKeyEllipticCurveSpecializer.self,
         JSONWebKeyCurve25519Specializer.self,

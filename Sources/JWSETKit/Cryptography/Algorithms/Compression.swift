@@ -50,17 +50,17 @@ public struct JSONWebCompressionAlgorithm: StringRepresentable {
 
 extension JSONWebCompressionAlgorithm {
 #if canImport(Compression)
-    private static let compressors: PthreadReadWriteLockedValue<[Self: any JSONWebCompressor.Type]> = [
+    private static let compressors: AtomicValue<[Self: any JSONWebCompressor.Type]> = [
         .deflate: AppleCompressor<DeflateCompressionCodec>.self,
     ]
 #elseif canImport(Czlib) || canImport(zlib)
-    private static let compressors: PthreadReadWriteLockedValue<[Self: any JSONWebCompressor.Type]> = [
+    private static let compressors: AtomicValue<[Self: any JSONWebCompressor.Type]> = [
         .deflate: ZlibCompressor<DeflateCompressionCodec>.self,
     ]
 #else
     // This should never happen as Compression is available on Darwin platforms
     // and Zlib is used on non-Darwin platform.
-    private static let compressors: PthreadReadWriteLockedValue<[Self: any JSONWebCompressor.Type]> = [:]
+    private static let compressors: AtomicValue<[Self: any JSONWebCompressor.Type]> = [:]
 #endif
     
     /// Returns provided compressor for this algorithm.

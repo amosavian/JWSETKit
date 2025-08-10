@@ -153,7 +153,7 @@ extension JSONWebKeyType {
 }
 
 extension JSONWebKeyType {
-    private static let requiredFields: PthreadReadWriteLockedValue<[Self: [String]]> = [
+    private static let requiredFields: AtomicValue<[Self: [String]]> = [
         .ellipticCurve: ["x", "y"],
         .rsa: ["n", "e"],
         .symmetric: ["k"],
@@ -176,7 +176,7 @@ public struct JSONWebKeyCurve: StringRepresentable {
 }
 
 extension JSONWebKeyCurve {
-    private static let keySizes: PthreadReadWriteLockedValue<[Self: Int]> = [
+    private static let keySizes: AtomicValue<[Self: Int]> = [
         .p256: 32, .ed25519: 32, .x25519: 32,
         .p384: 48,
         .p521: 66,

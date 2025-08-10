@@ -23,7 +23,8 @@ public struct JSONWebContentEncryptionAlgorithm: JSONWebAlgorithm {
 }
 
 extension JSONWebContentEncryptionAlgorithm {
-    private static let keyRegistryClasses: PthreadReadWriteLockedValue<[Self: any JSONWebSymmetricSealingKey.Type]> = [
+    private static let keyRegistryClasses: AtomicValue<[Self: any JSONWebSymmetricSealingKey.Type]> = [
+        .integrated: JSONWebDirectKey.self,
         .aesEncryptionGCM128: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM192: JSONWebKeyAESGCM.self,
         .aesEncryptionGCM256: JSONWebKeyAESGCM.self,
@@ -32,7 +33,7 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionCBC256SHA512: JSONWebKeyAESCBCHMAC<SHA512>.self,
     ]
     
-    private static let keyLengths: PthreadReadWriteLockedValue<[Self: SymmetricKeySize]> = [
+    private static let keyLengths: AtomicValue<[Self: SymmetricKeySize]> = [
         .aesEncryptionGCM128: .bits128,
         .aesEncryptionGCM192: .bits192,
         .aesEncryptionGCM256: .bits256,
@@ -94,6 +95,9 @@ extension JSONWebContentEncryptionAlgorithm {
 
 // Content Encryption
 extension JSONWebAlgorithm where Self == JSONWebContentEncryptionAlgorithm {
+    /// **Content Encryption**: Encryption is provided by KEK directly, e.g. when HPKE JWE Integrated Encryption is used.
+    static var integrated: Self { "int" }
+    
     /// **Content Encryption**: AES GCM using 128-bit key.
     public static var aesEncryptionGCM128: Self { "A128GCM" }
     

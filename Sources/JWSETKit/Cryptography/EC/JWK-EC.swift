@@ -25,6 +25,14 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWe
         }
     }
     
+    var keyAgreementKey: any JSONWebKey {
+        get throws {
+            // swiftformat:disable:next redundantSelf
+            try Self.keyAgreementType(self.curve)
+                .init(from: self)
+        }
+    }
+    
     public init(storage: JSONWebValueStorage) throws {
         self.storage = storage
         try validate()
@@ -45,6 +53,21 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWe
             return P521.Signing.PublicKey.self
         case .ed25519, .x25519:
             return Curve25519.Signing.PublicKey.self
+        default:
+            throw JSONWebKeyError.unknownKeyType
+        }
+    }
+    
+    static func keyAgreementType(_ curve: JSONWebKeyCurve?) throws -> any JSONWebKey.Type {
+        switch curve {
+        case .p256:
+            return P256.KeyAgreement.PublicKey.self
+        case .p384:
+            return P384.KeyAgreement.PublicKey.self
+        case .p521:
+            return P521.KeyAgreement.PublicKey.self
+        case .ed25519, .x25519:
+            return Curve25519.KeyAgreement.PublicKey.self
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -110,12 +133,40 @@ extension JSONWebECPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
     }
 }
 
+@available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+extension JSONWebECPublicKey: HPKEDiffieHellmanPublicKey {
+    public typealias EphemeralPrivateKey = JSONWebECPrivateKey
+    
+    public init<D>(_ serialization: D, kem: HPKE.KEM) throws where D: ContiguousBytes {
+        guard let curve = kem.curve, let keyType = try Self.keyAgreementType(curve) as? (any HPKEPublicKeySerialization.Type) else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        guard let key = try keyType.init(serialization, kem: kem) as? (any JSONWebKey) else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        try self.init(from: key)
+    }
+    
+    public func hpkeRepresentation(kem: HPKE.KEM) throws -> Data {
+        guard let key = try keyAgreementKey as? (any HPKEDiffieHellmanPublicKey) else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        return try key.hpkeRepresentation(kem: kem)
+    }
+}
+
 /// JWK container for different types of Elliptic-Curve private keys consists of P-256, P-384, P-521, Ed25519.
 public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWebSigningKey, Sendable {
     public var storage: JSONWebValueStorage
     
+    @EphemeralPublicKey
+    private var ephemeralPublicKey
+    
     public var publicKey: JSONWebECPublicKey {
-        JSONWebECPublicKey(from: self)
+        if let ephemeral = ephemeralPublicKey {
+            return ephemeral
+        }
+        return JSONWebECPublicKey(from: self)
     }
     
     var signingKey: any JSONWebSigningKey {
@@ -161,8 +212,20 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
     }
     
     public func sharedSecretFromKeyAgreement(with publicKeyShare: JSONWebECPublicKey) throws -> SharedSecret {
+        guard let publicKeyCureve = publicKeyShare.curve else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        var privateKey = self
+        if privateKey.curve != publicKeyCureve {
+            // Regenerate private key for new algorithm.
+            // Swift's HPKE implementation does not tell private key the KEM algorithm, but it will
+            // be revealed when `sharedSecretFromKeyAgreement` is called.
+            // We will regenerate the key for given curve and save the new public key in `ephemeralPublicKey`.
+            privateKey = try .init(curve: publicKeyCureve)
+            ephemeralPublicKey = privateKey.ephemeralPublicKey
+        }
         // swiftformat:disable:next redundantSelf
-        switch (self.keyType, self.curve) {
+        switch (privateKey.keyType, privateKey.curve) {
         case (JSONWebKeyType.ellipticCurve, .p256):
             return try P256.KeyAgreement.PrivateKey(from: self)
                 .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
@@ -206,6 +269,13 @@ extension JSONWebECPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
             throw JSONWebKeyError.unknownKeyType
         }
         return try underlyingKey.exportKey(format: format)
+    }
+}
+
+@available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+extension JSONWebECPrivateKey: HPKEDiffieHellmanPrivateKeyGeneration {
+    public init() {
+        try! self.init(curve: .p256)
     }
 }
 
@@ -263,4 +333,13 @@ extension JSONWebKeyCurve {
     fileprivate static let privateRawCurve: [Int: Self] = [
         97: .p256, 32: .ed25519, 145: .p384, 199: .p521,
     ]
+}
+
+@propertyWrapper private final class EphemeralPublicKey: @unchecked Sendable {
+    var wrappedValue: JSONWebECPublicKey? {
+        get { key }
+        set { key = newValue }
+    }
+
+    var key: JSONWebECPublicKey?
 }

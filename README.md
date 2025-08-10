@@ -110,8 +110,8 @@ For detailed usage and API documentation, check [the documentation][docs].
 | Ed448     | :x:                | :x:                | :x:                | :x:                 |
 | E256K     | :x:                | :x:                | :x:                | :x:                 |
 | ML-DSA-44 | :x:                | :x:                | :x:                | :x:                 |
-| ML-DSA-65 | :x:                | :x:                | :x:                | :x:                 |
-| ML-DSA-87 | :x:                | :x:                | :x:                | :x:                 |
+| ML-DSA-65 | :white_check_mark: | :x:                | :x:                | :x:                 |
+| ML-DSA-87 | :white_check_mark: | :x:                | :x:                | :x:                 |
 
 #### Key Encryption
 
@@ -133,11 +133,11 @@ For detailed usage and API documentation, check [the documentation][docs].
 | A256GCMKW              | :white_check_mark: | :x:                |
 | PBES2-HS256+A128KW     | :white_check_mark: | :x:                |
 | PBES2-HS384+A192KW     | :white_check_mark: | :x:                |
-| HPKE-0 (P256)          | :x:                | :x:                |
-| HPKE-1 (P384)          | :x:                | :x:                |
-| HPKE-2 (P521)          | :x:                | :x:                |
-| HPKE-3 (X25519)        | :x:                | :x:                |
-| HPKE-4 (X25519/ChaCha) | :x:                | :x:                |
+| HPKE-0 (P256)          | :white_check_mark: | :x:                |
+| HPKE-1 (P384)          | :white_check_mark: | :x:                |
+| HPKE-2 (P521)          | :white_check_mark: | :x:                |
+| HPKE-3 (X25519)        | :white_check_mark: | :x:                |
+| HPKE-4 (X25519/ChaCha) | :white_check_mark: | :x:                |
 | HPKE-5 (X448)          | :x:                | :x:                |
 | HPKE-6 (X448/ChaCha)   | :x:                | :x:                |
 

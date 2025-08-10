@@ -24,12 +24,10 @@ public struct JSONWebKeyEncryptionAlgorithm: JSONWebAlgorithm {
 
 extension JSONWebKeyEncryptionAlgorithm {
     public typealias EncryptedKeyHandler = (
-        _ header: inout JOSEHeader,
-        _ keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
+        _ recipientHeader: JOSEHeader,
         _ kek: (any JSONWebKey)?,
-        _ contentEncryptionAlgorithm: JSONWebContentEncryptionAlgorithm,
         _ cek: Data
-    ) throws -> Data
+    ) throws -> (headerFields: JOSEHeader?, cek: Data)
     
     public typealias DecryptionMutatorHandler = (
         _ header: JOSEHeader,
@@ -37,7 +35,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         _ cek: inout Data
     ) throws -> Void
     
-    private static let keyRegistryClasses: PthreadReadWriteLockedValue < [Self: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)]> = [
+    private static let keyRegistryClasses: AtomicValue < [Self: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)]> = [
         .direct: (JSONWebDirectKey.self, JSONWebDirectKey.self),
         .aesKeyWrap128: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
         .aesKeyWrap192: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
@@ -59,7 +57,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap256: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
     ]
     
-    private static let keyTypes: PthreadReadWriteLockedValue<[Self: JSONWebKeyType]> = [
+    private static let keyTypes: AtomicValue<[Self: JSONWebKeyType]> = [
         .direct: .symmetric,
         .aesKeyWrap128: .symmetric,
         .aesKeyWrap192: .symmetric,
@@ -79,9 +77,14 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: .ellipticCurve,
         .ecdhEphemeralStaticAESKeyWrap192: .ellipticCurve,
         .ecdhEphemeralStaticAESKeyWrap256: .ellipticCurve,
+        .internalHpkeP256SHA256AESGCM128: .ellipticCurve,
+        .internalHpkeP384SHA384AESGCM256: .ellipticCurve,
+        .internalHpkeP521SHA512AESGCM256: .ellipticCurve,
+        .internalHpkeCurve25519SHA256AESGCM128: .octetKeyPair,
+        .internalHpkeCurve25519SHA256ChachaPoly: .octetKeyPair,
     ]
     
-    private static let keyLengths: PthreadReadWriteLockedValue<[Self: Int]> = [
+    private static let keyLengths: AtomicValue<[Self: Int]> = [
         .aesKeyWrap128: SymmetricKeySize.bits128.bitCount,
         .aesKeyWrap192: SymmetricKeySize.bits192.bitCount,
         .aesKeyWrap256: SymmetricKeySize.bits256.bitCount,
@@ -101,7 +104,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap256: SymmetricKeySize.bits256.bitCount,
     ]
     
-    private static let hashFunctions: PthreadReadWriteLockedValue<[Self: any HashFunction.Type]> = [
+    private static let hashFunctions: AtomicValue<[Self: any HashFunction.Type]> = [
         .aesKeyWrap128: SHA256.self,
         .aesKeyWrap192: SHA384.self,
         .aesKeyWrap256: SHA512.self,
@@ -115,9 +118,14 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: SHA256.self,
         .ecdhEphemeralStaticAESKeyWrap192: SHA256.self,
         .ecdhEphemeralStaticAESKeyWrap256: SHA256.self,
+        .internalHpkeP256SHA256AESGCM128: SHA256.self,
+        .internalHpkeP384SHA384AESGCM256: SHA384.self,
+        .internalHpkeP521SHA512AESGCM256: SHA512.self,
+        .internalHpkeCurve25519SHA256AESGCM128: SHA256.self,
+        .internalHpkeCurve25519SHA256ChachaPoly: SHA256.self,
     ]
     
-    private static let encryptedKeyHandlers: PthreadReadWriteLockedValue<[Self: EncryptedKeyHandler]> = [
+    private static let encryptedKeyHandlers: AtomicValue<[Self: EncryptedKeyHandler]> = [
         .aesGCM128KeyWrap: aesGCMKeyWrapEncryptedKey,
         .aesGCM192KeyWrap: aesGCMKeyWrapEncryptedKey,
         .aesGCM256KeyWrap: aesGCMKeyWrapEncryptedKey,
@@ -128,9 +136,14 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: ecdhEsEncryptedKey,
         .ecdhEphemeralStaticAESKeyWrap192: ecdhEsEncryptedKey,
         .ecdhEphemeralStaticAESKeyWrap256: ecdhEsEncryptedKey,
+        .internalHpkeP256SHA256AESGCM128: hpkeEncryptedKey,
+        .internalHpkeP384SHA384AESGCM256: hpkeEncryptedKey,
+        .internalHpkeP521SHA512AESGCM256: hpkeEncryptedKey,
+        .internalHpkeCurve25519SHA256AESGCM128: hpkeEncryptedKey,
+        .internalHpkeCurve25519SHA256ChachaPoly: hpkeEncryptedKey,
     ]
     
-    private static let decryptionMutators: PthreadReadWriteLockedValue<[Self: DecryptionMutatorHandler]> = [
+    private static let decryptionMutators: AtomicValue<[Self: DecryptionMutatorHandler]> = [
         .direct: directDecryptionMutator,
         .aesGCM128KeyWrap: aesgcmDecryptionMutator,
         .aesGCM192KeyWrap: aesgcmDecryptionMutator,
@@ -142,6 +155,11 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: ecdhEsDecryptionMutator,
         .ecdhEphemeralStaticAESKeyWrap192: ecdhEsDecryptionMutator,
         .ecdhEphemeralStaticAESKeyWrap256: ecdhEsDecryptionMutator,
+        .internalHpkeP256SHA256AESGCM128: hpkeDecryptionMutator,
+        .internalHpkeP384SHA384AESGCM256: hpkeDecryptionMutator,
+        .internalHpkeP521SHA512AESGCM256: hpkeDecryptionMutator,
+        .internalHpkeCurve25519SHA256AESGCM128: hpkeDecryptionMutator,
+        .internalHpkeCurve25519SHA256ChachaPoly: hpkeDecryptionMutator,
     ]
     
     /// Key type, either RSA, Elliptic curve, Symmetric, etc.
@@ -224,37 +242,40 @@ extension JSONWebKeyEncryptionAlgorithm {
 
 extension JSONWebKeyEncryptionAlgorithm {
     static func standardEncryptdKey(
-        _: inout JOSEHeader,
-        _ keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
+        _ recipientHeader: JOSEHeader,
         _ keyEncryptionKey: (any JSONWebKey)?,
-        _: JSONWebContentEncryptionAlgorithm,
         _ cekData: Data
-    ) throws -> Data {
+    ) throws -> (headerFields: JOSEHeader?, cek: Data) {
+        guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
         guard let kek = keyEncryptionKey as? any JSONWebEncryptingKey else {
             throw JSONWebKeyError.keyNotFound
         }
-        return try kek.encrypt(cekData, using: keyEncryptingAlgorithm)
+        return try (nil, kek.encrypt(cekData, using: keyEncryptingAlgorithm))
     }
     
     fileprivate static func aesGCMKeyWrapEncryptedKey(
-        _ header: inout JOSEHeader,
-        _ keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
+        _ recipientHeader: JOSEHeader,
         _ keyEncryptionKey: (any JSONWebKey)?,
-        _: JSONWebContentEncryptionAlgorithm,
         _ cekData: Data
-    ) throws -> Data {
+    ) throws -> (headerFields: JOSEHeader?, cek: Data) {
+        guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
         guard let kek = keyEncryptionKey.map(AnyJSONWebKey.init)?.keyValue else {
             throw JSONWebKeyError.keyNotFound
         }
+        var header = JOSEHeader()
         let nonce: Data
-        if let headerNonce = header.initialVector {
+        if let headerNonce = recipientHeader.initialVector {
             nonce = headerNonce
         } else {
             nonce = AES.GCM.Nonce().data
             header.initialVector = nonce
         }
         let sealed = try kek.seal(cekData, iv: nonce, using: JSONWebContentEncryptionAlgorithm(keyEncryptingAlgorithm.rawValue.dropLast(2)))
-        if let headerTag = header.authenticationTag {
+        if let headerTag = recipientHeader.authenticationTag {
             guard headerTag == sealed.tag else {
                 throw CryptoKitError.authenticationFailure
             }
@@ -262,21 +283,23 @@ extension JSONWebKeyEncryptionAlgorithm {
             header.authenticationTag = sealed.tag
         }
         
-        return sealed.ciphertext
+        return (header, sealed.ciphertext)
     }
     
     fileprivate static func pbesEncryptedKey(
-        _ header: inout JOSEHeader,
-        _ keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
+        _ recipientHeader: JOSEHeader,
         _ keyEncryptionKey: (any JSONWebKey)?,
-        _: JSONWebContentEncryptionAlgorithm,
         _ cekData: Data
-    ) throws -> Data {
+    ) throws -> (headerFields: JOSEHeader?, cek: Data) {
+        guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
         guard let kek = keyEncryptionKey, let password = AnyJSONWebKey(kek).keyValue?.data else {
             throw JSONWebKeyError.keyNotFound
         }
+        var header = JOSEHeader()
         let iterations: Int
-        if let pbes2Count = header.pbes2Count {
+        if let pbes2Count = recipientHeader.pbes2Count {
             iterations = pbes2Count
         } else {
             // Default iterations count for PBES2 regarding OWASP 2023 recommendation.
@@ -284,7 +307,7 @@ extension JSONWebKeyEncryptionAlgorithm {
             header.pbes2Count = iterations
         }
         let pbes2Salt: Data
-        if let salt = header.pbes2Salt {
+        if let salt = recipientHeader.pbes2Salt {
             pbes2Salt = salt
         } else {
             pbes2Salt = Data.random(length: 16)
@@ -295,25 +318,24 @@ extension JSONWebKeyEncryptionAlgorithm {
             password: password, salt: kdfSalt, iterations: iterations,
             length: keyEncryptingAlgorithm.keyLength.map { $0 / 8 }, hashFunction: keyEncryptingAlgorithm.hashFunction.unsafelyUnwrapped
         )
-        return try key.encrypt(cekData, using: keyEncryptingAlgorithm)
+        return try (header, key.encrypt(cekData, using: keyEncryptingAlgorithm))
     }
     
     fileprivate static func ecdhEsEncryptedKey(
-        _ header: inout JOSEHeader,
-        _ keyEncryptingAlgorithm: JSONWebKeyEncryptionAlgorithm,
+        _ recipientHeader: JOSEHeader,
         _ keyEncryptionKey: (any JSONWebKey)?,
-        _: JSONWebContentEncryptionAlgorithm,
         _ cekData: Data
-    ) throws -> Data {
+    ) throws -> (headerFields: JOSEHeader?, cek: Data) {
+        guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm), let hashFunction = keyEncryptingAlgorithm.hashFunction else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
         guard let kek = keyEncryptionKey else {
             throw JSONWebKeyError.keyNotFound
         }
-        guard let hashFunction = keyEncryptingAlgorithm.hashFunction else {
-            throw JSONWebKeyError.keyNotFound
-        }
         
+        var header = JOSEHeader()
         let secret: SharedSecret
-        if let headerEphemeralKey = header.ephemeralPublicKey {
+        if let headerEphemeralKey = recipientHeader.ephemeralPublicKey {
             let ephemeralKey = try JSONWebECPublicKey(headerEphemeralKey)
             let staticKey = try JSONWebECPrivateKey(from: kek)
             secret = try staticKey.sharedSecretFromKeyAgreement(with: ephemeralKey)
@@ -328,15 +350,44 @@ extension JSONWebKeyEncryptionAlgorithm {
         let symmetricKey = try secret.concatDerivedSymmetricKey(
             using: hashFunction,
             algorithm: keyEncryptingAlgorithm,
-            contentEncryptionAlgorithm: header.encryptionAlgorithm,
-            apu: header.agreementPartyUInfo ?? .init(),
-            apv: header.agreementPartyVInfo ?? .init()
+            contentEncryptionAlgorithm: recipientHeader.encryptionAlgorithm,
+            apu: recipientHeader.agreementPartyUInfo ?? .init(),
+            apv: recipientHeader.agreementPartyVInfo ?? .init()
         )
         if keyEncryptingAlgorithm == .ecdhEphemeralStatic {
-            return symmetricKey.data
+            return (header, symmetricKey.data)
         } else {
             let key = try JSONWebKeyAESKW(symmetricKey)
-            return try key.encrypt(cekData, using: keyEncryptingAlgorithm)
+            return try (header, key.encrypt(cekData, using: keyEncryptingAlgorithm))
+        }
+    }
+    
+    static func hpkeEncryptedKey(
+        _ recipientHeader: JOSEHeader,
+        _ keyEncryptionKey: (any JSONWebKey)?,
+        _ cekData: Data
+    ) throws -> (headerFields: JOSEHeader?, cek: Data) {
+        if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
+            guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
+            guard let recipientKey = keyEncryptionKey as? (any HPKEDiffieHellmanPublicKey) else {
+                throw JSONWebKeyError.unknownKeyType
+            }
+            var hpke = try HPKE.Sender(
+                recipientKey: recipientKey,
+                ciphersuite: .init(algorithm: keyEncryptingAlgorithm),
+                info: .init()
+            )
+            if recipientHeader.encryptionAlgorithm == .integrated {
+                return (nil, hpke.encapsulatedKey)
+            } else {
+                var header = JOSEHeader()
+                header.encapsulatedKey = hpke.encapsulatedKey
+                return try (header, hpke.seal(cekData))
+            }
+        } else {
+            throw JSONWebKeyError.unknownAlgorithm
         }
     }
 }
@@ -402,6 +453,34 @@ extension JSONWebKeyEncryptionAlgorithm {
             cek = symmetricKey.data
         } else {
             kek = symmetricKey
+        }
+    }
+    
+    fileprivate static func hpkeDecryptionMutator(_ header: JOSEHeader, _ kek: inout any JSONWebKey, _: inout Data) throws {
+        if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
+            guard let algorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm) else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
+            let privateKey: any HPKEDiffieHellmanPrivateKey & JSONWebKey
+            if let key = kek as? (any HPKEDiffieHellmanPrivateKey & JSONWebKey) {
+                privateKey = key
+            } else if let key = AnyJSONWebKey(kek).specialized() as? (any HPKEDiffieHellmanPrivateKey & JSONWebKey) {
+                privateKey = key
+                kek = privateKey
+            } else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            if let encapsulatedKey = header.encapsulatedKey {
+                let hpke = try HPKE.Recipient(
+                    privateKey: privateKey,
+                    ciphersuite: .init(algorithm: algorithm),
+                    info: .init(),
+                    encapsulatedKey: encapsulatedKey
+                )
+                kek = JSONWebHPKERecipient(recipient: hpke)
+            }
+        } else {
+            throw JSONWebKeyError.unknownAlgorithm
         }
     }
 }

@@ -8,16 +8,24 @@
 import Collections
 #if canImport(FoundationEssentials)
 import FoundationEssentials
-#if canImport(Glibc)
+#if canImport(Darwin)
+import Darwin
+#elseif os(Windows)
+import ucrt
+import WinSDK
+#elseif canImport(Glibc)
 import Glibc
 #elseif canImport(Musl)
 import Musl
-#elseif os(Windows)
-import CRT
-#elseif canImport(Android)
-import Android
+#elseif canImport(Bionic)
+import Bionic
+#elseif canImport(WASILibc)
+import WASILibc
+#if canImport(pthread)
+import pthread
+#endif
 #else
-import Darwin
+#error("Unable to identify your C library.")
 #endif
 #else
 import Foundation
@@ -39,24 +47,16 @@ public struct LockContextEmpty: ReadWriteLockContext {
     }
 }
 
-public protocol Locking<Context>: Sendable {
+public protocol Locking<Context, Value>: Sendable {
     associatedtype Context
+    associatedtype Value
     
-    init()
-    func tryLock(_ context: Context) -> Bool
-    func lock(_ context: Context) throws
-    func unlock()
+    init(initialValue: consuming Value)
+    func withLock<R>(_ context: Context, _ handler: (inout Value) throws -> R) rethrows -> R
+    func withLockIfAvailable<R>(_ context: Context, _ handler: (inout Value) throws -> R) rethrows -> R?
 }
 
-extension Locking {
-    @inlinable
-    public func withLock<R>(_ context: Context, _ handler: () throws -> R) throws -> R {
-        try lock(context)
-        defer { unlock() }
-        return try handler()
-    }
-}
-
+#if canImport(pthread)
 @frozen
 public enum PthreadReadWriteContextLock: ReadWriteLockContext {
     case read
@@ -73,12 +73,15 @@ public enum PthreadReadWriteContextLock: ReadWriteLockContext {
     }
 }
 
-public final class PthreadReadWriteLock: Locking, @unchecked Sendable {
+public final class PthreadReadWriteLock<Value>: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: UnsafeMutablePointer<pthread_rwlock_t>
     
-    public init() {
+    private var value: Value
+    
+    public init(initialValue: consuming Value) {
         self.lock = .allocate(capacity: 1)
+        self.value = initialValue
         lock.initialize(to: pthread_rwlock_t())
         pthread_rwlock_init(lock, nil)
     }
@@ -116,17 +119,33 @@ public final class PthreadReadWriteLock: Locking, @unchecked Sendable {
     public func unlock() {
         pthread_rwlock_unlock(lock)
     }
+    
+    public func withLock<R>(_ context: PthreadReadWriteContextLock, _ handler: (inout Value) throws -> R) rethrows -> R {
+        try? lock(context)
+        defer { unlock() }
+        return try handler(&value)
+    }
+    
+    public func withLockIfAvailable<R>(_ context: PthreadReadWriteContextLock, _ handler: (inout Value) throws -> R) rethrows -> R? {
+        guard tryLock(context) else { return nil }
+        defer { unlock() }
+        return try handler(&value)
+    }
 }
 
-public typealias PthreadReadWriteLockedValue<Value> = LockedValue<PthreadReadWriteContextLock, PthreadReadWriteLock, Value>
+public typealias PthreadReadWriteLockedValue<Value> = LockedValue<PthreadReadWriteContextLock, Value, PthreadReadWriteLock<Value>>
+#endif
 
 #if canImport(Darwin)
-public final class OSUnfairLock: Locking, @unchecked Sendable {
+public final class OSUnfairLock<Value>: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: os_unfair_lock_t
     
-    public init() {
+    private var value: Value
+    
+    public init(initialValue: consuming Value) {
         self.lock = .allocate(capacity: 1)
+        self.value = initialValue
         lock.initialize(to: os_unfair_lock())
     }
     
@@ -149,17 +168,33 @@ public final class OSUnfairLock: Locking, @unchecked Sendable {
     public func unlock() {
         os_unfair_lock_unlock(lock)
     }
+    
+    public func withLock<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R {
+        lock(context)
+        defer { unlock() }
+        return try handler(&value)
+    }
+    
+    public func withLockIfAvailable<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R? {
+        guard tryLock(context) else { return nil }
+        defer { unlock() }
+        return try handler(&value)
+    }
 }
 
-public typealias OSUnfairLockedValue<Value> = LockedValue<LockContextEmpty, OSUnfairLock, Value>
+public typealias OSUnfairLockedValue<Value> = LockedValue<LockContextEmpty, Value, OSUnfairLock<Value>>
 #endif
 
-public final class PthreadMutex: Locking, @unchecked Sendable {
+#if canImport(pthread)
+public final class PthreadMutex<Value>: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: UnsafeMutablePointer<pthread_mutex_t>
     
-    public init() {
+    private var value: Value
+
+    public init(initialValue: consuming Value) {
         self.lock = .allocate(capacity: 1)
+        self.value = initialValue
         lock.initialize(to: pthread_mutex_t())
         pthread_mutex_init(lock, nil)
     }
@@ -184,32 +219,80 @@ public final class PthreadMutex: Locking, @unchecked Sendable {
     public func unlock() {
         pthread_mutex_unlock(lock)
     }
+    
+    public func withLock<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R {
+        lock(context)
+        defer { unlock() }
+        return try handler(&value)
+    }
+    
+    public func withLockIfAvailable<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R? {
+        guard tryLock(context) else { return nil }
+        defer { unlock() }
+        return try handler(&value)
+    }
 }
 
-public typealias PthreadMutexLockedValue<Value> = LockedValue<LockContextEmpty, PthreadMutex, Value>
+public typealias PthreadMutexLockedValue<Value> = LockedValue<LockContextEmpty, Value, PthreadMutex<Value>>
+#else
+public final class SingleThreadLock<Value>: Locking, @unchecked Sendable {
+    private var value: Value
+
+    public init(initialValue: consuming Value) {
+        self.value = initialValue
+    }
+    
+    @inlinable
+    public func tryLock(_: LockContextEmpty) -> Bool {
+        true
+    }
+    
+    @inlinable
+    public func lock(_: LockContextEmpty) {}
+    
+    @inlinable
+    public func unlock() {}
+    
+    public func withLock<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R {
+        lock(context)
+        defer { unlock() }
+        return try handler(&value)
+    }
+    
+    public func withLockIfAvailable<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R? {
+        guard tryLock(context) else { return nil }
+        defer { unlock() }
+        return try handler(&value)
+    }
+}
+#endif
+
+#if canImport(pthread)
+public typealias AtomicValue = PthreadReadWriteLockedValue
+#else
+public typealias AtomicValue<Value> = LockedValue<LockContextEmpty, Value, SingleThreadLock<Value>>
+#endif
 
 /// Synchronizing read and writes on a shared mutable property.
 @dynamicMemberLookup
-public final class LockedValue<Context, Lock: Locking<Context>, Value>: @unchecked Sendable where Context: ReadWriteLockContext {
-    private let lock = Lock()
+public final class LockedValue<Context, Value, Lock: Locking<Context, Value>>: @unchecked Sendable where Context: ReadWriteLockContext {
+    private let lock: Lock
     
-    private var value: Value
+    public init(wrappedValue: consuming Value) {
+        self.lock = .init(initialValue: wrappedValue)
+    }
     
     public var wrappedValue: Value {
         get {
-            (try? lock.withLock(.getContext) {
+            lock.withLock(.getContext) { value in
                 value
-            }) ?? value
+            }
         }
         set {
-            try? lock.withLock(.setContext) {
+            lock.withLock(.setContext) { value in
                 value = newValue
             }
         }
-    }
-    
-    public init(wrappedValue: Value) {
-        self.value = wrappedValue
     }
     
     @inlinable
@@ -228,9 +311,7 @@ public final class LockedValue<Context, Lock: Locking<Context>, Value>: @uncheck
     }
     
     public func withLock<R>(_ context: Context, _ handler: (_ value: inout Value) throws -> R) throws -> R {
-        try lock.withLock(context) {
-            try handler(&value)
-        }
+        try lock.withLock(context, handler)
     }
 }
 

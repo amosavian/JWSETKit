@@ -29,7 +29,7 @@ extension JSONWebSigningKey {
 }
 
 extension JSONWebSignatureAlgorithm {
-    private static let keyRegistryClasses: PthreadReadWriteLockedValue < [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)]> = [
+    private static let keyRegistryClasses: AtomicValue < [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)]> = [
         .unsafeNone: (JSONWebDirectKey.self, JSONWebDirectKey.self),
         .hmacSHA256: (JSONWebKeyHMAC<SHA256>.self, JSONWebKeyHMAC<SHA256>.self),
         .hmacSHA384: (JSONWebKeyHMAC<SHA384>.self, JSONWebKeyHMAC<SHA384>.self),
@@ -49,7 +49,7 @@ extension JSONWebSignatureAlgorithm {
         .mldsa87Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
     ]
     
-    private static let keyTypes: PthreadReadWriteLockedValue<[Self: JSONWebKeyType]> = [
+    private static let keyTypes: AtomicValue<[Self: JSONWebKeyType]> = [
         .unsafeNone: .empty,
         .hmacSHA256: .symmetric,
         .hmacSHA384: .symmetric,
@@ -69,13 +69,13 @@ extension JSONWebSignatureAlgorithm {
         .mldsa87Signature: .algorithmKeyPair,
     ]
     
-    private static let curves: PthreadReadWriteLockedValue<[Self: JSONWebKeyCurve]> = [
+    private static let curves: AtomicValue<[Self: JSONWebKeyCurve]> = [
         .ecdsaSignatureP256SHA256: .p256, .ecdsaSignatureP384SHA384: .p384,
         .ecdsaSignatureP521SHA512: .p521,
         .eddsaSignature: .ed25519, .eddsa25519Signature: .ed25519,
     ]
     
-    private static let hashFunctions: PthreadReadWriteLockedValue<[Self: any HashFunction.Type]> = [
+    private static let hashFunctions: AtomicValue<[Self: any HashFunction.Type]> = [
         .hmacSHA256: SHA256.self,
         .hmacSHA384: SHA384.self,
         .hmacSHA512: SHA512.self,
