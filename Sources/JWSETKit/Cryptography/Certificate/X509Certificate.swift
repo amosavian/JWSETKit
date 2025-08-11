@@ -18,7 +18,7 @@ import Foundation
 import Crypto
 import SwiftASN1
 
-extension X509.Certificate.PublicKey: Swift.Codable {}
+extension X509.Certificate.PublicKey: Swift.Decodable, Swift.Encodable {}
 
 extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWebKeyCurveType {
     public var storage: JSONWebValueStorage {
@@ -70,7 +70,7 @@ extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWe
     }
 }
 
-extension X509.Certificate.PrivateKey: Swift.Codable {}
+extension X509.Certificate.PrivateKey: Swift.Decodable, Swift.Encodable {}
 
 extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebKeyCurveType {
     public var storage: JSONWebValueStorage {
@@ -193,7 +193,7 @@ extension Certificate.SignatureAlgorithm {
     }
 }
 
-extension X509.Certificate: Swift.Codable {}
+extension X509.Certificate: Swift.Decodable, Swift.Encodable {}
 
 extension Certificate: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {

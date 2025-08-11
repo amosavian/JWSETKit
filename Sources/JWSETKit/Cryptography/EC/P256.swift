@@ -12,7 +12,7 @@ import Foundation
 #endif
 import Crypto
 
-extension Crypto.P256.Signing.PublicKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.P256.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P256.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentified {
     public static var algorithm: any JSONWebAlgorithm { .ecdsaSignatureP256SHA256 }
@@ -20,7 +20,7 @@ extension P256.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentifi
     static var curve: JSONWebKeyCurve { .p256 }
 }
 
-extension Crypto.P256.KeyAgreement.PublicKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.P256.KeyAgreement.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P256.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p256 }
@@ -45,7 +45,7 @@ extension P256.Signing.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
 extension P256.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension Crypto.P256.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.P256.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P256.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentified, CryptoECPrivateKey {
     public typealias PublicKey = P256.Signing.PublicKey
@@ -62,7 +62,7 @@ extension P256.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentif
     }
 }
 
-extension Crypto.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {
+extension Crypto.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(publicKey)
     }
@@ -80,7 +80,7 @@ extension P256.Signing.PrivateKey: CryptoECKeyPortable {}
 extension P256.KeyAgreement.PrivateKey: CryptoECKeyPortable {}
 
 #if canImport(Darwin)
-extension Crypto.SecureEnclave.P256.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.SecureEnclave.P256.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension SecureEnclave.P256.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentified, CryptoECPrivateKey {
     public typealias PublicKey = P256.Signing.PublicKey
@@ -111,7 +111,7 @@ extension SecureEnclave.P256.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAl
     }
 }
 
-extension Crypto.SecureEnclave.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {
+extension Crypto.SecureEnclave.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(publicKey)
     }

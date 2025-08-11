@@ -15,7 +15,7 @@ import Foundation
 #endif
 import SwiftASN1
 
-extension _CryptoExtras._RSA.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Codable {}
+extension _CryptoExtras._RSA.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension _RSA.Signing.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
@@ -80,7 +80,7 @@ extension _CryptoExtras._RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKey
     }
 }
 
-extension _CryptoExtras._RSA.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Codable {}
+extension _CryptoExtras._RSA.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension _RSA.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
@@ -138,7 +138,7 @@ extension _CryptoExtras._RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKe
     }
 }
 
-extension _CryptoExtras._RSA.Encryption.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Codable {}
+extension _CryptoExtras._RSA.Encryption.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
@@ -174,7 +174,7 @@ extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey, JSONWebKeyRSAType {
     }
 }
 
-extension _CryptoExtras._RSA.Encryption.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Codable {}
+extension _CryptoExtras._RSA.Encryption.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {

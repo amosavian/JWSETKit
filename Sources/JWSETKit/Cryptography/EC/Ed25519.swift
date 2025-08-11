@@ -13,7 +13,7 @@ import Foundation
 import Crypto
 import SwiftASN1
 
-extension Crypto.Curve25519.Signing.PublicKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.Curve25519.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension Curve25519.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentified {
     static var curve: JSONWebKeyCurve { .ed25519 }
@@ -37,7 +37,7 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmId
     }
 }
 
-extension Crypto.Curve25519.KeyAgreement.PublicKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.Curve25519.KeyAgreement.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .x25519 }
@@ -74,7 +74,7 @@ extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {
     public static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .x25519 }
 }
 
-extension Crypto.Curve25519.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.Curve25519.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey, CryptoEdKeyPortable {
     public typealias PublicKey = Curve25519.Signing.PublicKey
@@ -88,7 +88,7 @@ extension Curve25519.Signing.PrivateKey: JSONWebSigningKey, CryptoECPrivateKey, 
     }
 }
 
-extension Crypto.Curve25519.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.Curve25519.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension Curve25519.KeyAgreement.PrivateKey: CryptoECPrivateKey, CryptoEdKeyPortable {
     public typealias PublicKey = Curve25519.KeyAgreement.PublicKey

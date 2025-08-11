@@ -12,11 +12,11 @@ import Foundation
 #endif
 
 // TODO: Remove condition after release of swift-crypto 4.0
-#if canImport(CryptoKit) && swift(>=6.2)
+#if canImport(CryptoKit) && compiler(>=6.2)
 import Crypto
 
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
-extension Crypto.MLDSA87.PublicKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.MLDSA87.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension MLDSA87.PublicKey: JSONWebValidatingKey, JSONWebKeyRawRepresentable, JSONWebKeyImportable, JSONWebKeyExportable, CryptoModuleLatticePublicKey {
@@ -26,14 +26,14 @@ extension MLDSA87.PublicKey: JSONWebValidatingKey, JSONWebKeyRawRepresentable, J
 }
 
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
-extension Crypto.MLDSA87.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.MLDSA87.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension MLDSA87.PrivateKey: JSONWebSigningKey, JSONWebKeyImportable, JSONWebKeyExportable, CryptoModuleLatticePrivateKey {}
 
-#if canImport(Darwin) && swift(>=6.2)
+#if canImport(Darwin) && compiler(>=6.2)
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
-extension Crypto.SecureEnclave.MLDSA87.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.SecureEnclave.MLDSA87.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension SecureEnclave.MLDSA87.PrivateKey: JSONWebSigningKey {

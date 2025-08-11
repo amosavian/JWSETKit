@@ -9,7 +9,11 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
+#if canImport(Darwin) && compiler(>=6.2)
+@Suite
+#else
 @Suite(.enabled(if: false))
+#endif
 struct MLDSATests {
     let mldsaSeed = "AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8".decoded
     
@@ -235,6 +239,7 @@ struct MLDSATests {
     
     let plaintext = Data("The quick brown fox jumps over the lazy dog.".utf8)
     
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
     @Test
     func derImport() throws {
         #expect(throws: Never.self) { try JSONWebMLDSAPrivateKey(derRepresentation: mldsa65PrivateDER) }
@@ -246,6 +251,7 @@ struct MLDSATests {
         #expect(try JSONWebMLDSAPrivateKey(derRepresentation: mldsa87PrivateBothDER).seed == mldsaSeed)
     }
     
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
     @Test
     func derExport() throws {
         try print(JSONWebMLDSAPrivateKey(derRepresentation: mldsa65PrivateDER).exportKey(format: .pkcs8).base64EncodedString())
@@ -256,6 +262,7 @@ struct MLDSATests {
         #expect(try JSONWebMLDSAPrivateKey(derRepresentation: mldsa87PrivateBothDER).exportKey(format: .pkcs8) == mldsa87PrivateDER)
     }
     
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
     @Test
     func signing_MLDSA65_DER() throws {
         let publicKey = try JSONWebMLDSAPublicKey(derRepresentation: mldsa65PublicDER)
@@ -267,6 +274,7 @@ struct MLDSATests {
         #expect(plaintext != signature)
     }
     
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
     @Test
     func signing_MLDSA87_DER() throws {
         let publicKey = try JSONWebMLDSAPublicKey(derRepresentation: mldsa87PublicDER)

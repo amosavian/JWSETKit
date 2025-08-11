@@ -12,7 +12,7 @@ import Foundation
 #endif
 import Crypto
 
-extension Crypto.SymmetricKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.SymmetricKey: Swift.Hashable, Swift.Decodable, Swift.Encodable {}
 
 extension SymmetricKey: JSONWebKeySymmetric {
     public var storage: JSONWebValueStorage {

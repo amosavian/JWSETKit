@@ -56,7 +56,11 @@ extension HPKE.KEM {
             .p521
         case .Curve25519_HKDF_SHA256:
             .x25519
-        default:
+#if canImport(CryptoKit) && compiler(>=6.2)
+        case .XWingMLKEM768X25519:
+            .x25519
+#endif
+        @unknown default:
             nil
         }
     }
@@ -69,7 +73,11 @@ extension HPKE.KEM {
             SHA384.self
         case .P521_HKDF_SHA512:
             SHA512.self
-        default:
+#if canImport(CryptoKit) && compiler(>=6.2)
+        case .XWingMLKEM768X25519:
+            SHA256.self
+#endif
+        @unknown default:
             nil
         }
     }
@@ -85,7 +93,7 @@ extension HPKE.KDF {
             SHA384.self
         case .HKDF_SHA512:
             SHA512.self
-        default:
+        @unknown default:
             nil
         }
     }

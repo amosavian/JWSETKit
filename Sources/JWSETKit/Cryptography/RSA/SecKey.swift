@@ -15,7 +15,7 @@ import Foundation
 #endif
 import SwiftASN1
 
-extension Security.SecKey: Swift.Codable {}
+extension Security.SecKey: Swift.Decodable, Swift.Encodable {}
 
 extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
     public var storage: JSONWebValueStorage {

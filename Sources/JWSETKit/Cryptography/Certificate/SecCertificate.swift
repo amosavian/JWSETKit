@@ -18,7 +18,7 @@ import X509
 #endif
 import SwiftASN1
 
-extension Security.SecCertificate: Swift.Hashable, Swift.Codable, @unchecked Swift.Sendable {}
+extension Security.SecCertificate: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable, @unchecked Swift.Sendable {}
 
 extension SecCertificate: JSONWebValidatingKey {
 #if canImport(X509)
@@ -107,7 +107,7 @@ extension SecCertificate: Expirable {
     }
 }
 
-extension Security.SecTrust: Swift.Codable {}
+extension Security.SecTrust: Swift.Decodable, Swift.Encodable {}
 
 extension SecTrust: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {

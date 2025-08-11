@@ -12,7 +12,7 @@ import Foundation
 #endif
 import Crypto
 
-extension Crypto.P384.Signing.PublicKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.P384.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P384.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentified {
     public static var algorithm: any JSONWebAlgorithm { .ecdsaSignatureP384SHA384 }
@@ -20,7 +20,7 @@ extension P384.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentifi
     static var curve: JSONWebKeyCurve { .p384 }
 }
 
-extension Crypto.P384.KeyAgreement.PublicKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.P384.KeyAgreement.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P384.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p384 }
@@ -45,7 +45,7 @@ extension P384.Signing.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
 extension P384.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension Crypto.P384.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.P384.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P384.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentified, CryptoECPrivateKey {
     public typealias PublicKey = P384.Signing.PublicKey
@@ -62,7 +62,7 @@ extension P384.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentif
     }
 }
 
-extension Crypto.P384.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {
+extension Crypto.P384.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(publicKey)
     }

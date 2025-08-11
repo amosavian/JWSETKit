@@ -12,7 +12,7 @@ import Foundation
 #endif
 import Crypto
 
-extension Crypto.P521.Signing.PublicKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.P521.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P521.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentified {
     static var curve: JSONWebKeyCurve { .p521 }
@@ -20,7 +20,7 @@ extension P521.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentifi
     public static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .ecdsaP521 }
 }
 
-extension Crypto.P521.KeyAgreement.PublicKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.P521.KeyAgreement.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P521.KeyAgreement.PublicKey: CryptoECPublicKey {
     static var curve: JSONWebKeyCurve { .p521 }
@@ -45,7 +45,7 @@ extension P521.Signing.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
 extension P521.KeyAgreement.PublicKey: CryptoECKeyPortableCompactRepresentable {}
 
-extension Crypto.P521.Signing.PrivateKey: Swift.Hashable, Swift.Codable {}
+extension Crypto.P521.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P521.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentified, CryptoECPrivateKey {
     public typealias PublicKey = P521.Signing.PublicKey
@@ -62,7 +62,7 @@ extension P521.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentif
     }
 }
 
-extension Crypto.P521.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Codable {
+extension Crypto.P521.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(publicKey)
     }
