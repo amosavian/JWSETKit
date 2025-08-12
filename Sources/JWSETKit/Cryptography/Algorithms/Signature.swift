@@ -45,8 +45,8 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaSignaturePKCS1v15SHA384: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaSignaturePKCS1v15SHA512: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
-        .mldsa65Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
-        .mldsa87Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
+        .intenalMLDSA65Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
+        .intenalMLDSA87Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
     ]
     
     private static let keyTypes: AtomicValue<[Self: JSONWebKeyType]> = [
@@ -65,8 +65,8 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA256: .rsa,
         .rsaSignaturePKCS1v15SHA384: .rsa,
         .rsaSignaturePKCS1v15SHA512: .rsa,
-        .mldsa65Signature: .algorithmKeyPair,
-        .mldsa87Signature: .algorithmKeyPair,
+        .intenalMLDSA65Signature: .algorithmKeyPair,
+        .intenalMLDSA87Signature: .algorithmKeyPair,
     ]
     
     private static let curves: AtomicValue<[Self: JSONWebKeyCurve]> = [
@@ -214,8 +214,13 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     static var mldsa44Signature: Self { "ML-DSA-44" }
     
     /// **Signature**: ML-DSA-65 as described in FIPS 204.
-    static var mldsa65Signature: Self { "ML-DSA-65" }
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
+    public static var mldsa65Signature: Self { .intenalMLDSA65Signature }
     
     /// **Signature**: ML-DSA-87 as described in FIPS 204.
-    static var mldsa87Signature: Self { "ML-DSA-87" }
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
+    public static var mldsa87Signature: Self { .intenalMLDSA87Signature }
+    
+    static var intenalMLDSA65Signature: Self { "ML-DSA-65" }
+    static var intenalMLDSA87Signature: Self { "ML-DSA-87" }
 }

@@ -151,8 +151,8 @@ extension RFC5480AlgorithmIdentifier {
         .ed25519: .eddsaSignature,
         .ed448: .eddsaSignature,
         .mldsa44: .mldsa44Signature,
-        .mldsa65: .mldsa65Signature,
-        .mldsa87: .mldsa87Signature,
+        .mldsa65: .intenalMLDSA65Signature,
+        .mldsa87: .intenalMLDSA87Signature,
     ]
     
     public var jsonWebAlgorithm: (any JSONWebAlgorithm)? {

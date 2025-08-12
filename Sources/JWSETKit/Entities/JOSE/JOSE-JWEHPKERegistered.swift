@@ -16,10 +16,10 @@ import Crypto
 public struct JoseHeaderJWEHPKERegisteredParameters: JSONWebContainerParameters {
     public typealias Container = JOSEHeader
     /// An encapsulated key as defined in [Section 5.1.1 of RFC9180](https://www.rfc-editor.org/rfc/rfc9180.html#section-5.1.1 ).
-    var encapsulatedKey: Data?
+    public var encapsulatedKey: Data?
     
     /// A key identifier (`kid`) for the pre-shared key as defined in [Section 5.1.2 of RFC9180](https://www.rfc-editor.org/rfc/rfc9180.html#section-5.1.2 ).
-    var presharedKeyId: String?
+    var presharedKeyId: Data?
     
     @_documentation(visibility: private)
     public static let keys: [SendablePartialKeyPath<Self>: String] = [

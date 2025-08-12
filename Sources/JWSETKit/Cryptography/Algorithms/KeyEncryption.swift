@@ -456,10 +456,14 @@ extension JSONWebKeyEncryptionAlgorithm {
         }
     }
     
-    fileprivate static func hpkeDecryptionMutator(_ header: JOSEHeader, _ kek: inout any JSONWebKey, _: inout Data) throws {
+    fileprivate static func hpkeDecryptionMutator(_ header: JOSEHeader, _ kek: inout any JSONWebKey, _ cek: inout Data) throws {
         if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
             guard let algorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm) else {
                 throw JSONWebKeyError.unknownAlgorithm
+            }
+            guard header.presharedKeyId == nil else {
+                // Preshared key mode is not supported in this library
+                throw HPKE.Errors.unexpectedPSK
             }
             let privateKey: any HPKEDiffieHellmanPrivateKey & JSONWebKey
             if let key = kek as? (any HPKEDiffieHellmanPrivateKey & JSONWebKey) {
@@ -470,15 +474,21 @@ extension JSONWebKeyEncryptionAlgorithm {
             } else {
                 throw JSONWebKeyError.keyNotFound
             }
-            if let encapsulatedKey = header.encapsulatedKey {
-                let hpke = try HPKE.Recipient(
-                    privateKey: privateKey,
-                    ciphersuite: .init(algorithm: algorithm),
-                    info: .init(),
-                    encapsulatedKey: encapsulatedKey
-                )
-                kek = JSONWebHPKERecipient(recipient: hpke)
+            let encapsulatedKey: Data
+            if let headerEncapsulatedKey = header.encapsulatedKey, header.encryptionAlgorithm != .integrated {
+                encapsulatedKey = headerEncapsulatedKey
+            } else if header.encryptionAlgorithm == .integrated {
+                encapsulatedKey = cek
+            } else {
+                throw JSONWebKeyError.keyNotFound
             }
+            let hpke = try HPKE.Recipient(
+                privateKey: privateKey,
+                ciphersuite: .init(algorithm: algorithm),
+                info: .init(),
+                encapsulatedKey: encapsulatedKey
+            )
+            kek = JSONWebHPKERecipient(recipient: hpke)
         } else {
             throw JSONWebKeyError.unknownAlgorithm
         }

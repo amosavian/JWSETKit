@@ -216,8 +216,8 @@ enum JSONWebKeyAlgorithmKeyPairSigningSpecializer: JSONWebKeySpecializerByType {
     static let supportedKeyTypes: [JSONWebKeyType] = [.algorithmKeyPair]
     
     static let supportedAlgorithms: [any JSONWebAlgorithm]? = [
-        .mldsa65Signature,
-        .mldsa87Signature,
+        .intenalMLDSA65Signature,
+        .intenalMLDSA87Signature,
     ]
     
     static let objectIdentifiers: [ASN1ObjectIdentifier]? = .AlgorithmIdentifier.moduleLatticeDSAs

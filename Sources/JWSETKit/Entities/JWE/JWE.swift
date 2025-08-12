@@ -281,25 +281,20 @@ public struct JSONWebEncryption: Hashable, Sendable {
     
     fileprivate func decryptContentEncryptionKey(_ combinedHeader: JOSEHeader, _ key: any JSONWebKey, _ algorithm: JSONWebKeyEncryptionAlgorithm, _ targetEncryptedKey: Data?) throws -> any JSONWebSealOpeningKey {
         var targetEncryptedKey = targetEncryptedKey ?? .init()
+        var decryptingKey = key
+        try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &targetEncryptedKey)
         switch combinedHeader.encryptionAlgorithm {
         case .integrated:
-            if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
-                guard let privateKey = key as? (any HPKEDiffieHellmanPrivateKey) else {
-                    throw JSONWebKeyError.unknownKeyType
-                }
-                let hpke = try HPKE.Recipient(
-                    privateKey: privateKey,
-                    ciphersuite: .init(algorithm: algorithm),
-                    info: .init(),
-                    encapsulatedKey: targetEncryptedKey
-                )
-                return JSONWebHPKERecipient(recipient: hpke)
-            } else {
-                throw JSONWebKeyError.unknownAlgorithm
+            // When "alg" is not a JOSE-HPKE algorithm and the "enc" value is "int",
+            // the input MUST be rejected.
+            guard combinedHeader.algorithm?.rawValue.hasPrefix("HPKE") ?? false else {
+                throw JSONWebKeyError.operationNotAllowed
             }
+            guard let cek = decryptingKey as? any JSONWebSealOpeningKey else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            return cek
         default:
-            var decryptingKey = key
-            try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &targetEncryptedKey)
             guard let decryptingKey = decryptingKey as? (any JSONWebDecryptingKey) else {
                 throw JSONWebKeyError.keyNotFound
             }

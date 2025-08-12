@@ -150,7 +150,7 @@ public struct JoseHeaderJWSRegisteredParameters: JSONWebContainerParameters {
     /// the verifier of a JWS to recognize when replay has occurred.
     ///
     /// The "`nonce`" header parameter MUST be carried in the protected header of the JWS.
-    public var nonce: String?
+    public var nonce: Data?
     
     /// The "`url`" header parameter specifies the URL to which this JWS object is directed.
     ///
