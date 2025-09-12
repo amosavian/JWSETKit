@@ -462,7 +462,7 @@ extension JSONWebKeyEncryptionAlgorithm {
                 throw JSONWebKeyError.unknownAlgorithm
             }
             guard header.presharedKeyId == nil else {
-                // Preshared key mode is not supported in this library
+                // Pre-shared key mode is not supported in this library
                 throw HPKE.Errors.unexpectedPSK
             }
             let privateKey: any HPKEDiffieHellmanPrivateKey & JSONWebKey

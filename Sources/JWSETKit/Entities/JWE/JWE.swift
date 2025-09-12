@@ -358,8 +358,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         let mergedHeader = header.protected.value
             .merging(header.unprotected ?? .init(), uniquingKeysWith: { p, _ in p })
         for recipient in recipients {
-            let recipientMergedHeader = recipient.header
-                .map { mergedHeader.merging($0, uniquingKeysWith: { p, _ in p }) } ?? mergedHeader
+            let recipientMergedHeader = mergedHeader.merging(recipient.header ?? .init(), uniquingKeysWith: { p, _ in p })
             for key in keySet.matches(for: recipientMergedHeader) {
                 if let plain = try? decrypt(using: key) {
                     return plain

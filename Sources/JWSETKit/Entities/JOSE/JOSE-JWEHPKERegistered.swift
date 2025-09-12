@@ -14,7 +14,6 @@ import Crypto
 
 /// Registered parameters of JOSE header in [Draft JOSE-HPKE](https://datatracker.ietf.org/doc/html/draft-ietf-jose-hpke-encrypt-11#section-10.2.1 ).
 public struct JoseHeaderJWEHPKERegisteredParameters: JSONWebContainerParameters {
-    public typealias Container = JOSEHeader
     /// An encapsulated key as defined in [Section 5.1.1 of RFC9180](https://www.rfc-editor.org/rfc/rfc9180.html#section-5.1.1 ).
     public var encapsulatedKey: Data?
     

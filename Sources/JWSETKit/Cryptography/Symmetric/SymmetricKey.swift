@@ -47,7 +47,21 @@ extension ContiguousBytes {
     }
 }
 
-extension SymmetricKeySize {
+extension SymmetricKey {
+    public var size: SymmetricKeySize {
+        .init(bitCount: bitCount)
+    }
+}
+
+extension Crypto.SymmetricKeySize: Swift.Hashable, Swift.Equatable {
+    public static func == (lhs: Crypto.SymmetricKeySize, rhs: Crypto.SymmetricKeySize) -> Bool {
+        lhs.bitCount == rhs.bitCount
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(bitCount)
+    }
+    
     static func * (lhs: SymmetricKeySize, rhs: Int) -> SymmetricKeySize {
         .init(bitCount: lhs.bitCount * rhs)
     }

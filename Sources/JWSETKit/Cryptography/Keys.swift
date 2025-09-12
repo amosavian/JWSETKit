@@ -221,10 +221,10 @@ extension JSONWebKey {
     public func thumbprintUri<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> String where H: HashFunction {
         let digest = try thumbprint(format: format, using: hashFunction)
         let digestValue = digest.data.urlBase64EncodedString()
-        guard let digestType = H.Digest.self as? any NamedDigest.Type else {
+        guard let hashFunction = H.self as? any NamedHashFunction.Type else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        return "urn:ietf:params:oauth:\(format.rawValue)-thumbprint:\(digestType.identifier):\(digestValue)"
+        return "urn:ietf:params:oauth:\(format.rawValue)-thumbprint:\(hashFunction.identifier):\(digestValue)"
     }
 }
 
@@ -250,24 +250,6 @@ extension MutableJSONWebKey {
         // swiftformat:disable:next redundantSelf
         self.keyId = thumbprintUrn
     }
-}
-
-/// Hash name according to [RFC6920](https://www.rfc-editor.org/rfc/rfc6920 ).
-public protocol NamedDigest: Digest {
-    /// [IANA registration name](https://www.iana.org/assignments/named-information/named-information.xhtml) of the digest algorithm.
-    static var identifier: String { get }
-}
-
-extension SHA256Digest: NamedDigest {
-    public static let identifier = "sha-256"
-}
-
-extension SHA384Digest: NamedDigest {
-    public static let identifier = "sha-384"
-}
-
-extension SHA512Digest: NamedDigest {
-    public static let identifier = "sha-512"
 }
 
 /// Private key of an asymmetric cryptography algorithm.

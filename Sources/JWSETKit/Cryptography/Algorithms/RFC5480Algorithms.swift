@@ -150,9 +150,9 @@ extension RFC5480AlgorithmIdentifier {
         .ecdsaP521: .ecdsaSignatureP521SHA512,
         .ed25519: .eddsaSignature,
         .ed448: .eddsaSignature,
-        .mldsa44: .mldsa44Signature,
-        .mldsa65: .intenalMLDSA65Signature,
-        .mldsa87: .intenalMLDSA87Signature,
+        .mldsa44: .internalMLDSA44Signature,
+        .mldsa65: .internalMLDSA65Signature,
+        .mldsa87: .internalMLDSA87Signature,
     ]
     
     public var jsonWebAlgorithm: (any JSONWebAlgorithm)? {

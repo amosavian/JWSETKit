@@ -90,7 +90,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
         guard let size = AnyJSONWebAlgorithm(algorithm)?.keyLength else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        self.init(SymmetricKeySize(bitCount: size))
+        try self.init(SymmetricKeySize(bitCount: size))
     }
     
     /// Returns a new concrete key using json data.
@@ -104,15 +104,8 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
     /// Returns a new AES-KW with random key.
     ///
     /// - Parameter keySize: Size of random key in bits.
-    public init(_ keySize: SymmetricKeySize) {
-        self.storage = .init()
-        if [.bits128, .bits192, .bits256].contains(keySize) {
-            self.algorithm = .aesKeyWrap(bitCount: keySize.bitCount)
-            self.keyValue = SymmetricKey(size: keySize)
-        } else {
-            self.algorithm = .aesKeyWrap256
-            self.keyValue = SymmetricKey(size: .bits256)
-        }
+    public init(_ keySize: SymmetricKeySize) throws {
+        try self.init(SymmetricKey(size: keySize))
     }
     
     /// Initializes a AES-GCM key for encryption.
@@ -120,7 +113,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
     /// - Parameter key: A symmetric cryptographic key.
     public init(_ key: SymmetricKey) throws {
         self.storage = .init()
-        if [128, 192, 256].contains(key.bitCount) {
+        if [.bits128, .bits192, .bits256].contains(key.size) {
             self.algorithm = .aesKeyWrap(bitCount: key.bitCount)
         } else {
             throw CryptoKitError.incorrectParameterSize
@@ -136,6 +129,16 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
         try wrap(.init(data: Data(data)))
     }
     
+    /// Unwraps a key using the AES wrap algorithm.
+    ///
+    /// Wrap is an implementation of the AES key wrap algorithm as specified
+    /// in IETF RFC 3394. The method throws an error is the key was
+    /// incorrectly wrapped.
+    ///
+    /// - Parameters:
+    ///   - data: The key to unwrap.
+    ///
+    /// - Returns: The unwrapped key.
     public func unwrap<D>(_ data: D) throws -> SymmetricKey where D: DataProtocol {
         if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
             return try AES.KeyWrap.unwrap(data, using: .init(self))
@@ -148,6 +151,15 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
         }
     }
     
+    /// Wraps a key using the AES wrap algorithm.
+    ///
+    /// Wrap is an implementation of the AES key wrap algorithm as specified
+    /// in IETF RFC 3394.
+    ///
+    /// - Parameters:
+    ///   - key: The key to wrap.
+    ///
+    /// - Returns: The wrapped key.
     public func wrap(_ key: SymmetricKey) throws -> Data {
         if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
             return try AES.KeyWrap.wrap(key, using: .init(self))
@@ -158,15 +170,5 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
             return try AES.KeyWrap.wrap(key, using: .init(self))
 #endif
         }
-    }
-}
-
-extension Crypto.SymmetricKeySize: Swift.Hashable, Swift.Equatable {
-    public static func == (lhs: Crypto.SymmetricKeySize, rhs: Crypto.SymmetricKeySize) -> Bool {
-        lhs.bitCount == rhs.bitCount
-    }
-    
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(bitCount)
     }
 }

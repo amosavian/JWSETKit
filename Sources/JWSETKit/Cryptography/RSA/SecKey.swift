@@ -109,12 +109,16 @@ extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
         }
     }
     
+    private func attribute<T>(_ key: CFString, as type: T.Type) throws -> T? {
+        guard let attributes = SecKeyCopyAttributes(self) as? [CFString: Any] else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        return attributes[key] as? T
+    }
+    
     private var keyType: JSONWebKeyType {
         get throws {
-            guard let attributes = SecKeyCopyAttributes(self) as? [CFString: Any] else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            let cfKeyType = (attributes[kSecAttrKeyType] as? String ?? "") as CFString
+            let cfKeyType = try attribute(kSecAttrKeyType, as: CFString.self)
             switch cfKeyType {
             case kSecAttrKeyTypeRSA:
                 return .rsa
@@ -128,10 +132,7 @@ extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
     
     private var keyLength: Int {
         get throws {
-            guard let attributes = SecKeyCopyAttributes(self) as? [CFString: Any] else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            guard let size = attributes[kSecAttrKeySizeInBits] as? Int else {
+            guard let size = try attribute(kSecAttrKeySizeInBits, as: Int.self) else {
                 throw CryptoKitError.incorrectKeySize
             }
             return size
@@ -140,10 +141,13 @@ extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
     
     private var isPrivateKey: Bool {
         get throws {
-            guard let attributes = SecKeyCopyAttributes(self) as? [CFString: Any] else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            return (attributes[kSecAttrKeyClass] as? String ?? "") == kSecAttrKeyClassPrivate as String
+            return (try attribute(kSecAttrKeyClass, as: CFString.self)) == kSecAttrKeyClassPrivate
+        }
+    }
+    
+    private var isExtractable: Bool {
+        get throws {
+            return (try attribute(kSecAttrIsExtractable, as: Bool.self)) != false
         }
     }
     

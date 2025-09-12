@@ -26,7 +26,7 @@ extension MLDSA65.PublicKey: JSONWebValidatingKey, JSONWebKeyRawRepresentable, J
 }
 
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
-extension Crypto.MLDSA65.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable{}
+extension Crypto.MLDSA65.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension MLDSA65.PrivateKey: JSONWebSigningKey, JSONWebKeyImportable, JSONWebKeyExportable, CryptoModuleLatticePrivateKey {}

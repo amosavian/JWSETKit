@@ -45,8 +45,8 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaSignaturePKCS1v15SHA384: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
         .rsaSignaturePKCS1v15SHA512: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
-        .intenalMLDSA65Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
-        .intenalMLDSA87Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
+        .internalMLDSA65Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
+        .internalMLDSA87Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
     ]
     
     private static let keyTypes: AtomicValue<[Self: JSONWebKeyType]> = [
@@ -65,8 +65,8 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA256: .rsa,
         .rsaSignaturePKCS1v15SHA384: .rsa,
         .rsaSignaturePKCS1v15SHA512: .rsa,
-        .intenalMLDSA65Signature: .algorithmKeyPair,
-        .intenalMLDSA87Signature: .algorithmKeyPair,
+        .internalMLDSA65Signature: .algorithmKeyPair,
+        .internalMLDSA87Signature: .algorithmKeyPair,
     ]
     
     private static let curves: AtomicValue<[Self: JSONWebKeyCurve]> = [
@@ -215,12 +215,13 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     
     /// **Signature**: ML-DSA-65 as described in FIPS 204.
     @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
-    public static var mldsa65Signature: Self { .intenalMLDSA65Signature }
+    public static var mldsa65Signature: Self { .internalMLDSA65Signature }
     
     /// **Signature**: ML-DSA-87 as described in FIPS 204.
     @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
-    public static var mldsa87Signature: Self { .intenalMLDSA87Signature }
+    public static var mldsa87Signature: Self { .internalMLDSA87Signature }
     
-    static var intenalMLDSA65Signature: Self { "ML-DSA-65" }
-    static var intenalMLDSA87Signature: Self { "ML-DSA-87" }
+    static var internalMLDSA44Signature: Self { "ML-DSA-44" }
+    static var internalMLDSA65Signature: Self { "ML-DSA-65" }
+    static var internalMLDSA87Signature: Self { "ML-DSA-87" }
 }

@@ -23,6 +23,19 @@ enum RSAEncryptionPadding {
         case sha256
         case sha384
         case sha512
+        
+        var evp:  OpaquePointer? {
+            switch self {
+            case .sha1:
+                CCryptoBoringSSL_EVP_sha1()
+            case .sha256:
+                CCryptoBoringSSL_EVP_sha256()
+            case .sha384:
+                CCryptoBoringSSL_EVP_sha384()
+            case .sha512:
+                CCryptoBoringSSL_EVP_sha512()
+            }
+        }
     }
     
     init(algorithm: some JSONWebAlgorithm) throws {
@@ -292,16 +305,7 @@ extension BoringSSLRSAPublicKey {
                         CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING)
                     case .pkcs1_oaep(let digest):
                         CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING)
-                        switch digest {
-                        case .sha1:
-                            break // default case, nothing to set
-                        case .sha256:
-                            CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_oaep_md(ctx, CCryptoBoringSSL_EVP_sha256())
-                        case .sha384:
-                            CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_oaep_md(ctx, CCryptoBoringSSL_EVP_sha384())
-                        case .sha512:
-                            CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_oaep_md(ctx, CCryptoBoringSSL_EVP_sha512())
-                        }
+                        CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_oaep_md(ctx, digest.evp)
                     }
 
                     var writtenLength = bufferPtr.count
@@ -493,16 +497,7 @@ extension BoringSSLRSAPrivateKey {
                         CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_PADDING)
                     case .pkcs1_oaep(let digest):
                         CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING)
-                        switch digest {
-                        case .sha1:
-                            break // default case, nothing to set
-                        case .sha256:
-                            CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_oaep_md(ctx, CCryptoBoringSSL_EVP_sha256())
-                        case .sha384:
-                            CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_oaep_md(ctx, CCryptoBoringSSL_EVP_sha384())
-                        case .sha512:
-                            CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_oaep_md(ctx, CCryptoBoringSSL_EVP_sha512())
-                        }
+                        CCryptoBoringSSL_EVP_PKEY_CTX_set_rsa_oaep_md(ctx, digest.evp)
                     }
                     
                     var writtenLength = bufferPtr.count

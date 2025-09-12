@@ -371,7 +371,7 @@ struct SEC1PrivateKey: DERImplicitlyTaggable, PEMRepresentable {
     init(privateKey: [UInt8], algorithm: RFC5480AlgorithmIdentifier?, publicKey: [UInt8]) {
         self.privateKey = ASN1OctetString(contentBytes: privateKey[...])
         self.algorithm = algorithm
-        self.publicKey = ASN1BitString(bytes: publicKey[...])
+        self.publicKey = !publicKey.isEmpty ? ASN1BitString(bytes: publicKey[...]) : nil
     }
 
     func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier) throws {

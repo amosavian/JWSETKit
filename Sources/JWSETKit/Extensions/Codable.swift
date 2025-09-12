@@ -11,14 +11,24 @@ struct AnyCodable: Codable, @unchecked Sendable {
     let value: (any Sendable)?
     private var mirror: Mirror
     
+    var codableValue: JSONWebValueStorage.Value? {
+        guard let value else {
+            return nil
+        }
+        if let val = value as? [JSONWebValueStorage.Key: (any Codable)?] {
+            return (val as! JSONWebValueStorage.Value)
+        }
+        return ([value] as? [JSONWebValueStorage.Value])?[0]
+    }
+    
     @usableFromInline
     init<T: Sendable>(_ value: T?) {
         if let value = value as? AnyCodable {
             self = value
         } else {
             self.value = value
+            self.mirror = value.customMirror
         }
-        self.mirror = value.customMirror
     }
     
     @usableFromInline

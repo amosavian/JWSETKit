@@ -13,7 +13,7 @@ import Foundation
 import Crypto
 
 protocol CryptoModuleLatticePublicKey: JSONWebKey, JSONWebKeyRawRepresentable, JSONWebKeyAlgorithmIdentified, JSONWebKeyImportable, JSONWebKeyExportable {
-    func isValidSignature<S, D>(_ signature: S, for data: D) -> Bool where S : DataProtocol, D : DataProtocol
+    func isValidSignature<S, D>(_ signature: S, for data: D) -> Bool where S: DataProtocol, D: DataProtocol
 }
 
 extension CryptoModuleLatticePublicKey {

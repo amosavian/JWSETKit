@@ -96,7 +96,7 @@ extension JSONWebContentEncryptionAlgorithm {
 // Content Encryption
 extension JSONWebAlgorithm where Self == JSONWebContentEncryptionAlgorithm {
     /// **Content Encryption**: Encryption is provided by KEK directly, e.g. when HPKE JWE Integrated Encryption is used.
-    static var integrated: Self { "int" }
+    public static var integrated: Self { "int" }
     
     /// **Content Encryption**: AES GCM using 128-bit key.
     public static var aesEncryptionGCM128: Self { "A128GCM" }
