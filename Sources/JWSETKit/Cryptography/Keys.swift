@@ -224,7 +224,7 @@ extension JSONWebKey {
         guard let hashFunction = H.self as? any NamedHashFunction.Type else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        return "urn:ietf:params:oauth:\(format.rawValue)-thumbprint:\(hashFunction.identifier):\(digestValue)"
+        return "urn:ietf:params:oauth:\(format)-thumbprint:\(hashFunction.identifier):\(digestValue)"
     }
 }
 
@@ -457,6 +457,9 @@ public struct AnyJSONWebKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWebKeyCur
         self.storage = key.storage
     }
     
+    /// Initializes `AnyJSONWebKey` from symmetric key parameters.
+    ///
+    /// - Parameter key: symmetric key that type-erased JWK must be initialized from
     public init(_ key: SymmetricKey) throws {
         self.storage = .init()
         self.keyType = .symmetric

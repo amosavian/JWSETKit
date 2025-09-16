@@ -109,7 +109,7 @@ extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
         }
     }
     
-    private func attribute<T>(_ key: CFString, as type: T.Type) throws -> T? {
+    private func attribute<T>(_ key: CFString, as _: T.Type) throws -> T? {
         guard let attributes = SecKeyCopyAttributes(self) as? [CFString: Any] else {
             throw JSONWebKeyError.keyNotFound
         }
@@ -141,13 +141,13 @@ extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
     
     private var isPrivateKey: Bool {
         get throws {
-            return (try attribute(kSecAttrKeyClass, as: CFString.self)) == kSecAttrKeyClassPrivate
+            try (attribute(kSecAttrKeyClass, as: CFString.self)) == kSecAttrKeyClassPrivate
         }
     }
     
     private var isExtractable: Bool {
         get throws {
-            return (try attribute(kSecAttrIsExtractable, as: Bool.self)) != false
+            try (attribute(kSecAttrIsExtractable, as: Bool.self)) != false
         }
     }
     
@@ -327,7 +327,7 @@ extension SecKey: JSONWebDecryptingKey {
     ]
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        guard let secAlgorithm = Self.encAlgorithms[.init(algorithm.rawValue)] else {
+        guard let secAlgorithm = Self.encAlgorithms[.init(algorithm)] else {
             throw JSONWebKeyError.operationNotAllowed
         }
         return try handle { error in
@@ -336,7 +336,7 @@ extension SecKey: JSONWebDecryptingKey {
     }
     
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        guard let secAlgorithm = Self.encAlgorithms[.init(algorithm.rawValue)] else {
+        guard let secAlgorithm = Self.encAlgorithms[.init(algorithm)] else {
             throw JSONWebKeyError.operationNotAllowed
         }
         

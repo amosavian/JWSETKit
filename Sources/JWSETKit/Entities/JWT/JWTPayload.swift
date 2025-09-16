@@ -10,6 +10,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
+import Crypto
 
 /// Claims and payload in a JWT.
 public struct JSONWebTokenClaims: MutableJSONWebContainer, Sendable {
@@ -22,35 +23,6 @@ public struct JSONWebTokenClaims: MutableJSONWebContainer, Sendable {
 
 /// A JWS object that contains JWT registered tokens.
 public typealias JSONWebToken = JSONWebSignature<ProtectedJSONWebContainer<JSONWebTokenClaims>>
-
-extension JSONWebToken {
-    /// Creates a new JWT with given payload then signs with given key.
-    /// - Parameters:
-    ///   - payload: JWT payload.
-    ///   - algorithm: Sign and hash algorithm.
-    ///   - signingKey: The key to sign the payload.
-    public init<SK>(
-        payload: JSONWebTokenClaims,
-        algorithm: JSONWebSignatureAlgorithm,
-        using signingKey: SK
-    ) throws where SK: JSONWebSigningKey {
-        guard algorithm.keyType == signingKey.keyType else {
-            throw JSONWebKeyError.operationNotAllowed
-        }
-        self.signatures = try [
-            .init(
-                protected: JOSEHeader(
-                    algorithm: algorithm,
-                    type: .jwt,
-                    keyId: signingKey.keyId
-                ),
-                signature: .init()
-            ),
-        ]
-        self.payload = try .init(value: payload)
-        try updateSignature(using: signingKey)
-    }
-}
 
 extension JSONWebTokenClaims {
     /// Verify that the given audience is included as one of the claim's intended audiences.
@@ -100,6 +72,48 @@ extension JSONWebToken: Expirable {
     }
 }
 
+extension JSONWebToken {
+    /// Verifies token validity and signature.
+    ///
+    /// - Parameters:
+    ///   - keySet: A `JSONWebKeySet` object contains keys that would be used for validation.
+    ///   - audience: The exact intended audience, if applicable.
+    public func verify(using keySet: JSONWebKeySet, for audience: String? = nil) throws {
+        try verifySignature(using: keySet)
+        try verifyDate()
+        if let audience {
+            try verifyAudience(includes: audience)
+        }
+    }
+    
+    /// Verifies token validity and signature.
+    ///
+    /// - Parameters:
+    ///   - keys: An array of `JSONWebValidatingKey` that would be used for validation.
+    ///   - audience: The exact intended audience, if applicable.
+    public func verify<S>(using keys: S, for audience: String? = nil) throws where S: Sequence, S.Element: JSONWebValidatingKey {
+        try verify(using: JSONWebKeySet(keys: keys), for: audience)
+    }
+    
+    /// Verifies token validity and signature.
+    ///
+    /// - Parameters:
+    ///   - keys: An array of `JSONWebValidatingKey` that would be used for validation.
+    ///   - audience: The exact intended audience, if applicable.
+    public func verify<S>(using keys: S, for audience: String? = nil) throws where S: Sequence<any JSONWebValidatingKey> {
+        try verify(using: JSONWebKeySet(keys: .init(keys)), for: audience)
+    }
+    
+    /// Verifies token validity and signature.
+    ///
+    /// - Parameters:
+    ///   - key: A `JSONWebValidatingKey` object that would be used for validation.
+    ///   - audience: The exact intended audience, if applicable.
+    public func verify(using key: some JSONWebValidatingKey, for audience: String? = nil) throws {
+        try verify(using: JSONWebKeySet(keys: [key]), for: audience)
+    }
+}
+
 #if canImport(Foundation.NSURLSession)
 extension URLRequest {
     /// The `Authorization` http header in `Bearer` with given JSON Web Token (JWT).
@@ -112,6 +126,45 @@ extension URLRequest {
         set {
             setValue((newValue.map { "Bearer \($0.description)" }), forHTTPHeaderField: "Authorization")
         }
+    }
+    
+    /// Verifies `Authorization`'s header token validity and signature.
+    ///
+    /// - Parameters:
+    ///   - keySet: A `JSONWebKeySet` object contains keys that would be used for validation.
+    ///   - audience: The exact intended audience, if applicable.
+    public func verifyAuthorizationToken(using keySet: JSONWebKeySet, for audience: String? = nil) throws {
+        guard let authorizationToken = authorizationToken else {
+            throw CryptoKitError.authenticationFailure
+        }
+        try authorizationToken.verify(using: keySet, for: audience)
+    }
+    
+    /// Verifies `Authorization`'s header token validity and signature.
+    ///
+    /// - Parameters:
+    ///   - keys: An array of `JSONWebValidatingKey` that would be used for validation.
+    ///   - audience: The exact intended audience, if applicable.
+    public func verifyAuthorizationToken<S>(using keys: S, for audience: String? = nil) throws where S: Sequence, S.Element: JSONWebValidatingKey {
+        try verifyAuthorizationToken(using: JSONWebKeySet(keys: keys), for: audience)
+    }
+    
+    /// Verifies `Authorization`'s header token validity and signature.
+    ///
+    /// - Parameters:
+    ///   - keys: An array of `JSONWebValidatingKey` that would be used for validation.
+    ///   - audience: The exact intended audience, if applicable.
+    public func verify<S>(using keys: S, for audience: String? = nil) throws where S: Sequence<any JSONWebValidatingKey> {
+        try verifyAuthorizationToken(using: JSONWebKeySet(keys: .init(keys)), for: audience)
+    }
+    
+    /// Verifies `Authorization`'s header token validity and signature.
+    ///
+    /// - Parameters:
+    ///   - key: A `JSONWebValidatingKey` object that would be used for validation.
+    ///   - audience: The exact intended audience, if applicable.
+    public func verify(using key: some JSONWebValidatingKey, for audience: String? = nil) throws {
+        try verifyAuthorizationToken(using: JSONWebKeySet(keys: [key]), for: audience)
     }
 }
 #endif

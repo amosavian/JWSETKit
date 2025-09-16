@@ -189,6 +189,119 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     }
 }
 
+extension JSONWebSignature {
+    /// Strategy for identifying keys in JWS headers.
+    ///
+    /// Determines how the key identifier (`kid`) parameter is set in the JWS header
+    /// to help recipients identify which key to use for signature verification.
+    public enum KeyIdStrategy: Hashable {
+        /// Use the key's `keyId` property if available.
+        ///
+        /// This is the default strategy. If the signing key has a `keyId` property set,
+        /// it will be used as the `kid` header parameter.
+        case id
+
+        /// Use a custom string as the key identifier.
+        ///
+        /// - Parameter String: The custom identifier to use as the `kid` header parameter.
+        case customId(String)
+
+        /// Use the key's thumbprint as the identifier.
+        ///
+        /// Calculates and uses the JWK thumbprint of the signing key as the `kid` header parameter.
+        /// This provides a standardized way to identify keys based on their cryptographic properties.
+        case thumbprint
+
+        /// Use the key's `keyId` if available, otherwise fall back to thumbprint.
+        ///
+        /// First attempts to use the key's `keyId` property, and if that's not available,
+        /// calculates and uses the key's thumbprint as the identifier.
+        case idWithThumbprintFallback
+
+        /// Embed the full public key in the header instead of using an identifier.
+        ///
+        /// Places the complete public key in the `jwk` header parameter rather than
+        /// using a `kid` identifier. Recipients can use the embedded key directly
+        /// without needing to look it up.
+        case embedded
+    }
+    
+    /// Creates a new JWS/JWT with given protected payload then signs with given key.
+    /// - Parameters:
+    ///   - payload: JWS/JWT payload.
+    ///   - algorithm: Sign and hash algorithm.
+    ///   - signingKey: The key to sign the payload.
+    public init<SK>(
+        payload: Payload,
+        algorithm: JSONWebSignatureAlgorithm,
+        keyIdStrategy: KeyIdStrategy? = .id,
+        using signingKey: SK
+    ) throws where SK: JSONWebSigningKey {
+        guard algorithm.keyType == signingKey.keyType else {
+            throw JSONWebKeyError.operationNotAllowed
+        }
+        var header = JOSEHeader(
+            algorithm: algorithm,
+            type: .jwt
+        )
+        switch keyIdStrategy {
+        case .id:
+            header.keyId = signingKey.keyId
+        case .customId(let id):
+            header.keyId = id
+        case .thumbprint:
+            header.keyId = try signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
+        case .idWithThumbprintFallback:
+            header.keyId = try signingKey.keyId ?? signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
+        case .embedded:
+            header.key = signingKey
+        case .none:
+            break
+        }
+        
+        self.signatures = try [
+            .init(protected: header, signature: .init()),
+        ]
+        self.payload = payload
+        try updateSignature(using: signingKey)
+    }
+}
+
+/// A JWS object that contains plain data.
+public typealias JSONWebSignaturePlain = JSONWebSignature<ProtectedDataWebContainer>
+
+extension JSONWebSignature where Payload == ProtectedDataWebContainer {
+    /// Creates a new JWS/JWT with given payload then signs with given key.
+    /// - Parameters:
+    ///   - payload: JWS/JWT payload.
+    ///   - algorithm: Sign and hash algorithm.
+    ///   - signingKey: The key to sign the payload.
+    public init<PD, SK>(
+        payload: PD,
+        algorithm: JSONWebSignatureAlgorithm,
+        keyIdStrategy: KeyIdStrategy? = .id,
+        using signingKey: SK
+    ) throws where PD: Collection, PD.Element == UInt8, SK: JSONWebSigningKey {
+        try self.init(payload: Payload(encoded: .init(payload)), algorithm: algorithm, keyIdStrategy: keyIdStrategy, using: signingKey)
+    }
+}
+
+extension JSONWebSignature where Payload: TypedProtectedWebContainer {
+    /// Creates a new JWS/JWT with given payload then signs with given key.
+    /// - Parameters:
+    ///   - payload: JWS/JWT payload.
+    ///   - algorithm: Sign and hash algorithm.
+    ///   - signingKey: The key to sign the payload.
+    public init<SK>(
+        payload: Payload.Container,
+        algorithm: JSONWebSignatureAlgorithm,
+        keyIdStrategy: KeyIdStrategy? = .id,
+        using signingKey: SK
+    ) throws where SK: JSONWebSigningKey {
+        try self.init(payload: Payload(value: payload), algorithm: algorithm, keyIdStrategy: keyIdStrategy, using: signingKey)
+    }
+}
+
 extension String {
     /// Encodes JWS to a Base64URL compact encoded string.
     ///

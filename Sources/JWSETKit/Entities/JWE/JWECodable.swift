@@ -188,8 +188,15 @@ extension JSONWebEncryption: Codable {
     }
 }
 
+/// Allows encoding JWE with configuration for representation style of JWE such as compact, flattened JSON or JSON.
 @available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
 public struct JSONWebEncryptionCodableConfiguration: Sendable {
+    /// Changes serialization of JWE.
+    ///
+    /// Applications using this specification need to specify what serialization and serialization features are
+    /// used for that application.
+    ///
+    /// Default value is `.compact` if not set.
     public let representation: JSONWebEncryptionRepresentation
     
     public init(representation: JSONWebEncryptionRepresentation) {

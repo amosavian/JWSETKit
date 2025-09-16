@@ -24,7 +24,7 @@ enum RSAEncryptionPadding {
         case sha384
         case sha512
         
-        var evp:  OpaquePointer? {
+        var evp: OpaquePointer? {
             switch self {
             case .sha1:
                 CCryptoBoringSSL_EVP_sha1()

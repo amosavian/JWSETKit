@@ -44,7 +44,7 @@ public struct JOSEHeader: MutableJSONWebContainer, Sendable {
         self.keyId = keyId
     }
     
-    public func merging(_ other: JOSEHeader, uniquingKeysWith combine: (JSONWebValueStorage.Value, JSONWebValueStorage.Value) throws -> JSONWebValueStorage.Value) rethrows -> JOSEHeader {
+    public func merging(_ other: JOSEHeader, uniquingKeysWith combine: (any Sendable, any Sendable) throws -> any Sendable) rethrows -> JOSEHeader {
         guard !other.storage.storageKeys.isEmpty else { return self }
         let storage = try storage.merging(other.storage, uniquingKeysWith: combine)
         return .init(storage: storage)

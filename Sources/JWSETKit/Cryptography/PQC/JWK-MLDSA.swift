@@ -41,13 +41,13 @@ package struct JSONWebMLDSAPublicKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyP
     static func validatingType(_ algorithm: (any JSONWebAlgorithm)?) throws -> any (JSONWebValidatingKey & JSONWebKeyImportable).Type {
         switch algorithm ?? JSONWebSignatureAlgorithm.unsafeNone {
 #if canImport(CryptoKit) && compiler(>=6.2)
-        case .mldsa65Signature:
+        case .internalMLDSA65Signature:
             if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
                 return MLDSA65.PublicKey.self
             } else {
                 throw JSONWebKeyError.unknownKeyType
             }
-        case .mldsa87Signature:
+        case .internalMLDSA87Signature:
             if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
                 return MLDSA87.PublicKey.self
             } else {
@@ -119,13 +119,13 @@ package struct JSONWebMLDSAPrivateKey: MutableJSONWebKey, JSONWebKeyAlgorithmKey
     static func signingType(_ algorithm: (any JSONWebAlgorithm)?) throws -> any (JSONWebSigningKey & JSONWebKeyImportable).Type {
         switch algorithm ?? JSONWebSignatureAlgorithm.unsafeNone {
 #if canImport(CryptoKit) && compiler(>=6.2)
-        case .mldsa65Signature:
+        case .internalMLDSA65Signature:
             if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
                 return MLDSA65.PrivateKey.self
             } else {
                 throw JSONWebKeyError.unknownKeyType
             }
-        case .mldsa87Signature:
+        case .internalMLDSA87Signature:
             if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
                 return MLDSA87.PrivateKey.self
             } else {

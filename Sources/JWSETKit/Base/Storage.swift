@@ -18,7 +18,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     public typealias Key = String
     public typealias ValueType = Codable & Sendable
     
-    private var storage: [String: AnyCodable]
+    private var storage: [Key: any Sendable]
     
     public var customMirror: Mirror {
         storage.customMirror
@@ -71,9 +71,9 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     /// Returns values of given key.
     public subscript<T: ValueType>(_ member: String) -> [T] {
         get {
-            if let array = storage[member]?.value as? [T] {
+            if let array = storage[member] as? [T] {
                 return array
-            } else if let array = storage[member]?.value as? [Any] {
+            } else if let array = storage[member] as? [Any] {
                 return array.compactMap { JSONWebValueStorage.cast(value: $0, as: T.self) }
             } else {
                 return []
@@ -130,20 +130,21 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     
     /// Initializes storage with given key values.
     public init(_ elements: [String: any ValueType]) {
-        self.storage = .init(uniqueKeysWithValues: elements.map {
-            ($0, AnyCodable($1))
-        })
+        self.storage = elements
+    }
+    
+    private init(_ elements: [String: any Sendable]) {
+        self.storage = elements
     }
     
     public init(dictionaryLiteral elements: (String, any ValueType)...) {
-        let elements = elements.map { ($0, AnyCodable($1)) }
         self.storage = .init(uniqueKeysWithValues: elements)
     }
     
     public init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
         if let claims = try? container.decode([String: AnyCodable].self) {
-            self.storage = claims
+            self.storage = claims.mapValues { $0.value }
         } else if let base64url = try? container.decode(String.self),
                   let data = Data(urlBase64Encoded: base64url)
         {
@@ -165,9 +166,9 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     ///  - other: A storage to merge into this storage.
     ///  - combine: A closure that combines the values for any duplicate keys.
     /// - Returns: A new storage with the combined keys and values of this storage and `other`.
-    public func merging(_ other: JSONWebValueStorage, uniquingKeysWith combine: (any ValueType, any ValueType) throws -> any ValueType) rethrows -> JSONWebValueStorage {
+    public func merging(_ other: JSONWebValueStorage, uniquingKeysWith combine: (any Sendable, any Sendable) throws -> any Sendable) rethrows -> JSONWebValueStorage {
         try JSONWebValueStorage(storage.merging(other.storage) {
-            try .init(combine($0.value as! any ValueType, $1.value as! any ValueType))
+            try combine($0, $1)
         })
     }
     
@@ -178,7 +179,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
-        try container.encode(storage)
+        try container.encode(AnyCodable(storage))
     }
     
     public static func == (lhs: JSONWebValueStorage, rhs: JSONWebValueStorage) -> Bool {
@@ -248,7 +249,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     
     @usableFromInline
     func get<T>(key: String, as _: T.Type) -> T? where T: ValueType {
-        JSONWebValueStorage.cast(value: storage[key]?.value, as: T.self)
+        JSONWebValueStorage.cast(value: storage[key], as: T.self)
     }
     
     @usableFromInline

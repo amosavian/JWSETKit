@@ -69,7 +69,7 @@ extension Crypto.SymmetricKeySize: Swift.Hashable, Swift.Equatable {
 
 extension SymmetricKey: JSONWebSymmetricSigningKey {
     public init(algorithm: some JSONWebAlgorithm) throws {
-        if let size = AnyJSONWebAlgorithm(algorithm.rawValue).keyLength {
+        if let size = AnyJSONWebAlgorithm(algorithm).keyLength {
             self.init(size: .init(bitCount: size))
         } else {
             self.init(size: .bits256)
@@ -94,7 +94,7 @@ extension SymmetricKey: JSONWebSymmetricSigningKey {
 
 extension SymmetricKey: JSONWebSymmetricDecryptingKey {
     private func key(_ algorithm: some JSONWebAlgorithm) throws -> (any JSONWebSymmetricDecryptingKey)? {
-        if let keyClass = JSONWebKeyEncryptionAlgorithm(algorithm.rawValue).decryptingKeyClass as? any JSONWebSymmetricDecryptingKey.Type {
+        if let keyClass = JSONWebKeyEncryptionAlgorithm(algorithm).decryptingKeyClass as? any JSONWebSymmetricDecryptingKey.Type {
             return try keyClass.init(self)
         }
         return nil

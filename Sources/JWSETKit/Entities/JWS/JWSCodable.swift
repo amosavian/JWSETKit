@@ -227,6 +227,7 @@ extension JSONWebSignature: Codable {
     }
 }
 
+/// Allows encoding JWS with configuration for representation style of JWS such as compact, flattened JSON or JSON.
 @available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
 public struct JSONWebSignatureCodableConfiguration: Sendable {
     /// Determines serialization to JWS Compact or the JWS JSON form.

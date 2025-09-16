@@ -140,8 +140,7 @@ extension JSONWebTokenClaims {
             storage[stringKey(keyPath)]
         }
         set {
-            let key = stringKey(keyPath)
-            storage[key] = newValue
+            storage[stringKey(keyPath)] = newValue
         }
     }
 }

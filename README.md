@@ -1,6 +1,8 @@
 # JWSETKit
 
-A library for working with JSON Web Signature (JWS) and JSON Web Token (JWT).
+A library for working with JSON Web Signature (JWS) and .
+**A modern, type-safe Swift library for JSON Web Token (JWT), JSON Web Signature (JWS),
+ and JSON Web Encryption (JWE) with first-class Apple's CryptoKit support**
 
 [![Swift][swift-workflow-badge]][swift-workflow-url]
 [![CodeQL][codeql-workflow-badge]][codeql-workflow-url]
@@ -20,45 +22,61 @@ A library for working with JSON Web Signature (JWS) and JSON Web Token (JWT).
 
 ## Overview
 
-JSON Web Signature (JWS) represents content secured with digital
-signatures or Message Authentication Codes (MACs) using JSON-based
-[RFC7159][RFC7159] data structures.
-The JWS cryptographic mechanisms provide integrity protection for 
-an arbitrary sequence of octets.
-
-JSON Web Token (JWT) is a compact claims representation format
-intended for space constrained environments such as HTTP
-Authorization headers and URI query parameters.
+Building secure authentication in Swift? JWSETKit is your complete solution
+for working with **JSON Web Tokens (JWT)**, **JSON Web Signatures (JWS)**,
+and **JSON Web Encryption (JWE)** with native Apple CryptoKit integration.
 
 This module makes it possible to serialize, deserialize, create, 
 and verify JWS/JWT messages.
 
-## Supported Swift Versions
 
-This library was introduced with support for Swift 5.8 or later.
+## 📖 Table of Contents
+
+- [Features](#-features)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Comparison with Alternatives](#-comparison-with-alternatives)
+- [Documentation](#-documentation)
+- [Contributing](#-contributing)
+- [License](#-license)
+
+## 🚀 Features
+
+### Core Capabilities
+
+✅ **JWT (JSON Web Tokens)**
+- Create, sign, verify, and decode JWT tokens
+- Support for standard and custom claims
+- Expiration and validation handling
+
+✅ **JWS (JSON Web Signature)**
+- Digital signatures with multiple algorithms
+- Message authentication codes (MACs)
+- Detached signature support
+
+✅ **JWE (JSON Web Encryption)**
+- Content encryption with various algorithms
+- Key wrapping and management
+- Compact and JSON serialization
+
+✅ **JWK (JSON Web Keys)**
+- Key generation and management
+- Key conversion and serialization
+- Support for key sets (JWKS)
 
 ## Getting Started
 
-To use JWSETKit, add the following dependency to your Package.swift:
+### Swift Package Manager
+
+Add JWSETKit to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", from: "0.24.0")
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "0.26.0")
 ]
 ```
 
-From Swift 6.1 onwards, X509 support is not enabled by default to reduce dependencies,
-If you want to have support of X509 from [swift-certificates](https://github.com/apple/swift-certificates) library:
-
-```swift
-dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", from: "0.24.0", traits: ["X509"])
-]
-```
-
-Note that this repository does not have a 1.0 tag yet, so the API is not stable.
-
-You can then add the specific product dependency to your target:
+Then add to your target:
 
 ```swift
 dependencies: [
@@ -66,11 +84,113 @@ dependencies: [
 ]
 ```
 
+### With X509 Support
+
+For X509 certificate support (Swift 6.1+):
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "0.26.0", traits: ["X509"])
+]
+```
+
+### Xcode
+
+1. File → Add Package Dependencies
+2. Enter: `https://github.com/amosavian/JWSETKit`
+3. Select version and add to your target
+
 ## Usage
 
 For detailed usage and API documentation, check [the documentation][docs].
 
-## Comparison To Other Libraries
+### Creating and Verifying JWT Signature
+
+```swift
+import JWSETKit
+import CryptoKit
+
+// Create a JWT with claims
+let key = SymmetricKey(size: .bits128)
+let payload = try JSONWebTokenClaims {
+    $0.issuedAt = .init()
+    $0.expiry = .init(timeIntervalSinceNow: 3600)
+    $0.jwtUUID = .init()
+    $0.subject = "user123"
+}
+let jwt = try JSONWebToken(payload: payload, algorithm: .hmacSHA256, using: key)
+
+// Verify and decode
+let decodedJWT = try JSONWebToken(from: jwtString)
+try decodedJWT.verifySignature(using: key)
+print(decodedJWT.payload.subject) // "user123"
+```
+
+### Basic JWT Authentication
+
+```swift
+// Initialize key
+let key = try P256.Signing.PublicKey(pemRepresentation: publicKeyPEM)
+
+// Verify incoming JWT
+    
+let token = try JSONWebToken(from: request.headers["Authorization"])
+try token.verify(using: key, for: "audience-name")
+```
+
+### Working with JWS
+
+```swift
+// Sign arbitrary data with JWS
+let payload = "Important message"
+let jws = try JSONWebSignaturePlain(
+    payload: payload.utf8,
+    algorithm: .ecdsaSignatureP256SHA256,
+    using: key
+)
+try print(String(jws))
+
+// Verify JWS signature
+let verified = try JSONWebSignaturePlain(from: String(jws))
+try verified.verifySignature(using: key)
+let message = String(decoding: verified.payload, as: UTF8.self)
+```
+
+### Encrypting with JWE
+
+```swift
+// Encrypt sensitive data
+let sensitiveData = Data("Secret information".utf8)
+let encryptionKey = JSONWebRSAPrivateKey(keySize: .bits2048) 
+let jwe = try JSONWebEncryption(
+    content: sensitiveData,
+    keyEncryptingAlgorithm: .rsaEncryptionOAEP,
+    keyEncryptionKey: encryptionKey.publicKey,
+    contentEncryptionAlgorithm: .aesEncryptionGCM128
+)
+try print(String(jwe))
+
+// Decrypt JWE
+let jwe = try JSONWebEncryption(from: jweString)
+let decrypted = jwe.decrypt(using: encryptionKey)
+let secret = String(decoding: decrypted, as: UTF8.self)
+```
+
+### Managing Keys with JWK
+
+```swift
+// Create CryptoKit key
+let privateKey = P256.Signing.PrivateKey()
+
+// Import and Export as JWK data
+let jwkJSON = try JSONEncoder().encode(privateKey)
+let importedJWK = try JSONDecoder().decode(P256.Signing.PrivateKey.self, from: jwkJSON)
+
+// Import PKCS#8
+let importedKey = try P256.Signing.PrivateKey(importing: pkcs8Data, format: .pkcs8)
+```
+
+## 📊 Comparison with Alternatives
 
 ### Features
 
@@ -153,6 +273,87 @@ For detailed usage and API documentation, check [the documentation][docs].
 | A256GCM       | :white_check_mark: | :white_check_mark: |
 
 
+## 🏗️ Use Cases
+
+JWSETKit is perfect for:
+
+- 🔑 **API Authentication** - Secure REST API authentication with JWT tokens
+- 🌐 **OAuth 2.0 / OpenID Connect** - Implement modern authentication flows
+- 📱 **Mobile App Security** - Token-based auth for iOS/macOS apps
+- 🔄 **Microservices** - Service-to-service authentication
+- 🎫 **Session Management** - Stateless session tokens
+- 🔐 **Data Encryption** - Protect sensitive data with JWE
+
+## 📚 Documentation
+
+### 📖 [Full Documentation][docs]
+
+Browse our comprehensive guides:
+- [Getting Started Guide][docs]
+- [API Reference][docs]
+- [Security Best Practices](https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/security)
+
+## 🤝 Contributing
+
+We welcome contributions!
+
+### How to Contribute
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development
+
+```bash
+# Clone the repository
+git clone https://github.com/amosavian/JWSETKit.git
+
+# Run tests
+swift test
+
+# Build the project
+swift build
+```
+
+## 🌟 Support
+
+- 🐛 [Report Issues](https://github.com/amosavian/JWSETKit/issues)
+- 💬 [Discussions](https://github.com/amosavian/JWSETKit/discussions)
+- 📧 [Contact](https://github.com/amosavian)
+
+## 📄 License
+
+JWSETKit is released under the MIT License. See [LICENSE](LICENSE) for details.
+
+## 🙏 Acknowledgments
+
+This library implements the following JOSE standards:
+- [RFC 7515](https://www.rfc-editor.org/rfc/rfc7515) - JSON Web Signature (JWS)
+- [RFC 7516](https://www.rfc-editor.org/rfc/rfc7516) - JSON Web Encryption (JWE)
+- [RFC 7517](https://www.rfc-editor.org/rfc/rfc7517) - JSON Web Key (JWK)
+- [RFC 7518](https://www.rfc-editor.org/rfc/rfc7518) - JSON Web Algorithms (JWA)
+- [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519) - JSON Web Token (JWT)
+- [RFC 7520](https://www.rfc-editor.org/rfc/rfc7519) - Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)
+- [RFC 7797](https://www.rfc-editor.org/rfc/rfc7797) - JSON Web Signature (JWS) Unencoded Payload Option
+- [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800) - Proof-of-Possession Key Semantics for JSON Web Tokens (JWTs)
+- [draft-ietf-jose-fully-specified-algorithms](https://datatracker.ietf.org/doc/draft-ietf-jose-fully-specified-algorithms/) - Fully-Specified Algorithms for JOSE and COSE
+- [draft-ietf-jose-hpke-encrypt](https://datatracker.ietf.org/doc/draft-ietf-jose-hpke-encrypt/) - Use of Hybrid Public Key Encryption (HPKE) with JSON Object Signing and Encryption (JOSE)
+- [draft-ietf-cose-dilithium](https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/) - ML-DSA for JOSE and COSE
+- [OIDC Core](https://openid.net/specs/openid-connect-core-1_0.html) - OpenID Connect Core 1.0 incorporating errata set 2
+
+---
+
+<div align="center">
+
+**Built with ❤️ using Swift**
+
+[![Star on GitHub](https://img.shields.io/github/stars/amosavian/JWSETKit.svg?style=social)](https://github.com/amosavian/JWSETKit/stargazers)
+
+</div>
+
 [swift-workflow-badge]: https://github.com/amosavian/JWSETKit/actions/workflows/swift.yml/badge.svg
 [swift-workflow-url]: https://github.com/amosavian/JWSETKit/actions/workflows/swift.yml
 [codeql-workflow-badge]: https://github.com/amosavian/JWSETKit/actions/workflows/codeql.yml/badge.svg
@@ -175,8 +376,7 @@ For detailed usage and API documentation, check [the documentation][docs].
 [spi-url]: https://swiftpackageindex.com/amosavian/JWSETKit
 [platforms-badge]: https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Famosavian%2FJWSETKit%2Fbadge%3Ftype%3Dplatforms
 
-[RFC7159]: https://www.rfc-editor.org/rfc/rfc7159
-[docs]: https://swiftpackageindex.com/amosavian/JWSETKit/0.16.0/documentation/jwsetkit
+[docs]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation
 [jwt-kit]: https://github.com/vapor/jwt-kit
 [JOSESwift]: https://github.com/airsidemobile/JOSESwift
 [JWTDecode]: https://github.com/auth0/JWTDecode.swift

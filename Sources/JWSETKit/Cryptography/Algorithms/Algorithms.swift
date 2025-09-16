@@ -75,6 +75,10 @@ extension JSONWebAlgorithm {
         self.init(rawValue: rawValue)
     }
     
+    init(_ algorithm: any JSONWebAlgorithm) {
+        self.init(rawValue: algorithm.rawValue)
+    }
+    
     @usableFromInline
     static func specialized(_ rawValue: String) -> any JSONWebAlgorithm {
         if JSONWebSignatureAlgorithm(rawValue: rawValue).keyType != nil {
