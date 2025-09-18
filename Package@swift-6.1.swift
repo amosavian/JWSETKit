@@ -26,6 +26,7 @@ let package = Package(
     ],
     traits: [
         "X509",
+        "P256K",
         .default(enabledTraits: []),
     ],
     dependencies: [
@@ -33,6 +34,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.4.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "3.15.0"),
         .package(url: "https://github.com/apple/swift-certificates", from: "1.13.0"),
+        .package(url: "https://github.com/21-DOT-DEV/swift-secp256k1", from: "0.21.1"),
     ],
     targets: [
         .systemLibrary(
@@ -51,6 +53,7 @@ let package = Package(
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "X509", package: "swift-certificates", condition: .when(platforms: .darwin + .nonWasm, traits: ["X509"])),
+                .product(name: "P256K", package: "swift-secp256k1", condition: .when(traits: ["P256K"])),
                 // Linux support
                 .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .byName(name: "Czlib", condition: .when(platforms: .nonWasm)),

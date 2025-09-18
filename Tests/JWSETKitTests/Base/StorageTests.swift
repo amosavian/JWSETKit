@@ -62,4 +62,11 @@ struct StorageTests {
         #expect(type(of: keys[0]) == JSONWebECPublicKey.self)
         #expect(type(of: keys[1]) == JSONWebRSAPrivateKey.self)
     }
+    
+    @Test
+    func sharedSecretSet() throws {
+        let data = Data.random(length: 32)
+        let secret = try SharedSecret(from: data)
+        #expect(data == secret.data)
+    }
 }

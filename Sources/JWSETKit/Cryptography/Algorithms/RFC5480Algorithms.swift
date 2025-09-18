@@ -148,6 +148,7 @@ extension RFC5480AlgorithmIdentifier {
         .ecdsaP256: .ecdsaSignatureP256SHA256,
         .ecdsaP384: .ecdsaSignatureP384SHA384,
         .ecdsaP521: .ecdsaSignatureP521SHA512,
+        .ecdsaSecp256k1: .ecdsaSignatureSecp256k1SHA256,
         .ed25519: .eddsaSignature,
         .ed448: .eddsaSignature,
         .mldsa44: .internalMLDSA44Signature,
@@ -241,6 +242,11 @@ extension RFC5480AlgorithmIdentifier {
     }
 }
 
+extension ASN1ObjectIdentifier.NamedCurves {
+    /// Represents the secp256k1 curve.
+    public static let secp256k1: ASN1ObjectIdentifier = [1, 3, 132, 0, 10]
+}
+
 extension RFC5480AlgorithmIdentifier {
     public static let ecdsaP256 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
@@ -255,6 +261,11 @@ extension RFC5480AlgorithmIdentifier {
     public static let ecdsaP521 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
         parameters: .NamedCurves.secp521r1
+    )
+    
+    public static let ecdsaSecp256k1 = RFC5480AlgorithmIdentifier(
+        algorithm: .AlgorithmIdentifier.idEcPublicKey,
+        parameters: .NamedCurves.secp256k1
     )
     
     public static let ed25519 = RFC5480AlgorithmIdentifier(

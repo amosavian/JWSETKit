@@ -10,6 +10,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
+import Crypto
 
 #if swift(<6.2)
 typealias SendableMetatype = Any
@@ -53,4 +54,29 @@ func =~= <LHS: Collection, RHS: Collection>(_ lhs: LHS, _ rhs: RHS) -> Bool wher
     }
 
     return zip(lhs, rhs).reduce(into: 0) { $0 |= $1.0 ^ $1.1 } == 0
+}
+
+extension ContiguousBytes {
+    mutating func setBytes<D: DataProtocol>(_ bytes: D) {
+        withUnsafeBytes { buffer in
+            UnsafeMutableRawBufferPointer(mutating: buffer).copyBytes(from: bytes.prefix(buffer.count))
+        }
+    }
+}
+
+extension SharedSecret {
+    init<D: DataProtocol>(from bytes: D) throws {
+        var result = switch bytes.count {
+        case 32:
+            try P256.KeyAgreement.PrivateKey().sharedSecretFromKeyAgreement(with: P256.KeyAgreement.PrivateKey().publicKey)
+        case 48:
+            try P384.KeyAgreement.PrivateKey().sharedSecretFromKeyAgreement(with: P384.KeyAgreement.PrivateKey().publicKey)
+        case 64:
+            try P521.KeyAgreement.PrivateKey().sharedSecretFromKeyAgreement(with: P521.KeyAgreement.PrivateKey().publicKey)
+        default:
+            throw CryptoKitError.incorrectParameterSize
+        }
+        result.setBytes(bytes)
+        self = result
+    }
 }

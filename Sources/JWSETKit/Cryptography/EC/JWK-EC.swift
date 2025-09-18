@@ -11,6 +11,9 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+#if canImport(P256K)
+import P256K
+#endif
 
 /// JSON Web Key (JWK) container for different types of Elliptic-Curve public keys consists of P-256, P-384, P-521, Ed25519.
 @frozen
@@ -53,6 +56,10 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWe
             return P521.Signing.PublicKey.self
         case .ed25519, .x25519:
             return Curve25519.Signing.PublicKey.self
+#if canImport(P256K)
+        case .secp256k1:
+            return P256K.Signing.PublicKey.self
+#endif
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -202,6 +209,10 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
             return P521.Signing.PrivateKey.self
         case .ed25519, .x25519:
             return Curve25519.Signing.PrivateKey.self
+#if canImport(P256K)
+        case .secp256k1:
+            return P256K.Signing.PrivateKey.self
+#endif
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -211,7 +222,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
         try signingKey.signature(data, using: algorithm)
     }
     
-    public func sharedSecretFromKeyAgreement(with publicKeyShare: JSONWebECPublicKey) throws -> SharedSecret {
+    public func sharedSecretFromKeyAgreement(with publicKeyShare: JSONWebECPublicKey) throws -> Crypto.SharedSecret {
         guard let publicKeyCureve = publicKeyShare.curve else {
             throw JSONWebKeyError.unknownAlgorithm
         }
@@ -238,6 +249,12 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
         case (JSONWebKeyType.octetKeyPair, .x25519):
             return try Curve25519.KeyAgreement.PrivateKey(from: self)
                 .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
+#if canImport(P256K)
+        case (JSONWebKeyType.ellipticCurve, .secp256k1):
+            let secret = try P256K.KeyAgreement.PrivateKey(from: self)
+                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
+            return try Crypto.SharedSecret(from: secret.data)
+#endif
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -290,7 +307,7 @@ enum ECHelper {
         if data.count % (keyLength / 8) == 1 {
             // Key data is uncompressed.
             guard data.removeFirst() == 0x04 else {
-                throw CryptoKitError.incorrectParameterSize
+                throw Crypto.CryptoKitError.incorrectParameterSize
             }
         }
         return stride(from: 0, to: data.count, by: keyLength / 8).map {
