@@ -14,24 +14,41 @@ import Foundation
 /// Storage for values in JOSE headers or JWT claims
 @dynamicMemberLookup
 @frozen
-public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, ExpressibleByDictionaryLiteral, Sendable {
+public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflectable, ExpressibleByDictionaryLiteral, Sendable {
     public typealias Key = String
     public typealias ValueType = Codable & Sendable
+    public typealias Element = (String, any Sendable)
     
-    private var storage: [Key: any Sendable]
+    var storage: [Key: any Sendable]
     
     public var customMirror: Mirror {
         storage.customMirror
+    }
+    
+    public var startIndex: Dictionary<JSONWebValueStorage.Key, any Sendable>.Index {
+        storage.startIndex
+    }
+    
+    public var endIndex: Dictionary<JSONWebValueStorage.Key, any Sendable>.Index {
+        storage.endIndex
+    }
+    
+    public var count: Int {
+        storage.count
+    }
+    
+    public subscript(position: Dictionary<Key, any Sendable>.Index) -> (String, any Sendable) {
+        storage[position]
     }
     
     /// Returns value of given key.
     @inlinable
     public subscript<T: ValueType>(dynamicMember member: String) -> T? {
         get {
-            get(key: member, as: T.self)
+            self[member]
         }
         set {
-            updateValue(key: member, value: newValue)
+            self[member] = newValue
         }
     }
     
@@ -51,17 +68,6 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     public subscript<T: ValueType>(_ member: String) -> T? {
         get {
             get(key: member, as: T.self)
-        }
-        set {
-            updateValue(key: member, value: newValue)
-        }
-    }
-    
-    /// Returns value of given key.
-    @inlinable
-    public subscript(_ member: String) -> String? {
-        get {
-            get(key: member, as: String.self)
         }
         set {
             updateValue(key: member, value: newValue)
@@ -154,6 +160,10 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
         }
     }
     
+    public func index(after i: Dictionary<Key, any Sendable>.Index) -> Dictionary<Key, any Sendable>.Index {
+        storage.index(after: i)
+    }
+    
     public func hash(into hasher: inout Hasher) {
         let hashable = storage as any Hashable
         hasher.combine(hashable)
@@ -207,7 +217,7 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
         storage.removeValue(forKey: key)
     }
     
-    fileprivate static func cast<T>(value: Any?, as type: T.Type) -> T? where T: ValueType {
+    static func cast<T>(value: Any?, as type: T.Type) -> T? where T: ValueType {
         guard let value = value else { return nil }
         if let value = value as? T {
             return value
@@ -253,16 +263,13 @@ public struct JSONWebValueStorage: Codable, Hashable, CustomReflectable, Express
     }
     
     @usableFromInline
-    mutating func updateValue<T>(key: String, value: T?) where T: ValueType {
-        guard let value = value else {
-            remove(key: key)
-            return
-        }
-        
+    mutating func updateValue<T>(key: String, value: T?) where T: Sendable {
         switch value {
+        case .none:
+            remove(key: key)
         case let value as any JSONWebFieldEncodable:
             storage[key] = .init(value.jsonWebValue)
-        default:
+        case let .some(value):
             storage[key] = .init(value)
         }
     }

@@ -30,6 +30,23 @@ extension SHA512: NamedHashFunction {
     public static let identifier: JSONWebHashAlgorithm = "sha-512"
 }
 
+#if canImport(CryptoKit) && compiler(>=6.2)
+@available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
+extension SHA3_256: NamedHashFunction {
+    public static let identifier: JSONWebHashAlgorithm = "sha3-256"
+}
+
+@available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
+extension SHA3_384: NamedHashFunction {
+    public static let identifier: JSONWebHashAlgorithm = "sha3-384"
+}
+
+@available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
+extension SHA3_512: NamedHashFunction {
+    public static let identifier: JSONWebHashAlgorithm = "sha3-512"
+}
+#endif
+
 /// JSON Web Compression Algorithms.
 @frozen
 public struct JSONWebHashAlgorithm: StringRepresentable {
@@ -41,11 +58,32 @@ public struct JSONWebHashAlgorithm: StringRepresentable {
 }
 
 extension JSONWebHashAlgorithm {
-    private static let hashFunctions: AtomicValue<[Self: any HashFunction.Type]> = [
-        SHA256.identifier: SHA256.self,
-        SHA384.identifier: SHA384.self,
-        SHA512.identifier: SHA512.self,
-    ]
+    private static let hashFunctions: AtomicValue<[Self: any HashFunction.Type]> = {
+        if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
+#if canImport(CryptoKit) && compiler(>=6.2)
+            [
+                SHA256.identifier: SHA256.self,
+                SHA384.identifier: SHA384.self,
+                SHA512.identifier: SHA512.self,
+                SHA3_256.identifier: SHA3_256.self,
+                SHA3_384.identifier: SHA3_384.self,
+                SHA3_512.identifier: SHA3_512.self,
+            ]
+#else
+            [
+                SHA256.identifier: SHA256.self,
+                SHA384.identifier: SHA384.self,
+                SHA512.identifier: SHA512.self,
+            ]
+#endif
+        } else {
+            [
+                SHA256.identifier: SHA256.self,
+                SHA384.identifier: SHA384.self,
+                SHA512.identifier: SHA512.self,
+            ]
+        }
+    }()
     
     /// Returns provided hash function  for this algorithm.
     public var hashFunction: (any HashFunction.Type)? {
