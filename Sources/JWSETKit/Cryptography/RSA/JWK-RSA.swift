@@ -15,8 +15,8 @@ import SwiftASN1
 #if canImport(CommonCrypto)
 import CommonCrypto
 #endif
-#if canImport(_CryptoExtras)
-import _CryptoExtras
+#if canImport(CryptoExtras)
+import CryptoExtras
 #endif
 
 /// JSON Web Key (JWK) container for RSA public keys.
@@ -28,7 +28,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
         get throws {
 #if canImport(CommonCrypto)
             return try SecKey(from: self).exportKey(format: .spki)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
             return try _RSA.Signing.PublicKey(from: self).exportKey(format: .spki)
 #else
             #error("Unimplemented")
@@ -55,7 +55,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
         var key: AnyJSONWebKey
 #if canImport(CommonCrypto)
         key = try .init(SecKey(derRepresentation: Data(derRepresentation), keyType: .rsa))
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
         key = try .init(_RSA.Signing.PublicKey(derRepresentation: derRepresentation))
 #else
         #error("Unimplemented")
@@ -69,7 +69,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
 #if canImport(CommonCrypto)
         return try SecKey(from: self).verifySignature(signature, for: data, using: algorithm)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
         return try _RSA.Signing.PublicKey(from: self).verifySignature(signature, for: data, using: algorithm)
 #else
         #error("Unimplemented")
@@ -79,7 +79,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
     public func encrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
 #if canImport(CommonCrypto)
         return try SecKey(from: self).encrypt(data, using: algorithm)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
         switch algorithm {
         case .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256:
             return try _RSA.Encryption.PublicKey(from: self).encrypt(data, using: algorithm)
@@ -153,7 +153,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
         get throws {
 #if canImport(CommonCrypto)
             return try SecKey(from: self).exportKey(format: .pkcs8)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
             return try _RSA.Signing.PublicKey(from: self).exportKey(format: .pkcs8)
 #else
             #error("Unimplemented")
@@ -168,7 +168,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
     public init(keySize: KeySize) throws {
 #if canImport(CommonCrypto)
         self.storage = try SecKey(rsaBitCounts: keySize.bitCount).storage
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
         self.storage = try _RSA.Signing.PrivateKey(keySize: .init(bitCount: keySize.bitCount)).storage
 #else
         #error("Unimplemented")
@@ -184,7 +184,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
         var key: AnyJSONWebKey
 #if canImport(CommonCrypto)
         key = try .init(SecKey(derRepresentation: Data(derRepresentation), keyType: .rsa))
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
         key = try .init(_RSA.Signing.PrivateKey(derRepresentation: derRepresentation))
 #else
         #error("Unimplemented")
@@ -206,7 +206,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
 #if canImport(CommonCrypto)
         return try SecKey(from: self).signature(data, using: algorithm)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
         return try _RSA.Signing.PrivateKey(from: self).signature(data, using: algorithm)
 #else
         #error("Unimplemented")
@@ -216,7 +216,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
 #if canImport(CommonCrypto)
         return try SecKey(from: self).decrypt(data, using: algorithm)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
         switch algorithm {
         case .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256:
             return try _RSA.Encryption.PrivateKey(from: self).decrypt(data, using: algorithm)

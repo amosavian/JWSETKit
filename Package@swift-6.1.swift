@@ -29,10 +29,10 @@ let package = Package(
         .default(enabledTraits: []),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-collections.git", from: "1.2.0"),
-        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.4.0"),
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "3.15.0"),
-        .package(url: "https://github.com/apple/swift-certificates", from: "1.13.0"),
+        .package(url: "https://github.com/apple/swift-collections.git", from: "1.3.0"),
+        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.5.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "4.1.0"),
+        .package(url: "https://github.com/apple/swift-certificates", from: "1.15.1"),
     ],
     targets: [
         .systemLibrary(
@@ -52,7 +52,7 @@ let package = Package(
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "X509", package: "swift-certificates", condition: .when(platforms: .darwin + .nonWasm, traits: ["X509"])),
                 // Linux support
-                .product(name: "_CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
+                .product(name: "CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .byName(name: "Czlib", condition: .when(platforms: .nonWasm)),
             ],
             resources: [

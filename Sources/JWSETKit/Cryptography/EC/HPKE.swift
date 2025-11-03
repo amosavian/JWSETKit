@@ -26,6 +26,8 @@ extension HPKE.Ciphersuite {
         switch JSONWebKeyEncryptionAlgorithm(algorithm) {
         case .hpkeP256SHA256AESGCM128:
             self = .P256_SHA256_AES_GCM_128
+        case .hpkeP256SHA256AESGCM256:
+            self = .P256_SHA256_AES_GCM_256
         case .hpkeP384SHA384AESGCM256:
             self = .P384_SHA384_AES_GCM_256
         case .hpkeP521SHA512AESGCM256:
@@ -56,7 +58,7 @@ extension HPKE.KEM {
             .p521
         case .Curve25519_HKDF_SHA256:
             .x25519
-#if canImport(CryptoKit) && compiler(>=6.2)
+#if compiler(>=6.2) || !canImport(CryptoKit)
         case .XWingMLKEM768X25519:
             .x25519
 #endif
@@ -73,7 +75,7 @@ extension HPKE.KEM {
             SHA384.self
         case .P521_HKDF_SHA512:
             SHA512.self
-#if canImport(CryptoKit) && compiler(>=6.2)
+#if compiler(>=6.2) || !canImport(CryptoKit)
         case .XWingMLKEM768X25519:
             SHA256.self
 #endif
@@ -194,6 +196,8 @@ extension JSONWebKeyEncryptionAlgorithm {
         switch cipherSuite {
         case .P256_SHA256_AES_GCM_128:
             self = .hpkeP256SHA256AESGCM128
+        case .P256_SHA256_AES_GCM_256:
+            self = .hpkeP256SHA256AESGCM256
         case .P384_SHA384_AES_GCM_256:
             self = .hpkeP384SHA384AESGCM256
         case .P521_SHA512_AES_GCM_256:
@@ -213,6 +217,10 @@ extension JSONWebKeyEncryptionAlgorithm {
     /// and the AES-128-GCM AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
     public static let hpkeP256SHA256AESGCM128: Self = .internalHpkeP256SHA256AESGCM128
+    
+    /// Cipher suite for JOSE-HPKE using the DHKEM(P-256, HKDF-SHA256) KEM, the HKDF-SHA256 KDF
+    /// and the AES-256-GCM AEAD
+    public static let hpkeP256SHA256AESGCM256: Self = .internalHpkeP256SHA256AESGCM256
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(P-384, HKDF-SHA384) KEM, the HKDF-SHA384 KDF,
     /// and the AES-256-GCM AEAD
@@ -240,6 +248,7 @@ extension JSONWebKeyEncryptionAlgorithm {
     static let internalHpkeP521SHA512AESGCM256: Self = "HPKE-2"
     static let internalHpkeCurve25519SHA256AESGCM128: Self = "HPKE-3"
     static let internalHpkeCurve25519SHA256ChachaPoly: Self = "HPKE-4"
+    static let internalHpkeP256SHA256AESGCM256: Self = "HPKE-7"
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(P-256, HKDF-SHA256) KEM, the HKDF-SHA256 KDF
     /// and the AES-128-GCM AEAD
@@ -265,4 +274,9 @@ extension JSONWebKeyEncryptionAlgorithm {
     /// and the AES-256-GCM AEAD
     @available(*, unavailable, renamed: "hpkeCurve25519SHA256ChachaPoly")
     public static let hpke4: Self = .internalHpkeCurve25519SHA256ChachaPoly
+    
+    /// Cipher suite for JOSE-HPKE using the DHKEM(P-256, HKDF-SHA256) KEM, the HKDF-SHA256 KDF
+    /// and the AES-256-GCM AEAD
+    @available(*, unavailable, renamed: "hpkeP256SHA256AESGCM256")
+    public static let hpke7: Self = .internalHpkeP256SHA256AESGCM256
 }

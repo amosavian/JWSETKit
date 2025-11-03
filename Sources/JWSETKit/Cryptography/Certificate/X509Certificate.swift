@@ -7,8 +7,8 @@
 
 #if canImport(X509)
 import X509
-#if canImport(_CryptoExtras)
-import _CryptoExtras
+#if canImport(CryptoExtras)
+import CryptoExtras
 #endif
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -41,7 +41,7 @@ extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWe
 #if canImport(CommonCrypto)
             let der = try SecKey(key).externalRepresentation
             try self.init(derEncoded: der)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
             try self.init(_RSA.Signing.PublicKey(key))
 #else
             #error("Unimplemented")
@@ -92,7 +92,7 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
 #if canImport(CommonCrypto)
             let secKey = try SecKey(algorithm: algorithm)
             try self.init(secKey)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
             try self.init(_RSA.Signing.PrivateKey(keySize: .bits2048))
 #else
             #error("Unimplemented")
@@ -118,7 +118,7 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
 #if canImport(CommonCrypto)
             let secKey = try SecKey(key)
             try self.init(secKey)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
             try self.init(_RSA.Signing.PrivateKey(key))
 #else
             #error("Unimplemented")
@@ -158,7 +158,7 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
         case (.rsa, _):
 #if canImport(CommonCrypto)
             return try SecKey(derRepresentation: Data(der), keyType: .rsa)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
             return try _RSA.Signing.PrivateKey(derRepresentation: der)
 #else
             #error("Unimplemented")

@@ -8,8 +8,8 @@
 import Foundation
 import Testing
 @testable import JWSETKit
-#if canImport(_CryptoExtras)
-import _CryptoExtras
+#if canImport(CryptoExtras)
+import CryptoExtras
 
 @Suite
 struct RSACryptoTests {

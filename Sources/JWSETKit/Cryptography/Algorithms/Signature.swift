@@ -197,7 +197,7 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     /// **Signature**: EdDSA signature algorithms.
     ///
     /// - Important: Only Ed25519 is supported.
-    /// - Warning: This key is deprecated in [draft-ietf-jose-fully-specified-algorithms](https://datatracker.ietf.org/doc/draft-ietf-jose-fully-specified-algorithms/13/)
+    /// - Warning: This key is deprecated in [RFC 9864](https://www.rfc-editor.org/rfc/rfc9864)
     ///     and is available for compatibility reason. Please use ``eddsa25519Signature`` instead when possible.
     public static var eddsaSignature: Self { "EdDSA" }
         

@@ -189,7 +189,7 @@ Supports `RS256`, `RS384`, `RS512`, `PS256`, `PS384` and `PS512` algorithms for 
 Usable for validating.
 
 Usable for validating.
-See [_CryptoExtras._RSA.Signing.PublicKey](_cryptoextras/_rsa/signing/publickey).
+See [CryptoExtras._RSA.Signing.PublicKey](CryptoExtras/_rsa/signing/publickey).
 
 #### \_RSA.Signing.PrivateKey
 
@@ -198,7 +198,7 @@ Supports `RS256`, `RS384`, `RS512`, `PS256`, `PS384` and `PS512` algorithms for 
 Usable for validating and signing.
 
 Usable for validating and signing.
-See [_CryptoExtras._RSA.Signing.PrivateKey](_cryptoextras/_rsa/signing/privatekey).
+See [CryptoExtras._RSA.Signing.PrivateKey](CryptoExtras/_rsa/signing/privatekey).
 
 ### X509 Certificates
 

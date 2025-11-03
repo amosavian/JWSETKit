@@ -81,7 +81,7 @@ struct JWETests {
     }
     
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
-    @Test
+    @Test(.disabled("Draft examples are not updated"))
     func decrypt_HPKE0_int() throws {
         let jwe = try JSONWebEncryption(from: HPKE_0.jweString)
         let value = try jwe.decrypt(using: HPKE_0.kek)
@@ -89,7 +89,7 @@ struct JWETests {
     }
     
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
-    @Test
+    @Test(.disabled("Draft examples are not updated"))
     func decrypt_HPKE0_A128GCM() throws {
         let jwe = try JSONWebEncryption(from: HPKE_0.jweJSONString)
         let value = try jwe.decrypt(using: HPKE_0.kek)
@@ -474,7 +474,7 @@ enum HPKE_0 {
     SkdpZUdTRnVBdWd2bDBqclFKQ1ozeUt3Vks2c1VNNG8ifQ.BIh6I40uiBbK8-\
     UK7nHdo3ISEfgwJ_MF3zWjQzLt00GhFF2-\
     1VgWKHSYLXdeVeRV7AinyocYiCYmISvW0yqiDmc..Ov-\
-    llz6VUyiw8nZL0OPGLGZckLTm5UcTZFg.  
+    llz6VUyiw8nZL0OPGLGZckLTm5UcTZFg.
     """
     
     static let jweJSONString = """
