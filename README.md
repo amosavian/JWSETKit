@@ -339,7 +339,7 @@ This library implements the following JOSE standards:
 - [RFC 7520](https://www.rfc-editor.org/rfc/rfc7519) - Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)
 - [RFC 7797](https://www.rfc-editor.org/rfc/rfc7797) - JSON Web Signature (JWS) Unencoded Payload Option
 - [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800) - Proof-of-Possession Key Semantics for JSON Web Tokens (JWTs)
-- [draft-ietf-jose-fully-specified-algorithms](https://datatracker.ietf.org/doc/draft-ietf-jose-fully-specified-algorithms/) - Fully-Specified Algorithms for JOSE and COSE
+- [RFC 9864](https://www.rfc-editor.org/rfc/rfc9864) - Fully-Specified Algorithms for JOSE and COSE
 - [draft-ietf-jose-hpke-encrypt](https://datatracker.ietf.org/doc/draft-ietf-jose-hpke-encrypt/) - Use of Hybrid Public Key Encryption (HPKE) with JSON Object Signing and Encryption (JOSE)
 - [draft-ietf-cose-dilithium](https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/) - ML-DSA for JOSE and COSE
 - [OIDC Core](https://openid.net/specs/openid-connect-core-1_0.html) - OpenID Connect Core 1.0 incorporating errata set 2

@@ -73,10 +73,10 @@ extension Verifier {
     public mutating func validate(
         chain: JSONWebCertificateChain,
         diagnosticCallback: ((VerificationDiagnostic) -> Void)? = nil
-    ) async -> VerificationResult {
+    ) async -> CertificateValidationResult {
         do {
             return try await validate(
-                leafCertificate: chain.leaf,
+                leaf: chain.leaf,
                 intermediates: .init(chain.certificateChain.dropFirst()),
                 diagnosticCallback: diagnosticCallback
             )

@@ -11,8 +11,8 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
-#if canImport(_CryptoExtras)
-import _CryptoExtras
+#if canImport(CryptoExtras)
+import CryptoExtras
 #endif
 
 extension SymmetricKey {
@@ -37,7 +37,7 @@ extension SymmetricKey {
         let length = length ?? hashFunction.Digest.byteCount
 #if canImport(CommonCrypto)
         return try ccPbkdf2(pbkdf2Password: password, salt: salt, iterations: iterations, length: length, hashFunction: hashFunction)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
         return try KDF.Insecure.PBKDF2.deriveKey(from: password, salt: salt, using: .init(hashFunction), outputByteCount: length, unsafeUncheckedRounds: iterations)
 #else
         #error("Unimplemented")
@@ -45,7 +45,7 @@ extension SymmetricKey {
     }
 }
 
-#if canImport(_CryptoExtras)
+#if canImport(CryptoExtras)
 extension KDF.Insecure.PBKDF2.HashFunction {
     init<H>(_: H.Type) throws where H: HashFunction {
         switch H.self {

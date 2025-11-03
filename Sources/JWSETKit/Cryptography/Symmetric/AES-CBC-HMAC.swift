@@ -11,8 +11,8 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
-#if canImport(_CryptoExtras)
-import _CryptoExtras
+#if canImport(CryptoExtras)
+import CryptoExtras
 #endif
 
 /// JSON Web Key (JWK) container for AES-CBC keys for encryption/decryption with HMAC authentication.
@@ -96,7 +96,7 @@ public struct JSONWebKeyAESCBCHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebS
         }
 #if canImport(CommonCrypto)
         let ciphertext = try aesSymmetricKey.ccCrypt(operation: .aesCBC(decrypt: false), iv: iv, data: data)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
         let ciphertext = try AES._CBC.encrypt(data, using: aesSymmetricKey, iv: .init(ivBytes: iv))
 #else
         #error("Unimplemented")
@@ -115,7 +115,7 @@ public struct JSONWebKeyAESCBCHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebS
         
 #if canImport(CommonCrypto)
         return try aesSymmetricKey.ccCrypt(operation: .aesCBC(decrypt: true), iv: data.nonce, data: data.ciphertext)
-#elseif canImport(_CryptoExtras)
+#elseif canImport(CryptoExtras)
         return try AES._CBC.decrypt(data.ciphertext, using: aesSymmetricKey, iv: .init(ivBytes: data.nonce))
 #else
         #error("Unimplemented")

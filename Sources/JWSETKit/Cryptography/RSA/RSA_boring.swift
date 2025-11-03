@@ -5,8 +5,8 @@
 //  Created by Amir Abbas Mousavian on 6/20/25.
 //
 
-#if canImport(_CryptoExtras)
-import _CryptoExtras
+#if canImport(CryptoExtras)
+import CryptoExtras
 import Crypto
 #if canImport(FoundationEssentials)
 import FoundationEssentials

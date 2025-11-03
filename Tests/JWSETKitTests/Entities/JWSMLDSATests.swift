@@ -10,12 +10,17 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
+#if compiler(>=6.2) || !canImport(CryptoKit)
+@Suite
+#else
 @Suite(.enabled(if: false))
+#endif
 struct JWSMLDSATests {
     let payload = try! ProtectedDataWebContainer(encoded: """
     SXTigJlzIGEgZGFuZ2Vyb3VzIGJ1c2luZXNzLCBGcm9kbywgZ29pbmcgb3V0IHlvdXIgZG9vci4
     """.decoded)
     
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
     @Test
     func signatureMLDSA65() throws {
         let signature = """
@@ -105,6 +110,7 @@ struct JWSMLDSATests {
         #expect(throws: Never.self) { try jws.verifySignature(using: keys) }
     }
     
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
     @Test
     func signatureMLDSA87() throws {
         let signature = """

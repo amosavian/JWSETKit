@@ -9,7 +9,7 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
-#if canImport(Darwin) && compiler(>=6.2)
+#if compiler(>=6.2) || !canImport(CryptoKit)
 @Suite
 #else
 @Suite(.enabled(if: false))

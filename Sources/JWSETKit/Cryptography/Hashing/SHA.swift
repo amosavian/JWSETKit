@@ -30,7 +30,7 @@ extension SHA512: NamedHashFunction {
     public static let identifier: JSONWebHashAlgorithm = "sha-512"
 }
 
-#if canImport(CryptoKit) && compiler(>=6.2)
+#if compiler(>=6.2) || !canImport(CryptoKit)
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension SHA3_256: NamedHashFunction {
     public static let identifier: JSONWebHashAlgorithm = "sha3-256"
@@ -60,7 +60,7 @@ public struct JSONWebHashAlgorithm: StringRepresentable {
 extension JSONWebHashAlgorithm {
     private static let hashFunctions: AtomicValue<[Self: any HashFunction.Type]> = {
         if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
-#if canImport(CryptoKit) && compiler(>=6.2)
+#if compiler(>=6.2) || !canImport(CryptoKit)
             [
                 SHA256.identifier: SHA256.self,
                 SHA384.identifier: SHA384.self,

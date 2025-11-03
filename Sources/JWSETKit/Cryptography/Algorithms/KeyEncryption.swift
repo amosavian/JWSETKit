@@ -20,6 +20,13 @@ public struct JSONWebKeyEncryptionAlgorithm: JSONWebAlgorithm {
     public init<S>(_ rawValue: S) where S: StringProtocol {
         self.rawValue = String(rawValue)
     }
+    
+    public func keyWrapped(_ algorithm: JSONWebKeyEncryptionAlgorithm) -> Self {
+        guard [Self.aesKeyWrap128, Self.aesKeyWrap192, Self.aesKeyWrap256].contains(algorithm) else {
+            preconditionFailure("Unsupported key wrap algorithm.")
+        }
+        return .init("\(rawValue)+\(algorithm.rawValue)")
+    }
 }
 
 extension JSONWebKeyEncryptionAlgorithm {
@@ -78,6 +85,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap192: .ellipticCurve,
         .ecdhEphemeralStaticAESKeyWrap256: .ellipticCurve,
         .internalHpkeP256SHA256AESGCM128: .ellipticCurve,
+        .internalHpkeP256SHA256AESGCM256: .ellipticCurve,
         .internalHpkeP384SHA384AESGCM256: .ellipticCurve,
         .internalHpkeP521SHA512AESGCM256: .ellipticCurve,
         .internalHpkeCurve25519SHA256AESGCM128: .octetKeyPair,
@@ -119,6 +127,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap192: SHA256.self,
         .ecdhEphemeralStaticAESKeyWrap256: SHA256.self,
         .internalHpkeP256SHA256AESGCM128: SHA256.self,
+        .internalHpkeP256SHA256AESGCM256: SHA256.self,
         .internalHpkeP384SHA384AESGCM256: SHA384.self,
         .internalHpkeP521SHA512AESGCM256: SHA512.self,
         .internalHpkeCurve25519SHA256AESGCM128: SHA256.self,
@@ -137,6 +146,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap192: ecdhEsEncryptedKey,
         .ecdhEphemeralStaticAESKeyWrap256: ecdhEsEncryptedKey,
         .internalHpkeP256SHA256AESGCM128: hpkeEncryptedKey,
+        .internalHpkeP256SHA256AESGCM256: hpkeEncryptedKey,
         .internalHpkeP384SHA384AESGCM256: hpkeEncryptedKey,
         .internalHpkeP521SHA512AESGCM256: hpkeEncryptedKey,
         .internalHpkeCurve25519SHA256AESGCM128: hpkeEncryptedKey,
@@ -156,6 +166,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap192: ecdhEsDecryptionMutator,
         .ecdhEphemeralStaticAESKeyWrap256: ecdhEsDecryptionMutator,
         .internalHpkeP256SHA256AESGCM128: hpkeDecryptionMutator,
+        .internalHpkeP256SHA256AESGCM256: hpkeDecryptionMutator,
         .internalHpkeP384SHA384AESGCM256: hpkeDecryptionMutator,
         .internalHpkeP521SHA512AESGCM256: hpkeDecryptionMutator,
         .internalHpkeCurve25519SHA256AESGCM128: hpkeDecryptionMutator,
@@ -368,16 +379,17 @@ extension JSONWebKeyEncryptionAlgorithm {
         _ cekData: Data
     ) throws -> (headerFields: JOSEHeader?, cek: Data) {
         if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
-            guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
+            guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm), let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm else {
                 throw JSONWebKeyError.unknownAlgorithm
             }
             guard let recipientKey = keyEncryptionKey as? (any HPKEDiffieHellmanPublicKey) else {
                 throw JSONWebKeyError.unknownKeyType
             }
+            let info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF]
             var hpke = try HPKE.Sender(
                 recipientKey: recipientKey,
                 ciphersuite: .init(algorithm: keyEncryptingAlgorithm),
-                info: .init()
+                info: info
             )
             if recipientHeader.encryptionAlgorithm == .integrated {
                 return (nil, hpke.encapsulatedKey)
@@ -458,7 +470,7 @@ extension JSONWebKeyEncryptionAlgorithm {
     
     fileprivate static func hpkeDecryptionMutator(_ header: JOSEHeader, _ kek: inout any JSONWebKey, _ cek: inout Data) throws {
         if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
-            guard let algorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm) else {
+            guard let algorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm), let contentEncryptionAlgorithm = header.encryptionAlgorithm else {
                 throw JSONWebKeyError.unknownAlgorithm
             }
             guard header.presharedKeyId == nil else {
@@ -482,10 +494,11 @@ extension JSONWebKeyEncryptionAlgorithm {
             } else {
                 throw JSONWebKeyError.keyNotFound
             }
+            let info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF]
             let hpke = try HPKE.Recipient(
                 privateKey: privateKey,
                 ciphersuite: .init(algorithm: algorithm),
-                info: .init(),
+                info: info,
                 encapsulatedKey: encapsulatedKey
             )
             kek = JSONWebHPKERecipient(recipient: hpke)
@@ -558,14 +571,18 @@ extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     public static var ecdhEphemeralStatic: Self { "ECDH-ES" }
     
     // **Key Management**:ECDH-ES using Concat KDF and CEK wrapped with "A128KW".
-    public static var ecdhEphemeralStaticAESKeyWrap128: Self { "ECDH-ES+A128KW" }
+    public static var ecdhEphemeralStaticAESKeyWrap128: Self { .ecdhEphemeralStatic.keyWrapped(.aesKeyWrap128) }
     
     /// **Key Management**: ECDH-ES using Concat KDF and CEK wrapped with "A192KW".
-    public static var ecdhEphemeralStaticAESKeyWrap192: Self { "ECDH-ES+A192KW" }
+    public static var ecdhEphemeralStaticAESKeyWrap192: Self { .ecdhEphemeralStatic.keyWrapped(.aesKeyWrap192) }
     
     /// **Key Management**: ECDH-ES using Concat KDF and CEK wrapped with "A256KW".
-    public static var ecdhEphemeralStaticAESKeyWrap256: Self { "ECDH-ES+A256KW" }
+    public static var ecdhEphemeralStaticAESKeyWrap256: Self { .ecdhEphemeralStatic.keyWrapped(.aesKeyWrap256) }
     
     /// **Key Management**: No encryption for content key.
     public static var direct: Self { "dir" }
+    
+    static var internalMLKEM512: Self { "ML-KEM-512" }
+    static var internalMLKEM768: Self { "ML-KEM-768" }
+    static var internalMLKEM1024: Self { "ML-KEM-1024" }
 }

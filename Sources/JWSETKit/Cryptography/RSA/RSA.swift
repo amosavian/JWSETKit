@@ -5,8 +5,8 @@
 //  Created by Amir Abbas Mousavian on 9/12/23.
 //
 
-#if canImport(_CryptoExtras)
-import _CryptoExtras
+#if canImport(CryptoExtras)
+import CryptoExtras
 import Crypto
 #if canImport(FoundationEssentials)
 import FoundationEssentials
@@ -15,7 +15,7 @@ import Foundation
 #endif
 import SwiftASN1
 
-extension _CryptoExtras._RSA.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
+extension CryptoExtras._RSA.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension _RSA.Signing.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
@@ -56,7 +56,7 @@ extension _RSA.Signing.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType {
     }
 }
 
-extension _CryptoExtras._RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
+extension CryptoExtras._RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .spki:
@@ -80,7 +80,7 @@ extension _CryptoExtras._RSA.Signing.PublicKey: JSONWebKeyImportable, JSONWebKey
     }
 }
 
-extension _CryptoExtras._RSA.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
+extension CryptoExtras._RSA.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension _RSA.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
@@ -107,7 +107,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType {
     }
 }
 
-extension _CryptoExtras._RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
+extension CryptoExtras._RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
     var pkcs8Representation: Data {
         // PEM is always a valid Bas64.
         Data(base64Encoded: pkcs8PEMRepresentation
@@ -138,7 +138,7 @@ extension _CryptoExtras._RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKe
     }
 }
 
-extension _CryptoExtras._RSA.Encryption.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
+extension CryptoExtras._RSA.Encryption.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {
@@ -174,7 +174,7 @@ extension _RSA.Encryption.PublicKey: JSONWebEncryptingKey, JSONWebKeyRSAType {
     }
 }
 
-extension _CryptoExtras._RSA.Encryption.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
+extension CryptoExtras._RSA.Encryption.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey, JSONWebKeyRSAType {
     public var storage: JSONWebValueStorage {

@@ -136,7 +136,8 @@ public struct JSONWebEncryption: Hashable, Sendable {
                 guard let recipientKey = keyEncryptionKey as? (any HPKEDiffieHellmanPublicKey) else {
                     throw JSONWebKeyError.invalidKeyFormat
                 }
-                let sender = try HPKE.Sender(recipientKey: recipientKey, ciphersuite: .init(algorithm: keyEncryptingAlgorithm), info: .init())
+                let info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF]
+                let sender = try HPKE.Sender(recipientKey: recipientKey, ciphersuite: .init(algorithm: keyEncryptingAlgorithm), info: info)
                 cek = JSONWebHPKESender(sender: sender)
                 self.recipients = [.init(encryptedKey: sender.encapsulatedKey)]
             } else {

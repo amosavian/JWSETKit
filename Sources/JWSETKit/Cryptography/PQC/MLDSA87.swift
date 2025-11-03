@@ -11,8 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 
-// TODO: Remove condition after release of swift-crypto 4.0
-#if canImport(CryptoKit) && compiler(>=6.2)
+#if compiler(>=6.2) || !canImport(CryptoKit)
 import Crypto
 
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
@@ -31,7 +30,7 @@ extension Crypto.MLDSA87.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Deco
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension MLDSA87.PrivateKey: JSONWebSigningKey, JSONWebKeyImportable, JSONWebKeyExportable, CryptoModuleLatticePrivateKey {}
 
-#if canImport(Darwin) && compiler(>=6.2)
+#if canImport(CryptoKit)
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension Crypto.SecureEnclave.MLDSA87.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
