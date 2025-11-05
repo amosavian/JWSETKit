@@ -253,13 +253,15 @@ let importedKey = try P256.Signing.PrivateKey(importing: pkcs8Data, format: .pkc
 | A256GCMKW              | :white_check_mark: | :x:                |
 | PBES2-HS256+A128KW     | :white_check_mark: | :x:                |
 | PBES2-HS384+A192KW     | :white_check_mark: | :x:                |
-| HPKE-0 (P256)          | :white_check_mark: | :x:                |
-| HPKE-1 (P384)          | :white_check_mark: | :x:                |
-| HPKE-2 (P521)          | :white_check_mark: | :x:                |
-| HPKE-3 (X25519)        | :white_check_mark: | :x:                |
+| PBES2-HS512+A256KW     | :white_check_mark: | :x:                |
+| HPKE-0 (P256/AES128)   | :white_check_mark: | :x:                |
+| HPKE-1 (P384/AES256)   | :white_check_mark: | :x:                |
+| HPKE-2 (P521/AES256)   | :white_check_mark: | :x:                |
+| HPKE-3 (X25519/AES256) | :white_check_mark: | :x:                |
 | HPKE-4 (X25519/ChaCha) | :white_check_mark: | :x:                |
-| HPKE-5 (X448)          | :x:                | :x:                |
+| HPKE-5 (X448/AES256)   | :x:                | :x:                |
 | HPKE-6 (X448/ChaCha)   | :x:                | :x:                |
+| HPKE-7 (P256/AES256)   | :white_check_mark: | :x:                |
 
 #### Content Encryption
 

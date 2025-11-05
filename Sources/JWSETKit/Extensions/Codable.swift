@@ -64,8 +64,8 @@ struct AnyCodable: Codable, @unchecked Sendable {
         case nil:
             try container.encodeNil()
         case let value as any JSONWebFieldEncodable:
-            let codableValue = value.jsonWebValue as any Encodable
-            try container.encode(codableValue)
+            let encodableValue = value.jsonWebValue as any Encodable
+            try container.encode(encodableValue)
         case let value as [(any Sendable)?]:
             try container.encode(value.map { AnyCodable($0) })
         case let value as [String: (any Sendable)?]:

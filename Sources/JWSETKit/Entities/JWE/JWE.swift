@@ -103,10 +103,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         var protected = protected
         var unprotected = unprotected
         var header: JOSEHeader? = nil
-        guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
-            throw JSONWebKeyError.unknownAlgorithm
-        }
-        guard let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm else {
+        guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm), let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         let handler = keyEncryptingAlgorithm.encryptedKeyHandler ?? JSONWebKeyEncryptionAlgorithm.standardEncryptdKey
@@ -129,17 +126,13 @@ public struct JSONWebEncryption: Hashable, Sendable {
             cek = SymmetricKey(data: cekData)
             self.recipients = []
         case _ where contentEncryptionAlgorithm == .integrated:
-            guard keyEncryptingAlgorithm.rawValue.hasPrefix("HPKE-") else {
-                throw JSONWebKeyError.operationNotAllowed
-            }
             if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
                 guard let recipientKey = keyEncryptionKey as? (any HPKEDiffieHellmanPublicKey) else {
                     throw JSONWebKeyError.invalidKeyFormat
                 }
-                let info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF]
-                let sender = try HPKE.Sender(recipientKey: recipientKey, ciphersuite: .init(algorithm: keyEncryptingAlgorithm), info: info)
-                cek = JSONWebHPKESender(sender: sender)
-                self.recipients = [.init(encryptedKey: sender.encapsulatedKey)]
+                let senderKey = try JSONWebHPKESender(recipientKey: recipientKey, recipientHeader: recipientHeader)
+                cek = senderKey
+                self.recipients = [.init(encryptedKey: senderKey.encapsulatedKey)]
             } else {
                 throw JSONWebKeyError.unknownAlgorithm
             }
@@ -153,15 +146,13 @@ public struct JSONWebEncryption: Hashable, Sendable {
             self.recipients = [.init(encryptedKey: mutatedEncryptedKey)]
         }
         
-        if let header = header, !header.storage.storageKeys.isEmpty {
-            if unprotected != nil || additionalAuthenticatedData != nil {
-                // Compact representation can not be used so we set additional headers in unprotected.
-                unprotected = unprotected?.merging(header, uniquingKeysWith: { $1 })
-            } else if allowsModifyProtectedHeader {
+        if let header = header, !header.storage.isEmpty {
+            if allowsModifyProtectedHeader {
                 protected = try .init(value: protected.value.merging(header, uniquingKeysWith: { $1 }))
                 authenticating = protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
             } else {
-                throw JSONWebKeyError.operationNotAllowed
+                // Compact representation can not be used.
+                unprotected = unprotected?.merging(header, uniquingKeysWith: { $1 }) ?? header
             }
         }
         

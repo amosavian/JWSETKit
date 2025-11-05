@@ -56,7 +56,7 @@ public struct JSONWebEncryptionRecipient: Hashable, Sendable, Codable {
     public func encode(to encoder: any Encoder) throws {
         var container = encoder.container(keyedBy: CodingKeys.self)
         
-        if let header, !header.storage.storageKeys.isEmpty {
+        if let header, !header.storage.isEmpty {
             try container.encode(header, forKey: .header)
         }
         try container.encode(encryptedKey.urlBase64EncodedString(), forKey: .encryptedKey)

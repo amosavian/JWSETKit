@@ -59,7 +59,7 @@ public struct JSONWebHashAlgorithm: StringRepresentable {
 
 extension JSONWebHashAlgorithm {
     private static let hashFunctions: AtomicValue<[Self: any HashFunction.Type]> = {
-        if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
+        if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *) {
 #if compiler(>=6.2) || !canImport(CryptoKit)
             [
                 SHA256.identifier: SHA256.self,

@@ -42,13 +42,13 @@ package struct JSONWebMLDSAPublicKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyP
         switch algorithm ?? JSONWebSignatureAlgorithm.unsafeNone {
 #if compiler(>=6.2) || !canImport(CryptoKit)
         case .internalMLDSA65Signature:
-            if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
+            if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *) {
                 return MLDSA65.PublicKey.self
             } else {
                 throw JSONWebKeyError.unknownKeyType
             }
         case .internalMLDSA87Signature:
-            if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
+            if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *) {
                 return MLDSA87.PublicKey.self
             } else {
                 throw JSONWebKeyError.unknownKeyType
@@ -120,13 +120,13 @@ package struct JSONWebMLDSAPrivateKey: MutableJSONWebKey, JSONWebKeyAlgorithmKey
         switch algorithm ?? JSONWebSignatureAlgorithm.unsafeNone {
 #if compiler(>=6.2) || !canImport(CryptoKit)
         case .internalMLDSA65Signature:
-            if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
+            if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *) {
                 return MLDSA65.PrivateKey.self
             } else {
                 throw JSONWebKeyError.unknownKeyType
             }
         case .internalMLDSA87Signature:
-            if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *) {
+            if #available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *) {
                 return MLDSA87.PrivateKey.self
             } else {
                 throw JSONWebKeyError.unknownKeyType

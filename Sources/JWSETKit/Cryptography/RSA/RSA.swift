@@ -6,8 +6,8 @@
 //
 
 #if canImport(CryptoExtras)
-import CryptoExtras
 import Crypto
+import CryptoExtras
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else

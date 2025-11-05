@@ -269,7 +269,7 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
             remove(key: key)
         case let value as any JSONWebFieldEncodable:
             storage[key] = .init(value.jsonWebValue)
-        case let .some(value):
+        case .some(let value):
             storage[key] = .init(value)
         }
     }

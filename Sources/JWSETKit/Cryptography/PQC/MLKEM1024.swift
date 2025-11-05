@@ -1,5 +1,5 @@
 //
-//  MLKEM768.swift
+//  MLKEM1024.swift
 //  JWSETKit
 //
 //  Created by Amir Abbas Mousavian on 2025/10/30.

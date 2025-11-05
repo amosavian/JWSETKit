@@ -379,24 +379,19 @@ extension JSONWebKeyEncryptionAlgorithm {
         _ cekData: Data
     ) throws -> (headerFields: JOSEHeader?, cek: Data) {
         if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
-            guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm), let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm else {
+            guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
                 throw JSONWebKeyError.unknownAlgorithm
             }
             guard let recipientKey = keyEncryptionKey as? (any HPKEDiffieHellmanPublicKey) else {
                 throw JSONWebKeyError.unknownKeyType
             }
-            let info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF]
-            var hpke = try HPKE.Sender(
-                recipientKey: recipientKey,
-                ciphersuite: .init(algorithm: keyEncryptingAlgorithm),
-                info: info
-            )
+            let hpke = try JSONWebHPKESender(recipientKey: recipientKey, recipientHeader: recipientHeader)
             if recipientHeader.encryptionAlgorithm == .integrated {
                 return (nil, hpke.encapsulatedKey)
             } else {
                 var header = JOSEHeader()
                 header.encapsulatedKey = hpke.encapsulatedKey
-                return try (header, hpke.seal(cekData))
+                return try (header, hpke.seal(cekData, using: keyEncryptingAlgorithm).combined)
             }
         } else {
             throw JSONWebKeyError.unknownAlgorithm
@@ -470,9 +465,6 @@ extension JSONWebKeyEncryptionAlgorithm {
     
     fileprivate static func hpkeDecryptionMutator(_ header: JOSEHeader, _ kek: inout any JSONWebKey, _ cek: inout Data) throws {
         if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
-            guard let algorithm = JSONWebKeyEncryptionAlgorithm(header.algorithm), let contentEncryptionAlgorithm = header.encryptionAlgorithm else {
-                throw JSONWebKeyError.unknownAlgorithm
-            }
             guard header.presharedKeyId == nil else {
                 // Pre-shared key mode is not supported in this library
                 throw HPKE.Errors.unexpectedPSK
@@ -486,22 +478,7 @@ extension JSONWebKeyEncryptionAlgorithm {
             } else {
                 throw JSONWebKeyError.keyNotFound
             }
-            let encapsulatedKey: Data
-            if let headerEncapsulatedKey = header.encapsulatedKey, header.encryptionAlgorithm != .integrated {
-                encapsulatedKey = headerEncapsulatedKey
-            } else if header.encryptionAlgorithm == .integrated {
-                encapsulatedKey = cek
-            } else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            let info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF]
-            let hpke = try HPKE.Recipient(
-                privateKey: privateKey,
-                ciphersuite: .init(algorithm: algorithm),
-                info: info,
-                encapsulatedKey: encapsulatedKey
-            )
-            kek = JSONWebHPKERecipient(recipient: hpke)
+            kek = try JSONWebHPKERecipient(privateKey: privateKey, recipientHeader: header, encapsulatedKey: cek)
         } else {
             throw JSONWebKeyError.unknownAlgorithm
         }

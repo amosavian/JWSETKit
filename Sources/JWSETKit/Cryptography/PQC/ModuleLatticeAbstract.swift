@@ -16,7 +16,7 @@ public protocol JSONWebKeyAlgorithmKeyPairPublic: JSONWebKey {}
 
 public protocol JSONWebKeyAlgorithmKeyPairPrivate: JSONWebPrivateKey where PublicKey: JSONWebKeyAlgorithmKeyPairPublic {
     var seedRepresentation: Data { get }
-    init<D>(seedRepresentation: D, publicKey: PublicKey?) throws where D : DataProtocol
+    init<D>(seedRepresentation: D, publicKey: PublicKey?) throws where D: DataProtocol
 }
 
 extension JSONWebKeyAlgorithmKeyPairPublic where Self: JSONWebKeyRawRepresentable & JSONWebKeyAlgorithmIdentified {
