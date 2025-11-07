@@ -349,16 +349,26 @@ public struct JSONWebEncryption: Hashable, Sendable {
     public func decrypt(using keySet: JSONWebKeySet) throws -> Data {
         let mergedHeader = header.protected.value
             .merging(header.unprotected ?? .init(), uniquingKeysWith: { p, _ in p })
+        var result: Data?
+        var decryptError: (any Error)?
         for recipient in recipients {
             let recipientMergedHeader = mergedHeader.merging(recipient.header ?? .init(), uniquingKeysWith: { p, _ in p })
             for key in keySet.matches(for: recipientMergedHeader) {
-                if let plain = try? decrypt(using: key) {
-                    return plain
+                do {
+                    let plain = try decrypt(using: key)
+                    if result == nil {
+                        result = plain
+                    }
+                } catch {
+                    decryptError = error
                 }
             }
         }
-        
-        throw JSONWebKeyError.keyNotFound
+        if let result {
+            return result
+        } else {
+            throw decryptError ?? JSONWebKeyError.keyNotFound
+        }
     }
 }
 

@@ -12,9 +12,9 @@ import Foundation
 #endif
 import Crypto
 
-public protocol JSONWebKeyAlgorithmKeyPairPublic: JSONWebKey {}
+public protocol JSONWebKeyAlgorithmKeyPairPublic: JSONWebKey, JSONWebKeyAlgorithmKeyPairType {}
 
-public protocol JSONWebKeyAlgorithmKeyPairPrivate: JSONWebPrivateKey where PublicKey: JSONWebKeyAlgorithmKeyPairPublic {
+public protocol JSONWebKeyAlgorithmKeyPairPrivate: JSONWebPrivateKey, JSONWebKeyAlgorithmKeyPairType where PublicKey: JSONWebKeyAlgorithmKeyPairPublic {
     var seedRepresentation: Data { get }
     init<D>(seedRepresentation: D, publicKey: PublicKey?) throws where D: DataProtocol
 }

@@ -190,6 +190,11 @@ extension ASN1ObjectIdentifier.AlgorithmIdentifier {
     static let mlkem1024: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 4, 3]
 }
 
+extension ASN1ObjectIdentifier.NamedCurves {
+    /// Represents the secp256k1 curve.
+    public static let secp256k1: ASN1ObjectIdentifier = [1, 3, 132, 0, 10]
+}
+
 struct RSAOAEPParams: DERImplicitlyTaggable, Hashable, Sendable {
     static var defaultIdentifier: ASN1Identifier { .sequence }
     

@@ -126,7 +126,16 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     ///
     /// - Parameters:
     ///   - key: A `JSONWebKeySet` object contains keys that would be used for validation.
-    ///   - strict: If `true` (default), the algorithm in the protected header will be used otherwise algorithm in unprotected header will be allowed.
+    ///   - strict: Controls algorithm header validation behavior.
+    ///     - `true` (default, **RECOMMENDED**): Only use algorithm from protected (signed) header.
+    ///     - `false` (**INSECURE**): Allow algorithm from unprotected header when protected is "none".
+    ///
+    ///     **SECURITY WARNING**: Setting to `false` enables algorithm substitution attacks where an
+    ///     attacker can control which algorithm is used for verification by modifying unprotected headers.
+    ///     Only use in controlled environments where the JWS source is fully trusted and you understand
+    ///     the security implications. See [RFC 8725 Section 3.1](https://www.rfc-editor.org/rfc/rfc8725.html#section-3.1) for details.
+    ///
+    ///     **Default**: `true` (secure by default)
     public func verifySignature(using keySet: JSONWebKeySet, strict: Bool = true) throws {
         guard !signatures.isEmpty else {
             throw CryptoKitError.authenticationFailure
@@ -154,7 +163,12 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     ///
     /// - Parameters:
     ///   - keys: An array of `JSONWebValidatingKey` that would be used for validation.
-    ///   - strict: If `true` (default), the algorithm in the protected header will be used otherwise algorithm in unprotected header will be allowed.
+    ///   - strict: Controls algorithm header validation behavior.
+    ///     - `true` (default, **RECOMMENDED**): Only use algorithm from protected (signed) header.
+    ///     - `false` (**INSECURE**): Allow algorithm from unprotected header when protected is "none".
+    ///
+    ///     **SECURITY WARNING**: Setting to `false` enables algorithm substitution attacks. See main
+    ///     `verifySignature(using:strict:)` documentation for details.
     public func verifySignature<S>(using keys: S, strict: Bool = true) throws where S: Sequence, S.Element: JSONWebValidatingKey {
         try verifySignature(using: JSONWebKeySet(keys: keys), strict: strict)
     }
@@ -168,7 +182,12 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     ///
     /// - Parameters:
     ///   - keys: An array of `JSONWebValidatingKey` that would be used for validation.
-    ///   - strict: If `true` (default), the algorithm in the protected header will be used otherwise algorithm in unprotected header will be allowed.
+    ///   - strict: Controls algorithm header validation behavior.
+    ///     - `true` (default, **RECOMMENDED**): Only use algorithm from protected (signed) header.
+    ///     - `false` (**INSECURE**): Allow algorithm from unprotected header when protected is "none".
+    ///
+    ///     **SECURITY WARNING**: Setting to `false` enables algorithm substitution attacks. See main
+    ///     `verifySignature(using:strict:)` documentation for details.
     public func verifySignature<S>(using keys: S, strict: Bool = true) throws where S: Sequence<any JSONWebValidatingKey> {
         try verifySignature(using: JSONWebKeySet(keys: .init(keys)), strict: strict)
     }
@@ -177,7 +196,12 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     ///
     /// - Parameters:
     ///   - key: A `JSONWebValidatingKey` object that would be used for validation.
-    ///   - strict: If `true` (default), the algorithm in the protected header will be used otherwise algorithm in unprotected header will be allowed.
+    ///   - strict: Controls algorithm header validation behavior.
+    ///     - `true` (default, **RECOMMENDED**): Only use algorithm from protected (signed) header.
+    ///     - `false` (**INSECURE**): Allow algorithm from unprotected header when protected is "none".
+    ///
+    ///     **SECURITY WARNING**: Setting to `false` enables algorithm substitution attacks. See main
+    ///     `verifySignature(using:strict:)` documentation for details.
     public func verifySignature(using key: some JSONWebValidatingKey, strict: Bool = true) throws {
         try verifySignature(using: [key], strict: strict)
     }

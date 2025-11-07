@@ -19,7 +19,7 @@ extension Crypto.MLKEM768.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Deco
 
 @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
 extension MLKEM768.PublicKey: JSONWebKeyAlgorithmKeyPairPublic, JSONWebKeyRawRepresentable, JSONWebKeyImportable, JSONWebKeyExportable, JSONWebKeyAlgorithmIdentified {
-    public static let algorithm: any JSONWebAlgorithm = .mldsa65Signature
+    public static let algorithm: any JSONWebAlgorithm = .internalMLKEM768
     
     public static let algorithmIdentifier: RFC5480AlgorithmIdentifier = .mlkem768
 }

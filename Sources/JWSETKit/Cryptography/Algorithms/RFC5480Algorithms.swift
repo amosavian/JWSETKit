@@ -246,7 +246,12 @@ extension RFC5480AlgorithmIdentifier {
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
         parameters: .NamedCurves.secp256r1
     )
-
+    
+    public static let ecdsaSecp256k1 = RFC5480AlgorithmIdentifier(
+        algorithm: .AlgorithmIdentifier.idEcPublicKey,
+        parameters: .NamedCurves.secp256k1
+    )
+    
     public static let ecdsaP384 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
         parameters: .NamedCurves.secp384r1
