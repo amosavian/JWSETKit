@@ -127,7 +127,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             self.recipients = []
         case _ where contentEncryptionAlgorithm == .integrated:
             if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
-                guard let recipientKey = keyEncryptionKey as? (any HPKEDiffieHellmanPublicKey) else {
+                guard let recipientKey = keyEncryptionKey as? (any JSONWebKey & HPKEDiffieHellmanPublicKey) else {
                     throw JSONWebKeyError.invalidKeyFormat
                 }
                 let senderKey = try JSONWebHPKESender(recipientKey: recipientKey, recipientHeader: recipientHeader)

@@ -186,9 +186,13 @@ extension JSONWebKeyCurve {
         .p521: 66,
     ]
     
+    private static let fastPathKeySizes: [Self: Int] = [
+        .p256: 32, .ed25519: 32, .x25519: 32,
+    ]
+    
     /// Key size in bytes.
     public var coordinateSize: Int? {
-        Self.keySizes[self]
+        Self.fastPathKeySizes[self] ?? Self.keySizes[self]
     }
     
     /// Currently registered algorithms.

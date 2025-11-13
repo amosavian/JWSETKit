@@ -44,6 +44,33 @@ extension DataProtocol {
     }
 }
 
+extension UnsafeMutableBufferPointer {
+    fileprivate func copy<R: RangeExpression, D: DataProtocol>(from data: D, in range: R) -> Int where R.Bound == Int {
+        data.copyBytes(to: UnsafeMutableBufferPointer(rebasing: self[range]))
+    }
+}
+
+extension [Data] {
+    func joinedString(separator: Data) -> String {
+        switch count {
+        case 0:
+            return ""
+        case 1:
+            return String(decoding: self[0], as: UTF8.self)
+        default:
+            let capacity = reduce(0) { $0 + $1.count } + (separator.count) * count
+            return .init(unsafeUninitializedCapacity: capacity) { buffer in
+                var index = 0
+                for part in self {
+                    index += buffer.copy(from: part, in: index...)
+                    index += buffer.copy(from: separator, in: index...)
+                }
+                return index - separator.count
+            }
+        }
+    }
+}
+
 infix operator =~=: ComparisonPrecedence
 
 @inlinable

@@ -117,7 +117,7 @@ struct JSONWebHPKESender: JSONWebSealingKey, JSONWebEncryptingKey {
         throw JSONWebKeyError.operationNotAllowed
     }
     
-    init<PK>(recipientKey: PK, recipientHeader: JOSEHeader, extraInfo: Data = Data()) throws where PK: HPKEDiffieHellmanPublicKey {
+    init<PK>(recipientKey: PK, recipientHeader: JOSEHeader, extraInfo: Data = Data()) throws where PK: JSONWebKey & HPKEDiffieHellmanPublicKey {
         guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
             throw JSONWebKeyError.unknownAlgorithm
         }
@@ -126,13 +126,9 @@ struct JSONWebHPKESender: JSONWebSealingKey, JSONWebEncryptingKey {
         }
         let info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF] + extraInfo
         self.sender = try .init(recipientKey: recipientKey, ciphersuite: .init(algorithm: keyEncryptingAlgorithm), info: info)
-        if var recipientKey = (recipientKey as? any JSONWebKey).map(AnyJSONWebKey.init) {
-            recipientKey.algorithm = keyEncryptingAlgorithm
-            self.storage = recipientKey.storage
-        } else {
-            assertionFailure("Key must be conformed to JSONWebKey")
-            self.storage = .init()
-        }
+        var key = AnyJSONWebKey(recipientKey)
+        key.algorithm = keyEncryptingAlgorithm
+        self.storage = key.storage
     }
     
     func seal<D, IV, AAD, JWA>(_ data: D, iv _: IV?, authenticating: AAD?, using _: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
@@ -180,7 +176,7 @@ struct JSONWebHPKERecipient: JSONWebSealOpeningKey, JSONWebDecryptingKey {
         throw JSONWebKeyError.operationNotAllowed
     }
     
-    init<SK>(privateKey: SK, recipientHeader: JOSEHeader, extraInfo: Data = Data(), encapsulatedKey: Data) throws where SK: HPKEDiffieHellmanPrivateKey {
+    init<SK>(privateKey: SK, recipientHeader: JOSEHeader, extraInfo: Data = Data(), encapsulatedKey: Data) throws where SK: JSONWebKey & HPKEDiffieHellmanPrivateKey {
         guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
             throw JSONWebKeyError.unknownAlgorithm
         }
@@ -201,13 +197,9 @@ struct JSONWebHPKERecipient: JSONWebSealOpeningKey, JSONWebDecryptingKey {
             info: info,
             encapsulatedKey: encapsulatedKeyData
         )
-        if var privateKey = (privateKey as? any JSONWebKey).map(AnyJSONWebKey.init) {
-            privateKey.algorithm = keyEncryptingAlgorithm
-            self.storage = privateKey.storage
-        } else {
-            assertionFailure("Key must be conformed to JSONWebKey")
-            self.storage = .init()
-        }
+        var key = AnyJSONWebKey(privateKey)
+        key.algorithm = keyEncryptingAlgorithm
+        self.storage = key.storage
     }
     
     func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using _: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {

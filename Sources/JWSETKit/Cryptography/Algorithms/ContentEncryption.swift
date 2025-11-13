@@ -45,6 +45,16 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionCBC256SHA512: .bits256 * 2,
     ]
     
+    private nonisolated(unsafe) static let fastPathKeyRegistryClasses: [Self: any JSONWebSymmetricSealingKey.Type] = [
+        .aesEncryptionGCM256: JSONWebKeyAESGCM.self,
+        .aesEncryptionGCM128: JSONWebKeyAESGCM.self,
+    ]
+    
+    private static let fastPathKeyLengths: [Self: SymmetricKeySize] = [
+        .aesEncryptionGCM256: .bits256,
+        .aesEncryptionGCM128: .bits128,
+    ]
+    
     /// Key type, either RSA, Elliptic curve, Symmetric, etc.
     public var keyType: JSONWebKeyType? {
         .symmetric
@@ -52,12 +62,12 @@ extension JSONWebContentEncryptionAlgorithm {
     
     /// Returns sealing class appropriate for algorithm.
     public var keyClass: (any JSONWebSymmetricSealingKey.Type)? {
-        Self.keyRegistryClasses[self]
+        Self.fastPathKeyRegistryClasses[self] ?? Self.keyRegistryClasses[self]
     }
     
     // Length of key in bits.
     public var keyLength: SymmetricKeySize? {
-        Self.keyLengths[self]
+        Self.fastPathKeyLengths[self] ?? Self.keyLengths[self]
     }
     
     /// Currently registered algorithms.

@@ -126,14 +126,6 @@ struct SubjectPublicKeyInfo: DERImplicitlyTaggable, Hashable {
     }
 }
 
-extension Equatable {
-    /// Compare this value to another existential Equatable.
-    func isEqual(to other: (any Equatable)?) -> Bool {
-        guard let other = other as? Self else { return false }
-        return self == other
-    }
-}
-
 // MARK: Algorithm Identifier Statics
 
 extension [ASN1ObjectIdentifier] {

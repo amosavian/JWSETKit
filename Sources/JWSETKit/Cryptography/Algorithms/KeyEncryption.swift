@@ -173,29 +173,55 @@ extension JSONWebKeyEncryptionAlgorithm {
         .internalHpkeCurve25519SHA256ChachaPoly: hpkeDecryptionMutator,
     ]
     
+    private nonisolated(unsafe) static let fastPathKeyRegistryClasses: [Self: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)] = [
+        .aesKeyWrap128: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
+        .aesKeyWrap256: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
+        .rsaEncryptionOAEP: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
+        .rsaEncryptionOAEPSHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
+    ]
+    
+    private static let fastPathKeyTypes: [Self: JSONWebKeyType] = [
+        .aesKeyWrap128: .symmetric,
+        .aesKeyWrap256: .symmetric,
+        .rsaEncryptionOAEP: .rsa,
+        .rsaEncryptionOAEPSHA256: .rsa,
+    ]
+    
+    private static let fastPathKeyLengths: [Self: Int] = [
+        .aesKeyWrap128: SymmetricKeySize.bits128.bitCount,
+        .aesKeyWrap256: SymmetricKeySize.bits256.bitCount,
+        .rsaEncryptionOAEP: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+        .rsaEncryptionOAEPSHA256: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+    ]
+    
+    private static let fastPathHashFunctions: [Self: any HashFunction.Type] = [
+        .aesKeyWrap128: SHA256.self,
+        .aesKeyWrap256: SHA512.self,
+    ]
+    
     /// Key type, either RSA, Elliptic curve, Symmetric, etc.
     public var keyType: JSONWebKeyType? {
-        Self.keyTypes[self]
+        Self.fastPathKeyTypes[self] ?? Self.keyTypes[self]
     }
     
     /// Returns private class appropriate for algorithm.
     public var encryptingKeyClass: (any JSONWebEncryptingKey.Type)? {
-        Self.keyRegistryClasses[self]?.public
+        Self.fastPathKeyRegistryClasses[self]?.public ?? Self.keyRegistryClasses[self]?.public
     }
     
     /// Returns public class appropriate for algorithm.
     public var decryptingKeyClass: (any JSONWebDecryptingKey.Type)? {
-        Self.keyRegistryClasses[self]?.private
+        Self.fastPathKeyRegistryClasses[self]?.private ?? Self.keyRegistryClasses[self]?.private
     }
     
     // Length of key in bits, if applicable.
     public var keyLength: Int? {
-        Self.keyLengths[self]
+        Self.fastPathKeyLengths[self] ?? Self.keyLengths[self]
     }
     
     /// Hash function for symmetric algorithms.
     public var hashFunction: (any HashFunction.Type)? {
-        Self.hashFunctions[self]
+        Self.fastPathHashFunctions[self] ?? Self.hashFunctions[self]
     }
     
     /// Returns handler for encrypting content encryption key.
@@ -382,7 +408,7 @@ extension JSONWebKeyEncryptionAlgorithm {
             guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
                 throw JSONWebKeyError.unknownAlgorithm
             }
-            guard let recipientKey = keyEncryptionKey as? (any HPKEDiffieHellmanPublicKey) else {
+            guard let recipientKey = keyEncryptionKey as? (any JSONWebKey & HPKEDiffieHellmanPublicKey) else {
                 throw JSONWebKeyError.unknownKeyType
             }
             let hpke = try JSONWebHPKESender(recipientKey: recipientKey, recipientHeader: recipientHeader)

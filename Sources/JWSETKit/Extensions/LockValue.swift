@@ -54,6 +54,7 @@ public protocol Locking<Context, Value>: Sendable {
     init(initialValue: consuming Value)
     func withLock<R>(_ context: Context, _ handler: (inout Value) throws -> R) rethrows -> R
     func withLockIfAvailable<R>(_ context: Context, _ handler: (inout Value) throws -> R) rethrows -> R?
+    subscript(lockedFor context: Context) -> Value { get set }
 }
 
 #if canImport(pthread)
@@ -76,8 +77,9 @@ public enum PthreadReadWriteContextLock: ReadWriteLockContext {
 public final class PthreadReadWriteLock<Value>: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: UnsafeMutablePointer<pthread_rwlock_t>
-    
-    private var value: Value
+
+    @usableFromInline
+    internal var value: Value
     
     public init(initialValue: consuming Value) {
         self.lock = .allocate(capacity: 1)
@@ -131,6 +133,20 @@ public final class PthreadReadWriteLock<Value>: Locking, @unchecked Sendable {
         defer { unlock() }
         return try handler(&value)
     }
+    
+    @inlinable
+    public subscript(lockedFor context: PthreadReadWriteContextLock) -> Value {
+        _read {
+            try? lock(context)
+            defer { unlock() }
+            yield value
+        }
+        _modify {
+            try? lock(context)
+            defer { unlock() }
+            yield &value
+        }
+    }
 }
 
 public typealias PthreadReadWriteLockedValue<Value> = LockedValue<PthreadReadWriteContextLock, Value, PthreadReadWriteLock<Value>>
@@ -141,7 +157,8 @@ public final class OSUnfairLock<Value>: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: os_unfair_lock_t
     
-    private var value: Value
+    @usableFromInline
+    internal var value: Value
     
     public init(initialValue: consuming Value) {
         self.lock = .allocate(capacity: 1)
@@ -180,6 +197,20 @@ public final class OSUnfairLock<Value>: Locking, @unchecked Sendable {
         defer { unlock() }
         return try handler(&value)
     }
+    
+    @inlinable
+    public subscript(lockedFor context: LockContextEmpty) -> Value {
+        _read {
+            lock(context)
+            defer { unlock() }
+            yield value
+        }
+        _modify {
+            lock(context)
+            defer { unlock() }
+            yield &value
+        }
+    }
 }
 
 public typealias OSUnfairLockedValue<Value> = LockedValue<LockContextEmpty, Value, OSUnfairLock<Value>>
@@ -190,7 +221,8 @@ public final class PthreadMutex<Value>: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: UnsafeMutablePointer<pthread_mutex_t>
     
-    private var value: Value
+    @usableFromInline
+    internal var value: Value
 
     public init(initialValue: consuming Value) {
         self.lock = .allocate(capacity: 1)
@@ -231,12 +263,27 @@ public final class PthreadMutex<Value>: Locking, @unchecked Sendable {
         defer { unlock() }
         return try handler(&value)
     }
+    
+    @inlinable
+    public subscript(lockedFor context: LockContextEmpty) -> Value {
+        _read {
+            lock(context)
+            defer { unlock() }
+            yield value
+        }
+        _modify {
+            lock(context)
+            defer { unlock() }
+            yield &value
+        }
+    }
 }
 
 public typealias PthreadMutexLockedValue<Value> = LockedValue<LockContextEmpty, Value, PthreadMutex<Value>>
 #else
 public final class SingleThreadLock<Value>: Locking, @unchecked Sendable {
-    private var value: Value
+    @usableFromInline
+    internal var value: Value
 
     public init(initialValue: consuming Value) {
         self.value = initialValue
@@ -268,34 +315,49 @@ public final class SingleThreadLock<Value>: Locking, @unchecked Sendable {
         defer { unlock() }
         return try handler(&value)
     }
+
+    @inlinable
+    public subscript(lockedFor context: LockContextEmpty) -> Value {
+        _read {
+            lock(context)
+            defer { unlock() }
+            yield value
+        }
+        _modify {
+            lock(context)
+            defer { unlock() }
+            yield &value
+        }
+    }
 }
+public typealias SingleThreadLockedValue<Value> = LockedValue<LockContextEmpty, Value, OSUnfairLock<Value>>
 #endif
 
-#if canImport(pthread)
+#if canImport(Darwin)
+public typealias AtomicValue = OSUnfairLockedValue
+#elseif canImport(pthread)
 public typealias AtomicValue = PthreadReadWriteLockedValue
 #else
-public typealias AtomicValue<Value> = LockedValue<LockContextEmpty, Value, SingleThreadLock<Value>>
+public typealias AtomicValue = SingleThreadLockedValue
 #endif
 
 /// Synchronizing read and writes on a shared mutable property.
 @dynamicMemberLookup
 public final class LockedValue<Context, Value, Lock: Locking<Context, Value>>: @unchecked Sendable where Context: ReadWriteLockContext {
-    private let lock: Lock
+    @usableFromInline
+    internal var lock: Lock
     
     public init(wrappedValue: consuming Value) {
         self.lock = .init(initialValue: wrappedValue)
     }
     
+    @inlinable
     public var wrappedValue: Value {
-        get {
-            lock.withLock(.getContext) { value in
-                value
-            }
+        _read {
+            yield lock[lockedFor: .getContext]
         }
-        set {
-            lock.withLock(.setContext) { value in
-                value = newValue
-            }
+        _modify {
+            yield &lock[lockedFor: .setContext]
         }
     }
     

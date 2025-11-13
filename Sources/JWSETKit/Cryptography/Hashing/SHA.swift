@@ -85,9 +85,15 @@ extension JSONWebHashAlgorithm {
         }
     }()
     
+    private static let fastPathHashFunctions: [Self: any HashFunction.Type] = [
+        SHA256.identifier: SHA256.self,
+        SHA384.identifier: SHA384.self,
+        SHA512.identifier: SHA512.self,
+    ]
+    
     /// Returns provided hash function  for this algorithm.
     public var hashFunction: (any HashFunction.Type)? {
-        Self.hashFunctions[self]
+        Self.fastPathHashFunctions[self] ?? Self.hashFunctions[self]
     }
     
     /// Currently registered algorithms.

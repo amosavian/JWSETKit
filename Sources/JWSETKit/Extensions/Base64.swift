@@ -16,19 +16,20 @@ extension RandomAccessCollection where Self.Element == UInt8 {
     ///
     /// - returns: The URL-safe Base-64 encoded data.
     public func urlBase64EncodedData() -> Data {
-        let result = Data(self).base64EncodedData()
-            .compactMap { (byte: UInt8) -> UInt8? in
-                switch byte {
-                case "+":
-                    return "-"
-                case "/":
-                    return "_"
-                case "=":
-                    return nil
-                default:
-                    return byte
-                }
+        var result = Data(self).base64EncodedData()
+        for i in 0 ..< result.count {
+            switch result[i] {
+            case "+":
+                result[i] = "-"
+            case "/":
+                result[i] = "_"
+            default:
+                break
             }
+        }
+        while result.last == UInt8(ascii: "=") {
+            result.removeLast()
+        }
         return Data(result)
     }
     

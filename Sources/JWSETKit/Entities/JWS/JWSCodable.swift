@@ -129,9 +129,7 @@ extension JSONWebSignature: Codable {
     
     fileprivate func encode(_ encoder: any Encoder, parts: [Data]) throws {
         var container = encoder.singleValueContainer()
-        let value = parts
-            .map { String(decoding: $0, as: UTF8.self) }
-            .joined(separator: ".")
+        let value = parts.joinedString(separator: Data(".".utf8))
         try container.encode(value)
     }
     

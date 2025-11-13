@@ -90,6 +90,18 @@ extension JSONWebSignatureAlgorithm {
         .rsaSignaturePKCS1v15SHA512: SHA512.self,
     ]
     
+    private nonisolated(unsafe) static let fastPathKeyRegistryClasses: [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)] = [
+        .hmacSHA256: (JSONWebKeyHMAC<SHA256>.self, JSONWebKeyHMAC<SHA256>.self),
+        .rsaSignaturePSSSHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
+        .ecdsaSignatureP256SHA256: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
+    ]
+    
+    private static let fastPathHashFunctions: [Self: any HashFunction.Type] = [
+        .hmacSHA256: SHA256.self,
+        .rsaSignaturePSSSHA256: SHA256.self,
+        .ecdsaSignatureP256SHA256: SHA256.self,
+    ]
+    
     public var keyType: JSONWebKeyType? {
         Self.keyTypes[self]
     }
@@ -100,17 +112,17 @@ extension JSONWebSignatureAlgorithm {
     
     /// Returns private class appropriate for algorithm.
     public var signingKeyClass: (any JSONWebSigningKey.Type)? {
-        Self.keyRegistryClasses[self]?.private
+        Self.fastPathKeyRegistryClasses[self]?.private ?? Self.keyRegistryClasses[self]?.private
     }
     
     /// Returns public class appropriate for algorithm.
     public var validatingKeyClass: (any JSONWebValidatingKey.Type)? {
-        Self.keyRegistryClasses[self]?.public
+        Self.fastPathKeyRegistryClasses[self]?.public ?? Self.keyRegistryClasses[self]?.public
     }
     
     /// Hash function for signing algorithms.
     public var hashFunction: (any HashFunction.Type)? {
-        Self.hashFunctions[self]
+        Self.fastPathHashFunctions[self] ?? Self.hashFunctions[self]
     }
     
     /// Currently registered algorithms.

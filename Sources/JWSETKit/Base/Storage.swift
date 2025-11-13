@@ -193,12 +193,33 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     }
     
     public static func == (lhs: JSONWebValueStorage, rhs: JSONWebValueStorage) -> Bool {
+        guard lhs.storage.count == rhs.storage.count else {
+            return false
+        }
+        for (key, lhsValue) in lhs.storage {
+            guard let rhsValue = rhs.storage[key] else {
+                return false
+            }
+            if !valuesEqual(lhsValue, rhsValue) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private static func valuesEqual(_ lhs: any Sendable, _ rhs: any Sendable) -> Bool {
+        if let lhsEquatable = lhs as? any Equatable,
+           lhsEquatable.isEqual(to: rhs as? any Equatable)
+        {
+            return true
+        }
+        // Fallback: use JSON encoding for complex cases (arrays, nested types, etc.)
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         encoder.dateEncodingStrategy = .millisecondsSince1970
         encoder.nonConformingFloatEncodingStrategy = .convertToString(positiveInfinity: "Inf", negativeInfinity: "-Inf", nan: "NaN")
-        let lhs = try? encoder.encode(lhs)
-        let rhs = try? encoder.encode(rhs)
+        let lhs = try? encoder.encode(AnyCodable(lhs))
+        let rhs = try? encoder.encode(AnyCodable(rhs))
         return lhs == rhs
     }
     
@@ -273,4 +294,19 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
             storage[key] = .init(value)
         }
     }
+}
+
+extension Equatable {
+    func isEqual(to other: (any Equatable)?) -> Bool {
+        switch (self, other) {
+        case (_, let other as Self):
+            return self == other
+        case (_, let other as any RawRepresentable<Self>):
+            return self == other.rawValue
+        case (_ as any RawRepresentable, let other?):
+            return other.isEqual(to: self)
+        default:
+            return false
+        }
+     }
 }
