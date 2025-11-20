@@ -101,8 +101,10 @@ extension HPKE.KDF {
     }
 }
 
+#if swift(<6.2) && canImport(CryptoKit)
 @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
 extension Crypto.HPKE.Ciphersuite: @unchecked Swift.Sendable {}
+#endif
 
 @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
 struct JSONWebHPKESender: JSONWebSealingKey, JSONWebEncryptingKey {

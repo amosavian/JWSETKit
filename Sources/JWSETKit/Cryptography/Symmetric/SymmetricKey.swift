@@ -148,6 +148,7 @@ extension SymmetricKey: JSONWebSymmetricSealingKey {
     }
 }
 
-#if swift(<6.2) || !canImport(CryptoKit)
+#if swift(<6.2) && canImport(CryptoKit)
 extension SymmetricKey: @unchecked Swift.Sendable {}
+extension SymmetricKeySize: @unchecked Swift.Sendable {}
 #endif

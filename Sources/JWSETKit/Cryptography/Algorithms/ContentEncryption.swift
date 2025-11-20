@@ -134,7 +134,3 @@ extension JSONWebAlgorithm where Self == JSONWebContentEncryptionAlgorithm {
         .init(rawValue: "A\(bitCount)CBC-HS\(bitCount * 2)")
     }
 }
-
-#if compiler(<6.1)
-extension SymmetricKeySize: @unchecked Sendable {}
-#endif

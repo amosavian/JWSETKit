@@ -57,7 +57,7 @@ public protocol Locking<Context, Value>: Sendable {
     subscript(lockedFor context: Context) -> Value { get set }
 }
 
-#if canImport(pthread)
+#if !canImport(WASILibc) || canImport(pthread)
 @frozen
 public enum PthreadReadWriteContextLock: ReadWriteLockContext {
     case read
@@ -216,7 +216,7 @@ public final class OSUnfairLock<Value>: Locking, @unchecked Sendable {
 public typealias OSUnfairLockedValue<Value> = LockedValue<LockContextEmpty, Value, OSUnfairLock<Value>>
 #endif
 
-#if canImport(pthread)
+#if !canImport(WASILibc) || canImport(pthread)
 public final class PthreadMutex<Value>: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: UnsafeMutablePointer<pthread_mutex_t>
@@ -330,12 +330,12 @@ public final class SingleThreadLock<Value>: Locking, @unchecked Sendable {
         }
     }
 }
-public typealias SingleThreadLockedValue<Value> = LockedValue<LockContextEmpty, Value, OSUnfairLock<Value>>
+public typealias SingleThreadLockedValue<Value> = LockedValue<LockContextEmpty, Value, SingleThreadLock<Value>>
 #endif
 
 #if canImport(Darwin)
 public typealias AtomicValue = OSUnfairLockedValue
-#elseif canImport(pthread)
+#elseif !canImport(WASILibc) || canImport(pthread)
 public typealias AtomicValue = PthreadReadWriteLockedValue
 #else
 public typealias AtomicValue = SingleThreadLockedValue
@@ -409,7 +409,7 @@ extension LockedValue: Sequence where Value: Sequence {
     }
     
     @inlinable
-    public var underestimatedCounValue: Int {
+    public var underestimatedCount: Int {
         wrappedValue.underestimatedCount
     }
     
@@ -557,6 +557,12 @@ extension LockedValue: RandomAccessCollection where Value: RandomAccessCollectio
 extension LockedValue: LazySequenceProtocol where Value: LazySequenceProtocol {}
 
 extension LockedValue: LazyCollectionProtocol where Value: LazyCollectionProtocol {}
+
+extension LockedValue: AsyncSequence where Value: AsyncSequence {
+    public func makeAsyncIterator() -> Value.AsyncIterator {
+        wrappedValue.makeAsyncIterator()
+    }
+}
 
 extension LockedValue: ExpressibleByNilLiteral where Value: ExpressibleByNilLiteral {
     @inlinable
