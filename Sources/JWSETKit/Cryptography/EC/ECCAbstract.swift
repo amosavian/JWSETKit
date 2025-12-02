@@ -79,13 +79,10 @@ extension CryptoECKeyPortable {
         switch format {
         case .raw:
             try self.init(x963Representation: key.asContiguousBytes)
-        case .spki where Self.self is (any CryptoECPublicKey).Type,
-             .pkcs8 where Self.self is (any CryptoECPrivateKey).Type:
-            try self.init(derRepresentation: key)
+        case .spki, .pkcs8:
+            try self.init(derRepresentation: Array(key))
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
-        default:
-            throw JSONWebKeyError.invalidKeyFormat
         }
     }
     
@@ -93,13 +90,10 @@ extension CryptoECKeyPortable {
         switch format {
         case .raw:
             return x963Representation
-        case .spki where self is any CryptoECPublicKey,
-             .pkcs8 where self is any CryptoECPrivateKey:
+        case .spki, .pkcs8:
             return derRepresentation
         case .jwk:
             return try jwkRepresentation
-        default:
-            throw JSONWebKeyError.invalidKeyFormat
         }
     }
 }
@@ -124,13 +118,10 @@ extension CryptoECKeyPortableCompactRepresentable {
         switch format {
         case .raw:
             try self.init(importingRaw: key)
-        case .spki where Self.self is (any CryptoECPublicKey).Type,
-             .pkcs8 where Self.self is (any CryptoECPrivateKey).Type:
-            try self.init(derRepresentation: key)
+        case .spki, .pkcs8:
+            try self.init(derRepresentation: Array(key))
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
-        default:
-            throw JSONWebKeyError.invalidKeyFormat
         }
     }
 }

@@ -184,6 +184,7 @@ extension JSONWebKeyCurve {
         .p256: 32, .ed25519: 32, .x25519: 32,
         .p384: 48,
         .p521: 66,
+        .secp256k1: 32,
     ]
     
     private static let fastPathKeySizes: [Self: Int] = [
@@ -227,6 +228,13 @@ extension JSONWebKeyCurve {
     
     /// X-25519 for Diffie-Hellman curve.
     public static let x25519: Self = "X25519"
+    
+#if P256K
+    /// P-256K (secp256k1) curve.
+    public static let secp256k1: Self = "secp256k1"
+#else
+    static let secp256k1: Self = "secp256k1"
+#endif
 }
 
 /// JSON Key Usage, e.g. `sig`, `enc`, etc.

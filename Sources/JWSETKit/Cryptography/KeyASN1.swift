@@ -13,26 +13,6 @@ import Foundation
 import Crypto
 import SwiftASN1
 
-extension DERImplicitlyTaggable {
-    /// Initializes a DER serializable object from given data.
-    ///
-    /// - Parameter derEncoded: DER encoded object.
-    @usableFromInline
-    init<D>(derEncoded: D) throws where D: DataProtocol {
-        try self.init(derEncoded: [UInt8](derEncoded))
-    }
-    
-    /// DER serialized data representation of object.
-    @usableFromInline
-    var derRepresentation: Data {
-        get throws {
-            var derSerializer = DER.Serializer()
-            try serialize(into: &derSerializer)
-            return Data(derSerializer.serializedBytes)
-        }
-    }
-}
-
 protocol DERKeyContainer {
     var algorithmIdentifier: RFC5480AlgorithmIdentifier { get }
 }
@@ -350,19 +330,8 @@ struct SEC1PrivateKey: DERImplicitlyTaggable, PEMRepresentable {
 
     private init(privateKey: ASN1OctetString, algorithm: ASN1ObjectIdentifier?, publicKey: ASN1BitString?) throws {
         self.privateKey = privateKey
+        self.algorithm = .init(algorithm: .AlgorithmIdentifier.idEcPublicKey, parameters: algorithm)
         self.publicKey = publicKey
-        self.algorithm = try algorithm.map { algorithmOID in
-            switch algorithmOID {
-            case ASN1ObjectIdentifier.NamedCurves.secp256r1:
-                return .ecdsaP256
-            case ASN1ObjectIdentifier.NamedCurves.secp384r1:
-                return .ecdsaP384
-            case ASN1ObjectIdentifier.NamedCurves.secp521r1:
-                return .ecdsaP521
-            default:
-                throw CryptoKitASN1Error.invalidObjectIdentifier
-            }
-        }
     }
 
     init(privateKey: [UInt8], algorithm: RFC5480AlgorithmIdentifier?, publicKey: [UInt8]) {
@@ -375,23 +344,10 @@ struct SEC1PrivateKey: DERImplicitlyTaggable, PEMRepresentable {
         try coder.appendConstructedNode(identifier: identifier) { coder in
             try coder.serialize(1) // version
             try coder.serialize(privateKey)
-
-            if let algorithm = algorithm {
-                let oid: ASN1ObjectIdentifier
-                switch algorithm {
-                case .ecdsaP256:
-                    oid = ASN1ObjectIdentifier.NamedCurves.secp256r1
-                case .ecdsaP384:
-                    oid = ASN1ObjectIdentifier.NamedCurves.secp384r1
-                case .ecdsaP521:
-                    oid = ASN1ObjectIdentifier.NamedCurves.secp521r1
-                default:
-                    throw CryptoKitASN1Error.invalidASN1Object
-                }
-
-                try coder.serialize(oid, explicitlyTaggedWithTagNumber: 0, tagClass: .contextSpecific)
+            
+            if let algorithm = algorithm, let curveOID = algorithm.parameters as? ASN1ObjectIdentifier {
+                try coder.serialize(curveOID, explicitlyTaggedWithTagNumber: 0, tagClass: .contextSpecific)
             }
-
             if let publicKey = publicKey {
                 try coder.serialize(publicKey, explicitlyTaggedWithTagNumber: 1, tagClass: .contextSpecific)
             }
@@ -413,7 +369,7 @@ struct ModuleLatticePrivateKey: DERParseable, DERSerializable, Hashable, Sendabl
     
     init(derEncoded node: ASN1Node) throws {
         switch node.identifier {
-        case ASN1Identifier(tagWithNumber: 0, tagClass: .contextSpecific):
+        case .init(tagWithNumber: 0, tagClass: .contextSpecific):
             // seed [0] case
             guard let seed = node.content.primitive else {
                 throw CryptoKitASN1Error.unexpectedFieldType
@@ -423,11 +379,11 @@ struct ModuleLatticePrivateKey: DERParseable, DERSerializable, Hashable, Sendabl
             }
             try self.init(seed: .init(seed))
             
-        case ASN1Identifier.octetString:
+        case .octetString:
             // expandedKey case - this still breaks the design
             throw CryptoKitASN1Error.unexpectedFieldType
             
-        case ASN1Identifier.sequence:
+        case .sequence:
             // both case
             guard case .constructed(let elementsSequence) = node.content else {
                 throw CryptoKitASN1Error.unexpectedFieldType
@@ -480,7 +436,9 @@ struct PKCS8PrivateKey: DERImplicitlyTaggable {
             }
 
             let encodedAlgorithm = try RFC5480AlgorithmIdentifier(derEncoded: &nodes)
-            let privateKeyBytes = try ASN1OctetString(derEncoded: &nodes)
+            guard let privateKey = nodes.next()?.content.primitive else {
+                throw CryptoKitASN1Error.invalidASN1Object
+            }
             
             _ = try DER.optionalExplicitlyTagged(&nodes, tagNumber: 0, tagClass: .contextSpecific) { _ in
                 // We ignore the attributes
@@ -493,26 +451,18 @@ struct PKCS8PrivateKey: DERImplicitlyTaggable {
                 }
             }
             
-            switch try encodedAlgorithm.keyType {
-            case .rsa:
-                return try .init(algorithm: encodedAlgorithm, privateKey: privateKeyBytes.bytes)
-            case .ellipticCurve:
-                let privateKeyNode = try DER.parse(privateKeyBytes.bytes)
-                let privateKey = try SEC1PrivateKey(derEncoded: privateKeyNode)
+            if encodedAlgorithm.algorithm == .AlgorithmIdentifier.idEcPublicKey {
+                let privateKey = try SEC1PrivateKey(derEncoded: privateKey)
                 if let innerAlgorithm = privateKey.algorithm, innerAlgorithm != encodedAlgorithm {
                     throw CryptoKitASN1Error.invalidObjectIdentifier
                 }
                 return try .init(algorithm: encodedAlgorithm, privateKey: privateKey)
-            case .octetKeyPair:
-                let privateKeyNode = try DER.parse(privateKeyBytes.bytes)
-                let privateKey = try ASN1OctetString(derEncoded: privateKeyNode.encodedBytes)
+            } else if [ASN1ObjectIdentifier].AlgorithmIdentifier.moduleLatticeAlgs.contains(encodedAlgorithm.algorithm) {
+                let privateKey = try ModuleLatticePrivateKey(derEncoded: privateKey)
                 return try .init(algorithm: encodedAlgorithm, privateKey: privateKey)
-            case .algorithmKeyPair:
-                let privateKeyNode = try DER.parse(privateKeyBytes.bytes)
-                let privateKey = try ModuleLatticePrivateKey(derEncoded: privateKeyNode)
-                return try .init(algorithm: encodedAlgorithm, privateKey: privateKey)
-            default:
-                throw CryptoKitASN1Error.invalidASN1Object
+            } else {
+                // RSA and Edwards curve
+                return try .init(algorithm: encodedAlgorithm, privateKey: ASN1OctetString(derEncoded: privateKey))
             }
         }
     }
@@ -524,14 +474,12 @@ struct PKCS8PrivateKey: DERImplicitlyTaggable {
 
     init(algorithm: RFC5480AlgorithmIdentifier, privateKey: [UInt8], publicKey: [UInt8] = []) {
         self.algorithm = algorithm
-        switch try? algorithm.keyType {
-        case .ellipticCurve:
+        if algorithm.algorithm == .AlgorithmIdentifier.idEcPublicKey {
             self.privateKey = SEC1PrivateKey(privateKey: privateKey, algorithm: algorithm, publicKey: publicKey)
-        case .octetKeyPair:
-            self.privateKey = ASN1OctetString(contentBytes: privateKey[...])
-        case .algorithmKeyPair:
+        } else if [ASN1ObjectIdentifier].AlgorithmIdentifier.moduleLatticeAlgs.contains(algorithm.algorithm) {
             self.privateKey = (try? ModuleLatticePrivateKey(seed: privateKey, expandedKey: nil)) ?? ASN1OctetString(contentBytes: privateKey[...])
-        default:
+        } else {
+            // RSA and Edwards curve
             self.privateKey = ASN1OctetString(contentBytes: privateKey[...])
         }
     }

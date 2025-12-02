@@ -148,6 +148,7 @@ extension RFC5480AlgorithmIdentifier {
         .ecdsaP256: .ecdsaSignatureP256SHA256,
         .ecdsaP384: .ecdsaSignatureP384SHA384,
         .ecdsaP521: .ecdsaSignatureP521SHA512,
+        .ecdsaSecp256k1: .ecdsaSignatureSecp256k1SHA256,
         .ed25519: .eddsaSignature,
         .ed448: .eddsaSignature,
         .mldsa44: .internalMLDSA44Signature,

@@ -308,5 +308,5 @@ extension Equatable {
         default:
             return false
         }
-     }
+    }
 }

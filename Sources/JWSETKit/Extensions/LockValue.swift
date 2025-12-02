@@ -54,7 +54,7 @@ public protocol Locking<Context, Value>: Sendable {
     init(initialValue: consuming Value)
     func withLock<R>(_ context: Context, _ handler: (inout Value) throws -> R) rethrows -> R
     func withLockIfAvailable<R>(_ context: Context, _ handler: (inout Value) throws -> R) rethrows -> R?
-    subscript(lockedFor context: Context) -> Value { get set }
+    subscript(lockedFor _: Context) -> Value { get set }
 }
 
 #if !canImport(WASILibc) || canImport(pthread)
@@ -79,7 +79,7 @@ public final class PthreadReadWriteLock<Value>: Locking, @unchecked Sendable {
     let lock: UnsafeMutablePointer<pthread_rwlock_t>
 
     @usableFromInline
-    internal var value: Value
+    var value: Value
     
     public init(initialValue: consuming Value) {
         self.lock = .allocate(capacity: 1)
@@ -158,7 +158,7 @@ public final class OSUnfairLock<Value>: Locking, @unchecked Sendable {
     let lock: os_unfair_lock_t
     
     @usableFromInline
-    internal var value: Value
+    var value: Value
     
     public init(initialValue: consuming Value) {
         self.lock = .allocate(capacity: 1)
@@ -222,7 +222,7 @@ public final class PthreadMutex<Value>: Locking, @unchecked Sendable {
     let lock: UnsafeMutablePointer<pthread_mutex_t>
     
     @usableFromInline
-    internal var value: Value
+    var value: Value
 
     public init(initialValue: consuming Value) {
         self.lock = .allocate(capacity: 1)
@@ -283,7 +283,7 @@ public typealias PthreadMutexLockedValue<Value> = LockedValue<LockContextEmpty, 
 #else
 public final class SingleThreadLock<Value>: Locking, @unchecked Sendable {
     @usableFromInline
-    internal var value: Value
+    var value: Value
 
     public init(initialValue: consuming Value) {
         self.value = initialValue
@@ -330,6 +330,7 @@ public final class SingleThreadLock<Value>: Locking, @unchecked Sendable {
         }
     }
 }
+
 public typealias SingleThreadLockedValue<Value> = LockedValue<LockContextEmpty, Value, SingleThreadLock<Value>>
 #endif
 
@@ -345,7 +346,7 @@ public typealias AtomicValue = SingleThreadLockedValue
 @dynamicMemberLookup
 public final class LockedValue<Context, Value, Lock: Locking<Context, Value>>: @unchecked Sendable where Context: ReadWriteLockContext {
     @usableFromInline
-    internal var lock: Lock
+    var lock: Lock
     
     public init(wrappedValue: consuming Value) {
         self.lock = .init(initialValue: wrappedValue)

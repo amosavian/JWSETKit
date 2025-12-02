@@ -109,6 +109,7 @@ struct ECTests {
         #expect(throws: Never.self) {
             try Curve25519.Signing.PrivateKey(importing: key, format: .pkcs8)
         }
+        #expect(try Curve25519.Signing.PrivateKey(importing: key, format: .pkcs8).exportKey(format: .pkcs8) == key)
     }
     
     @Test
@@ -122,4 +123,52 @@ struct ECTests {
             try Curve25519.Signing.PrivateKey(importing: key, format: .pkcs8)
         }
     }
+
+#if P256K
+    @Test
+    func secp256k1() throws {
+        let key = P256K.Signing.PrivateKey()
+
+        #expect(key.xCoordinate != nil)
+        #expect(key.yCoordinate != nil)
+        #expect(key.privateKey != nil)
+
+        let signature = try key.signature(plaintext, using: .ecdsaSignatureSecp256k1SHA256)
+        try key.publicKey.verifySignature(signature, for: plaintext, using: .ecdsaSignatureSecp256k1SHA256)
+    }
+    
+    @Test
+    func secp256k1Decode() throws {
+        let signature = try ExampleKeys.privateEC256K.signature(plaintext, using: .ecdsaSignatureSecp256k1SHA256)
+        try ExampleKeys.publicEC256K.verifySignature(signature, for: plaintext, using: .ecdsaSignatureSecp256k1SHA256)
+    }
+
+    @Test
+    func secp256k1PublicDecodeSPKI() throws {
+        // Generate a fresh P256K key and export to SPKI
+        let privateKey = P256K.Signing.PrivateKey()
+        let publicKey = privateKey.publicKey
+        let spki = publicKey.derRepresentation
+
+        #expect(try JSONWebECPublicKey(importing: spki, format: .spki).keyType == .ellipticCurve)
+        #expect(try JSONWebECPublicKey(importing: spki, format: .spki).curve == .secp256k1)
+        #expect(throws: Never.self) {
+            try P256K.Signing.PublicKey(importing: spki, format: .spki)
+        }
+    }
+
+    @Test
+    func secp256k1PrivateDecodePKCS8() throws {
+        // Generate a fresh P256K key and export to PKCS8
+        let privateKey = P256K.Signing.PrivateKey()
+        let pkcs8 = privateKey.derRepresentation
+
+        #expect(try JSONWebECPrivateKey(importing: pkcs8, format: .pkcs8).keyType == .ellipticCurve)
+        #expect(try JSONWebECPrivateKey(importing: pkcs8, format: .pkcs8).curve == .secp256k1)
+        #expect(throws: Never.self) {
+            try P256K.Signing.PrivateKey(importing: pkcs8, format: .pkcs8)
+        }
+        #expect(try P256K.Signing.PrivateKey(importing: pkcs8, format: .pkcs8).exportKey(format: .pkcs8) == pkcs8)
+    }
+#endif
 }

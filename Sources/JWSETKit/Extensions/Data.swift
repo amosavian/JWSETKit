@@ -50,6 +50,14 @@ extension UnsafeMutableBufferPointer {
     }
 }
 
+extension ContiguousBytes {
+    mutating func setBytes<D: DataProtocol>(_ bytes: D) {
+        withUnsafeBytes { buffer in
+            UnsafeMutableRawBufferPointer(mutating: buffer).copyBytes(from: bytes.prefix(buffer.count))
+        }
+    }
+}
+
 extension [Data] {
     func joinedString(separator: Data) -> String {
         switch count {

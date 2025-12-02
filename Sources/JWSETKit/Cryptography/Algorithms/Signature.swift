@@ -37,6 +37,7 @@ extension JSONWebSignatureAlgorithm {
         .ecdsaSignatureP256SHA256: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
         .ecdsaSignatureP384SHA384: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
         .ecdsaSignatureP521SHA512: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
+        .ecdsaSignatureSecp256k1SHA256: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
         .eddsaSignature: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
         .eddsa25519Signature: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
         .rsaSignaturePSSSHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
@@ -57,6 +58,7 @@ extension JSONWebSignatureAlgorithm {
         .ecdsaSignatureP256SHA256: .ellipticCurve,
         .ecdsaSignatureP384SHA384: .ellipticCurve,
         .ecdsaSignatureP521SHA512: .ellipticCurve,
+        .ecdsaSignatureSecp256k1SHA256: .ellipticCurve,
         .eddsaSignature: .octetKeyPair,
         .eddsa25519Signature: .octetKeyPair,
         .rsaSignaturePSSSHA256: .rsa,
@@ -72,6 +74,7 @@ extension JSONWebSignatureAlgorithm {
     private static let curves: AtomicValue<[Self: JSONWebKeyCurve]> = [
         .ecdsaSignatureP256SHA256: .p256, .ecdsaSignatureP384SHA384: .p384,
         .ecdsaSignatureP521SHA512: .p521,
+        .ecdsaSignatureSecp256k1SHA256: .secp256k1,
         .eddsaSignature: .ed25519, .eddsa25519Signature: .ed25519,
     ]
     
@@ -82,6 +85,7 @@ extension JSONWebSignatureAlgorithm {
         .ecdsaSignatureP256SHA256: SHA256.self,
         .ecdsaSignatureP384SHA384: SHA384.self,
         .ecdsaSignatureP521SHA512: SHA512.self,
+        .ecdsaSignatureSecp256k1SHA256: SHA256.self,
         .rsaSignaturePSSSHA256: SHA256.self,
         .rsaSignaturePSSSHA384: SHA384.self,
         .rsaSignaturePSSSHA512: SHA512.self,
@@ -222,8 +226,15 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     /// **Signature**: ECDSA using P-521 and SHA-512.
     public static var ecdsaSignatureP521SHA512: Self { "ES512" }
     
+#if P256K
+    /// **Signature**: ECDSA using secp256k1 curve and SHA-256.
+    public static var ecdsaSignatureSecp256k1SHA256: Self { "ES256K" }
+#else
+    static var ecdsaSignatureSecp256k1SHA256: Self { "ES256K" }
+#endif
+    
     /// **Signature**: ML-DSA-44 as described in FIPS 204.
-    static var mldsa44Signature: Self { "ML-DSA-44" }
+    static var mldsa44Signature: Self { .internalMLDSA44Signature }
     
     /// **Signature**: ML-DSA-65 as described in FIPS 204.
     @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)

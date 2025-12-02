@@ -97,7 +97,30 @@ enum ExampleKeys {
          "kid":"1"}
         """.utf8
     ), format: .jwk)
-    
+
+#if P256K
+    static let privateEC256K = try! JSONWebECPrivateKey(importing: Data(
+        """
+        {"kty":"EC",
+         "crv":"secp256k1",
+         "x":"3_HXfypnHF82GDcm2yNBvlj-rh2i3s7YQyQPe1Arplk",
+         "y":"LOGblGxO5YVG9SUdRBoGXqUHNWBpheWyKHiL7E5YKJg",
+         "d":"t-FRYortKmq_cViAnPTzx2LnFg84tNpWp4TZBFGQz-8",
+         "kid":"1"}
+        """.utf8
+    ), format: .jwk)
+
+    static let publicEC256K = try! JSONWebECPublicKey(importing: Data(
+        """
+        {"kty":"EC",
+         "crv":"secp256k1",
+         "x":"3_HXfypnHF82GDcm2yNBvlj-rh2i3s7YQyQPe1Arplk",
+         "y":"LOGblGxO5YVG9SUdRBoGXqUHNWBpheWyKHiL7E5YKJg",
+         "kid":"1"}
+        """.utf8
+    ), format: .jwk)
+#endif
+
     static let publicRSA2048 = try! JSONWebRSAPublicKey(importing: Data(
         """
         {"kty":"RSA",

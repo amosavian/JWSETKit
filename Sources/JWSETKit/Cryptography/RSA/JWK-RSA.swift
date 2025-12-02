@@ -81,7 +81,7 @@ public struct JSONWebRSAPublicKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWeb
         return try SecKey(from: self).encrypt(data, using: algorithm)
 #elseif canImport(CryptoExtras)
         switch algorithm {
-        case .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256:
+        case .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256, .unsafeRSAEncryptionPKCS1:
             return try _RSA.Encryption.PublicKey(from: self).encrypt(data, using: algorithm)
         default:
             return try BoringSSLRSAPublicKey(from: self).encrypt(data, using: algorithm)
@@ -218,7 +218,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
         return try SecKey(from: self).decrypt(data, using: algorithm)
 #elseif canImport(CryptoExtras)
         switch algorithm {
-        case .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256:
+        case .rsaEncryptionOAEP, .rsaEncryptionOAEPSHA256, .unsafeRSAEncryptionPKCS1:
             return try _RSA.Encryption.PrivateKey(from: self).decrypt(data, using: algorithm)
         default:
             return try BoringSSLRSAPrivateKey(from: self).decrypt(data, using: algorithm)

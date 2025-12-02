@@ -72,7 +72,7 @@ Add JWSETKit to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", from: "0.26.0")
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "1.0.0")
 ]
 ```
 
@@ -90,7 +90,17 @@ For X509 certificate support (Swift 6.1+):
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", from: "0.26.0", traits: ["X509"])
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "1.0.0", traits: ["X509"])
+]
+```
+
+### With P256K Support
+
+For secp256k1 (ES256K) support (Swift 6.1+):
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "1.0.0", traits: ["X509"])
 ]
 ```
 
@@ -228,7 +238,7 @@ let importedKey = try P256.Signing.PrivateKey(importing: pkcs8Data, format: .pkc
 | EdDSA     | :white_check_mark: | :white_check_mark: | :x:                | :x:                 |
 | Ed25519   | :white_check_mark: | :x:                | :x:                | :x:                 |
 | Ed448     | :x:                | :x:                | :x:                | :x:                 |
-| E256K     | :x:                | :x:                | :x:                | :x:                 |
+| ES256K    | :white_check_mark: | :x:                | :x:                | :x:                 |
 | ML-DSA-44 | :x:                | :x:                | :x:                | :x:                 |
 | ML-DSA-65 | :white_check_mark: | :x:                | :x:                | :x:                 |
 | ML-DSA-87 | :white_check_mark: | :x:                | :x:                | :x:                 |

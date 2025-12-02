@@ -51,6 +51,10 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWe
             return P384.Signing.PublicKey.self
         case .p521:
             return P521.Signing.PublicKey.self
+#if P256K
+        case .secp256k1:
+            return P256K.Signing.PublicKey.self
+#endif
         case .ed25519, .x25519:
             return Curve25519.Signing.PublicKey.self
         default:
@@ -66,6 +70,10 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWe
             return P384.KeyAgreement.PublicKey.self
         case .p521:
             return P521.KeyAgreement.PublicKey.self
+#if P256K
+        case .secp256k1:
+            return P256K.KeyAgreement.PublicKey.self
+#endif
         case .ed25519, .x25519:
             return Curve25519.KeyAgreement.PublicKey.self
         default:
@@ -79,18 +87,50 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWe
 }
 
 extension JSONWebKeyImportable {
+    private init<D>(
+        secgKey: D,
+        isPrivate: Bool,
+        keyFinder: (_ curve: JSONWebKeyCurve) throws -> any JSONWebValidatingKey.Type
+    ) throws where D: DataProtocol {
+        let coordinateSize: Int
+        switch secgKey.first {
+        case 0x02, 0x03:
+            coordinateSize = secgKey.count - 1 / (isPrivate ? 2 : 1)
+        case 0x04:
+            coordinateSize = secgKey.count - 1 / (isPrivate ? 3 : 2)
+        default:
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        let probableCurves = JSONWebKeyCurve.registeredCurves
+            .filter { $0.rawValue.hasPrefix("P") || $0.rawValue.hasPrefix("secp") }
+            .filter { $0.coordinateSize == coordinateSize }
+        for probableCurve in probableCurves {
+            if let type = try keyFinder(probableCurve) as? any JSONWebKeyImportable.Type, let exactKey = try? type.init(importing: secgKey, format: .raw) {
+                try self = Self(from: exactKey)
+                return
+            }
+        }
+        throw JSONWebKeyError.unknownAlgorithm
+    }
+    
     fileprivate init<D>(
         key: D, format: JSONWebKeyFormat,
-        keyLengthTable: [Int: JSONWebKeyCurve],
+        isPrivate: Bool,
         keyFinder: (_ curve: JSONWebKeyCurve) throws -> any JSONWebValidatingKey.Type
     ) throws where D: DataProtocol {
         let curve: JSONWebKeyCurve
         switch format {
         case .raw:
-            guard let probableCurve = keyLengthTable[key.count] else {
+            if !key.count.isMultiple(of: 2) {
+                // SECG curves
+                try self.init(secgKey: key, isPrivate: isPrivate, keyFinder: keyFinder)
+                return
+            } else if key.count == 32 {
+                // Edwards curve
+                curve = .ed25519
+            } else {
                 throw JSONWebKeyError.unknownAlgorithm
             }
-            curve = probableCurve
         case .spki:
             let spki = try SubjectPublicKeyInfo(derEncoded: key)
             guard let probableCurve = spki.keyCurve else {
@@ -117,7 +157,7 @@ extension JSONWebECPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw, .spki:
-            try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.publicRawCurve, keyFinder: Self.signingType)
+            try self.init(key: key, format: format, isPrivate: false, keyFinder: Self.signingType)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
@@ -200,6 +240,10 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
             return P384.Signing.PrivateKey.self
         case .p521:
             return P521.Signing.PrivateKey.self
+#if P256K
+        case .secp256k1:
+            return P256K.Signing.PrivateKey.self
+#endif
         case .ed25519, .x25519:
             return Curve25519.Signing.PrivateKey.self
         default:
@@ -235,6 +279,11 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
         case (JSONWebKeyType.ellipticCurve, .p521):
             return try P521.KeyAgreement.PrivateKey(from: self)
                 .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
+#if P256K
+        case (JSONWebKeyType.ellipticCurve, .secp256k1):
+            return try P256K.KeyAgreement.PrivateKey(from: self)
+                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
+#endif
         case (JSONWebKeyType.octetKeyPair, .x25519):
             return try Curve25519.KeyAgreement.PrivateKey(from: self)
                 .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
@@ -256,7 +305,7 @@ extension JSONWebECPrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
         switch format {
         case .raw, .pkcs8:
-            try self.init(key: key, format: format, keyLengthTable: JSONWebKeyCurve.privateRawCurve, keyFinder: Self.signingType)
+            try self.init(key: key, format: format, isPrivate: true, keyFinder: Self.signingType)
         case .jwk:
             self = try JSONDecoder().decode(Self.self, from: Data(key))
         default:
@@ -323,16 +372,6 @@ enum ECHelper {
             throw JSONWebKeyError.unknownKeyType
         }
     }
-}
-
-extension JSONWebKeyCurve {
-    fileprivate static let publicRawCurve: [Int: Self] = [
-        65: .p256, 32: .ed25519, 97: .p384, 133: .p521,
-    ]
-    
-    fileprivate static let privateRawCurve: [Int: Self] = [
-        97: .p256, 32: .ed25519, 145: .p384, 199: .p521,
-    ]
 }
 
 @propertyWrapper private final class EphemeralPublicKey: @unchecked Sendable {
