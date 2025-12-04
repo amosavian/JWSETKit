@@ -202,13 +202,16 @@ extension P256K.KeyAgreement.PrivateKey: DiffieHellmanKeyAgreement {
     public func sharedSecretFromKeyAgreement(with publicKeyShare: P256K.KeyAgreement.PublicKey) throws(CryptoKitMetaError) -> SharedSecret {
         var secret = [UInt8](repeating: 0, count: 32)
         var pubKey = publicKeyShare.impl.key
-        let result = secp256k1_ecdh(P256K.context, &secret, &pubKey, impl.bytes, nil, nil)
+        let result = impl.key.withUnsafeBytes {
+            secp256k1_ecdh(P256K.context, &secret, &pubKey, $0.baseAddress.unsafelyUnwrapped, nil, nil)
+        }
         guard result == 1 else {
             throw CryptoKitError.incorrectParameterSize
         }
         return try SharedSecret(from: secret)
     }
 }
+#endif
 
 extension SharedSecret {
     init<D: DataProtocol>(from bytes: D) throws {
@@ -226,5 +229,3 @@ extension SharedSecret {
         self = result
     }
 }
-
-#endif

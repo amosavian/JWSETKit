@@ -24,17 +24,18 @@ extension HPKE.Ciphersuite {
     
     public init(algorithm: some JSONWebAlgorithm) throws {
         switch JSONWebKeyEncryptionAlgorithm(algorithm) {
-        case .hpkeP256SHA256AESGCM128:
+        // Integrated Encryption algorithms (HPKE-0 through HPKE-7)
+        case .hpkeP256SHA256AESGCM128, .hpkeP256SHA256AESGCM128KE:
             self = .P256_SHA256_AES_GCM_128
-        case .hpkeP256SHA256AESGCM256:
+        case .hpkeP256SHA256AESGCM256, .hpkeP256SHA256AESGCM256KE:
             self = .P256_SHA256_AES_GCM_256
-        case .hpkeP384SHA384AESGCM256:
+        case .hpkeP384SHA384AESGCM256, .hpkeP384SHA384AESGCM256KE:
             self = .P384_SHA384_AES_GCM_256
-        case .hpkeP521SHA512AESGCM256:
+        case .hpkeP521SHA512AESGCM256, .hpkeP521SHA512AESGCM256KE:
             self = .P521_SHA512_AES_GCM_256
-        case .hpkeCurve25519SHA256AESGCM128:
+        case .hpkeCurve25519SHA256AESGCM128, .hpkeCurve25519SHA256AESGCM128KE:
             self = .Curve25519_SHA256_AES_GCM_128
-        case .hpkeCurve25519SHA256ChachaPoly:
+        case .hpkeCurve25519SHA256ChachaPoly, .hpkeCurve25519SHA256ChachaPolyKE:
             self = .Curve25519_SHA256_ChachaPoly
         default:
             throw JSONWebKeyError.unknownAlgorithm
@@ -123,10 +124,14 @@ struct JSONWebHPKESender: JSONWebSealingKey, JSONWebEncryptingKey {
         guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        guard let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm else {
-            throw JSONWebKeyError.unknownAlgorithm
+        let info: Data
+        if let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm {
+            // Key Encryption: info = "JOSE-HPKE rcpt" || 0xFF || enc_alg || 0xFF || extra_info
+            info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF] + extraInfo
+        } else {
+            // Integrated Encryption: info defaults to empty octet sequence
+            info = extraInfo
         }
-        let info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF] + extraInfo
         self.sender = try .init(recipientKey: recipientKey, ciphersuite: .init(algorithm: keyEncryptingAlgorithm), info: info)
         var key = AnyJSONWebKey(recipientKey)
         key.algorithm = keyEncryptingAlgorithm
@@ -182,17 +187,17 @@ struct JSONWebHPKERecipient: JSONWebSealOpeningKey, JSONWebDecryptingKey {
         guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        guard let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm else {
-            throw JSONWebKeyError.unknownAlgorithm
+        let info: Data
+        let encapsulatedKeyData: Data
+        if let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm {
+            // Key Encryption: info = "JOSE-HPKE rcpt" || 0xFF || enc_alg || 0xFF || extra_info
+            info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF] + extraInfo
+            encapsulatedKeyData = recipientHeader.encapsulatedKey ?? .init()
+        } else {
+            // Integrated Encryption: info defaults to empty octet sequence
+            info = extraInfo
+            encapsulatedKeyData = encapsulatedKey
         }
-        let encapsulatedKeyData = switch recipientHeader.encryptionAlgorithm {
-        case .integrated:
-            encapsulatedKey
-        default:
-            recipientHeader.encapsulatedKey ?? .init()
-        }
-        
-        let info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF] + extraInfo
         self.recipient = try HPKE.Recipient(
             privateKey: privateKey,
             ciphersuite: .init(algorithm: keyEncryptingAlgorithm),
@@ -249,42 +254,83 @@ extension JSONWebKeyEncryptionAlgorithm {
 }
 
 extension JSONWebKeyEncryptionAlgorithm {
-    /// Cipher suite for JOSE-HPKE using the DHKEM(P-256, HKDF-SHA256) KEM, the HKDF-SHA256 KDF
-    /// and the AES-128-GCM AEAD
+    /// Cipher suite for JOSE-HPKE Integrated Encryption using the DHKEM(P-256, HKDF-SHA256) KEM,
+    /// the HKDF-SHA256 KDF and the AES-128-GCM AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
     public static let hpkeP256SHA256AESGCM128: Self = .internalHpkeP256SHA256AESGCM128
     
-    /// Cipher suite for JOSE-HPKE using the DHKEM(P-256, HKDF-SHA256) KEM, the HKDF-SHA256 KDF
-    /// and the AES-256-GCM AEAD
-    public static let hpkeP256SHA256AESGCM256: Self = .internalHpkeP256SHA256AESGCM256
-    
-    /// Cipher suite for JOSE-HPKE using the DHKEM(P-384, HKDF-SHA384) KEM, the HKDF-SHA384 KDF,
-    /// and the AES-256-GCM AEAD
+    /// Cipher suite for JOSE-HPKE Integrated Encryption using the DHKEM(P-384, HKDF-SHA384) KEM,
+    /// the HKDF-SHA384 KDF, and the AES-256-GCM AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
     public static let hpkeP384SHA384AESGCM256: Self = .internalHpkeP384SHA384AESGCM256
     
-    /// Cipher suite for JOSE-HPKE using the DHKEM(P-521, HKDF-SHA512) KEM, the HKDF-SHA512 KDF,
-    /// and the AES-256-GCM AEAD
+    /// Cipher suite for JOSE-HPKE Integrated Encryption using the DHKEM(P-521, HKDF-SHA512) KEM,
+    /// the HKDF-SHA512 KDF, and the AES-256-GCM AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
     public static let hpkeP521SHA512AESGCM256: Self = .internalHpkeP521SHA512AESGCM256
     
-    /// Cipher suite for JOSE-HPKE using the DHKEM(X25519, HKDF-SHA256) KEM, the HKDF-SHA256 KDF,
-    /// and the AES-128-GCM AEAD
+    /// Cipher suite for JOSE-HPKE Integrated Encryption using the DHKEM(X25519, HKDF-SHA256) KEM,
+    /// the HKDF-SHA256 KDF, and the AES-128-GCM AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
     public static let hpkeCurve25519SHA256AESGCM128: Self = .internalHpkeCurve25519SHA256AESGCM128
     
-    /// Cipher suite for JOSE-HPKE using the DHKEM(X25519, HKDF-SHA256) KEM, the HKDF-SHA256 KDF,
-    /// and the ChaCha20Poly1305 AEAD
+    /// Cipher suite for JOSE-HPKE Integrated Encryption using the DHKEM(X25519, HKDF-SHA256) KEM,
+    /// the HKDF-SHA256 KDF, and the ChaCha20Poly1305 AEAD
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
     public static let hpkeCurve25519SHA256ChachaPoly: Self = .internalHpkeCurve25519SHA256ChachaPoly
     
-    // These are for internal registration use.
+    /// Cipher suite for JOSE-HPKE Integrated Encryption using the DHKEM(P-256, HKDF-SHA256) KEM,
+    /// the HKDF-SHA256 KDF and the AES-256-GCM AEAD
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    public static let hpkeP256SHA256AESGCM256: Self = .internalHpkeP256SHA256AESGCM256
+    
+    /// Cipher suite for JOSE-HPKE Key Encryption using the DHKEM(P-256, HKDF-SHA256) KEM,
+    /// the HKDF-SHA256 KDF and the AES-128-GCM AEAD
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    public static let hpkeP256SHA256AESGCM128KE: Self = .internalHpkeP256SHA256AESGCM128KE
+    
+    /// Cipher suite for JOSE-HPKE Key Encryption using the DHKEM(P-384, HKDF-SHA384) KEM,
+    /// the HKDF-SHA384 KDF, and the AES-256-GCM AEAD
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    public static let hpkeP384SHA384AESGCM256KE: Self = .internalHpkeP384SHA384AESGCM256KE
+    
+    /// Cipher suite for JOSE-HPKE Key Encryption using the DHKEM(P-521, HKDF-SHA512) KEM,
+    /// the HKDF-SHA512 KDF, and the AES-256-GCM AEAD
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    public static let hpkeP521SHA512AESGCM256KE: Self = .internalHpkeP521SHA512AESGCM256KE
+    
+    /// Cipher suite for JOSE-HPKE Key Encryption using the DHKEM(X25519, HKDF-SHA256) KEM,
+    /// the HKDF-SHA256 KDF, and the AES-128-GCM AEAD
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    public static let hpkeCurve25519SHA256AESGCM128KE: Self = .internalHpkeCurve25519SHA256AESGCM128KE
+    
+    /// Cipher suite for JOSE-HPKE Key Encryption using the DHKEM(X25519, HKDF-SHA256) KEM,
+    /// the HKDF-SHA256 KDF, and the ChaCha20Poly1305 AEAD
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    public static let hpkeCurve25519SHA256ChachaPolyKE: Self = .internalHpkeCurve25519SHA256ChachaPolyKE
+    
+    /// Cipher suite for JOSE-HPKE Key Encryption using the DHKEM(P-256, HKDF-SHA256) KEM,
+    /// the HKDF-SHA256 KDF and the AES-256-GCM AEAD
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    public static let hpkeP256SHA256AESGCM256KE: Self = .internalHpkeP256SHA256AESGCM256KE
+    
+    // MARK: - Internal algorithm identifiers
+    
+    // Integrated Encryption algorithms
     static let internalHpkeP256SHA256AESGCM128: Self = "HPKE-0"
     static let internalHpkeP384SHA384AESGCM256: Self = "HPKE-1"
     static let internalHpkeP521SHA512AESGCM256: Self = "HPKE-2"
     static let internalHpkeCurve25519SHA256AESGCM128: Self = "HPKE-3"
     static let internalHpkeCurve25519SHA256ChachaPoly: Self = "HPKE-4"
     static let internalHpkeP256SHA256AESGCM256: Self = "HPKE-7"
+    
+    // Key Encryption algorithms
+    static let internalHpkeP256SHA256AESGCM128KE: Self = "HPKE-0-KE"
+    static let internalHpkeP384SHA384AESGCM256KE: Self = "HPKE-1-KE"
+    static let internalHpkeP521SHA512AESGCM256KE: Self = "HPKE-2-KE"
+    static let internalHpkeCurve25519SHA256AESGCM128KE: Self = "HPKE-3-KE"
+    static let internalHpkeCurve25519SHA256ChachaPolyKE: Self = "HPKE-4-KE"
+    static let internalHpkeP256SHA256AESGCM256KE: Self = "HPKE-7-KE"
     
     /// Cipher suite for JOSE-HPKE using the DHKEM(P-256, HKDF-SHA256) KEM, the HKDF-SHA256 KDF
     /// and the AES-128-GCM AEAD

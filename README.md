@@ -64,6 +64,19 @@ and verify JWS/JWT messages.
 - Key conversion and serialization
 - Support for key sets (JWKS)
 
+### Extended Cryptographic Support
+
+✅ **CryptoKit Integration**
+- JWK encoding/decoding for all CryptoKit key types (P256, P384, P521, Curve25519, RSA)
+- SPKI (SubjectPublicKeyInfo) and PKCS#8 import/export for CryptoKit keys
+- ML-DSA (Dilithium) post-quantum keys with SPKI/PKCS#8 support
+
+✅ **secp256k1 (P-256K) Support**
+- ES256K signature algorithm for Bitcoin/Ethereum compatibility
+- ECDSA signing and verification
+- Schnorr signature support
+- ECDH key agreement
+
 ## Getting Started
 
 ### Swift Package Manager

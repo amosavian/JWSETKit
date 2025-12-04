@@ -54,6 +54,24 @@ For a comprehensive guide to key formats, key creation, import/export, and key s
 
 For information about supported algorithms and their usage, see ``JSONWebAlgorithm``.
 
+### Key Format Support
+
+JWSETKit provides comprehensive key format support for interoperability:
+
+#### JWK (JSON Web Key)
+
+All CryptoKit key types (P-256, P-384, P-521, Curve25519, SymmetricKey) and RSA keys
+can be encoded to and decoded from JWK format.
+
+#### SPKI and PKCS#8
+
+Public keys can be exported in SubjectPublicKeyInfo (SPKI) format and private keys
+in PKCS#8 format. This includes:
+
+- All CryptoKit elliptic curve keys (P-256, P-384, P-521, Curve25519)
+- RSA keys via CryptoExtras
+- ML-DSA (Dilithium) post-quantum signature keys
+
 ### Symmetric
 
 #### HMAC
@@ -159,6 +177,28 @@ Supports `EdDSA` algorithm for signature.
 Usable for validating and signing.
 See [Curve25519.Signing.PrivateKey](cryptokit/curve25519/signing/privatekey).
 
+#### secp256k1 (P-256K)
+
+JWSETKit provides secp256k1 curve support for Bitcoin and Ethereum compatibility:
+
+##### P256K.Signing.PublicKey
+
+Supports `ES256K` algorithm for ECDSA signature and Schnorr signatures.
+
+Usable for validating.
+
+##### P256K.Signing.PrivateKey
+
+Supports `ES256K` algorithm for ECDSA signature and Schnorr signatures.
+
+Usable for validating and signing.
+
+##### P256K.KeyAgreement
+
+Supports ECDH key agreement on secp256k1 curve.
+
+Usable for key derivation and encryption key wrapping.
+
 ### RSA
 
 #### Public Key
@@ -215,6 +255,15 @@ Supports `RS256`, `RS384`, `RS512`, `PS256`, `PS384`, `PS512`,
 `ES256`, `ES384`and `ES512` algorithms for signature.
 
 Usable for validating. See ``Security/SecCertificate``.
+
+### Post-Quantum Cryptography
+
+#### ML-DSA (Dilithium)
+
+Supports `ML-DSA-65` and `ML-DSA-87` algorithms for post-quantum digital signatures.
+Available on macOS 26+ and iOS 26+.
+
+Keys support JWK, SPKI (public), and PKCS#8 (private) formats for interoperability.
 
 ## Topics
 

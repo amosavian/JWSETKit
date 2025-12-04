@@ -316,7 +316,12 @@ extension P256K.Signing.PrivateKey {
     /// every call, even for the same data and key.
     public func signature<D: Digest>(for digest: D) throws(CryptoKitMetaError) -> P256K.Signing.ECDSASignature {
         var signature = secp256k1_ecdsa_signature()
-        secp256k1_ecdsa_sign(P256K.context, &signature, [UInt8](digest.data), impl.bytes, secp256k1_nonce_function_rfc6979, nil)
+        let success = impl.key.withUnsafeBytes {
+            secp256k1_ecdsa_sign(P256K.context, &signature, [UInt8](digest.data), $0.baseAddress.unsafelyUnwrapped, secp256k1_nonce_function_rfc6979, nil)
+        }
+        if success != 1 {
+            throw CryptoKitError.incorrectKeySize
+        }
         return try .init(signature)
     }
     

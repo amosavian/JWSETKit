@@ -15,7 +15,7 @@ import Crypto
 import LibSECP256k1
 import SwiftASN1
 
-enum Secp256K1BackingPublic {
+enum Secp256K1BackingPublic: Hashable {
     case x963(secp256k1_pubkey)
     case xonly(secp256k1_xonly_pubkey)
     
@@ -107,6 +107,25 @@ enum Secp256K1BackingPublic {
         self = .xonly(impl)
     }
     
+    static func == (lhs: Secp256K1BackingPublic, rhs: Secp256K1BackingPublic) -> Bool {
+        switch (lhs, rhs) {
+        case (.x963(var lhsKey), .x963(var rhsKey)):
+            return secp256k1_ec_pubkey_cmp(P256K.context, &lhsKey, &rhsKey) == 0
+        case (.xonly(var lhsKey), .xonly(var rhsKey)):
+            return secp256k1_xonly_pubkey_cmp(P256K.context, &lhsKey, &rhsKey) == 0
+        case (.x963(var lhsKey), .xonly):
+            var rhsKey = rhs.key
+            return secp256k1_ec_pubkey_cmp(P256K.context, &lhsKey, &rhsKey) == 0
+        case (.xonly, .x963(var rhsKey)):
+            var lhsKey = lhs.key
+            return secp256k1_ec_pubkey_cmp(P256K.context, &lhsKey, &rhsKey) == 0
+        }
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(derRepresentation)
+    }
+    
     func serialize(compressed: Bool = false) -> Data {
         var length = compressed ? 33 : 65
         var result = [UInt8](repeating: 0, count: length)
@@ -147,19 +166,29 @@ enum Secp256K1BackingPublic {
 #endif
 }
 
-struct Secp256K1BackingPrivate {
-    let bytes: [UInt8]
+struct Secp256K1BackingPrivate: Hashable {
+    let key: SymmetricKey
     
     var keypair: secp256k1_keypair {
         var result = secp256k1_keypair()
-        _ = secp256k1_keypair_create(P256K.context, &result, bytes)
+        key.withUnsafeBytes {
+            _ = secp256k1_keypair_create(P256K.context, &result, $0.baseAddress.unsafelyUnwrapped)
+        }
         return result
     }
     
-    static func isCompactRepresentable(_ key: [UInt8]) -> Bool {
+    static func isCompactRepresentable(_ key: SymmetricKey) -> Bool {
         var pubkey = secp256k1_pubkey()
-        _ = secp256k1_ec_pubkey_create(P256K.context, &pubkey, key)
+        key.withUnsafeBytes {
+            _ = secp256k1_ec_pubkey_create(P256K.context, &pubkey, $0.baseAddress.unsafelyUnwrapped)
+        }
         return !Secp256K1BackingPublic(impl: pubkey).xonlyKey.parity
+    }
+    
+    private static func isValid(_ key: SymmetricKey, compactRepresentable: Bool) -> Bool {
+        key.withUnsafeBytes {
+            secp256k1_ec_seckey_verify(P256K.context, $0.baseAddress.unsafelyUnwrapped) == 0 && (!compactRepresentable || Self.isCompactRepresentable(key))
+        }
     }
 
     /// Creates a random P-256 private key for signing.
@@ -172,11 +201,11 @@ struct Secp256K1BackingPrivate {
     ///   - compactRepresentable: A Boolean value that indicates whether CryptoKit
     /// creates the key with the structure to enable compact point encoding.
     init(compactRepresentable: Bool = true) {
-        var bytes: [UInt8]
+        var key: SymmetricKey
         repeat {
-            bytes = [UInt8](SymmetricKey(size: .bits256).data)
-        } while secp256k1_ec_seckey_verify(P256K.context, bytes) == 0 && (!compactRepresentable || Self.isCompactRepresentable(bytes))
-        self.bytes = bytes
+            key = SymmetricKey(size: .bits256)
+        } while Self.isValid(key, compactRepresentable: compactRepresentable)
+        self.key = key
     }
 
     /// Creates a P-256 private key for signing from an ANSI x9.63
@@ -188,7 +217,7 @@ struct Secp256K1BackingPrivate {
         guard x963Representation.data.count == 1 + 3 * 32 else {
             throw CryptoKitError.incorrectKeySize
         }
-        self.bytes = x963Representation.data.suffix(32)
+        self.key = SymmetricKey(data: x963Representation.data.suffix(32))
     }
 
     /// Creates a P-256 private key for signing from a collection of bytes.
@@ -200,7 +229,7 @@ struct Secp256K1BackingPrivate {
         guard rawRepresentation.data.count == 32 else {
             throw CryptoKitError.incorrectKeySize
         }
-        self.bytes = [UInt8](rawRepresentation.data)
+        self.key = SymmetricKey(data: rawRepresentation.data)
     }
 
 #if !hasFeature(Embedded)
@@ -215,13 +244,13 @@ struct Secp256K1BackingPrivate {
         switch pem.discriminator {
         case "EC PRIVATE KEY":
             let parsed = try SEC1PrivateKey(derEncoded: Array(pem.derBytes))
-            self = try .init(rawRepresentation: parsed.privateKey.bytes)
+            try self.init(rawRepresentation: parsed.privateKey.bytes)
         case "PRIVATE KEY":
             let parsed = try PKCS8PrivateKey(derEncoded: Array(pem.derBytes))
             guard let privateKey = (parsed.privateKey as? SEC1PrivateKey)?.privateKey else {
                 throw CryptoASN1Error.invalidPEMDocument
             }
-            self = try .init(rawRepresentation: privateKey.bytes)
+            try self.init(rawRepresentation: privateKey.bytes)
         default:
             throw CryptoKitASN1Error.invalidPEMDocument
         }
@@ -254,15 +283,17 @@ struct Secp256K1BackingPrivate {
     /// The corresponding public key.
     var publicKey: Secp256K1BackingPublic {
         var pubkey = secp256k1_pubkey()
-        _ = secp256k1_ec_pubkey_create(P256K.context, &pubkey, bytes)
+        key.withUnsafeBytes {
+            _ = secp256k1_ec_pubkey_create(P256K.context, &pubkey, $0.baseAddress.unsafelyUnwrapped)
+        }
         return Secp256K1BackingPublic(impl: pubkey)
     }
 
     /// A data representation of the private key.
-    var rawRepresentation: Data { Data(bytes) }
+    var rawRepresentation: Data { key.data }
     
     /// An ANSI x9.63 representation of the private key.
-    var x963Representation: Data { publicKey.x963Representation + Data(bytes) }
+    var x963Representation: Data { publicKey.x963Representation + key.data }
 
     /// A Distinguished Encoding Rules (DER) encoded representation of the private key.
     var derRepresentation: Data {

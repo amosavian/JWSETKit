@@ -103,9 +103,10 @@ public struct JSONWebEncryption: Hashable, Sendable {
         var protected = protected
         var unprotected = unprotected
         var header: JOSEHeader? = nil
-        guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm), let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm else {
+        guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
             throw JSONWebKeyError.unknownAlgorithm
         }
+        let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm
         let handler = keyEncryptingAlgorithm.encryptedKeyHandler ?? JSONWebKeyEncryptionAlgorithm.standardEncryptdKey
         
         let cek: any JSONWebSealingKey
@@ -125,9 +126,10 @@ public struct JSONWebEncryption: Hashable, Sendable {
             (header, cekData) = try handler(recipientHeader, keyEncryptionKey, Data())
             cek = SymmetricKey(data: cekData)
             self.recipients = []
-        case _ where contentEncryptionAlgorithm == .integrated:
+        case _ where contentEncryptionAlgorithm == nil:
+            // HPKE Integrated Encryption: HPKE encrypts plaintext directly
             if #available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *) {
-                guard let recipientKey = keyEncryptionKey as? (any JSONWebKey & HPKEDiffieHellmanPublicKey) else {
+                guard keyEncryptingAlgorithm.rawValue.hasPrefix("HPKE"), let recipientKey = keyEncryptionKey as? (any JSONWebKey & HPKEDiffieHellmanPublicKey) else {
                     throw JSONWebKeyError.invalidKeyFormat
                 }
                 let senderKey = try JSONWebHPKESender(recipientKey: recipientKey, recipientHeader: recipientHeader)
@@ -137,6 +139,9 @@ public struct JSONWebEncryption: Hashable, Sendable {
                 throw JSONWebKeyError.unknownAlgorithm
             }
         default:
+            guard let contentEncryptionAlgorithm else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
             cek = try contentEncryptionKey ?? contentEncryptionAlgorithm.generateRandomKey()
             guard let cekData = AnyJSONWebKey(cek).keyValue?.data else {
                 throw JSONWebKeyError.keyNotFound
@@ -161,7 +166,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             plainData,
             iv: nonce,
             authenticating: authenticating,
-            using: contentEncryptionAlgorithm
+            using: contentEncryptionAlgorithm ?? .integrated
         )
         self.additionalAuthenticatedData = additionalAuthenticatedData
     }
@@ -184,7 +189,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///   - keyEncryptingAlgorithm: Encryption algorithm applied to `contentEncryptionKey`
     ///         using `keyEncryptionKey`.
     ///   - keyEncryptionKey: The public key that `contentEncryptionKey` will be encrypted with.
-    ///   - contentEncryptionAlgorithm: Algorithm of content encryption.
+    ///   - contentEncryptionAlgorithm: Algorithm of content encryption. Pass `.integrated` for HPKE Integrated Encryption.
     ///   - contentEncryptionKey: AEAD key, generates a new key compatible
     ///         with `contentEncryptionAlgorithm` if `nil` is passed.
     public init<ND: DataProtocol, PD: DataProtocol, AD: DataProtocol>(
@@ -200,8 +205,9 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ) throws {
         var protected = protected ?? JOSEHeader(algorithm: keyEncryptingAlgorithm, type: .jwe)
         protected.algorithm = keyEncryptingAlgorithm
-        protected.encryptionAlgorithm = contentEncryptionAlgorithm
-        
+        // For HPKE Integrated Encryption, enc header must be absent
+        protected.encryptionAlgorithm = contentEncryptionAlgorithm == .integrated ? nil : contentEncryptionAlgorithm
+
         try self.init(
             protected: .init(value: protected), unprotected: unprotected,
             nonce: nonce, content: content,
@@ -275,10 +281,8 @@ public struct JSONWebEncryption: Hashable, Sendable {
         var targetEncryptedKey = targetEncryptedKey ?? .init()
         var decryptingKey = key
         try algorithm.decryptionMutator?(combinedHeader, &decryptingKey, &targetEncryptedKey)
-        switch combinedHeader.encryptionAlgorithm {
-        case .integrated:
-            // When "alg" is not a JOSE-HPKE algorithm and the "enc" value is "int",
-            // the input MUST be rejected.
+        if combinedHeader.encryptionAlgorithm == nil {
+            // HPKE Integrated Encryption: alg must be HPKE and enc must be absent
             guard combinedHeader.algorithm?.rawValue.hasPrefix("HPKE") ?? false else {
                 throw JSONWebKeyError.operationNotAllowed
             }
@@ -286,7 +290,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
                 throw JSONWebKeyError.keyNotFound
             }
             return cek
-        default:
+        } else {
             guard let decryptingKey = decryptingKey as? (any JSONWebDecryptingKey) else {
                 throw JSONWebKeyError.keyNotFound
             }
@@ -307,9 +311,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         let combinedHeader = header.protected.value
             .merging(header.unprotected ?? .init(), uniquingKeysWith: { p, _ in p })
             .merging(recipient?.header ?? .init(), uniquingKeysWith: { p, _ in p })
-        guard let contentEncAlgorithm = combinedHeader.encryptionAlgorithm else {
-            throw JSONWebKeyError.unknownAlgorithm
-        }
+        let contentEncAlgorithm = combinedHeader.encryptionAlgorithm ?? .integrated
         
         guard let algorithm = combinedHeader.algorithm?.specialized() as? JSONWebKeyEncryptionAlgorithm else {
             throw JSONWebKeyError.unknownAlgorithm

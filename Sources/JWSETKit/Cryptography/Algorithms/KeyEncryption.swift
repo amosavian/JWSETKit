@@ -84,12 +84,20 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: .ellipticCurve,
         .ecdhEphemeralStaticAESKeyWrap192: .ellipticCurve,
         .ecdhEphemeralStaticAESKeyWrap256: .ellipticCurve,
+        // HPKE Integrated Encryption
         .internalHpkeP256SHA256AESGCM128: .ellipticCurve,
         .internalHpkeP256SHA256AESGCM256: .ellipticCurve,
         .internalHpkeP384SHA384AESGCM256: .ellipticCurve,
         .internalHpkeP521SHA512AESGCM256: .ellipticCurve,
         .internalHpkeCurve25519SHA256AESGCM128: .octetKeyPair,
         .internalHpkeCurve25519SHA256ChachaPoly: .octetKeyPair,
+        // HPKE Key Encryption
+        .internalHpkeP256SHA256AESGCM128KE: .ellipticCurve,
+        .internalHpkeP256SHA256AESGCM256KE: .ellipticCurve,
+        .internalHpkeP384SHA384AESGCM256KE: .ellipticCurve,
+        .internalHpkeP521SHA512AESGCM256KE: .ellipticCurve,
+        .internalHpkeCurve25519SHA256AESGCM128KE: .octetKeyPair,
+        .internalHpkeCurve25519SHA256ChachaPolyKE: .octetKeyPair,
     ]
     
     private static let keyLengths: AtomicValue<[Self: Int]> = [
@@ -126,12 +134,20 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: SHA256.self,
         .ecdhEphemeralStaticAESKeyWrap192: SHA256.self,
         .ecdhEphemeralStaticAESKeyWrap256: SHA256.self,
+        // HPKE Integrated Encryption
         .internalHpkeP256SHA256AESGCM128: SHA256.self,
         .internalHpkeP256SHA256AESGCM256: SHA256.self,
         .internalHpkeP384SHA384AESGCM256: SHA384.self,
         .internalHpkeP521SHA512AESGCM256: SHA512.self,
         .internalHpkeCurve25519SHA256AESGCM128: SHA256.self,
         .internalHpkeCurve25519SHA256ChachaPoly: SHA256.self,
+        // HPKE Key Encryption
+        .internalHpkeP256SHA256AESGCM128KE: SHA256.self,
+        .internalHpkeP256SHA256AESGCM256KE: SHA256.self,
+        .internalHpkeP384SHA384AESGCM256KE: SHA384.self,
+        .internalHpkeP521SHA512AESGCM256KE: SHA512.self,
+        .internalHpkeCurve25519SHA256AESGCM128KE: SHA256.self,
+        .internalHpkeCurve25519SHA256ChachaPolyKE: SHA256.self,
     ]
     
     private static let encryptedKeyHandlers: AtomicValue<[Self: EncryptedKeyHandler]> = [
@@ -145,12 +161,20 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: ecdhEsEncryptedKey,
         .ecdhEphemeralStaticAESKeyWrap192: ecdhEsEncryptedKey,
         .ecdhEphemeralStaticAESKeyWrap256: ecdhEsEncryptedKey,
+        // HPKE Integrated Encryption
         .internalHpkeP256SHA256AESGCM128: hpkeEncryptedKey,
         .internalHpkeP256SHA256AESGCM256: hpkeEncryptedKey,
         .internalHpkeP384SHA384AESGCM256: hpkeEncryptedKey,
         .internalHpkeP521SHA512AESGCM256: hpkeEncryptedKey,
         .internalHpkeCurve25519SHA256AESGCM128: hpkeEncryptedKey,
         .internalHpkeCurve25519SHA256ChachaPoly: hpkeEncryptedKey,
+        // HPKE Key Encryption
+        .internalHpkeP256SHA256AESGCM128KE: hpkeEncryptedKey,
+        .internalHpkeP256SHA256AESGCM256KE: hpkeEncryptedKey,
+        .internalHpkeP384SHA384AESGCM256KE: hpkeEncryptedKey,
+        .internalHpkeP521SHA512AESGCM256KE: hpkeEncryptedKey,
+        .internalHpkeCurve25519SHA256AESGCM128KE: hpkeEncryptedKey,
+        .internalHpkeCurve25519SHA256ChachaPolyKE: hpkeEncryptedKey,
     ]
     
     private static let decryptionMutators: AtomicValue<[Self: DecryptionMutatorHandler]> = [
@@ -165,12 +189,20 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap128: ecdhEsDecryptionMutator,
         .ecdhEphemeralStaticAESKeyWrap192: ecdhEsDecryptionMutator,
         .ecdhEphemeralStaticAESKeyWrap256: ecdhEsDecryptionMutator,
+        // HPKE Integrated Encryption
         .internalHpkeP256SHA256AESGCM128: hpkeDecryptionMutator,
         .internalHpkeP256SHA256AESGCM256: hpkeDecryptionMutator,
         .internalHpkeP384SHA384AESGCM256: hpkeDecryptionMutator,
         .internalHpkeP521SHA512AESGCM256: hpkeDecryptionMutator,
         .internalHpkeCurve25519SHA256AESGCM128: hpkeDecryptionMutator,
         .internalHpkeCurve25519SHA256ChachaPoly: hpkeDecryptionMutator,
+        // HPKE Key Encryption
+        .internalHpkeP256SHA256AESGCM128KE: hpkeDecryptionMutator,
+        .internalHpkeP256SHA256AESGCM256KE: hpkeDecryptionMutator,
+        .internalHpkeP384SHA384AESGCM256KE: hpkeDecryptionMutator,
+        .internalHpkeP521SHA512AESGCM256KE: hpkeDecryptionMutator,
+        .internalHpkeCurve25519SHA256AESGCM128KE: hpkeDecryptionMutator,
+        .internalHpkeCurve25519SHA256ChachaPolyKE: hpkeDecryptionMutator,
     ]
     
     private nonisolated(unsafe) static let fastPathKeyRegistryClasses: [Self: (public: any JSONWebEncryptingKey.Type, private: any JSONWebDecryptingKey.Type)] = [
@@ -412,7 +444,7 @@ extension JSONWebKeyEncryptionAlgorithm {
                 throw JSONWebKeyError.unknownKeyType
             }
             let hpke = try JSONWebHPKESender(recipientKey: recipientKey, recipientHeader: recipientHeader)
-            if recipientHeader.encryptionAlgorithm == .integrated {
+            if recipientHeader.encryptionAlgorithm == nil {
                 return (nil, hpke.encapsulatedKey)
             } else {
                 var header = JOSEHeader()

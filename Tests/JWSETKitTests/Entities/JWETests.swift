@@ -81,18 +81,18 @@ struct JWETests {
     }
     
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
-    @Test(.disabled("Draft examples are not updated"))
-    func decrypt_HPKE0_int() throws {
+    @Test
+    func decrypt_HPKE0_integrated() throws {
         let jwe = try JSONWebEncryption(from: HPKE_0.jweString)
         let value = try jwe.decrypt(using: HPKE_0.kek)
         #expect(value == HPKE_0.plainData)
     }
     
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
-    @Test(.disabled("Draft examples are not updated"))
-    func decrypt_HPKE0_A128GCM() throws {
+    @Test
+    func decrypt_HPKE0_KE_A128GCM() throws {
         let jwe = try JSONWebEncryption(from: HPKE_0.jweJSONString)
-        let value = try jwe.decrypt(using: HPKE_0.kek)
+        let value = try jwe.decrypt(using: HPKE_0.kekKE)
         #expect(value == HPKE_0.plainData)
     }
     
@@ -261,7 +261,7 @@ struct JWETests {
     
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
     @Test
-    func encrypt_HPKE0_int() throws {
+    func encrypt_HPKE0_integrated() throws {
         let jwe = try JSONWebEncryption(
             content: HPKE_0.plainData,
             keyEncryptingAlgorithm: .hpkeP256SHA256AESGCM128,
@@ -274,12 +274,64 @@ struct JWETests {
     
     @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
     @Test
-    func encrypt_HPKE0_A128GCM() throws {
+    func encrypt_HPKE7_integrated() throws {
         let jwe = try JSONWebEncryption(
             content: HPKE_0.plainData,
-            keyEncryptingAlgorithm: .hpkeP256SHA256AESGCM128,
+            keyEncryptingAlgorithm: .hpkeP256SHA256AESGCM256,
+            keyEncryptionKey: HPKE_0.kek.publicKey,
+            contentEncryptionAlgorithm: .integrated
+        )
+        let decrypted = try jwe.decrypt(using: HPKE_0.kek)
+        #expect(HPKE_0.plainData == decrypted)
+    }
+    
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    @Test
+    func encrypt_HPKE0_KE_A128GCM() throws {
+        let jwe = try JSONWebEncryption(
+            content: HPKE_0.plainData,
+            keyEncryptingAlgorithm: .hpkeP256SHA256AESGCM128KE,
             keyEncryptionKey: HPKE_0.kek.publicKey,
             contentEncryptionAlgorithm: .aesEncryptionGCM128
+        )
+        let decrypted = try jwe.decrypt(using: HPKE_0.kek)
+        #expect(HPKE_0.plainData == decrypted)
+    }
+    
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    @Test
+    func encrypt_HPKE0_KE_A256GCM() throws {
+        let jwe = try JSONWebEncryption(
+            content: HPKE_0.plainData,
+            keyEncryptingAlgorithm: .hpkeP256SHA256AESGCM128KE,
+            keyEncryptionKey: HPKE_0.kek.publicKey,
+            contentEncryptionAlgorithm: .aesEncryptionGCM256
+        )
+        let decrypted = try jwe.decrypt(using: HPKE_0.kek)
+        #expect(HPKE_0.plainData == decrypted)
+    }
+    
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    @Test
+    func encrypt_HPKE7_KE_A256GCM() throws {
+        let jwe = try JSONWebEncryption(
+            content: HPKE_0.plainData,
+            keyEncryptingAlgorithm: .hpkeP256SHA256AESGCM256KE,
+            keyEncryptionKey: HPKE_0.kek.publicKey,
+            contentEncryptionAlgorithm: .aesEncryptionGCM256
+        )
+        let decrypted = try jwe.decrypt(using: HPKE_0.kek)
+        #expect(HPKE_0.plainData == decrypted)
+    }
+    
+    @available(iOS 17.0, macOS 14.0, watchOS 10.0, tvOS 17.0, *)
+    @Test
+    func encrypt_HPKE0_KE_CBC() throws {
+        let jwe = try JSONWebEncryption(
+            content: HPKE_0.plainData,
+            keyEncryptingAlgorithm: .hpkeP256SHA256AESGCM128KE,
+            keyEncryptionKey: HPKE_0.kek.publicKey,
+            contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512
         )
         let decrypted = try jwe.decrypt(using: HPKE_0.kek)
         #expect(HPKE_0.plainData == decrypted)
@@ -469,48 +521,70 @@ enum ECDH_ES_KW {
 }
 
 enum HPKE_0 {
+    // Integrated Encryption example from draft-ietf-jose-hpke-encrypt (no enc header)
     static let jweString = """
-    eyJhbGciOiAiSFBLRS0wIiwgImVuYyI6ICJpbnQiLCAia2lkIjogIkc1Tl9fQ3FNdl9r\
-    SkdpZUdTRnVBdWd2bDBqclFKQ1ozeUt3Vks2c1VNNG8ifQ.BIh6I40uiBbK8-\
-    UK7nHdo3ISEfgwJ_MF3zWjQzLt00GhFF2-\
-    1VgWKHSYLXdeVeRV7AinyocYiCYmISvW0yqiDmc..Ov-\
-    llz6VUyiw8nZL0OPGLGZckLTm5UcTZFg.
+    eyJhbGciOiJIUEtFLTAiLCJraWQiOiJ5Q25mYm1ZTVpjV3JLRHRfRGpOZWJSQ0IxdnhWb3F2NHVtSjRXSzhSWWprIn0.\
+    BLAJX8adrFsDKaoJAc3iy2dq-6jEH3Uv-bSgqIoDeREqpWglMoTS67XsXere1ZYxiQKEFU6MbWe8O7vmdlSmcUk..\
+    NcN9ew5aijn8W7piLVRU8r2cOP0JKqxOF4RllVsJM4qsAfVXW5Ka6so9zdUmXXNOXyCEk0wV_s8ICAnD4LbRa5Tkh\
+    TeuhijIfAt9bQ2fMLOeyed3WyArs8yaMraa9Zbh4i6SaHunM7jU_xoz_N2WbykSOSySmCO49H4mP3jLW9L_TYQfeV\
+    fYsrB8clqokZ8h-3eQGNwmOPtkjWdpAfaHUsp4-HC9nRd6yrTU6mV65Nn2iYynu3Xkgy2Lm-kQKDavIEW3PBpEeiw\
+    6mtPJE9o8sT-0lZ9kpWtqog2XbNGEfjSOjujvNe1b0g4-FdNFMFO_fo0rxe902W1pGT7znv4Q-xBkIydK4ZwjiFN6\
+    dAXutnococ37A0Hr5esPLwHRTTrBFw.
     """
     
+    // Key Encryption example using HPKE-0-KE with A128GCM from draft Section 6.3
     static let jweJSONString = """
     {
-      "protected": "eyJlbmMiOiAiQTEyOEdDTSJ9",
-      "ciphertext": "9AxOd65ROJY1cQ",
-      "iv": "2u3NRi3CSr-x7Wuj",
-      "tag": "1NKYSWVV4pw5thsq7t6m6Q",
+      "ciphertext": "uF1XBbVZWhYm_pDbeJvI_fkuqFJiKd1WMP3O_BAGOP-LkpTLE3Et2VQNcOpPAIBfyx8rUzshGqiOFOWzcoWZ3mIwYuDvvAW3-P1RCS8Dtq70JRvahO5O8sAN1vzJg8_dyBPnwsQY6Cy3RhMD6sSSCjjSw0FYmmx67IiI2zJ6Wr8z69k0f34ZTh43k4C-pTwaUSvjl2XI_YrUgdDVYmY_MJ5vmlPTcceMaefP8Onz_fx5xOcGfnVBVz2gpMQPuQL8k5Rk5KJvPGfFfN6hrgWkK_LDzi4lrfnIrvNsk3BCBeZPpc-n19-u7W4-GQxLjAlVyMHeGk5K4tU6gHB8PnnQ4ND5ZTtyXrJWQW-Qr1iFev6g",
+      "iv": "mLiHjYaQA42nPm1L",
       "recipients": [
         {
-          "encrypted_key": "l9VRW1K5CA037fY2ZqVF4bDej413TaAtfjoe3k89-eI",
+          "encrypted_key": "hU6b0hp4-y4ZoK1Qz8YWmDmqDmgTto3HW25-RyPhcLU",
           "header": {
-            "alg": "HPKE-0",
-            "kid": "G5N__CqMv_kJGieGSFuAugvl0jrQJCZ3yKwVK6sUM4o",
-            "ek": "BJl0V6KLl3HOAZbzFwiAL9eaYbFQPg7-ROmIJpluIQjNS5zultZsC4rGhGzmW1GUWG8bzJUWLQtxFF9oze0AKhU"
+            "alg": "HPKE-0-KE",
+            "kid": "9CfUPiGcAcTp7oXgVbDStw2FEjka-_KHU_i-X3XMCEA",
+            "ek": "BGWPWLoD5BUjFEDIjMS-yvtcCXBn5A-kuv2RjzUY_2hKUjgZINqtEy1aHZ8dWxAiyApV5JafG76W8O_yZzy5T54"
           }
         }
-      ]
+      ],
+      "tag": "K22C64ZhFABEu2S2F00PLg",
+      "aad": "VGhlIEZlbGxvd3NoaXAgb2YgdGhlIFJpbmc",
+      "protected": "eyJlbmMiOiJBMTI4R0NNIn0"
     }
     """
     
+    // Integrated Encryption key from Appendix A.1
     static let kek = try! JSONWebECPrivateKey(
         importing:
         """
         {
             "kty": "EC",
-            "use": "enc",
-            "alg": "HPKE-0",
-            "kid": "G5N__CqMv_kJGieGSFuAugvl0jrQJCZ3yKwVK6sUM4o",
             "crv": "P-256",
+            "d": "g2DXtKapi2oN2zL_RCWX8D4bWURHCKN2-ZNGC05ZaR8",
             "x": "gixQJ0qg4Ag-6HSMaIEDL_zbDhoXavMyKlmdn__AQVE",
             "y": "ZxTgRLWaKONCL_GbZKLNPsW9EW6nBsN4AwQGEFAFFbM",
-            "d": "g2DXtKapi2oN2zL_RCWX8D4bWURHCKN2-ZNGC05ZaR8"
+            "kid": "yCnfbmYMZcWrKDt_DjNebRCB1vxVoqv4umJ4WK8RYjk",
+            "alg": "HPKE-0"
         }
         """.data, format: .jwk
     )
     
-    static let plainData = Data("hello 🌎".utf8)
+    // Key Encryption key from Appendix A.2
+    static let kekKE = try! JSONWebECPrivateKey(
+        importing:
+        """
+        {
+            "kty": "EC",
+            "crv": "P-256",
+            "d": "MeCnMF65SaRVZ11Gf1Weacx3H9SdzO7MtWcDXvHWNv8",
+            "x": "WVKOswXQAgntIrLSYlwkyaU1dIE-FIhrbTEotFgMwIA",
+            "y": "jpZT1WNmQH752Bh_pDK41IhLkiXLj-15wR4ZBZ-MWFk",
+            "kid": "9CfUPiGcAcTp7oXgVbDStw2FEjka-_KHU_i-X3XMCEA",
+            "alg": "HPKE-0-KE"
+        }
+        """.data, format: .jwk
+    )
+    
+    // Plaintext from draft examples (LOTR quote)
+    static let plainData = Data("You can trust us to stick with you through thick and thin\u{2013}to the bitter end. And you can trust us to keep any secret of yours\u{2013}closer than you keep it yourself. But you cannot trust us to let you face trouble alone, and go off without a word. We are your friends, Frodo.".utf8)
 }
