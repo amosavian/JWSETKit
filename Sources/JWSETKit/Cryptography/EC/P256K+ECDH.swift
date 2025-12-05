@@ -5,13 +5,14 @@
 //  Created by Amir Abbas Mousavian on 2025/12/1.
 //
 
-#if P256K
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
 import Crypto
+
+#if P256K
 import LibSECP256k1
 
 // MARK: - P256K + KeyAgreement

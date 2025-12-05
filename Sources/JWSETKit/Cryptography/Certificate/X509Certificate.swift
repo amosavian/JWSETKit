@@ -52,7 +52,14 @@ extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWe
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try jsonWebKey().verifySignature(signature, for: data, using: algorithm)
+        switch algorithm {
+        case .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384, .rsaSignaturePSSSHA512:
+            return try jsonWebKey().verifySignature(signature, for: data, using: algorithm)
+        default:
+            guard try isValidSignature(signature, for: data, signatureAlgorithm: .init(algorithm)) else {
+                throw CryptoKitError.authenticationFailure
+            }
+        }
     }
     
     /// Generates a key object from the public key inside certificate.
@@ -186,7 +193,7 @@ extension Certificate.SignatureAlgorithm {
     ]
     
     init(_ algorithm: some JSONWebAlgorithm) throws {
-        guard let result = Self.mappings[.init(algorithm).unsafelyUnwrapped] else {
+        guard let result = Self.mappings[.init(algorithm)] else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         self = result

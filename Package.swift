@@ -28,7 +28,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-collections.git", from: "1.3.0"),
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.5.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.2.0"),
-        .package(url: "https://github.com/apple/swift-certificates", from: "1.16.0"),
+        .package(url: "https://github.com/apple/swift-certificates", from: "1.17.0"),
     ],
     targets: [
         .systemLibrary(
