@@ -105,6 +105,18 @@ public enum JSONWebValidationError: JSONWebError, Sendable {
     /// A required field is missing.
     case missingRequiredField(key: String)
     
+    /// Duplicate disclosure digest found in SD-JWT `_sd` array.
+    case duplicateDisclosureDigest
+    
+    /// Disclosure has no matching digest reference in SD-JWT payload.
+    case orphanDisclosure
+    
+    /// Key binding JWT is required but not present in the SD-JWT presentation.
+    case keyBindingRequired
+    
+    /// Key binding JWT validation failed with an underlying error.
+    case invalidKeyBinding
+    
     private func formatDate(_ date: Date, locale: Locale) -> String {
 #if canImport(Foundation.NSDateFormatter)
         let dateFormatter = DateFormatter()
@@ -147,6 +159,30 @@ public enum JSONWebValidationError: JSONWebError, Sendable {
                 value: "Required \"%@\" field is missing.",
                 locale: locale,
                 key
+            )
+        case .duplicateDisclosureDigest:
+            return .init(
+                localizingKey: "errorDuplicateDigest",
+                value: "Duplicate disclosure digest found in SD-JWT.",
+                locale: locale
+            )
+        case .orphanDisclosure:
+            return .init(
+                localizingKey: "errorOrphanDisclosure",
+                value: "Disclosure has no matching digest in SD-JWT payload.",
+                locale: locale
+            )
+        case .keyBindingRequired:
+            return .init(
+                localizingKey: "errorKeyBindingRequired",
+                value: "Key binding JWT is required but not present.",
+                locale: locale
+            )
+        case .invalidKeyBinding:
+            return .init(
+                localizingKey: "errorInvalidKeyBinding",
+                value: "Key binding JWT validation failed",
+                locale: locale
             )
         }
     }

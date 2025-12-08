@@ -130,6 +130,23 @@ extension JSONWebContentType {
     
     /// Payload contains a JSON with JSON Web Key Set (JWKS) items.
     public static let jwks: Self = "jwk-set+json"
+    
+    /// Payload contains a Selective Disclosure JWT (SD-JWT) as defined in RFC 9901.
+    ///
+    /// SD-JWT enables selective disclosure of individual claims within a JWT.
+    /// This type is used with compact serialization format.
+    public static let sdJWT: Self = "sd-jwt"
+    
+    /// Payload contains a Selective Disclosure JWT (SD-JWT) in JSON serialization as defined in RFC 9901.
+    ///
+    /// SD-JWT enables selective disclosure of individual claims within a JWT.
+    /// This type is used with JSON serialization format.
+    public static let sdJWTJSON: Self = "sd-jwt+json"
+    
+    /// Key Binding JWT type as defined in RFC 9901.
+    ///
+    /// KB-JWT is used to bind an SD-JWT presentation to a holder's key.
+    public static let keyBindingJWT: Self = "kb+jwt"
 }
 
 #if canImport(UniformTypeIdentifiers)

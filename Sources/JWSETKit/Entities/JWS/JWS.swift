@@ -213,7 +213,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     }
 }
 
-extension JSONWebSignature {
+extension JOSEHeader {
     /// Strategy for identifying keys in JWS headers.
     ///
     /// Determines how the key identifier (`kid`) parameter is set in the JWS header
@@ -250,6 +250,31 @@ extension JSONWebSignature {
         case embedded
     }
     
+    public mutating func updateKeyId<SK>(using signingKey: SK, strategy: KeyIdStrategy? = .idWithThumbprintFallback) throws where SK: JSONWebSigningKey {
+        switch strategy {
+        case .id:
+            self.keyId = signingKey.keyId
+        case .customId(let id):
+            self.keyId = id
+        case .thumbprint:
+            self.keyId = try signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
+        case .idWithThumbprintFallback:
+            self.keyId = try signingKey.keyId ?? signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
+        case .embedded:
+            self.key = signingKey
+        case .none:
+            break
+        }
+    }
+    
+    public func updatedKeyId<SK>(using signingKey: SK, strategy: KeyIdStrategy? = .idWithThumbprintFallback) throws -> Self where SK: JSONWebSigningKey {
+        var result = self
+        try result.updateKeyId(using: signingKey, strategy: strategy)
+        return result
+    }
+}
+
+extension JSONWebSignature {
     /// Creates a new JWS/JWT with given protected payload then signs with given key.
     /// - Parameters:
     ///   - payload: JWS/JWT payload.
@@ -258,30 +283,16 @@ extension JSONWebSignature {
     public init<SK>(
         payload: Payload,
         algorithm: JSONWebSignatureAlgorithm,
-        keyIdStrategy: KeyIdStrategy? = .id,
+        keyIdStrategy: JOSEHeader.KeyIdStrategy? = .id,
         using signingKey: SK
     ) throws where SK: JSONWebSigningKey {
         guard algorithm.keyType == signingKey.keyType else {
             throw JSONWebKeyError.operationNotAllowed
         }
-        var header = JOSEHeader(
+        let header = try JOSEHeader(
             algorithm: algorithm,
             type: .jwt
-        )
-        switch keyIdStrategy {
-        case .id:
-            header.keyId = signingKey.keyId
-        case .customId(let id):
-            header.keyId = id
-        case .thumbprint:
-            header.keyId = try signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
-        case .idWithThumbprintFallback:
-            header.keyId = try signingKey.keyId ?? signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
-        case .embedded:
-            header.key = signingKey
-        case .none:
-            break
-        }
+        ).updatedKeyId(using: signingKey, strategy: keyIdStrategy)
         
         self.signatures = try [
             .init(protected: header, signature: .init()),
@@ -303,7 +314,7 @@ extension JSONWebSignature where Payload == ProtectedDataWebContainer {
     public init<PD, SK>(
         payload: PD,
         algorithm: JSONWebSignatureAlgorithm,
-        keyIdStrategy: KeyIdStrategy? = .id,
+        keyIdStrategy: JOSEHeader.KeyIdStrategy? = .id,
         using signingKey: SK
     ) throws where PD: Collection, PD.Element == UInt8, SK: JSONWebSigningKey {
         try self.init(payload: Payload(encoded: .init(payload)), algorithm: algorithm, keyIdStrategy: keyIdStrategy, using: signingKey)
@@ -319,7 +330,7 @@ extension JSONWebSignature where Payload: TypedProtectedWebContainer {
     public init<SK>(
         payload: Payload.Container,
         algorithm: JSONWebSignatureAlgorithm,
-        keyIdStrategy: KeyIdStrategy? = .id,
+        keyIdStrategy: JOSEHeader.KeyIdStrategy? = .id,
         using signingKey: SK
     ) throws where SK: JSONWebSigningKey {
         try self.init(payload: Payload(value: payload), algorithm: algorithm, keyIdStrategy: keyIdStrategy, using: signingKey)

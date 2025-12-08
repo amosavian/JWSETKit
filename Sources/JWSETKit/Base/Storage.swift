@@ -139,7 +139,7 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
         self.storage = elements
     }
     
-    private init(_ elements: [String: any Sendable]) {
+    init(_ elements: [String: any Sendable]) {
         self.storage = elements
     }
     
