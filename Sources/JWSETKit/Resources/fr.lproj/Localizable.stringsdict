@@ -52,5 +52,25 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>Le champ requis &quot;%@&quot; est manquant.</string>
 	</dict>
+	<key>errorDuplicateDigest</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Un condensé de divulgation en double a été trouvé dans le SD-JWT.</string>
+	</dict>
+	<key>errorOrphanDisclosure</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>La divulgation n'a pas de condensé correspondant dans la charge utile SD-JWT.</string>
+	</dict>
+	<key>errorKeyBindingRequired</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Le JWT de liaison de clé est requis mais n'est pas présent.</string>
+	</dict>
+	<key>errorInvalidKeyBinding</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>La validation du JWT de liaison de clé a échoué.</string>
+	</dict>
 </dict>
 </plist>

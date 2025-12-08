@@ -52,5 +52,25 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>الحقل المطلوب &quot;%@&quot; مفقود.</string>
 	</dict>
+	<key>errorDuplicateDigest</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>تم العثور على ملخص إفصاح مكرر في SD-JWT.</string>
+	</dict>
+	<key>errorOrphanDisclosure</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>الإفصاح ليس له ملخص مطابق في حمولة SD-JWT.</string>
+	</dict>
+	<key>errorKeyBindingRequired</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>ربط المفتاح JWT مطلوب ولكنه غير موجود.</string>
+	</dict>
+	<key>errorInvalidKeyBinding</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>فشل التحقق من ربط المفتاح JWT.</string>
+	</dict>
 </dict>
 </plist>

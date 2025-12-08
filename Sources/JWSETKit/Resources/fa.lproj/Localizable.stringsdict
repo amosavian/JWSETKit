@@ -52,5 +52,25 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>فیلد ضروری &quot;%@&quot; وجود ندارد.</string>
 	</dict>
+	<key>errorDuplicateDigest</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>خلاصه افشای تکراری در SD-JWT یافت شد.</string>
+	</dict>
+	<key>errorOrphanDisclosure</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>افشا هیچ خلاصه مطابقی در محتوای SD-JWT ندارد.</string>
+	</dict>
+	<key>errorKeyBindingRequired</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>JWT اتصال کلید مورد نیاز است اما وجود ندارد.</string>
+	</dict>
+	<key>errorInvalidKeyBinding</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>اعتبارسنجی JWT اتصال کلید ناموفق بود.</string>
+	</dict>
 </dict>
 </plist>

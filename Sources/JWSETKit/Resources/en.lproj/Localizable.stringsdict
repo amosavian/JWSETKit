@@ -52,5 +52,25 @@
 		<key>NSStringLocalizedFormatKey</key>
 		<string>Required &quot;%@&quot; field is missing.</string>
 	</dict>
+	<key>errorDuplicateDigest</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Duplicate disclosure digest found in SD-JWT.</string>
+	</dict>
+	<key>errorOrphanDisclosure</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Disclosure has no matching digest in SD-JWT payload.</string>
+	</dict>
+	<key>errorKeyBindingRequired</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Key binding JWT is required but not present.</string>
+	</dict>
+	<key>errorInvalidKeyBinding</key>
+	<dict>
+		<key>NSStringLocalizedFormatKey</key>
+		<string>Key binding JWT validation failed.</string>
+	</dict>
 </dict>
 </plist>
