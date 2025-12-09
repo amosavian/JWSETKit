@@ -110,6 +110,7 @@ package struct JSONWebMLDSAPrivateKey: MutableJSONWebKey, JSONWebKeyAlgorithmKey
     public init(algorithm: some JSONWebAlgorithm) throws {
         let keyType = try Self.signingType(algorithm)
         self.storage = try keyType.init(algorithm: algorithm).storage
+        self.algorithm = algorithm
     }
     
     public init(derRepresentation: some DataProtocol) throws {

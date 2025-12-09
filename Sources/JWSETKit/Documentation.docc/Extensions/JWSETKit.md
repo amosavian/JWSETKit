@@ -54,6 +54,11 @@ of JWS.
 Check ``JSONWebEncryption`` documentation for usage, encrypting and decrypting
 payload.
 
+### SD-JWT (Selective Disclosure)
+
+Check ``JSONWebSelectiveDisclosureToken`` documentation for creating tokens
+with selective disclosure support per RFC 9901.
+
 ### JSON Web Key (JWK)
 
 Check ``JSONWebKey`` documentation for working with cryptographic keys in JWK format.
@@ -70,6 +75,7 @@ and their usage.
 - ``JSONWebToken``
 - ``JSONWebSignature``
 - ``JSONWebEncryption``
+- ``JSONWebSelectiveDisclosureToken``
 - ``JSONWebKey``
 - ``JSONWebAlgorithm``
 - <doc:5-SecurityGuidelines>
