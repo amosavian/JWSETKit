@@ -253,14 +253,19 @@ extension JOSEHeader {
     public mutating func updateKeyId<SK>(using signingKey: SK, strategy: KeyIdStrategy? = .idWithThumbprintFallback) throws where SK: JSONWebSigningKey {
         switch strategy {
         case .id:
+            // swiftformat:disable:next redundantSelf
             self.keyId = signingKey.keyId
         case .customId(let id):
+            // swiftformat:disable:next redundantSelf
             self.keyId = id
         case .thumbprint:
+            // swiftformat:disable:next redundantSelf
             self.keyId = try signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
         case .idWithThumbprintFallback:
+            // swiftformat:disable:next redundantSelf
             self.keyId = try signingKey.keyId ?? signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
         case .embedded:
+            // swiftformat:disable:next redundantSelf
             self.key = signingKey
         case .none:
             break
@@ -278,19 +283,22 @@ extension JSONWebSignature {
     /// Creates a new JWS/JWT with given protected payload then signs with given key.
     /// - Parameters:
     ///   - payload: JWS/JWT payload.
-    ///   - algorithm: Sign and hash algorithm.
+    ///   - algorithm: Sign and hash algorithm. If nil, inferred from the key.
     ///   - signingKey: The key to sign the payload.
     public init<SK>(
         payload: Payload,
-        algorithm: JSONWebSignatureAlgorithm,
+        algorithm: JSONWebSignatureAlgorithm? = nil,
         keyIdStrategy: JOSEHeader.KeyIdStrategy? = .id,
         using signingKey: SK
     ) throws where SK: JSONWebSigningKey {
-        guard algorithm.keyType == signingKey.keyType else {
+        guard let resolvedAlgorithm = signingKey.resolveAlgorithm(algorithm) else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        guard resolvedAlgorithm.keyType == signingKey.keyType else {
             throw JSONWebKeyError.operationNotAllowed
         }
         let header = try JOSEHeader(
-            algorithm: algorithm,
+            algorithm: resolvedAlgorithm,
             type: .jwt
         ).updatedKeyId(using: signingKey, strategy: keyIdStrategy)
         
@@ -309,11 +317,11 @@ extension JSONWebSignature where Payload == ProtectedDataWebContainer {
     /// Creates a new JWS/JWT with given payload then signs with given key.
     /// - Parameters:
     ///   - payload: JWS/JWT payload.
-    ///   - algorithm: Sign and hash algorithm.
+    ///   - algorithm: Sign and hash algorithm. If nil, inferred from the key.
     ///   - signingKey: The key to sign the payload.
     public init<PD, SK>(
         payload: PD,
-        algorithm: JSONWebSignatureAlgorithm,
+        algorithm: JSONWebSignatureAlgorithm? = nil,
         keyIdStrategy: JOSEHeader.KeyIdStrategy? = .id,
         using signingKey: SK
     ) throws where PD: Collection, PD.Element == UInt8, SK: JSONWebSigningKey {
@@ -325,11 +333,11 @@ extension JSONWebSignature where Payload: TypedProtectedWebContainer {
     /// Creates a new JWS/JWT with given payload then signs with given key.
     /// - Parameters:
     ///   - payload: JWS/JWT payload.
-    ///   - algorithm: Sign and hash algorithm.
+    ///   - algorithm: Sign and hash algorithm. If nil, inferred from the key.
     ///   - signingKey: The key to sign the payload.
     public init<SK>(
         payload: Payload.Container,
-        algorithm: JSONWebSignatureAlgorithm,
+        algorithm: JSONWebSignatureAlgorithm? = nil,
         keyIdStrategy: JOSEHeader.KeyIdStrategy? = .id,
         using signingKey: SK
     ) throws where SK: JSONWebSigningKey {
@@ -368,5 +376,23 @@ extension JSONWebSignature: LosslessStringConvertible, CustomDebugStringConverti
     
     public var debugDescription: String {
         "Signatures: \(signatures.debugDescription)\nPayload: \(payload.encoded.urlBase64EncodedString())"
+    }
+}
+
+extension JSONWebKey {
+    func resolveAlgorithm(
+        _ algorithm: JSONWebSignatureAlgorithm?
+    ) -> JSONWebSignatureAlgorithm? {
+        if let algorithm {
+            return algorithm
+        }
+        // swiftformat:disable:next redundantSelf
+        if let keyAlgorithm = self.algorithm {
+            return JSONWebSignatureAlgorithm(keyAlgorithm)
+        }
+        if let identifiedType = type(of: self) as? any JSONWebKeyAlgorithmIdentified.Type {
+            return JSONWebSignatureAlgorithm(identifiedType.algorithm)
+        }
+        return nil
     }
 }

@@ -287,3 +287,10 @@ extension JSONWebTokenClaims {
         }
     }
 }
+
+extension JSONPointer {
+    public init(_ keyPath: SendablePartialKeyPath<JSONWebTokenClaimsPublicOIDCStandardParameters>) {
+        let key = JSONWebTokenClaimsPublicOIDCStandardParameters.keys[keyPath] ?? keyPath.name.jsonWebKey
+        self.init(key: key)
+    }
+}

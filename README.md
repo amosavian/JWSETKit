@@ -59,6 +59,13 @@ and verify JWS/JWT messages.
 - Key wrapping and management
 - Compact and JSON serialization
 
+✅ **SD-JWT (Selective Disclosure)**
+
+- RFC 9901 compliant selective disclosure
+- Privacy-preserving credential presentations
+- Key binding for holder authentication
+- SD-JWT VC support for Verifiable Credentials
+
 ✅ **JWK (JSON Web Keys)**
 - Key generation and management
 - Key conversion and serialization
@@ -113,7 +120,7 @@ For secp256k1 (ES256K) support (Swift 6.1+):
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", from: "1.0.0", traits: ["X509"])
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "1.0.0", traits: ["P256K"])
 ]
 ```
 
@@ -213,6 +220,34 @@ let importedJWK = try JSONDecoder().decode(P256.Signing.PrivateKey.self, from: j
 let importedKey = try P256.Signing.PrivateKey(importing: pkcs8Data, format: .pkcs8)
 ```
 
+### SD-JWT (Selective Disclosure)
+
+```swift
+// Issuer: Create SD-JWT with selective claims
+let claims = try JSONWebTokenClaims {
+    $0.issuer = "https://issuer.example.com"
+    $0.subject = "user123"
+    $0.giveName = "John"
+    $0.familyName = "Doe"
+    $0.email = "john@example.com"
+}
+
+let sdJWT = try JSONWebSelectiveDisclosureToken(
+    claims: claims,
+    policy: .default,  // Standard claims visible, others disclosable
+    using: issuerKey
+)
+
+// Holder: Create presentation with selected disclosures
+let presentation = try sdJWT.presenting(paths: ["/email"])
+
+// Verifier: Validate and access disclosed claims
+try presentation.validate()
+try presentation.verifySignature(using: issuerPublicKey)
+let disclosed = try presentation.disclosedPayload()
+print(disclosed.email)  // "john@example.com"
+```
+
 ## 📊 Comparison with Alternatives
 
 ### Features
@@ -226,6 +261,7 @@ let importedKey = try P256.Signing.PrivateKey(importing: pkcs8Data, format: .pkc
 | JWT Signature Verification     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
 | JWT Expire/NotBefore Validity  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
 | JSON Web Encryption (JWE)      | :white_check_mark: | :x:                | :white_check_mark: | :x:                 |
+| SD-JWT (RFC 9901)              | :white_check_mark: | :x:                | :x:                | :x:                 |
 | Support [CommonCrypto] Keys    | :white_check_mark: | :x:                | :x:                | :x:                 |
 | Support [CryptoKit] Keys       | :white_check_mark: | :x:                | :x:                | :x:                 |
 
@@ -249,12 +285,12 @@ let importedKey = try P256.Signing.PrivateKey(importing: pkcs8Data, format: .pkc
 | PS512     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
 | PS512     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
 | EdDSA     | :white_check_mark: | :white_check_mark: | :x:                | :x:                 |
-| Ed25519   | :white_check_mark: | :x:                | :x:                | :x:                 |
+| Ed25519   | :white_check_mark: | :white_check_mark: | :x:                | :x:                 |
 | Ed448     | :x:                | :x:                | :x:                | :x:                 |
 | ES256K    | :white_check_mark: | :x:                | :x:                | :x:                 |
 | ML-DSA-44 | :x:                | :x:                | :x:                | :x:                 |
-| ML-DSA-65 | :white_check_mark: | :x:                | :x:                | :x:                 |
-| ML-DSA-87 | :white_check_mark: | :x:                | :x:                | :x:                 |
+| ML-DSA-65 | :white_check_mark: | :white_check_mark: | :x:                | :x:                 |
+| ML-DSA-87 | :white_check_mark: | :white_check_mark: | :x:                | :x:                 |
 
 #### Key Encryption
 
@@ -308,6 +344,7 @@ JWSETKit is perfect for:
 - 🔄 **Microservices** - Service-to-service authentication
 - 🎫 **Session Management** - Stateless session tokens
 - 🔐 **Data Encryption** - Protect sensitive data with JWE
+- 🪪 **Verifiable Credentials** - Privacy-preserving identity with SD-JWT
 
 ## 📚 Documentation
 
@@ -365,6 +402,7 @@ This library implements the following JOSE standards:
 - [RFC 7797](https://www.rfc-editor.org/rfc/rfc7797) - JSON Web Signature (JWS) Unencoded Payload Option
 - [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800) - Proof-of-Possession Key Semantics for JSON Web Tokens (JWTs)
 - [RFC 9864](https://www.rfc-editor.org/rfc/rfc9864) - Fully-Specified Algorithms for JOSE and COSE
+- [RFC 9901](https://www.rfc-editor.org/rfc/rfc9901) - SD-JWT: Selective Disclosure for JWTs
 - [draft-ietf-jose-hpke-encrypt](https://datatracker.ietf.org/doc/draft-ietf-jose-hpke-encrypt/) - Use of Hybrid Public Key Encryption (HPKE) with JSON Object Signing and Encryption (JOSE)
 - [draft-ietf-cose-dilithium](https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/) - ML-DSA for JOSE and COSE
 - [OIDC Core](https://openid.net/specs/openid-connect-core-1_0.html) - OpenID Connect Core 1.0 incorporating errata set 2

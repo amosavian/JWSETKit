@@ -163,6 +163,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
     
     public init(algorithm _: some JSONWebAlgorithm) throws {
         try self.init(keySize: .defaultKeyLength)
+        self.algorithm = algorithm
     }
     
     public init(keySize: KeySize) throws {

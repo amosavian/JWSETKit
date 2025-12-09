@@ -110,13 +110,15 @@ extension JSONWebSelectiveDisclosureToken: Codable {
         self.payload = jws.payload
         self.signatures = jws.signatures
         if let firstHeader = jws.signatures.first?.unprotected,
-           let disclosureStrings: [String] = firstHeader.storage["disclosures"] {
+           let disclosureStrings: [String] = firstHeader.storage["disclosures"]
+        {
             self.disclosures = try disclosureStrings.map { try JSONWebSelectiveDisclosure(encoded: $0) }
         } else {
             self.disclosures = []
         }
         if let firstHeader = jws.signatures.first?.unprotected,
-           let kbJWTString: String = firstHeader.storage["kb_jwt"] {
+           let kbJWTString: String = firstHeader.storage["kb_jwt"]
+        {
             self.keyBinding = try JSONWebToken(from: kbJWTString)
         } else {
             self.keyBinding = nil
@@ -124,7 +126,9 @@ extension JSONWebSelectiveDisclosureToken: Codable {
     }
     
     public func encode(to encoder: any Encoder) throws {
-        try validate()
+        // Validate structure without requiring key binding during encoding
+        // Key binding validation should be done explicitly by verifiers
+        try validate(requireKeyBinding: false)
         let representation = encoder.userInfo[.sdJWTEncodedRepresentation] as? JSONWebSelectiveDisclosureTokenRepresentation ?? .automatic
         try encodeFunction(for: representation)(encoder)
     }
@@ -166,12 +170,12 @@ extension JSONWebSelectiveDisclosureToken: Codable {
     
     fileprivate func encodeAsCompact(_ encoder: any Encoder) throws {
         var components: [String] = []
-        components.append(try String(jwt))
+        try components.append(String(jwt))
         for disclosure in disclosures {
-            components.append(try disclosure.encoded)
+            try components.append(disclosure.encoded)
         }
         if let keyBinding {
-            components.append(try String(keyBinding))
+            try components.append(String(keyBinding))
         } else {
             components.append("")
         }
@@ -274,7 +278,9 @@ extension JSONWebSelectiveDisclosureToken: EncodableWithConfiguration {
     public typealias EncodingConfiguration = JSONWebSelectiveDisclosureTokenCodableConfiguration
     
     public func encode(to encoder: any Encoder, configuration: JSONWebSelectiveDisclosureTokenCodableConfiguration) throws {
-        try validate()
+        // Validate structure without requiring key binding during encoding
+        // Key binding validation should be done explicitly by verifiers
+        try validate(requireKeyBinding: false)
         try encodeFunction(for: configuration.representation)(encoder)
     }
 }

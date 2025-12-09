@@ -227,9 +227,11 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
     }
     
     public init(curve: JSONWebKeyCurve) throws {
-        self.storage = try Self
-            .signingType(curve)
-            .init(algorithm: .unsafeNone).storage
+        let curve = try Self.signingType(curve)
+        self.storage = try curve.init(algorithm: .unsafeNone).storage
+        if let algorithm = (curve as? any JSONWebKeyAlgorithmIdentified.Type)?.algorithm {
+            self.algorithm = algorithm
+        }
     }
     
     static func signingType(_ curve: JSONWebKeyCurve?) throws -> any JSONWebSigningKey.Type {

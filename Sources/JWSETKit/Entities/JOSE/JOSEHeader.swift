@@ -103,6 +103,18 @@ public struct JSONWebContentType: StringRepresentable {
 }
 
 extension JSONWebContentType {
+    /// Adds "+json" suffix.
+    public var jsonFormatted: Self {
+        if rawValue.lowercased().hasSuffix("+json") {
+            return self
+        }
+        return if rawValue.first?.isUppercase ?? false {
+            .init(rawValue: rawValue + "+JSON")
+        } else {
+            .init(rawValue: rawValue + "+json")
+        }
+    }
+    
     /// Payload contains a JSON with JSON Web Token (JWT) claims.
     ///
     /// JWT values are encoded as a series of`base64url`-encoded values (some of which may be the empty

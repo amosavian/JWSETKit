@@ -1,5 +1,5 @@
 //
-//  JSONWebSelectiveDisclosure.swift
+//  SelectiveDisclosure.swift
 //
 //
 //  Created by Claude Code on 9/9/25.
@@ -10,8 +10,8 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-import Crypto
 import Collections
+import Crypto
 
 /// Represents a single selective disclosure containing a salt, claim name, and claim value.
 ///
@@ -38,9 +38,9 @@ public struct JSONWebSelectiveDisclosure: Hashable, Codable, ExpressibleByArrayL
     /// Creates a new disclosure with the specified salt, claim name, and value.
     ///
     /// - Parameters:
+    ///   - key: Name of the claim (nil for array elements)
+    ///   - value: Value of the claim
     ///   - salt: Cryptographically random salt (minimum 16 bytes recommended)
-    ///   - claimName: Name of the claim
-    ///   - claimValue: Value of the claim
     public init<S>(
         _ key: JSONWebValueStorage.Key? = nil,
         value: any JSONWebValueStorage.ValueType,
@@ -54,9 +54,9 @@ public struct JSONWebSelectiveDisclosure: Hashable, Codable, ExpressibleByArrayL
     /// Creates a new disclosure with the specified salt, claim name, and value.
     ///
     /// - Parameters:
+    ///   - key: Name of the claim (nil for array elements)
+    ///   - value: Value of the claim
     ///   - salt: Cryptographically random salt (minimum 16 bytes recommended)
-    ///   - claimName: Name of the claim
-    ///   - claimValue: Value of the claim
     public init<S>(
         _ key: JSONWebValueStorage.Key? = nil,
         value: any Sendable,
@@ -110,7 +110,6 @@ public struct JSONWebSelectiveDisclosure: Hashable, Codable, ExpressibleByArrayL
         default:
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Length of disclosure array is not interpretable.")
         }
-        
         self.init(key, value: value, salt: salt)
     }
     
@@ -231,27 +230,30 @@ public struct JSONWebSelectiveDisclosureList: RandomAccessCollection, Hashable, 
         items.merge(disclosureList.items, uniquingKeysWith: { $1 })
     }
     
+    @discardableResult
     public mutating func append(_ disclosure: JSONWebSelectiveDisclosure) throws -> Data {
-        let key = try disclosure.digest(using: hashFunction)
-        items.updateValue(disclosure, forKey: key)
-        return key
+        let hash = try disclosure.digest(using: hashFunction)
+        items.updateValue(disclosure, forKey: hash)
+        return hash
     }
     
+    @discardableResult
     public mutating func insert(_ disclosure: JSONWebSelectiveDisclosure, at index: Int) throws -> Data {
-        let key = try disclosure.digest(using: hashFunction)
-        items.updateValue(disclosure, forKey: key, insertingAt: index)
-        return key
+        let hash = try disclosure.digest(using: hashFunction)
+        items.updateValue(disclosure, forKey: hash, insertingAt: index)
+        return hash
     }
     
     public mutating func remove(_ disclosure: JSONWebSelectiveDisclosure) throws {
-        try items.removeValue(forKey: disclosure.digest(using: hashFunction))
+        let hash = try disclosure.digest(using: hashFunction)
+        items.removeValue(forKey: hash)
     }
     
-    public mutating func remove(digest: Data) throws {
+    public mutating func remove(digest: Data) {
         items.removeValue(forKey: digest)
     }
     
-    public mutating func remove(at index: Int) throws {
+    public mutating func remove(at index: Int) {
         items.remove(at: index)
     }
 }

@@ -347,3 +347,10 @@ extension JSONWebTokenClaims {
         }
     }
 }
+
+extension JSONPointer {
+    public init(_ keyPath: SendablePartialKeyPath<JSONWebTokenClaimsPopParameters>) {
+        let key = JSONWebTokenClaimsPopParameters.keys[keyPath] ?? keyPath.name.jsonWebKey
+        self.init(key: key)
+    }
+}

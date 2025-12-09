@@ -17,7 +17,7 @@ struct JWTTests {
     func decode() throws {
         let jwt = try JSONWebToken(from: jwtString)
         #expect(jwt.signatures.first?.protected.algorithm == .hmacSHA256)
-        #expect(jwt.payload.value.issuedAt == Date(timeIntervalSince1970: 1_516_239_022))
+        #expect(jwt.payload.issuedAt == Date(timeIntervalSince1970: 1_516_239_022))
         #expect(throws: Never.self) { try jwt.verifySignature(using: ExampleKeys.symmetric) }
     }
     
