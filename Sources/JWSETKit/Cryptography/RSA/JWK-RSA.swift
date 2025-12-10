@@ -161,7 +161,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
         }
     }
     
-    public init(algorithm _: some JSONWebAlgorithm) throws {
+    public init(algorithm: some JSONWebAlgorithm) throws {
         try self.init(keySize: .defaultKeyLength)
         self.algorithm = algorithm
     }
@@ -270,35 +270,28 @@ enum RSAHelper {
             }
         }
         
-        init?(keyData data: Data) {
-            do {
-                let der = try DER.parse([UInt8](data))
-                guard der.identifier == .sequence, let rootNodes = der.content.sequence else {
-                    throw CryptoKitASN1Error.unexpectedFieldType
-                }
-                guard rootNodes.count >= 2 else {
-                    throw CryptoKitASN1Error.invalidASN1Object
-                }
-                
-                // Private keys start with an INTEGER version field.
-                // PKCS#8 Private Key second element is a SEQUENCE (algorithm identifier)
-                // PKCS#1 Public Key is a SEQUENCE of two INTEGERs (modulus and exponent).
-                switch (rootNodes[0].identifier, rootNodes[1].identifier) {
-                case (.sequence, .bitString):
-                    self = .subjectPublicKey
-                    return
-                case (.integer, .sequence) where rootNodes[0].content.primitive == [0x00]:
-                    self = .pkcs8PrivateKey
-                    return
-                case (.integer, .integer):
-                    self = rootNodes[0].content.primitive == [0x00] ? .pkcs1PrivateKey : .pkcs1PublicKey
-                    return
-                default:
-                    break
-                }
-            } catch {}
+        init(keyData data: Data) throws {
+            let der = try DER.parse([UInt8](data))
+            guard der.identifier == .sequence, let rootNodes = der.content.sequence else {
+                throw CryptoKitASN1Error.unexpectedFieldType
+            }
+            guard rootNodes.count >= 2 else {
+                throw CryptoKitASN1Error.invalidASN1Object
+            }
             
-            return nil
+            // Private keys start with an INTEGER version field.
+            // PKCS#8 Private Key second element is a SEQUENCE (algorithm identifier)
+            // PKCS#1 Public Key is a SEQUENCE of two INTEGERs (modulus and exponent).
+            switch (rootNodes[0].identifier, rootNodes[1].identifier) {
+            case (.sequence, .bitString):
+                self = .subjectPublicKey
+            case (.integer, .sequence) where rootNodes[0].content.primitive == [0x00]:
+                self = .pkcs8PrivateKey
+            case (.integer, .integer):
+                self = rootNodes[0].content.primitive == [0x00] ? .pkcs1PrivateKey : .pkcs1PublicKey
+            default:
+                throw CryptoKitASN1Error.invalidASN1Object
+            }
         }
     }
     

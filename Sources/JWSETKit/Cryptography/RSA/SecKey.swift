@@ -274,7 +274,7 @@ extension JSONWebSigningKey where Self: SecKey {
             throw JSONWebKeyError.unknownKeyType
         }
         
-        let type = RSAHelper.DERType(keyData: derRepresentation) ?? .pkcs1PrivateKey
+        let type = (try? RSAHelper.DERType(keyData: derRepresentation)) ?? .pkcs1PrivateKey
         var attributes: [CFString: Any] = [
             kSecAttrKeyType: secKeyType,
             kSecAttrKeyClass: type.isPublic ? kSecAttrKeyClassPublic : kSecAttrKeyClassPrivate,

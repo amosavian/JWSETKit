@@ -25,20 +25,20 @@ struct JSONWebSelectiveDisclosureJWTTests {
         #expect(disclosure.key == "email")
         #expect(disclosure.value as? String == "john.doe@example.com")
         #expect(disclosure.salt.count >= 16) // At least 128 bits
-        #expect(try disclosure.encoded == "WyJab3JWU3IzeG1PSy0tWkF6aklXVXp3IiwiZW1haWwiLCJqb2huLmRvZUBleGFtcGxlLmNvbSJd")
-        #expect(try disclosure.digest(using: SHA256.self) == "slGGh6U1smz_WBQPhlfX90TCr98fg7UfXLJcT-Qf8kY".decoded)
+        #expect(disclosure.encoded == "WyJab3JWU3IzeG1PSy0tWkF6aklXVXp3IiwiZW1haWwiLCJqb2huLmRvZUBleGFtcGxlLmNvbSJd")
+        #expect(disclosure.digest(using: SHA256.self) == "slGGh6U1smz_WBQPhlfX90TCr98fg7UfXLJcT-Qf8kY".decoded)
     }
     
     @Test("Encode and decode selective disclosure")
     func selectiveDisclosureCodec() throws {
         let originalDisclosure = JSONWebSelectiveDisclosure("test", value: "value123")
         
-        let encoded = try originalDisclosure.encoded
+        let encoded = originalDisclosure.encoded
         let decodedDisclosure = try JSONWebSelectiveDisclosure(encoded: encoded)
         
         #expect(decodedDisclosure.key == originalDisclosure.key)
         #expect(decodedDisclosure.value as? String == originalDisclosure.value as? String)
-        #expect(try decodedDisclosure.digest(using: SHA256.self) == originalDisclosure.digest(using: SHA256.self))
+        #expect(decodedDisclosure.digest(using: SHA256.self) == originalDisclosure.digest(using: SHA256.self))
     }
     
     @Test("Merge disclosures with JWT claims")
@@ -73,7 +73,7 @@ struct JSONWebSelectiveDisclosureJWTTests {
         }
         // Create a disclosure
         let emailDisclosure = JSONWebSelectiveDisclosure("email", value: "john.doe@example.com")
-        let emailHash = try emailDisclosure.digest(using: SHA256.self)
+        let emailHash = emailDisclosure.digest(using: SHA256.self)
         
         // Add a hash that won't have a matching disclosure
         let fakeHash = Data(count: 32) // 32 zero bytes
@@ -145,9 +145,9 @@ struct JSONWebSelectiveDisclosureJWTTests {
         let skillDisclosure = JSONWebSelectiveDisclosure(value: "Swift Programming")
         let disclosureList = try JSONWebSelectiveDisclosureList([phoneDisclosure, departmentDisclosure, skillDisclosure], hashFunction: SHA256.self)
         
-        let phoneHash = try phoneDisclosure.digest(using: SHA256.self)
-        let departmentHash = try departmentDisclosure.digest(using: SHA256.self)
-        let skillHash = try skillDisclosure.digest(using: SHA256.self)
+        let phoneHash = phoneDisclosure.digest(using: SHA256.self)
+        let departmentHash = departmentDisclosure.digest(using: SHA256.self)
+        let skillHash = skillDisclosure.digest(using: SHA256.self)
         
         let contactInfo: [String: any Sendable] = [
             "email": "john@example.com",
