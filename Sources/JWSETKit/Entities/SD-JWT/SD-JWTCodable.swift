@@ -172,7 +172,7 @@ extension JSONWebSelectiveDisclosureToken: Codable {
         var components: [String] = []
         try components.append(String(jwt))
         for disclosure in disclosures {
-            try components.append(disclosure.encoded)
+            components.append(disclosure.encoded)
         }
         if let keyBinding {
             try components.append(String(keyBinding))
@@ -195,7 +195,7 @@ extension JSONWebSelectiveDisclosureToken: Codable {
         var headerContainer = encoder.container(keyedBy: JSONWebSignatureHeader.CodingKeys.self)
         try headerContainer.encode(signature.protected, forKey: .protected)
         var unprotectedStorage = signature.unprotected?.storage ?? JSONWebValueStorage()
-        unprotectedStorage["disclosures"] = try disclosures.map { try $0.encoded }
+        unprotectedStorage["disclosures"] = disclosures.map { $0.encoded }
         if let keyBinding {
             unprotectedStorage["kb_jwt"] = try String(keyBinding)
         }
@@ -212,7 +212,7 @@ extension JSONWebSelectiveDisclosureToken: Codable {
         for (index, signature) in signatures.enumerated() {
             if index == 0 {
                 var unprotectedStorage = signature.unprotected?.storage ?? JSONWebValueStorage()
-                unprotectedStorage["disclosures"] = try disclosures.map { try $0.encoded }
+                unprotectedStorage["disclosures"] = disclosures.map { $0.encoded }
                 if let keyBinding {
                     unprotectedStorage["kb_jwt"] = try String(keyBinding)
                 }

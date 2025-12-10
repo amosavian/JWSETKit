@@ -87,7 +87,7 @@ public struct DisclosurePolicy: Hashable, Sendable {
     }
     
     /// Creates a policy that makes all claims disclosable except standard JWT claims.
-    public static var `default`: DisclosurePolicy {
+    public static var standard: DisclosurePolicy {
         .init()
     }
     
@@ -167,7 +167,6 @@ extension JSONWebValueStorage {
             try concealGroup(
                 parentPath: parentPath,
                 childPaths: childPaths,
-                hashFunction: hashFunction,
                 disclosures: &disclosures
             )
         }
@@ -177,19 +176,17 @@ extension JSONWebValueStorage {
     private mutating func concealGroup(
         parentPath: JSONPointer,
         childPaths: [JSONPointer],
-        hashFunction: any HashFunction.Type,
         disclosures: inout JSONWebSelectiveDisclosureList
     ) throws {
         if parentPath.isRoot {
-            try concealAtRoot(paths: childPaths, hashFunction: hashFunction, disclosures: &disclosures)
+            try concealAtRoot(paths: childPaths, disclosures: &disclosures)
         } else {
-            try concealNested(parentPath: parentPath, paths: childPaths, hashFunction: hashFunction, disclosures: &disclosures)
+            try concealNested(parentPath: parentPath, paths: childPaths, disclosures: &disclosures)
         }
     }
     
     private mutating func concealAtRoot(
         paths: [JSONPointer],
-        hashFunction _: any HashFunction.Type,
         disclosures: inout JSONWebSelectiveDisclosureList
     ) throws {
         var sdHashes: [String] = storage["_sd"] as? [String] ?? []
@@ -200,8 +197,8 @@ extension JSONWebValueStorage {
             let key = lastComponent.stringValue
             guard let value = storage[key] else { continue }
             
-            let disclosure = JSONWebSelectiveDisclosure(key, value: value)
-            let hash = try disclosures.append(disclosure)
+            let disclosure = try JSONWebSelectiveDisclosure(key, value: value)
+            let hash = disclosures.append(disclosure)
             sdHashes.append(hash.urlBase64EncodedString())
             storage.removeValue(forKey: key)
         }
@@ -214,11 +211,10 @@ extension JSONWebValueStorage {
     private mutating func concealNested(
         parentPath: JSONPointer,
         paths: [JSONPointer],
-        hashFunction _: any HashFunction.Type,
         disclosures: inout JSONWebSelectiveDisclosureList
     ) throws {
         // Navigate to parent and modify in place
-        guard let parent = value(at: parentPath) else { return }
+        guard let parent = self[parentPath] else { return }
         
         if var parentDict = parent as? [String: any Sendable] {
             var sdHashes: [String] = parentDict["_sd"] as? [String] ?? []
@@ -229,8 +225,8 @@ extension JSONWebValueStorage {
                 
                 guard lastComponent.intValue == nil, let value = parentDict[key] else { continue }
                 
-                let disclosure = JSONWebSelectiveDisclosure(key, value: value)
-                let hash = try disclosures.append(disclosure)
+                let disclosure = try JSONWebSelectiveDisclosure(key, value: value)
+                let hash = disclosures.append(disclosure)
                 sdHashes.append(hash.urlBase64EncodedString())
                 parentDict.removeValue(forKey: key)
             }
@@ -238,8 +234,7 @@ extension JSONWebValueStorage {
             if !sdHashes.isEmpty {
                 parentDict["_sd"] = sdHashes
             }
-            try setValue(parentDict, at: parentPath)
-            
+            self[parentPath] = parentDict
         } else if var parentArray = parent as? [any Sendable] {
             // Handle array element concealment
             for path in paths {
@@ -249,11 +244,11 @@ extension JSONWebValueStorage {
                 else { continue }
                 
                 let value = parentArray[index]
-                let disclosure = JSONWebSelectiveDisclosure(nil, value: value)
-                let hash = try disclosures.append(disclosure)
+                let disclosure = try JSONWebSelectiveDisclosure(nil, value: value)
+                let hash = disclosures.append(disclosure)
                 parentArray[index] = ["...": hash.urlBase64EncodedString()]
             }
-            try setValue(parentArray, at: parentPath)
+            self[parentPath] = parentArray
         }
     }
     
@@ -389,7 +384,7 @@ extension JSONWebTokenClaims {
     ///   - hashFunction: Hash function for computing disclosure digests
     /// - Returns: List of created disclosures
     public mutating func conceal(
-        policy: DisclosurePolicy = .default,
+        policy: DisclosurePolicy = .standard,
         using hashFunction: any HashFunction.Type
     ) throws -> JSONWebSelectiveDisclosureList {
         try storage.conceal(policy: policy, using: hashFunction)

@@ -27,7 +27,7 @@ extension RandomAccessCollection where Self.Element == UInt8 {
                 break
             }
         }
-        while result.last == UInt8(ascii: "=") {
+        while result.last == "=" {
             result.removeLast()
         }
         return Data(result)

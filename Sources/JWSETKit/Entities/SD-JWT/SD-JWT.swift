@@ -117,11 +117,11 @@ public struct JSONWebSelectiveDisclosureToken: Hashable, Sendable {
         if requireKeyBinding, payload.confirmation?.key != nil {
             try verifyKeyBinding()
         }
-        let allDisclosureHashes = allDisclosureHashes
-        guard allDisclosureHashes.count == Set(allDisclosureHashes).count else {
+        let hashes = allDisclosureHashes
+        guard hashes.count == Set(hashes).count else {
             throw JSONWebValidationError.duplicateDisclosureDigest
         }
-        guard try Set(disclosureList.hashes).isSubset(of: allDisclosureHashes) else {
+        guard try Set(disclosureList.hashes).isSubset(of: hashes) else {
             throw JSONWebValidationError.orphanDisclosure
         }
     }
@@ -158,7 +158,7 @@ extension JSONWebSelectiveDisclosureToken {
     /// - Throws: `JSONWebKeyError` if key operations fail, `CryptoKitError` for cryptographic failures
     public init<SK: JSONWebSigningKey>(
         claims: JSONWebTokenClaims,
-        policy: DisclosurePolicy = .default,
+        policy: DisclosurePolicy = .standard,
         header: JOSEHeader = .init(),
         algorithm: JSONWebSignatureAlgorithm? = nil,
         hashAlgorithm: any NamedHashFunction.Type = SHA256.self,
@@ -292,7 +292,7 @@ extension JSONWebSelectiveDisclosureToken {
 
             if let index = lastComponent.intValue {
                 // Array element: look for {"...": hash} marker at the index
-                if let parentArray = payload.value.storage.value(at: parentPath) as? [Any],
+                if let parentArray = payload.value.storage[parentPath] as? [Any],
                    parentArray.indices.contains(index),
                    let marker = parentArray[index] as? [String: Any],
                    marker.count == 1,
@@ -311,7 +311,7 @@ extension JSONWebSelectiveDisclosureToken {
                 let sdArray: [String]?
                 if parentPath.isRoot {
                     sdArray = payload.value.storage.storage["_sd"] as? [String]
-                } else if let parentDict = payload.value.storage.value(at: parentPath) as? [String: Any] {
+                } else if let parentDict = payload.value.storage[parentPath] as? [String: Any] {
                     sdArray = parentDict["_sd"] as? [String]
                 } else {
                     sdArray = nil
@@ -332,7 +332,7 @@ extension JSONWebSelectiveDisclosureToken {
         }
 
         let selectedDisclosures = disclosures.filter { disclosure in
-            guard let hash = try? disclosure.digest(using: disclosureList.hashFunction) else { return false }
+            let hash = disclosure.digest(using: disclosureList.hashFunction)
             return selectedHashes.contains(hash)
         }
 

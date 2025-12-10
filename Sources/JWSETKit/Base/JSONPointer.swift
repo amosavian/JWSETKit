@@ -219,11 +219,24 @@ extension Set<JSONPointer> {
 }
 
 extension JSONWebValueStorage {
+    public subscript(pointer: JSONPointer) -> (any Sendable)? {
+        get {
+            value(at: pointer)
+        }
+        set {
+            if let newValue {
+                setValue(newValue, at: pointer)
+            } else {
+                removeValue(at: pointer)
+            }
+        }
+    }
+    
     /// Gets value at the specified JSON Pointer path.
     ///
     /// - Parameter pointer: The JSON Pointer path to the value
     /// - Returns: The value at the path, or nil if not found
-    func value(at pointer: JSONPointer) -> (any Sendable)? {
+    private func value(at pointer: JSONPointer) -> (any Sendable)? {
         guard !pointer.isRoot else { return storage }
         return value(at: pointer.components, in: storage)
     }
@@ -254,25 +267,21 @@ extension JSONWebValueStorage {
     ///   - value: The value to set
     ///   - pointer: The JSON Pointer path where to set the value
     /// - Throws: If the path is invalid or parent containers don't exist
-    mutating func setValue(_ value: any Sendable, at pointer: JSONPointer) throws {
+    private mutating func setValue(_ value: any Sendable, at pointer: JSONPointer) {
         guard !pointer.isRoot else {
             if let dict = value as? [String: any Sendable] {
                 storage = dict
             }
             return
         }
-        try setValue(value, at: pointer.components, in: &storage)
+        setValue(value, at: pointer.components, in: &storage)
     }
     
-    private func setValue(_ value: any Sendable, at components: [JSONPointer.Component], in current: inout [String: any Sendable]) throws {
+    private func setValue(_ value: any Sendable, at components: [JSONPointer.Component], in current: inout [String: any Sendable]) {
         guard let first = components.first else { return }
         let remaining = Array(components.dropFirst())
         
         if remaining.isEmpty {
-            // Final component - set the value
-            if first.intValue != nil {
-                throw JSONWebKeyError.keyNotFound
-            }
             current[first.stringValue] = value
         } else {
             // Navigate deeper
@@ -280,23 +289,24 @@ extension JSONWebValueStorage {
             if remaining.first?.intValue != nil {
                 // Next level is array
                 var array = current[key] as? [any Sendable] ?? []
-                try setValue(value, at: remaining, inArray: &array)
+                setValue(value, at: remaining, inArray: &array)
                 current[key] = array
             } else {
                 // Next level is object
                 var nested = current[key] as? [String: any Sendable] ?? [:]
-                try setValue(value, at: remaining, in: &nested)
+                setValue(value, at: remaining, in: &nested)
                 current[key] = nested
             }
         }
     }
     
-    private func setValue(_ value: any Sendable, at components: [JSONPointer.Component], inArray array: inout [any Sendable]) throws {
-        guard let first = components.first,
-              let index = first.intValue,
-              array.indices.contains(index)
-        else {
-            throw JSONWebKeyError.keyNotFound
+    private func setValue(_ value: any Sendable, at components: [JSONPointer.Component], inArray array: inout [any Sendable]) {
+        guard let first = components.first, let index = first.intValue, index >= 0 else {
+            return
+        }
+        if !array.indices.contains(index) {
+            let padding = [any Sendable](repeating: Data?.none, count: index - array.count + 1)
+            array.append(contentsOf: padding)
         }
         let remaining = Array(components.dropFirst())
         
@@ -304,11 +314,11 @@ extension JSONWebValueStorage {
             array[index] = value
         } else if remaining.first?.intValue != nil {
             var nested = array[index] as? [any Sendable] ?? []
-            try setValue(value, at: remaining, inArray: &nested)
+            setValue(value, at: remaining, inArray: &nested)
             array[index] = nested
         } else {
             var nested = array[index] as? [String: any Sendable] ?? [:]
-            try setValue(value, at: remaining, in: &nested)
+            setValue(value, at: remaining, in: &nested)
             array[index] = nested
         }
     }
@@ -318,7 +328,7 @@ extension JSONWebValueStorage {
     /// - Parameter pointer: The JSON Pointer path to remove
     /// - Returns: The removed value, or nil if not found
     @discardableResult
-    mutating func removeValue(at pointer: JSONPointer) -> (any Sendable)? {
+    private mutating func removeValue(at pointer: JSONPointer) -> (any Sendable)? {
         guard !pointer.isRoot else {
             let old = storage
             storage = [:]
