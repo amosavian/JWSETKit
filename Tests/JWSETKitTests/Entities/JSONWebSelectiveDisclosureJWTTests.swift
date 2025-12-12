@@ -560,8 +560,179 @@ struct JSONWebSelectiveDisclosureJWTTests {
         #expect(decoded.disclosures.count == sdJWT.disclosures.count)
     }
     
+    @Test("SD-JWT JSON flattened serialization roundtrip")
+    func jsonFlattenedSerializationRoundtrip() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.email = "john.doe@example.com"
+        }
+
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            concealedPaths: ["/email"],
+            using: issuerKey
+        )
+
+        // Encode to flattened JSON format
+        let encoder = JSONEncoder.encoder
+        encoder.userInfo[.sdJWTEncodedRepresentation] = JSONWebSelectiveDisclosureTokenRepresentation.jsonFlattened
+        let jsonData = try encoder.encode(sdJWT)
+
+        // Should be valid JSON with expected structure
+        let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
+        #expect(json?["payload"] != nil)
+        #expect(json?["protected"] != nil)
+        #expect(json?["header"] != nil)
+        #expect(json?["signature"] != nil)
+
+        // The header should contain disclosures
+        let header = json?["header"] as? [String: Any]
+        #expect(header?["disclosures"] != nil)
+
+        // Decode back
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(JSONWebSelectiveDisclosureToken.self, from: jsonData)
+
+        #expect(decoded.disclosures.count == sdJWT.disclosures.count)
+        #expect(decoded.payload.subject == "user123")
+    }
+
+    @Test("SD-JWT JSON general serialization roundtrip")
+    func jsonGeneralSerializationRoundtrip() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.email = "john.doe@example.com"
+        }
+
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            concealedPaths: ["/email"],
+            using: issuerKey
+        )
+
+        // Encode to general JSON format
+        let encoder = JSONEncoder.encoder
+        encoder.userInfo[.sdJWTEncodedRepresentation] = JSONWebSelectiveDisclosureTokenRepresentation.jsonGeneral
+        let jsonData = try encoder.encode(sdJWT)
+
+        // Should be valid JSON with signatures array
+        let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
+        #expect(json?["payload"] != nil)
+        #expect(json?["signatures"] != nil)
+
+        // Decode back
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(JSONWebSelectiveDisclosureToken.self, from: jsonData)
+
+        #expect(decoded.disclosures.count == sdJWT.disclosures.count)
+        #expect(decoded.payload.subject == "user123")
+    }
+
+    @Test("SD-JWT JSON serialization with key binding")
+    func jsonSerializationWithKeyBinding() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+        let holderKey = P256.Signing.PrivateKey()
+
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.email = "john.doe@example.com"
+            $0.confirmation = .key(holderKey)
+        }
+
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            concealedPaths: ["/email"],
+            using: issuerKey
+        )
+
+        let presentation = try sdJWT.withKeyBinding(
+            using: holderKey,
+            algorithm: .ecdsaSignatureP256SHA256,
+            nonce: "test-nonce",
+            audience: "https://verifier.example.com"
+        )
+
+        // Encode to flattened JSON format
+        let encoder = JSONEncoder.encoder
+        encoder.userInfo[.sdJWTEncodedRepresentation] = JSONWebSelectiveDisclosureTokenRepresentation.jsonFlattened
+        let jsonData = try encoder.encode(presentation)
+
+        // The header should contain kb_jwt
+        let json = try JSONSerialization.jsonObject(with: jsonData) as? [String: Any]
+        let header = json?["header"] as? [String: Any]
+        #expect(header?["kb_jwt"] != nil)
+
+        // Decode back
+        let decoder = JSONDecoder()
+        let decoded = try decoder.decode(JSONWebSelectiveDisclosureToken.self, from: jsonData)
+
+        #expect(decoded.keyBinding != nil)
+        #expect(decoded.keyBinding?.payload.nonce == "test-nonce")
+    }
+
+    @Test("SD-JWT automatic representation selection")
+    func automaticRepresentationSelection() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.email = "john.doe@example.com"
+        }
+
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            concealedPaths: ["/email"],
+            using: issuerKey
+        )
+
+        // Encode with automatic representation (should choose compact for single signature)
+        let encoder = JSONEncoder.encoder
+        encoder.userInfo[.sdJWTEncodedRepresentation] = JSONWebSelectiveDisclosureTokenRepresentation.automatic
+        let data = try encoder.encode(sdJWT)
+        let string = String(decoding: data, as: UTF8.self)
+
+        // Should use compact format (contains ~)
+        #expect(string.contains("~"))
+    }
+
+    @Test("SD-JWT compact serialization with key binding")
+    func compactSerializationWithKeyBinding() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+        let holderKey = P256.Signing.PrivateKey()
+
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.confirmation = .key(holderKey)
+        }
+
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            using: issuerKey
+        )
+
+        let presentation = try sdJWT.withKeyBinding(
+            using: holderKey,
+            algorithm: .ecdsaSignatureP256SHA256,
+            nonce: "test-nonce",
+            audience: "https://verifier.example.com"
+        )
+
+        // Encode to compact format
+        let compactString = try String(presentation)
+
+        // Should contain KB-JWT at the end (not empty after last ~)
+        let components = compactString.split(separator: "~", omittingEmptySubsequences: false)
+        let lastComponent = String(components.last!)
+        #expect(!lastComponent.isEmpty)
+        #expect(lastComponent.hasPrefix("ey")) // JWT prefix
+    }
+
     // MARK: - JWT Verification Tests
-    
+
     @Test("Verify issuer JWT signature")
     func verifyIssuerJWTSignature() throws {
         let issuerKey = P256.Signing.PrivateKey()
@@ -603,18 +774,18 @@ struct JSONWebSelectiveDisclosureJWTTests {
     }
     
     // MARK: - Disclosure Policy Tests
-    
+
     @Test("Create SD-JWT with disclosure policy")
     func disclosurePolicy() throws {
         let issuerKey = P256.Signing.PrivateKey()
-        
+
         let claims = try JSONWebTokenClaims {
             $0.subject = "user123"
             $0.issuer = "https://issuer.example.com"
             $0.name = "John Doe"
             $0.email = "john.doe@example.com"
         }
-        
+
         // Create with explicit disclosable paths
         let policy = DisclosurePolicy.disclosable(["/name", "/email"])
         let sdJWT = try JSONWebSelectiveDisclosureToken(
@@ -622,12 +793,240 @@ struct JSONWebSelectiveDisclosureJWTTests {
             policy: policy,
             using: issuerKey
         )
-        
+
         // Verify structure
         #expect(sdJWT.disclosures.count == 2)
-        
+
         // Verify standard claims remain visible
         #expect(sdJWT.jwt.payload.subject == "user123")
         #expect(sdJWT.jwt.payload.issuer == "https://issuer.example.com")
+    }
+
+    // MARK: - Disclosure Codable Tests
+
+    @Test("Decode disclosure from encoded string")
+    func decodeDisclosureFromEncodedString() throws {
+        // Create a disclosure and encode it
+        let original = JSONWebSelectiveDisclosure("name", value: "John Doe")
+        let encoded = original.encoded
+
+        // Decode from encoded string
+        let decoded = try JSONWebSelectiveDisclosure(encoded: encoded)
+        #expect(decoded.key == "name")
+        #expect(decoded.value as? String == "John Doe")
+    }
+
+    @Test("Encode disclosure")
+    func encodeDisclosure() throws {
+        let disclosure = JSONWebSelectiveDisclosure("email", value: "test@example.com")
+
+        // Test the encoded property
+        let encoded = disclosure.encoded
+        #expect(!encoded.isEmpty)
+        // Should be valid base64url
+        #expect(encoded.allSatisfy { $0.isLetter || $0.isNumber || $0 == "-" || $0 == "_" })
+
+        // Can decode back
+        let decoded = try JSONWebSelectiveDisclosure(encoded: encoded)
+        #expect(decoded.key == "email")
+    }
+
+    @Test("Disclosure with complex value types")
+    func disclosureWithComplexValues() throws {
+        // Test with dictionary value
+        let disclosure1 = try JSONWebSelectiveDisclosure(
+            "address",
+            value: ["street": "123 Main", "city": "NYC"] as [String: String]
+        )
+        #expect(disclosure1.key == "address")
+
+        // Test with integer value
+        let disclosure2 = JSONWebSelectiveDisclosure("age", value: 25)
+        #expect(disclosure2.value as? Int == 25)
+
+        // Test with boolean value
+        let disclosure3 = try JSONWebSelectiveDisclosure("verified", value: true)
+        #expect(disclosure3.value as? Bool == true)
+
+        // Test with array value
+        let disclosure4 = try JSONWebSelectiveDisclosure("tags", value: ["a", "b", "c"])
+        let tags = disclosure4.value as? [String]
+        #expect(tags == ["a", "b", "c"])
+    }
+
+    @Test("Disclosure digest determinism")
+    func disclosureDigestDeterminism() throws {
+        // Same disclosure should produce same digest
+        let salt = Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
+                         0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10])
+        let d1 = JSONWebSelectiveDisclosure("key", value: "value", salt: salt)
+        let d2 = JSONWebSelectiveDisclosure("key", value: "value", salt: salt)
+
+        #expect(d1.digest(using: SHA256.self) == d2.digest(using: SHA256.self))
+        #expect(d1.encoded == d2.encoded)
+    }
+
+    @Test("Disclosure list operations")
+    func disclosureListOperations() throws {
+        let d1 = JSONWebSelectiveDisclosure("a", value: "1")
+        let d2 = JSONWebSelectiveDisclosure("b", value: "2")
+        let d3 = JSONWebSelectiveDisclosure("c", value: "3")
+
+        var list = try JSONWebSelectiveDisclosureList([d1, d2], hashFunction: SHA256.self)
+        #expect(list.count == 2)
+
+        // Test append
+        let hash = list.append(d3)
+        #expect(list.count == 3)
+        #expect(list[hash] == d3)
+
+        // Test index lookup
+        let d1Hash = d1.digest(using: SHA256.self)
+        #expect(list.index(for: d1Hash) == 0)
+
+        // Test remove
+        list.remove(d1)
+        #expect(list.count == 2)
+        #expect(list.index(for: d1Hash) == nil)
+
+        // Test remove by digest
+        let d2Hash = d2.digest(using: SHA256.self)
+        list.remove(digest: d2Hash)
+        #expect(list.count == 1)
+
+        // Test remove at index
+        list.remove(at: 0)
+        #expect(list.isEmpty)
+    }
+
+    @Test("Disclosure list append another list")
+    func disclosureListAppendList() throws {
+        let d1 = JSONWebSelectiveDisclosure("a", value: "1")
+        let d2 = JSONWebSelectiveDisclosure("b", value: "2")
+
+        var list1 = try JSONWebSelectiveDisclosureList([d1], hashFunction: SHA256.self)
+        let list2 = try JSONWebSelectiveDisclosureList([d2], hashFunction: SHA256.self)
+
+        try list1.append(list2)
+        #expect(list1.count == 2)
+    }
+
+    @Test("Invalid disclosure decoding errors")
+    func invalidDisclosureDecodingErrors() throws {
+        // Invalid encoded string (not base64)
+        #expect(throws: Error.self) {
+            try JSONWebSelectiveDisclosure(encoded: "not-valid-base64-at-all!!!")
+        }
+
+        // Empty encoded string
+        #expect(throws: Error.self) {
+            try JSONWebSelectiveDisclosure(encoded: "")
+        }
+
+        // Valid base64 but not valid JSON inside
+        let invalidJSON = Data([0x00, 0x01, 0x02]).urlBase64EncodedString()
+        #expect(throws: Error.self) {
+            try JSONWebSelectiveDisclosure(encoded: invalidJSON)
+        }
+
+        // Valid base64 but wrong array length (1 element)
+        let oneElement = try JSONEncoder().encode(["only-salt"])
+        let oneElementB64 = oneElement.urlBase64EncodedString()
+        #expect(throws: Error.self) {
+            try JSONWebSelectiveDisclosure(encoded: oneElementB64)
+        }
+    }
+
+    // MARK: - Additional SD-JWT Tests
+
+    @Test("SD-JWT description and debug description")
+    func sdJWTDescriptions() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.email = "john.doe@example.com"
+        }
+
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            concealedPaths: ["/email"],
+            using: issuerKey
+        )
+
+        // description should be compact format
+        let description = sdJWT.description
+        #expect(description.contains("~"))
+
+        // debugDescription should include detailed info
+        let debugDesc = sdJWT.debugDescription
+        #expect(debugDesc.contains("Signatures:"))
+        #expect(debugDesc.contains("Payload:"))
+        #expect(debugDesc.contains("Disclosures:"))
+    }
+
+    @Test("SD-JWT string description format")
+    func sdJWTStringDescription() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.email = "john.doe@example.com"
+        }
+
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            concealedPaths: ["/email"],
+            using: issuerKey
+        )
+
+        // Description should be compact format with ~ separators
+        let description = sdJWT.description
+        #expect(description.contains("~"))
+
+        // Should start with JWT header (eyJ...)
+        #expect(description.hasPrefix("ey"))
+    }
+
+    @Test("SD-JWT with SHA384 hash algorithm")
+    func sdJWTWithSHA384() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.email = "john.doe@example.com"
+        }
+
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            concealedPaths: ["/email"],
+            hashAlgorithm: SHA384.self,
+            using: issuerKey
+        )
+
+        #expect(sdJWT.payload.disclosureHashAlgorithm == SHA384.identifier)
+    }
+
+    @Test("SD-JWT with custom header")
+    func sdJWTWithCustomHeader() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+        }
+
+        var header = JOSEHeader()
+        header.type = .sdJWT
+
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            header: header,
+            using: issuerKey
+        )
+
+        // Type should be set to sd+jwt
+        #expect(sdJWT.signatures.first?.protected.type == .sdJWT)
+        // Algorithm should be inferred from key
+        #expect(sdJWT.signatures.first?.protected.algorithm != nil)
     }
 }
