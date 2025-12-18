@@ -17,15 +17,12 @@ import LibSECP256k1
 
 // MARK: - P256K + KeyAgreement
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
 extension P256K {
     /// A mechanism used to create a shared secret between two users by
     /// performing secp256k1 elliptic curve Diffie Hellman (ECDH) key
     /// exchange.
-    @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
     public enum KeyAgreement: Sendable {
         /// Asecp256k1 public key used for key agreement.
-        @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
         public struct PublicKey: Sendable {
             var impl: Secp256K1BackingPublic
 
@@ -113,7 +110,6 @@ extension P256K {
         }
 
         /// A secp256k1 private key used for key agreement.
-        @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
         public struct PrivateKey: Sendable {
             let impl: Secp256K1BackingPrivate
 
@@ -192,7 +188,6 @@ extension P256K {
 
 // MARK: - P256K + DH
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
 extension P256K.KeyAgreement.PrivateKey: DiffieHellmanKeyAgreement {
     /// Computes a shared secret with the provided public key from another party.
     ///

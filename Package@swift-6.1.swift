@@ -13,10 +13,11 @@ let package = Package(
     name: "JWSETKit",
     defaultLocalization: "en",
     platforms: [
-        .iOS(.v14),
-        .macOS(.v11),
-        .tvOS(.v14),
-        .macCatalyst(.v14),
+        .iOS(.v15),
+        .macOS(.v12),
+        .tvOS(.v15),
+        .macCatalyst(.v15),
+        .visionOS(.v1),
     ],
     products: [
         .library(

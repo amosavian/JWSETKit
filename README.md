@@ -234,7 +234,7 @@ let claims = try JSONWebTokenClaims {
 
 let sdJWT = try JSONWebSelectiveDisclosureToken(
     claims: claims,
-    policy: .default,  // Standard claims visible, others disclosable
+    policy: .standard,  // Standard claims visible, others disclosable
     using: issuerKey
 )
 

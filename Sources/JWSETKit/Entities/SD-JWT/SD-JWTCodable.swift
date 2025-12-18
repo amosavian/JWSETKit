@@ -106,7 +106,7 @@ extension JSONWebSelectiveDisclosureToken: Codable {
             return
         }
         
-        let jws = try JSONWebSignature<ProtectedJSONWebContainer<JSONWebTokenClaims>>(from: decoder)
+        let jws = try JSONWebToken(from: decoder)
         self.payload = jws.payload
         self.signatures = jws.signatures
         if let firstHeader = jws.signatures.first?.unprotected,
@@ -260,7 +260,6 @@ extension JSONWebSelectiveDisclosureToken: LosslessStringConvertible, CustomDebu
 }
 
 /// Allows encoding SD-JWT with configuration for representation style.
-@available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
 public struct JSONWebSelectiveDisclosureTokenCodableConfiguration: Sendable {
     /// Determines serialization format for SD-JWT.
     public let representation: JSONWebSelectiveDisclosureTokenRepresentation
@@ -273,7 +272,6 @@ public struct JSONWebSelectiveDisclosureTokenCodableConfiguration: Sendable {
     }
 }
 
-@available(macOS 12, iOS 15, tvOS 15, watchOS 8, *)
 extension JSONWebSelectiveDisclosureToken: EncodableWithConfiguration {
     public typealias EncodingConfiguration = JSONWebSelectiveDisclosureTokenCodableConfiguration
     

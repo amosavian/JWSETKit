@@ -172,7 +172,7 @@ extension JSONWebSignatureAlgorithm {
 extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     /// **Signature**: No digital signature or MAC performed.
     @available(*, deprecated, message: "This algorithm is intended to be deprecated regarding https://datatracker.ietf.org/doc/draft-ietf-jose-deprecate-none-rsa15/")
-    public static var none: Self { "none" }
+    public static var none: Self { .unsafeNone }
     
     static var unsafeNone: Self { "none" }
     

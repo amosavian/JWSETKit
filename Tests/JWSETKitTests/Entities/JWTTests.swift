@@ -8,6 +8,9 @@
 import Foundation
 import Testing
 @testable import JWSETKit
+#if canImport(NIOHTTP1)
+import NIOHTTP1
+#endif
 
 @Suite
 struct JWTTests {
@@ -48,15 +51,34 @@ struct JWTTests {
         #expect(throws: Never.self) { try jwt.verifyAudience(includes: "google.com") }
         #expect(throws: JSONWebValidationError.self) { try jwt.verifyAudience(includes: "yahoo.com") }
     }
-
+    
 #if canImport(Foundation.NSURLSession)
     @Test
-    func authorization() throws {
+    func authorizationNSURLSession() throws {
         let jwt = try JSONWebToken(from: jwtString)
         var request = URLRequest(url: .init(string: "https://www.example.com/")!)
         request.authorizationToken = jwt
         #expect(request.authorizationToken == jwt)
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer \(jwtString)")
+    }
+#endif
+    
+#if canImport(NIOHTTP1)
+    @Test
+    func authorizationNIOHTTP1() throws {
+        let jwt = try JSONWebToken(from: jwtString)
+        var headers = HTTPHeaders()
+        headers.authorizationToken = jwt
+        #expect(headers.authorizationToken == jwt)
+        #expect(headers["Authorization"].first == "Bearer \(jwtString)")
+    }
+#endif
+    
+#if canImport(Foundation.NSURLSession) || canImport(FoundationNetworking) || canImport(AsyncHTTPClient)
+    @Test
+    func jwkSetFetch() async throws {
+        let keySet = try await JSONWebKeySet(url: .init(string: "https://appleid.apple.com/auth/keys")!)
+        #expect(!keySet.isEmpty)
     }
 #endif
 }

@@ -74,64 +74,6 @@ extension SymmetricKey {
         }
     }
     
-    func ccWrapKey(_ key: SymmetricKey) throws -> Data {
-        let kek = data
-        let rawKeyLength = key.data.count
-        var wrappedKeyLength = CCSymmetricWrappedSize(CCWrappingAlgorithm(kCCWRAPAES), rawKeyLength)
-        var wrappedKey = Data(count: wrappedKeyLength)
-        
-        let status = key.data.withUnsafeBytes { rawKeyBytes in
-            kek.withUnsafeBytes { kekBytes in
-                wrappedKey.withUnsafeMutableBytes { wrappedKeyBytes in
-                    CCSymmetricKeyWrap(
-                        CCWrappingAlgorithm(kCCWRAPAES),
-                        CCrfc3394_iv,
-                        CCrfc3394_ivLen,
-                        kekBytes.baseAddress,
-                        kek.count,
-                        rawKeyBytes.baseAddress,
-                        rawKeyLength,
-                        wrappedKeyBytes.baseAddress,
-                        &wrappedKeyLength
-                    )
-                }
-            }
-        }
-        if let error = status.cryptoKitError {
-            throw error
-        } else {
-            return wrappedKey.prefix(wrappedKeyLength)
-        }
-    }
-    
-    func ccUnwrapKey<D>(_ wrappedKey: D) throws -> SymmetricKey where D: DataProtocol {
-        let kek = data
-        var unwrappedKeyLength = CCSymmetricUnwrappedSize(CCWrappingAlgorithm(kCCWRAPAES), wrappedKey.count)
-        var rawKey = Data(count: unwrappedKeyLength)
-        let status = kek.withUnsafeBytes { kekBytes in
-            wrappedKey.withUnsafeBuffer { wrappedKeyBytes in
-                rawKey.withUnsafeMutableBytes { rawKeyBytes in
-                    CCSymmetricKeyUnwrap(
-                        CCWrappingAlgorithm(kCCWRAPAES),
-                        CCrfc3394_iv,
-                        CCrfc3394_ivLen,
-                        kekBytes.baseAddress,
-                        kekBytes.count,
-                        wrappedKeyBytes.baseAddress,
-                        wrappedKeyBytes.count,
-                        rawKeyBytes.baseAddress,
-                        &unwrappedKeyLength
-                    )
-                }
-            }
-        }
-        if let error = status.cryptoKitError {
-            throw error
-        } else {
-            return .init(data: rawKey.prefix(unwrappedKeyLength))
-        }
-    }
-    
     static func ccPbkdf2<PD, SD, H>(
         pbkdf2Password password: PD, salt: SD, iterations: Int, length: Int, hashFunction: H.Type
     ) throws -> SymmetricKey where PD: DataProtocol, SD: DataProtocol, H: HashFunction {

@@ -441,22 +441,3 @@ func hashFunction<D: DataProtocol>(of data: D) throws -> any HashFunction.Type {
         throw CryptoKitError.incorrectParameterSize
     }
 }
-
-#if canImport(Foundation.NSURLSession)
-
-extension JSONWebKeySet {
-    /// Initializes JWKSet using given contents of given URL.
-    ///
-    /// - Parameter url: The URL of the JWKSet (`jku`)..
-    ///
-    /// - Throws: `DecodingError` if the data is not valid JSON or not a JWKSet.
-    /// - Throws: `URLError` if the URL is not reachable.
-    public init(url: URL) async throws {
-        let (data, response) = try await URLSession.shared.data(from: url)
-        guard let _ = response as? HTTPURLResponse else {
-            throw URLError(.cannotParseResponse)
-        }
-        self = try JSONDecoder().decode(Self.self, from: data)
-    }
-}
-#endif

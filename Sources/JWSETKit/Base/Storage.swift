@@ -285,13 +285,15 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     
     @usableFromInline
     mutating func updateValue<T>(key: String, value: T?) where T: Sendable {
-        switch value {
-        case .none:
+        guard let value = value else {
             remove(key: key)
+            return
+        }
+        switch value {
         case let value as any JSONWebFieldEncodable:
-            storage[key] = .init(value.jsonWebValue)
-        case .some(let value):
-            storage[key] = .init(value)
+            storage[key] = value.jsonWebValue
+        default:
+            storage[key] = value
         }
     }
 }

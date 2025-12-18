@@ -133,7 +133,6 @@ struct JSONWebSelectiveDisclosureJWTTests {
             "public-item-3",
         ]
         let disclosedItems = try itemsArray.disclosed(with: disclosureList)
-        print(disclosedItems)
         #expect(disclosedItems as? [String] == ["public-item-1", "secret-item-1", "public-item-2", "secret-item-2", "public-item-3"])
     }
     
@@ -858,7 +857,7 @@ struct JSONWebSelectiveDisclosureJWTTests {
     func disclosureDigestDeterminism() throws {
         // Same disclosure should produce same digest
         let salt = Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
-                         0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x10])
+                         0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10])
         let d1 = JSONWebSelectiveDisclosure("key", value: "value", salt: salt)
         let d2 = JSONWebSelectiveDisclosure("key", value: "value", salt: salt)
 

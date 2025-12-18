@@ -117,18 +117,6 @@ public enum JSONWebValidationError: JSONWebError, Sendable {
     /// Key binding JWT validation failed with an underlying error.
     case invalidKeyBinding
     
-    private func formatDate(_ date: Date, locale: Locale) -> String {
-#if canImport(Foundation.NSDateFormatter)
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = locale
-        dateFormatter.dateStyle = .medium
-        dateFormatter.timeStyle = .medium
-        return dateFormatter.string(from: date)
-#else
-        return date.iso8601
-#endif
-    }
-    
     /// A localized message describing what error occurred.
     public func localizedError(for locale: Locale) -> String {
         switch self {
@@ -137,14 +125,14 @@ public enum JSONWebValidationError: JSONWebError, Sendable {
                 localizingKey: "errorExpiredToken",
                 value: "Token is invalid after %@",
                 locale: locale,
-                formatDate(date, locale: locale)
+                date.formatted(locale: locale)
             )
         case .tokenInvalidBefore(let date):
             return .init(
                 localizingKey: "errorNotBeforeToken",
                 value: "Token is invalid before %@",
                 locale: locale,
-                formatDate(date, locale: locale)
+                date.formatted(locale: locale)
             )
         case .audienceNotIntended(let audience):
             return .init(
@@ -185,5 +173,19 @@ public enum JSONWebValidationError: JSONWebError, Sendable {
                 locale: locale
             )
         }
+    }
+}
+
+extension Date {
+    fileprivate func formatted(locale: Locale) -> String {
+#if canImport(Foundation.NSDateFormatter)
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = locale
+        dateFormatter.dateStyle = .medium
+        dateFormatter.timeStyle = .medium
+        return dateFormatter.string(from: self)
+#else
+        return date.iso8601
+#endif
     }
 }

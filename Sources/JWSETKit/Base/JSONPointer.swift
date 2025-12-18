@@ -38,6 +38,11 @@ public struct JSONPointer: Hashable, Sendable, RandomAccessCollection, CustomStr
             self.stringValue = String(intValue)
             self.intValue = intValue
         }
+        
+        public init(stringValue: String, intValue: Int?) {
+            self.stringValue = stringValue
+            self.intValue = intValue
+        }
     }
     
     /// The path components after parsing.
@@ -106,7 +111,7 @@ public struct JSONPointer: Hashable, Sendable, RandomAccessCollection, CustomStr
     
     /// Creates a JSON Pointer from an array of coding keys.
     public init(codingPath: [any CodingKey]) {
-        self.components = codingPath.map { Component(stringValue: $0.stringValue) }
+        self.components = codingPath.map { Component(stringValue: $0.stringValue, intValue: $0.intValue) }
     }
     
     /// Creates a JSON Pointer from a single key.
@@ -224,10 +229,15 @@ extension JSONWebValueStorage {
             value(at: pointer)
         }
         set {
-            if let newValue {
-                setValue(newValue, at: pointer)
-            } else {
+            guard let newValue = newValue else {
                 removeValue(at: pointer)
+                return
+            }
+            switch newValue {
+            case let value as any JSONWebFieldEncodable:
+                setValue(value.jsonWebValue, at: pointer)
+            default:
+                setValue(newValue, at: pointer)
             }
         }
     }
@@ -382,14 +392,14 @@ extension JSONWebValueStorage {
     ///
     /// This traverses the entire structure and returns JSON Pointers to all leaf values
     /// (non-container values like strings, numbers, booleans, etc.)
-    func allPaths() -> [JSONPointer] {
+    public func allPaths() -> [JSONPointer] {
         var paths: [JSONPointer] = []
         collectPaths(from: storage, prefix: .init(), into: &paths)
         return paths
     }
     
     /// Returns all top-level keys as JSON Pointers.
-    func topLevelPaths() -> [JSONPointer] {
+    public func topLevelPaths() -> [JSONPointer] {
         storage.keys.map(JSONPointer.init(key:))
     }
     
@@ -398,7 +408,7 @@ extension JSONWebValueStorage {
             if dict.isEmpty {
                 paths.append(prefix)
             } else {
-                for (key, nested) in dict where key != "_sd" && key != "_sd_alg" {
+                for (key, nested) in dict {
                     collectPaths(from: nested, prefix: prefix.appending(.init(stringValue: key)), into: &paths)
                 }
             }
@@ -412,6 +422,23 @@ extension JSONWebValueStorage {
             }
         } else {
             paths.append(prefix)
+        }
+    }
+}
+
+extension JSONWebContainer {
+    public subscript(pointer: JSONPointer) -> (any Sendable)? {
+        storage[pointer]
+    }
+}
+
+extension MutableJSONWebContainer {
+    public subscript(pointer: JSONPointer) -> (any Sendable)? {
+        get {
+            storage[pointer]
+        }
+        set {
+            storage[pointer] = newValue
         }
     }
 }

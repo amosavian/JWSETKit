@@ -15,7 +15,6 @@ import Crypto
 import LibSECP256k1
 
 /// An elliptic curve that enables P256K signatures and key agreement.
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
 public enum P256K: Sendable {
     static let coordinateByteCount = 32
     
@@ -29,14 +28,11 @@ public enum P256K: Sendable {
 
 // MARK: - P256K + Signing
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
 extension P256K {
     /// A mechanism used to create or verify a cryptographic signature using
     /// the P-256K elliptic curve digital signature algorithm (ECDSA).
-    @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
     public enum Signing: Sendable {
         /// A P-256 public key used to verify cryptographic signatures.
-        @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
         public struct PublicKey: Sendable {
             var impl: Secp256K1BackingPublic
             
@@ -124,7 +120,6 @@ extension P256K {
         }
 
         /// A P-256 private key used to create cryptographic signatures.
-        @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
         public struct PrivateKey: Sendable {
             let impl: Secp256K1BackingPrivate
             
@@ -199,10 +194,8 @@ extension P256K {
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
 extension P256K.Signing {
     /// A P256K elliptic curve digital signature algorithm (ECDSA) signature.
-    @available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
     public struct ECDSASignature: ContiguousBytes, Sendable {
         /// A raw data representation of a P256K digital signature.
         public var rawRepresentation: Data
@@ -304,7 +297,6 @@ extension P256K.Signing {
 
 // MARK: - P256 + PrivateKey
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
 extension P256K.Signing.PrivateKey {
     /// Generates an Elliptic Curve Digital Signature Algorithm (ECDSA)
     /// signature of the digest you provide over the P256K elliptic curve.
@@ -345,7 +337,6 @@ extension P256K.Signing.PrivateKey {
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
 extension P256K.Signing.PrivateKey {
     /// Generates an Elliptic Curve Digital Signature Algorithm (ECDSA)
     /// signature of the data you provide over the P256K elliptic curve,
@@ -361,7 +352,6 @@ extension P256K.Signing.PrivateKey {
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
 extension P256K.Signing.PublicKey {
     /// Verifies an elliptic curve digital signature algorithm (ECDSA)
     /// signature on a digest over the P256K elliptic curve.
@@ -378,7 +368,6 @@ extension P256K.Signing.PublicKey {
     }
 }
 
-@available(macOS 10.15, iOS 13, watchOS 6, tvOS 13, macCatalyst 13, visionOS 1.0, *)
 extension P256K.Signing.PublicKey {
     /// Verifies an elliptic curve digital signature algorithm (ECDSA)
     /// signature on a block of data over the P256K elliptic curve.

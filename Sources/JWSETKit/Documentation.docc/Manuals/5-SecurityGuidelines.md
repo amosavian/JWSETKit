@@ -14,8 +14,11 @@ Proper selection of cryptographic algorithms is critical for the security of you
 | RS384/RS512 | Higher | Increased resistance to attacks | Preferred over RS256 for sensitive data |
 | PS256/PS384/PS512 | High | More resistant to certain attacks than RS* | Preferred when clients support it |
 | ES256 | High | Faster and smaller signatures than RSA | Excellent for mobile applications |
+| ES256K | High | secp256k1 curve for WebAuthn/decentralized identity | Good for WebAuthn and blockchain integrations |
 | ES384/ES512 | Higher | Increased resistance to quantum attacks | Recommended for long-term security |
-| EdDSA | Very High | Modern, fast, secure | Best choice when available |
+| EdDSA (Ed25519) | Very High | Modern, fast, secure | Best choice when available |
+| ML-DSA-65 | Very High | Post-quantum signature algorithm | Future-proof choice for long-term security |
+| ML-DSA-87 | Very High | Post-quantum with higher security level | Maximum security for critical applications |
 
 ### Key Encryption Algorithms
 
@@ -73,7 +76,11 @@ For selecting a suitable signature algorithm:
      - Use RSA-based algorithms (RS256, RS384, RS512)
    - **If** enhanced security is needed:
      - Use RSA-PSS algorithms (PS256, PS384, PS512) or EdDSA
-     
+   - **If** WebAuthn or decentralized identity support is needed:
+     - Use ES256K (secp256k1 curve)
+   - **If** post-quantum resistance is required:
+     - Use ML-DSA-65 (standard security) or ML-DSA-87 (high security)
+
 3. **For** encryption:
    - **If** you need maximum security:
      - Use ECDH-ES for key management with A256GCM for content
@@ -83,8 +90,10 @@ For selecting a suitable signature algorithm:
 ## References
 
 - [RFC 7518 - JSON Web Algorithms](https://www.rfc-editor.org/rfc/rfc7518.html)
+- [RFC 8812 - COSE and JOSE Registrations for WebAuthn Algorithms](https://www.rfc-editor.org/rfc/rfc8812.html)
 - [NIST Guidelines for Cryptographic Algorithm and Key Size Selection](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r5.pdf)
 - [JWT Best Practices - RFC 8725](https://www.rfc-editor.org/rfc/rfc8725.html)
+- [FIPS 204 - Module-Lattice-Based Digital Signature Standard](https://csrc.nist.gov/pubs/fips/204/final)
 
 ## Topics
 

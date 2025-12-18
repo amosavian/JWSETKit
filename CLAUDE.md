@@ -102,9 +102,9 @@ The test suite includes RFC 7520 compliance tests for encryption, decryption, an
 
 ## Platform Support
 
-- **Apple Platforms**: iOS 14+, macOS 11+, tvOS 14+, macCatalyst 14+
+- **Apple Platforms**: iOS 15, macOS 12+, tvOS 15+, macCatalyst 15+
 - **Linux**: Supported via Docker testing
-- **Swift Versions**: 5.10, 6.0, 6.1
+- **Swift Versions**: 6.0, 6.1, 6.2
 
 ## Notes for Development
 

@@ -140,15 +140,7 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
     ///
     /// - Returns: The unwrapped key.
     public func unwrap<D>(_ data: D) throws -> SymmetricKey where D: DataProtocol {
-        if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            return try AES.KeyWrap.unwrap(data, using: .init(self))
-        } else {
-#if canImport(CommonCrypto)
-            return try SymmetricKey(self).ccUnwrapKey(data)
-#else
-            return try AES.KeyWrap.unwrap(data, using: .init(self))
-#endif
-        }
+        try AES.KeyWrap.unwrap(data, using: .init(self))
     }
     
     /// Wraps a key using the AES wrap algorithm.
@@ -161,14 +153,6 @@ public struct JSONWebKeyAESKW: MutableJSONWebKey, JSONWebSymmetricDecryptingKey,
     ///
     /// - Returns: The wrapped key.
     public func wrap(_ key: SymmetricKey) throws -> Data {
-        if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            return try AES.KeyWrap.wrap(key, using: .init(self))
-        } else {
-#if canImport(CommonCrypto)
-            return try SymmetricKey(self).ccWrapKey(key)
-#else
-            return try AES.KeyWrap.wrap(key, using: .init(self))
-#endif
-        }
+        try AES.KeyWrap.wrap(key, using: .init(self))
     }
 }

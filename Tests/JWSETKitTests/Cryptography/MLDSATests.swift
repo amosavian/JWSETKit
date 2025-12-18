@@ -254,7 +254,6 @@ struct MLDSATests {
     @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
     @Test
     func derExport() throws {
-        try print(JSONWebMLDSAPrivateKey(derRepresentation: mldsa65PrivateDER).exportKey(format: .pkcs8).base64EncodedString())
         #expect(try JSONWebMLDSAPublicKey(derRepresentation: mldsa65PublicDER).exportKey(format: .spki) == mldsa65PublicDER)
         #expect(try JSONWebMLDSAPublicKey(derRepresentation: mldsa87PublicDER).exportKey(format: .spki) == mldsa87PublicDER)
         #expect(try JSONWebMLDSAPrivateKey(derRepresentation: mldsa65PrivateDER).exportKey(format: .pkcs8) == mldsa65PrivateDER)

@@ -45,6 +45,12 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
         try validate()
     }
     
+    public init(_ certificates: [CertificateType]) {
+        var key = AnyJSONWebKey()
+        key.certificateChain = certificates
+        self.storage = key.storage
+    }
+    
     public func validate() throws {
         // swiftformat:disable:next redundantSelf
         guard !self.certificateChain.isEmpty else {

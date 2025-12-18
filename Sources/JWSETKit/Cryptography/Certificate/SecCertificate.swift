@@ -124,17 +124,7 @@ extension SecTrust: JSONWebValidatingKey {
     
     /// Certificate chain
     public var certificateChain: [SecCertificate] {
-        if #available(iOS 15.0, macOS 12.0, watchOS 8.0, tvOS 15.0, *) {
-            return (SecTrustCopyCertificateChain(self) as? [SecCertificate]) ?? []
-        } else {
-            let count = SecTrustGetCertificateCount(self)
-            guard count > 0 else {
-                return []
-            }
-            return (0 ..< count).compactMap {
-                SecTrustGetCertificateAtIndex(self, $0)
-            }
-        }
+        (SecTrustCopyCertificateChain(self) as? [SecCertificate]) ?? []
     }
     
     /// Return the public key for a leaf certificate after it has been evaluated.
