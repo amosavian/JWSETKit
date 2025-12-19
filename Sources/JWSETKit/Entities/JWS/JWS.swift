@@ -393,6 +393,24 @@ extension JSONWebKey {
         if let identifiedType = type(of: self) as? any JSONWebKeyAlgorithmIdentified.Type {
             return JSONWebSignatureAlgorithm(identifiedType.algorithm)
         }
-        return nil
+        // swiftformat:disable:next redundantSelf
+        switch self.keyType {
+        case .rsa:
+            return .rsaSignaturePSSSHA256
+        case .symmetric:
+            let count = AnyJSONWebKey(self).keyValue?.bitCount ?? 0
+            switch count {
+            case 256..<384:
+                return .hmacSHA256
+            case 384..<512:
+                return .hmacSHA384
+            case 512...:
+                return .hmacSHA512
+            default:
+                return nil
+            }
+        default:
+            return nil
+        }
     }
 }

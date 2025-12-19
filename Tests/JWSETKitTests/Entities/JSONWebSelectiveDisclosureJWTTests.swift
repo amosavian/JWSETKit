@@ -754,7 +754,7 @@ struct JSONWebSelectiveDisclosureJWTTests {
         
         // Verify with wrong key should fail
         let wrongKey = P256.Signing.PrivateKey()
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try sdJWT.jwt.verifySignature(using: wrongKey.publicKey)
         }
     }
@@ -763,11 +763,10 @@ struct JSONWebSelectiveDisclosureJWTTests {
     
     @Test("Handle invalid disclosure format")
     func invalidDisclosureFormat() throws {
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: "invalid-base64!!!")
         }
-        
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: "")
         }
     }
@@ -913,25 +912,25 @@ struct JSONWebSelectiveDisclosureJWTTests {
     @Test("Invalid disclosure decoding errors")
     func invalidDisclosureDecodingErrors() throws {
         // Invalid encoded string (not base64)
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: "not-valid-base64-at-all!!!")
         }
 
         // Empty encoded string
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: "")
         }
 
         // Valid base64 but not valid JSON inside
         let invalidJSON = Data([0x00, 0x01, 0x02]).urlBase64EncodedString()
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: invalidJSON)
         }
 
         // Valid base64 but wrong array length (1 element)
         let oneElement = try JSONEncoder().encode(["only-salt"])
         let oneElementB64 = oneElement.urlBase64EncodedString()
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: oneElementB64)
         }
     }

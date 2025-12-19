@@ -141,7 +141,7 @@ import JWSETKit
 import CryptoKit
 
 // Create a JWT with claims
-let key = SymmetricKey(size: .bits128)
+let key = SymmetricKey(size: .bits256)
 let payload = try JSONWebTokenClaims {
     $0.issuedAt = .init()
     $0.expiry = .init(timeIntervalSinceNow: 3600)

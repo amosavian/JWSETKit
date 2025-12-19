@@ -284,7 +284,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         if combinedHeader.encryptionAlgorithm == nil {
             // HPKE Integrated Encryption: alg must be HPKE and enc must be absent
             guard combinedHeader.algorithm?.rawValue.hasPrefix("HPKE") ?? false else {
-                throw JSONWebKeyError.operationNotAllowed
+                throw JSONWebKeyError.unknownAlgorithm
             }
             guard let cek = decryptingKey as? any JSONWebSealOpeningKey else {
                 throw JSONWebKeyError.keyNotFound

@@ -172,7 +172,7 @@ extension JSONWebKey {
     func checkRequiredFields(_ fields: [String]) throws {
         for field in fields {
             if !storage.contains(key: field) {
-                throw JSONWebKeyError.keyNotFound
+                throw CryptoKitError.incorrectParameterSize
             }
         }
     }

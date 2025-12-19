@@ -54,8 +54,10 @@ extension RandomAccessCollection where Self.Element == UInt8, Self: RangeReplace
     ///
     /// - parameter urlBase64Encoded: URL-safe Base-64, UTF-8 encoded input data.
     public init?(urlBase64Encoded: some Collection<UInt8>) {
-        var base64Encoded = urlBase64Encoded.map { (byte: UInt8) -> UInt8 in
+        var base64Encoded = urlBase64Encoded.compactMap { (byte: UInt8) -> UInt8? in
             switch byte {
+            case " ", 0x0D, 0x0A:
+                return nil
             case "-":
                 return "+"
             case "_":
@@ -67,7 +69,7 @@ extension RandomAccessCollection where Self.Element == UInt8, Self: RangeReplace
         if base64Encoded.count % 4 != 0 {
             base64Encoded.append(contentsOf: [UInt8](repeating: "=", count: 4 - base64Encoded.count % 4))
         }
-        guard let value = Data(base64Encoded: .init(base64Encoded), options: [.ignoreUnknownCharacters]) else {
+        guard let value = Data(base64Encoded: .init(base64Encoded), options: []) else {
             return nil
         }
         self.init(value)

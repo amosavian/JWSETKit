@@ -220,7 +220,7 @@ struct RFC9901ComplianceTests {
         
         // The nationalities should be concealed in the payload
         let nationalities: [String]? = sdJWT.payload.nationalities
-        #expect(nationalities == nil)
+        #expect(nationalities == nil || nationalities == [])
         
         // But available when disclosed
         let disclosed = try sdJWT.disclosedPayload

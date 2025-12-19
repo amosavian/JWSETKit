@@ -17,7 +17,7 @@ struct SDJWTNegativeTests {
     
     @Test("Invalid disclosure base64 should fail")
     func invalidDisclosureBase64() throws {
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: "!!!invalid_base64!!!")
         }
     }
@@ -26,7 +26,7 @@ struct SDJWTNegativeTests {
     func invalidDisclosureJSON() throws {
         // Base64 of "not json"
         let encoded = Data("not json".utf8).urlBase64EncodedString()
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: encoded)
         }
     }
@@ -35,13 +35,13 @@ struct SDJWTNegativeTests {
     func disclosureWrongArrayLength() throws {
         // Array with only 1 element (should be 2 or 3)
         let singleElement = Data("[\"salt\"]".utf8).urlBase64EncodedString()
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: singleElement)
         }
         
         // Array with 4 elements
         let fourElements = Data("[\"salt\",\"key\",\"value\",\"extra\"]".utf8).urlBase64EncodedString()
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: fourElements)
         }
     }
@@ -50,7 +50,7 @@ struct SDJWTNegativeTests {
     func disclosureNonStringSalt() throws {
         // Salt is not a string
         let encoded = Data("[123,\"key\",\"value\"]".utf8).urlBase64EncodedString()
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: encoded)
         }
     }
@@ -59,7 +59,7 @@ struct SDJWTNegativeTests {
     func disclosureNonStringKey() throws {
         // Key is not a string (for object disclosure)
         let encoded = Data("[\"salt\",123,\"value\"]".utf8).urlBase64EncodedString()
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebSelectiveDisclosure(encoded: encoded)
         }
     }

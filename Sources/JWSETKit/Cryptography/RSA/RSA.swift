@@ -109,10 +109,7 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType {
 
 extension CryptoExtras._RSA.Signing.PrivateKey: JSONWebKeyImportable, JSONWebKeyExportable {
     var pkcs8Representation: Data {
-        // PEM is always a valid Bas64.
-        Data(base64Encoded: pkcs8PEMRepresentation
-            .components(separatedBy: .whitespacesAndNewlines)
-            .dropFirst().dropLast().joined(), options: [.ignoreUnknownCharacters]).unsafelyUnwrapped
+        pkcs8DERRepresentation
     }
     
     public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {

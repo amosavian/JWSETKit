@@ -237,7 +237,7 @@ struct JWTNegativeTests {
         
         // But signature verification with wrong key should fail
         let wrongKey = try JSONWebKeyHMAC<SHA256>(SymmetricKey(size: .bits256))
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jwt.verifySignature(using: wrongKey)
         }
     }

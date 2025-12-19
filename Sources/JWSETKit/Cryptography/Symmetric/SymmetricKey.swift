@@ -54,6 +54,12 @@ extension SymmetricKey {
 }
 
 extension Crypto.SymmetricKeySize: Swift.Hashable, Swift.Equatable {
+    /// A size of 384 bits.
+    static let bits384: SymmetricKeySize = .init(bitCount: 384)
+    
+    /// A size of 512 bits.
+    static let bits512: SymmetricKeySize = .init(bitCount: 512)
+    
     public static func == (lhs: Crypto.SymmetricKeySize, rhs: Crypto.SymmetricKeySize) -> Bool {
         lhs.bitCount == rhs.bitCount
     }

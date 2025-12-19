@@ -31,7 +31,7 @@ struct JWSNegativeTests {
     func invalidBase64InHeader() throws {
         // Header contains invalid base64url characters (!, @, #)
         let invalidJWS = "!!!invalid@@@.eyJpc3MiOiJqb2UifQ.signature"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: invalidJWS)
         }
     }
@@ -41,7 +41,7 @@ struct JWSNegativeTests {
         // Valid header, but payload has invalid base64url
         let header = "eyJhbGciOiJIUzI1NiJ9" // {"alg":"HS256"}
         let invalidJWS = "\(header).###invalid###.signature"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: invalidJWS)
         }
     }
@@ -49,18 +49,13 @@ struct JWSNegativeTests {
     @Test
     func invalidBase64InSignature() throws {
         // Valid header and payload, but signature has invalid base64url
-        // Note: The library may parse this but signature verification would fail
         let header = "eyJhbGciOiJIUzI1NiJ9" // {"alg":"HS256"}
         let payload = "eyJpc3MiOiJqb2UifQ" // {"iss":"joe"}
         let invalidJWS = "\(header).\(payload).***invalid***"
         
-        // The library may accept malformed signatures during parsing
-        // but verification will fail
-        let jws = try? JSONWebToken(from: invalidJWS)
-        if let jws = jws {
-            #expect(throws: Error.self) {
-                try jws.verifySignature(using: ExampleKeys.symmetric)
-            }
+        #expect(throws: DecodingError.self) {
+            let jws = try JSONWebToken(from: invalidJWS)
+            try jws.verifySignature(using: ExampleKeys.symmetric)
         }
     }
     
@@ -69,7 +64,7 @@ struct JWSNegativeTests {
     @Test
     func truncatedCompactOnlyOneSegment() throws {
         let invalidJWS = "eyJhbGciOiJIUzI1NiJ9"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: invalidJWS)
         }
     }
@@ -77,21 +72,21 @@ struct JWSNegativeTests {
     @Test
     func truncatedCompactOnlyTwoSegments() throws {
         let invalidJWS = "eyJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJqb2UifQ"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: invalidJWS)
         }
     }
     
     @Test
     func emptyString() throws {
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: "")
         }
     }
     
     @Test
     func onlyDots() throws {
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: "..")
         }
     }
@@ -102,7 +97,7 @@ struct JWSNegativeTests {
         let header = "eyJhbGciOiJIUzI1NiJ9"
         let payload = "eyJpc3MiOiJqb2UifQ"
         let invalidJWS = "\(header).\(payload).sig.extra"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: invalidJWS)
         }
     }
@@ -115,7 +110,7 @@ struct JWSNegativeTests {
         let invalidHeader = Data("not json at all".utf8).urlBase64EncodedString()
         let payload = "eyJpc3MiOiJqb2UifQ"
         let invalidJWS = "\(invalidHeader).\(payload).sig"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: invalidJWS)
         }
     }
@@ -126,7 +121,7 @@ struct JWSNegativeTests {
         // Base64 of "not json"
         let invalidPayload = Data("not json".utf8).urlBase64EncodedString()
         let invalidJWS = "\(header).\(invalidPayload).sig"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: invalidJWS)
         }
     }
@@ -137,7 +132,7 @@ struct JWSNegativeTests {
         let arrayHeader = Data("[\"alg\",\"HS256\"]".utf8).urlBase64EncodedString()
         let payload = "eyJpc3MiOiJqb2UifQ"
         let invalidJWS = "\(arrayHeader).\(payload).sig"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: invalidJWS)
         }
     }
@@ -149,11 +144,10 @@ struct JWSNegativeTests {
         // When alg is "none", signature should be empty
         let header = Data("{\"alg\":\"none\"}".utf8).urlBase64EncodedString()
         let payload = "eyJpc3MiOiJqb2UifQ"
-        let jwsString = "\(header).\(payload).nonEmptySignature"
+        let jwsString = "\(header).\(payload).AAAAAA"
         
-        let jws = try JSONWebToken(from: jwsString)
-        // Verification should fail because signature is present with "none" algorithm
         #expect(throws: JSONWebKeyError.self) {
+            let jws = try JSONWebToken(from: jwsString)
             try jws.verifySignature(using: ExampleKeys.publicRSA2048)
         }
     }
@@ -166,7 +160,7 @@ struct JWSNegativeTests {
         let jwsString = "\(header).\(payload).fakesig"
         
         let jws = try JSONWebToken(from: jwsString)
-        #expect(throws: Error.self) {
+        #expect(throws: JSONWebKeyError.keyNotFound) {
             try jws.verifySignature(using: ExampleKeys.publicRSA2048)
         }
     }
@@ -182,7 +176,7 @@ struct JWSNegativeTests {
         
         let jws = try JSONWebToken(from: jwsString)
         // Try to verify with RSA key - should fail
-        #expect(throws: Error.self) {
+        #expect(throws: JSONWebKeyError.keyNotFound) {
             try jws.verifySignature(using: ExampleKeys.publicRSA2048)
         }
     }
@@ -196,22 +190,20 @@ struct JWSNegativeTests {
         
         let jws = try JSONWebToken(from: jwsString)
         // Try to verify with EC key - should fail
-        #expect(throws: Error.self) {
+        #expect(throws: JSONWebKeyError.keyNotFound) {
             try jws.verifySignature(using: ExampleKeys.publicEC256)
         }
     }
     
     @Test
     func symmetricKeyWithAsymmetricAlgorithm() throws {
-        // Create a JWS with RS256 algorithm
         let header = Data("{\"alg\":\"RS256\"}".utf8).urlBase64EncodedString()
         let payload = "eyJpc3MiOiJqb2UifQ"
         let jwsString = "\(header).\(payload).fakesig"
         
         let jws = try JSONWebToken(from: jwsString)
         let symmetricKey = try JSONWebKeyHMAC<SHA256>(ExampleKeys.symmetric)
-        // Try to verify with symmetric key - should fail
-        #expect(throws: Error.self) {
+        #expect(throws: JSONWebKeyError.keyNotFound) {
             try jws.verifySignature(using: symmetricKey)
         }
     }
@@ -220,32 +212,25 @@ struct JWSNegativeTests {
     
     @Test
     func verifyWithWrongKey() throws {
-        // Create a valid JWS signed with one key
         var jws = try createTestJWS()
         let key1 = try JSONWebKeyHMAC<SHA256>(ExampleKeys.symmetric)
         try jws.updateSignature(using: key1)
         
-        // Try to verify with a different key
         let differentKey = SymmetricKey(size: .bits256)
         let key2 = try JSONWebKeyHMAC<SHA256>(differentKey)
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jws.verifySignature(using: key2)
         }
     }
     
     @Test
     func tamperedPayload() throws {
-        // Create a valid JWS
         var jws = try createTestJWS()
         jws.payload.value.issuer = "original"
         let key = try JSONWebKeyHMAC<SHA256>(ExampleKeys.symmetric)
         try jws.updateSignature(using: key)
-        
-        // Tamper with the payload
         jws.payload.value.issuer = "tampered"
-        
-        // Verification should fail
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jws.verifySignature(using: key)
         }
     }
@@ -256,12 +241,8 @@ struct JWSNegativeTests {
         var jws = try createTestJWS()
         let key = try JSONWebKeyHMAC<SHA256>(ExampleKeys.symmetric)
         try jws.updateSignature(using: key)
-        
-        // Modify the header (change algorithm)
         jws.signatures[0].protected.algorithm = .hmacSHA384
-        
-        // Verification should fail
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jws.verifySignature(using: key)
         }
     }
@@ -280,7 +261,7 @@ struct JWSNegativeTests {
         let tamperedJWS = "\(parts[0]).\(parts[1]).\(truncatedSig)"
         
         let parsedJWS = try JSONWebToken(from: tamperedJWS)
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try parsedJWS.verifySignature(using: key)
         }
     }
@@ -293,24 +274,19 @@ struct JWSNegativeTests {
         let header = "eyJhbGciOiJIUzI1NiJ9" // {"alg":"HS256"}
         let emptyPayload = Data("{}".utf8).urlBase64EncodedString()
         let jwsString = "\(header).\(emptyPayload).sig"
-        
-        // Should parse successfully (empty claims is valid)
         let jws = try JSONWebToken(from: jwsString)
         #expect(jws.payload.storage.isEmpty)
     }
     
     @Test
     func nullBytesInPayload() throws {
-        // Payload with null bytes
         let header = "eyJhbGciOiJIUzI1NiJ9"
         var payloadData = Data("{\"iss\":\"test".utf8)
         payloadData.append(0x00) // null byte
         payloadData.append(contentsOf: "\"}".utf8)
         let payloadB64 = payloadData.urlBase64EncodedString()
         let jwsString = "\(header).\(payloadB64).sig"
-        
-        // Behavior depends on JSON parser, but should handle gracefully
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: jwsString)
         }
     }
@@ -318,7 +294,7 @@ struct JWSNegativeTests {
     @Test
     func newlinesInCompact() throws {
         let jwsWithNewlines = "eyJhbGciOiJIUzI1NiJ9\n.eyJpc3MiOiJqb2UifQ\n.sig"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebToken(from: jwsWithNewlines)
         }
     }

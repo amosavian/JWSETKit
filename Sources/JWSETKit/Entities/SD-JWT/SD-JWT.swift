@@ -209,7 +209,7 @@ extension JSONWebSelectiveDisclosureToken {
     ///   - claims: The full JWT claims to include
     ///   - concealedPaths: JSON Pointer paths (RFC 6901) to claims that should be selectively disclosable
     ///   - header: Custom JOSE header (default: empty, `typ` will be set to `sd+jwt`)
-    ///   - algorithm: Signature algorithm (if nil, inferred from key)
+    ///   - algorithm: Signature algorithm (if nil, inferred from key if possible)
     ///   - hashAlgorithm: Hash algorithm for disclosure digests (default: SHA-256)
     ///   - decoyCount: Number of decoy digests to add for privacy (default: random 0-4)
     ///   - signingKey: The issuer's signing key

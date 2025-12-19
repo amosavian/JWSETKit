@@ -91,9 +91,14 @@ extension CodingUserInfoKey {
 extension JSONWebSignature: Codable {
     public init(from decoder: any Decoder) throws {
         if let stringContainer = try? decoder.singleValueContainer(), let value = try? stringContainer.decode(String.self) {
-            let sections = value
+            let sections = try value
                 .components(separatedBy: ".")
-                .map { Data(urlBase64Encoded: $0) ?? .init() }
+                .map {
+                    guard let data = Data(urlBase64Encoded: $0) else {
+                        throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "JWS String is not base64-encoded data."))
+                    }
+                    return data
+                }
             guard sections.count == 3 else {
                 throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "JWS String is not a three part data."))
             }

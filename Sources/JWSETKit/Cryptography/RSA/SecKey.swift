@@ -384,8 +384,8 @@ extension SecKey: JSONWebKeyExportable {
 func handle<T>(_ closure: (_ error: inout Unmanaged<CFError>?) -> T?) throws -> T {
     var error: Unmanaged<CFError>?
     let result = closure(&error)
-    if let error = error?.takeRetainedValue() {
-        throw error
+    if let error = error?.takeRetainedValue() as? NSError {
+        throw CryptoKitError.underlyingCoreCryptoError(error: Int32(error.code))
     }
     guard let unWrapped = result else {
         throw CryptoKitError.underlyingCoreCryptoError(error: 0)

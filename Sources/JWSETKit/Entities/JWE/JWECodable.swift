@@ -82,18 +82,23 @@ extension JSONWebEncryption: Codable {
     }
     
     private init(string: String, codingPath: [any CodingKey]) throws {
-        let sections = string
+        let sections = try string
             .components(separatedBy: ".")
-            .map { Data(urlBase64Encoded: $0) }
+            .map {
+                guard let data = Data(urlBase64Encoded: $0) else {
+                    throw DecodingError.dataCorrupted(.init(codingPath: codingPath, debugDescription: "JWE String is not base64-encoded data."))
+                }
+                return data
+            }
         guard sections.count == 5 else {
             throw DecodingError.dataCorrupted(.init(codingPath: codingPath, debugDescription: "JWE String is not a five part data."))
         }
-        self.header = try JSONWebEncryptionHeader(protected: .init(encoded: sections[0] ?? .init()))
-        self.recipients = sections[1].map { [JSONWebEncryptionRecipient(encryptedKey: $0)] } ?? []
+        self.header = try JSONWebEncryptionHeader(protected: .init(encoded: sections[0]))
+        self.recipients = [JSONWebEncryptionRecipient(encryptedKey: sections[1])]
         let iv = sections[2]
         let ciphertext = sections[3]
         let tag = sections[4]
-        self.sealed = .init(nonce: iv ?? .init(), ciphertext: ciphertext ?? .init(), tag: tag ?? .init())
+        self.sealed = .init(nonce: iv, ciphertext: ciphertext, tag: tag)
     }
     
     private init(object decoder: any Decoder) throws {

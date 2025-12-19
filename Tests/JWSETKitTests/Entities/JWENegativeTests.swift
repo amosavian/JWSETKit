@@ -53,7 +53,7 @@ struct JWENegativeTests {
     @Test
     func invalidCompactOnlyOneSegment() throws {
         let invalidJWE = "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebEncryption(from: invalidJWE)
         }
     }
@@ -61,7 +61,7 @@ struct JWENegativeTests {
     @Test
     func invalidCompactOnlyTwoSegments() throws {
         let invalidJWE = "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.encryptedKey"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebEncryption(from: invalidJWE)
         }
     }
@@ -69,7 +69,7 @@ struct JWENegativeTests {
     @Test
     func invalidCompactOnlyThreeSegments() throws {
         let invalidJWE = "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.encryptedKey.iv"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebEncryption(from: invalidJWE)
         }
     }
@@ -77,7 +77,7 @@ struct JWENegativeTests {
     @Test
     func invalidCompactOnlyFourSegments() throws {
         let invalidJWE = "eyJhbGciOiJSU0EtT0FFUCIsImVuYyI6IkEyNTZHQ00ifQ.encryptedKey.iv.ciphertext"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebEncryption(from: invalidJWE)
         }
     }
@@ -85,21 +85,21 @@ struct JWENegativeTests {
     @Test
     func invalidCompactExtraSegments() throws {
         let invalidJWE = "header.encKey.iv.ciphertext.tag.extra"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebEncryption(from: invalidJWE)
         }
     }
     
     @Test
     func emptyJWEString() throws {
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebEncryption(from: "")
         }
     }
     
     @Test
     func onlyDotsJWE() throws {
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebEncryption(from: "....")
         }
     }
@@ -109,7 +109,7 @@ struct JWENegativeTests {
     @Test
     func invalidBase64InHeader() throws {
         let invalidJWE = "!!!invalid@@@.encKey.iv.ciphertext.tag"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebEncryption(from: invalidJWE)
         }
     }
@@ -122,7 +122,7 @@ struct JWENegativeTests {
         // The library may parse this but decryption will fail
         do {
             let jwe = try JSONWebEncryption(from: invalidJWE)
-            #expect(throws: Error.self) {
+            #expect(throws: CryptoKitError.self) {
                 try jwe.decrypt(using: rsaKey)
             }
         } catch {
@@ -136,7 +136,7 @@ struct JWENegativeTests {
     func invalidJSONInHeader() throws {
         let invalidHeader = Data("not json".utf8).urlBase64EncodedString()
         let invalidJWE = "\(invalidHeader).encKey.iv.ciphertext.tag"
-        #expect(throws: Error.self) {
+        #expect(throws: DecodingError.self) {
             try JSONWebEncryption(from: invalidJWE)
         }
     }
@@ -152,7 +152,7 @@ struct JWENegativeTests {
         let jweString = "\(header).\(encKey).\(iv).\(ciphertext).\(tag)"
         
         let jwe = try JSONWebEncryption(from: jweString)
-        #expect(throws: Error.self) {
+        #expect(throws: JSONWebKeyError.unknownAlgorithm) {
             try jwe.decrypt(using: rsaKey)
         }
     }
@@ -168,7 +168,7 @@ struct JWENegativeTests {
         let jweString = "\(header).\(encKey).\(iv).\(ciphertext).\(tag)"
         
         let jwe = try JSONWebEncryption(from: jweString)
-        #expect(throws: Error.self) {
+        #expect(throws: JSONWebKeyError.unknownAlgorithm) {
             try jwe.decrypt(using: rsaKey)
         }
     }
@@ -185,7 +185,7 @@ struct JWENegativeTests {
         let jweString = "\(header).\(encKey).\(iv).\(ciphertext).\(tag)"
         
         let jwe = try JSONWebEncryption(from: jweString)
-        #expect(throws: Error.self) {
+        #expect(throws: JSONWebKeyError.unknownAlgorithm) {
             try jwe.decrypt(using: rsaKey)
         }
     }
@@ -200,7 +200,7 @@ struct JWENegativeTests {
         let jweString = "\(header).\(encKey).\(iv).\(ciphertext).\(tag)"
         
         let jwe = try JSONWebEncryption(from: jweString)
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jwe.decrypt(using: rsaKey)
         }
     }
@@ -218,7 +218,7 @@ struct JWENegativeTests {
         )
         
         // Try to decrypt with EC key
-        #expect(throws: Error.self) {
+        #expect(throws: JSONWebKeyError.keyNotFound) {
             try jwe.decrypt(using: ecKey)
         }
     }
@@ -234,7 +234,7 @@ struct JWENegativeTests {
         )
         
         // Try to decrypt with RSA key
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jwe.decrypt(using: rsaKey)
         }
     }
@@ -250,7 +250,7 @@ struct JWENegativeTests {
         )
         
         // Try to decrypt with symmetric key
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jwe.decrypt(using: symmetricKey)
         }
     }
@@ -284,7 +284,7 @@ struct JWENegativeTests {
         ), format: .jwk)
         
         // Try to decrypt with different key
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jwe.decrypt(using: differentKey)
         }
     }
@@ -303,7 +303,7 @@ struct JWENegativeTests {
         let differentKey = try JSONWebKeyAESKW(SymmetricKey(size: .bits128))
         
         // Try to decrypt with different key
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jwe.decrypt(using: differentKey)
         }
     }
@@ -333,7 +333,7 @@ struct JWENegativeTests {
         let tamperedJWE = "\(parts[0]).\(parts[1]).\(parts[2]).\(tamperedCiphertext.urlBase64EncodedString()).\(parts[4])"
         
         let parsedJWE = try JSONWebEncryption(from: tamperedJWE)
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try parsedJWE.decrypt(using: rsaKey)
         }
     }
@@ -361,7 +361,7 @@ struct JWENegativeTests {
         let tamperedJWE = "\(parts[0]).\(parts[1]).\(parts[2]).\(parts[3]).\(tamperedTag.urlBase64EncodedString())"
         
         let parsedJWE = try JSONWebEncryption(from: tamperedJWE)
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try parsedJWE.decrypt(using: rsaKey)
         }
     }
@@ -389,7 +389,7 @@ struct JWENegativeTests {
         let tamperedJWE = "\(parts[0]).\(parts[1]).\(tamperedIV.urlBase64EncodedString()).\(parts[3]).\(parts[4])"
         
         let parsedJWE = try JSONWebEncryption(from: tamperedJWE)
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try parsedJWE.decrypt(using: rsaKey)
         }
     }
@@ -417,7 +417,7 @@ struct JWENegativeTests {
         let tamperedJWE = "\(parts[0]).\(tamperedEncKey.urlBase64EncodedString()).\(parts[2]).\(parts[3]).\(parts[4])"
         
         let parsedJWE = try JSONWebEncryption(from: tamperedJWE)
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try parsedJWE.decrypt(using: rsaKey)
         }
     }
@@ -436,7 +436,7 @@ struct JWENegativeTests {
         let jweString = "\(header).\(encKey).\(wrongIV).\(ciphertext).\(tag)"
         
         let jwe = try JSONWebEncryption(from: jweString)
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jwe.decrypt(using: symmetricKey)
         }
     }
@@ -453,7 +453,7 @@ struct JWENegativeTests {
         let jweString = "\(header).\(encKey).\(iv).\(ciphertext).\(wrongTag)"
         
         let jwe = try JSONWebEncryption(from: jweString)
-        #expect(throws: Error.self) {
+        #expect(throws: CryptoKitError.self) {
             try jwe.decrypt(using: symmetricKey)
         }
     }

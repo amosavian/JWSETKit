@@ -25,18 +25,35 @@ public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetr
         try validate()
     }
     
-    /// Returns a new HMAC key with given symmetric key.
-    ///
-    /// - Parameter key: Symmetric key for operation.
-    public init(_ key: SymmetricKey) throws {
+    private init(key: SymmetricKey) {
         self.storage = .init()
         self.keyType = .symmetric
         self.algorithm = .hmac(bitCount: H.Digest.byteCount * 8)
         self.keyValue = key.keyValue
     }
     
-    public init(algorithm _: some JSONWebAlgorithm) throws {
-        try self.init(SymmetricKey(size: .init(bitCount: H.Digest.byteCount * 8)))
+    /// Returns a new HMAC key with given symmetric key.
+    ///
+    /// - Parameter key: Symmetric key for operation.
+    /// - Throws: `CryptoKitError.incorrectKeySize` if key size is less than hash byte count,
+    ///     per[RFC 7518 section 3.2](https://www.rfc-editor.org/rfc/rfc7518#section-3.2) .
+
+    public init(_ key: SymmetricKey) throws {
+        guard H.Digest.byteCount <= key.bitCount / 8 else {
+            throw CryptoKitError.incorrectKeySize
+        }
+        self.init(key: key)
+    }
+    
+    public init() {
+        self.init(key: SymmetricKey(size: .init(bitCount: H.Digest.byteCount * 8)))
+    }
+    
+    public init(algorithm: some JSONWebAlgorithm) throws {
+        guard JSONWebSignatureAlgorithm(algorithm).hashFunction == H.self else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        self.init()
     }
     
     public func signature<D: DataProtocol>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data {
