@@ -82,9 +82,9 @@ enum HTTPClientFetch: HTTPFetch {
         let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
         if response.status == .ok {
             var body = try await response.body.collect(upTo: 64 * 1024 * 1024) // 64 MB
-            return body.readData(length: body.readableBytes) ?? .init()
+            return Data(body.readBytes(length: body.readableBytes) ?? .init())
         } else {
-            throw URLError(.cannotParseResponse)
+            throw HTTPError.fromStatus(response.status.code)
         }
     }
 }

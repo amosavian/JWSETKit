@@ -379,7 +379,7 @@ extension JSONWebSignature: LosslessStringConvertible, CustomDebugStringConverti
     }
 }
 
-extension JSONWebKey {
+extension JSONWebValidatingKey {
     func resolveAlgorithm(
         _ algorithm: JSONWebSignatureAlgorithm?
     ) -> JSONWebSignatureAlgorithm? {
@@ -400,9 +400,9 @@ extension JSONWebKey {
         case .symmetric:
             let count = AnyJSONWebKey(self).keyValue?.bitCount ?? 0
             switch count {
-            case 256..<384:
+            case 256 ..< 384:
                 return .hmacSHA256
-            case 384..<512:
+            case 384 ..< 512:
                 return .hmacSHA384
             case 512...:
                 return .hmacSHA512

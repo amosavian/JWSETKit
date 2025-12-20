@@ -32,10 +32,15 @@ import FoundationNetworking
 enum URLSessionHTTPFetch: HTTPFetch {
     static func fetch(url: URL) async throws -> Data {
         let (data, response) = try await URLSession.shared.data(from: url)
-        guard let response = response as? HTTPURLResponse, response.statusCode == 200 else {
-            throw URLError(.cannotParseResponse)
+        guard let response = response as? HTTPURLResponse else {
+            throw HTTPError.connectionError
         }
-        return data
+        switch response.statusCode {
+        case 200:
+            return data
+        default:
+            throw HTTPError.fromStatus(response.statusCode)
+        }
     }
 }
 

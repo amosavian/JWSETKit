@@ -21,68 +21,49 @@ import AsyncHTTPClient
 #endif
 
 #if canImport(Foundation.NSURLSession) || canImport(FoundationNetworking) || canImport(AsyncHTTPClient)
-extension MutableJSONWebKey {
+extension MutableJSONWebContainer {
+    fileprivate func loadCertificateFromURL() async throws -> [String] {
+        guard let url: URL = self["x5u"] else {
+            throw JSONWebValidationError.missingRequiredField(key: "x5u")
+        }
+        let data = try await httpClient.fetch(url: url)
+        // 
+        return try PEMDocument.parseMultiple(pemString: .init(decoding: data, as: UTF8.self))
+            .map(\.derBytes).map { Data($0).base64EncodedString() }
+    }
+    
+    fileprivate var _resolvedCertificateChain: JSONWebCertificateChain {
+        get async throws {
+            let chain: [String]
+            if storage.contains(key: "x5c") {
+                chain = self["x5c"] ?? []
+            } else {
+                chain = try await loadCertificateFromURL()
+            }
+            return try .init { container in
+                container["x5c"] = chain
+                container["x5u"] = self["x5u"]
+            }
+        }
+    }
+}
+
 #if canImport(X509) || canImport(CommonCrypto)
+extension MutableJSONWebKey {
     /// Returns certificate chain from embedded chain in `x5c` or fetched certificates from url (`x5u`).
     public var resolvedCertificateChain: JSONWebCertificateChain {
         get async throws {
-            // swiftformat:disable:next redundantSelf
-            if !self.certificateChain.isEmpty {
-                // swiftformat:disable:next redundantSelf
-                return .init(self.certificateChain)
-            }
-            return try await .init(fetchedCertificatesFromURL().certificateChain)
+            try await _resolvedCertificateChain
         }
-    }
-#endif
-    
-    mutating func fetchCertificatesFromURL() async throws {
-        // swiftformat:disable:next redundantSelf
-        guard let url = self.certificateURL else {
-            throw JSONWebKeyError.operationNotAllowed
-        }
-        let data = try await httpClient.fetch(url: url)
-        let certificates = try PEMDocument.parseMultiple(pemString: .init(decoding: data, as: UTF8.self))
-            .map(\.derBytes).map { $0.urlBase64EncodedString() }
-        self["x5c"] = certificates
-    }
-    
-    func fetchedCertificatesFromURL() async throws -> Self {
-        var result = self
-        try await result.fetchCertificatesFromURL()
-        return result
     }
 }
 
 extension JOSEHeader {
-#if canImport(X509) || canImport(CommonCrypto)
     public var resolvedCertificateChain: JSONWebCertificateChain {
         get async throws {
-            // swiftformat:disable:next redundantSelf
-            if !self.certificateChain.isEmpty {
-                // swiftformat:disable:next redundantSelf
-                return .init(self.certificateChain)
-            }
-            return try await .init(fetchedCertificatesFromURL().certificateChain)
+            try await _resolvedCertificateChain
         }
-    }
-#endif
-    
-    mutating func fetchCertificatesFromURL() async throws {
-        // swiftformat:disable:next redundantSelf
-        guard let url = self.certificateURL else {
-            throw JSONWebKeyError.operationNotAllowed
-        }
-        let data = try await httpClient.fetch(url: url)
-        let certificates = try PEMDocument.parseMultiple(pemString: .init(decoding: data, as: UTF8.self))
-            .map(\.derBytes).map { $0.urlBase64EncodedString() }
-        self["x5c"] = certificates
-    }
-    
-    func fetchedCertificatesFromURL() async throws -> Self {
-        var result = self
-        try await result.fetchCertificatesFromURL()
-        return result
     }
 }
+#endif
 #endif

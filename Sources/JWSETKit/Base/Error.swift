@@ -176,6 +176,55 @@ public enum JSONWebValidationError: JSONWebError, Sendable {
     }
 }
 
+public enum HTTPError: JSONWebError {
+    case unknownError
+    case connectionError
+    case clientError(code: Int)
+    case serverError(code: Int)
+    
+    public static func fromStatus<C: BinaryInteger>(_ code: C) -> Self {
+        switch code {
+        case 400 ..< 500:
+            .clientError(code: .init(code))
+        case 500 ..< 600:
+            .serverError(code: .init(code))
+        default:
+            .unknownError
+        }
+    }
+    
+    public func localizedError(for locale: Locale) -> String {
+        switch self {
+        case .unknownError:
+            return .init(
+                localizingKey: "errorHTTPUnknown",
+                value: "HTTP request failed.",
+                locale: locale
+            )
+        case .connectionError:
+            return .init(
+                localizingKey: "errorHTTPConnection",
+                value: "HTTP connection failed.",
+                locale: locale
+            )
+        case .clientError(code: let code):
+            return .init(
+                localizingKey: "errorHTTPClientStatus",
+                value: "HTTP client error with status %@",
+                locale: locale,
+                code
+            )
+        case .serverError(code: let code):
+            return .init(
+                localizingKey: "errorHTTPServerStatus",
+                value: "HTTP server error with status %@",
+                locale: locale,
+                code
+            )
+        }
+    }
+}
+
 extension Date {
     fileprivate func formatted(locale: Locale) -> String {
 #if canImport(Foundation.NSDateFormatter)
@@ -185,7 +234,7 @@ extension Date {
         dateFormatter.timeStyle = .medium
         return dateFormatter.string(from: self)
 #else
-        return date.iso8601
+        return iso8601
 #endif
     }
 }
