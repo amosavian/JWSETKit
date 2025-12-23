@@ -50,10 +50,7 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
 #if canImport(X509)
             return leaf.publicKey
 #elseif canImport(CommonCrypto)
-            guard let publicKey = leaf.publicKey else {
-                throw JSONWebKeyError.keyNotFound
-            }
-            return publicKey
+            return try leaf.publicKey
 #else
             return try InternalCertificate(derEncoded: [UInt8](leaf)).publicKey
 #endif
@@ -72,10 +69,7 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
 #if canImport(X509)
         var key = AnyJSONWebKey(leaf.publicKey)
 #elseif canImport(CommonCrypto)
-        guard let publicKey = leaf.publicKey else {
-            throw JSONWebKeyError.keyNotFound
-        }
-        var key = AnyJSONWebKey(publicKey)
+        var key = try AnyJSONWebKey(leaf.publicKey)
 #else
         var key = try AnyJSONWebKey(InternalCertificate(derEncoded: [UInt8](leaf)).publicKey)
 #endif
