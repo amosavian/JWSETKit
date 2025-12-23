@@ -106,5 +106,28 @@ struct JOSEHeaderJWSTests {
         #expect(cert.notValidAfter == .init(timeIntervalSinceReferenceDate: 816_486_877))
         #expect(try cert.publicKey.externalRepresentation == "MIIBCgKCAQEAxC3VFYycJkzsMjXrX7hZAVqmYYFZO3Bjq+PcPccquMkz03nkOu08MCOEjrMwFLayh8M9lVQEnt+Z3QslHiHeZSl+NaipVOv29zI51CZVla3v+/5Yhtee9ACNjCoMvUIEzqc/BPbugPKq71KhaWbavhqtXdosZuoaa7vlGlFKAC9Ix5h12LkpyO74Zm0KnLPz/Hh8ovij8rXD87l6kcGn5iUunKjtEmVuavYSRFNwMJXDnCtYKz0IdEryvlGwv4fQTCdYa7U1xZ2vFzH4C4/urYE2BYkImM86ryWHwEnqp/1n90WOl8wUOeI2hbV+Gjf9FvZxEZp0MBb+E5SjP4QNTwIDAQAB".decoded)
     }
+    
+    @Test
+    func certificateChainVerify() async throws {
+        let cert1 = try SecCertificate(derEncoded: Self.cert1Data)
+        let cert2 = try SecCertificate(derEncoded: Self.cert2Data)
+        let trust = try SecTrust([cert1, cert2])
+        await #expect(throws: Never.self) {
+            try await trust.verifyChain(currentDate: .init(timeIntervalSinceReferenceDate: 685_334_877))
+        }
+        #expect(try trust.publicKey?.externalRepresentation == "MIIBCgKCAQEAxC3VFYycJkzsMjXrX7hZAVqmYYFZO3Bjq+PcPccquMkz03nkOu08MCOEjrMwFLayh8M9lVQEnt+Z3QslHiHeZSl+NaipVOv29zI51CZVla3v+/5Yhtee9ACNjCoMvUIEzqc/BPbugPKq71KhaWbavhqtXdosZuoaa7vlGlFKAC9Ix5h12LkpyO74Zm0KnLPz/Hh8ovij8rXD87l6kcGn5iUunKjtEmVuavYSRFNwMJXDnCtYKz0IdEryvlGwv4fQTCdYa7U1xZ2vFzH4C4/urYE2BYkImM86ryWHwEnqp/1n90WOl8wUOeI2hbV+Gjf9FvZxEZp0MBb+E5SjP4QNTwIDAQAB".decoded)
+    }
+#endif
+    
+#if canImport(X509)
+    @Test
+    func x509CertificateChainVerify() async throws {
+        let cert1 = try Certificate(derEncoded: Self.cert1Data)
+        let cert2 = try Certificate(derEncoded: Self.cert2Data)
+        let trust = [cert1, cert2]
+        await #expect(throws: Never.self) {
+            try await trust.verifyChain(currentDate: .init(timeIntervalSinceReferenceDate: 685_334_877))
+        }
+    }
 #endif
 }

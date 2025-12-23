@@ -121,18 +121,18 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
     @frozen
     public struct KeySize {
         public let bitCount: Int
-
+        
         /// RSA key size of 2048 bits
         public static let bits2048 = KeySize(bitCount: 2048)
-
+        
         /// RSA key size of 3072 bits
         public static let bits3072 = KeySize(bitCount: 3072)
-
+        
         /// RSA key size of 4096 bits
         public static let bits4096 = KeySize(bitCount: 4096)
         
         static let defaultKeyLength = bits2048
-
+        
         /// RSA key size with a custom number of bits.
         ///
         /// Params:
@@ -338,7 +338,7 @@ enum RSAHelper {
     }
     
     static func rsaWebKey(pkcs1: Data) throws -> any JSONWebKey {
-        let components = try pkcs1Integers(pkcs1)
+        var components = try pkcs1Integers(pkcs1)
         var key = AnyJSONWebKey()
         key.keyType = .rsa
         if components[0] == Data([0x00]), components.count >= 9 {
@@ -352,6 +352,9 @@ enum RSAHelper {
             key.firstCRTCoefficient = components[8]
             return try JSONWebRSAPrivateKey(key)
         } else {
+            if !components[0].count.isMultiple(of: 2) {
+                components[0].removeFirst()
+            }
             key.modulus = components[0]
             key.exponent = components[1]
             return try JSONWebRSAPublicKey(key)

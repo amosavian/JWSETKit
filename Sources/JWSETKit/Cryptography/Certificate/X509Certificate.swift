@@ -6,6 +6,7 @@
 //
 
 #if canImport(X509)
+@_spi(FixedExpiryValidationTime)
 import X509
 #if canImport(CryptoExtras)
 import CryptoExtras
@@ -20,7 +21,7 @@ import SwiftASN1
 
 extension X509.Certificate.PublicKey: Swift.Decodable, Swift.Encodable {}
 
-extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWebKeyCurveType {
+extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWebKeyCurveType, JSONWebKeyImportable, JSONWebKeyExportable {
     public var storage: JSONWebValueStorage {
         (try? jsonWebKey().storage) ?? .init()
     }
@@ -51,6 +52,11 @@ extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWe
         }
     }
     
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
+        let decodedKey = try AnyJSONWebKey(importing: key, format: format)
+        try self.init(storage: decodedKey.storage)
+    }
+    
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         switch algorithm {
         case .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384, .rsaSignaturePSSSHA512:
@@ -66,6 +72,19 @@ extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWe
     ///
     /// - Returns: A public key to validate signatures.
     public func jsonWebKey() throws -> any JSONWebValidatingKey {
+        if let key = P256.Signing.PublicKey(self) {
+            return key
+        } else if let key = P256.Signing.PublicKey(self) {
+            return key
+        } else if let key = P384.Signing.PublicKey(self) {
+            return key
+        } else if let key = P521.Signing.PublicKey(self) {
+            return key
+        } else if let key = _RSA.Signing.PublicKey(self) {
+            return key
+        } else if let key = Curve25519.Signing.PublicKey(self) {
+            return key
+        }
         guard let key = try AnyJSONWebKey(importing: subjectPublicKeyInfoBytes, format: .spki).specialized() as? any JSONWebValidatingKey else {
             throw JSONWebKeyError.unknownKeyType
         }
@@ -75,11 +94,18 @@ extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWe
     public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
         try jsonWebKey().thumbprint(format: format, using: hashFunction)
     }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        guard let key = try jsonWebKey() as? any JSONWebKeyExportable else {
+            throw JSONWebKeyError.operationNotAllowed
+        }
+        return try key.exportKey(format: format)
+    }
 }
 
 extension X509.Certificate.PrivateKey: Swift.Decodable, Swift.Encodable {}
 
-extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebKeyCurveType {
+extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebKeyCurveType, JSONWebKeyImportable, JSONWebKeyExportable {
     public var storage: JSONWebValueStorage {
         (try? jsonWebKey().storage) ?? .init()
     }
@@ -135,6 +161,11 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
         }
     }
     
+    public init<D>(importing key: D, format: JSONWebKeyFormat) throws where D: DataProtocol {
+        let decodedKey = try AnyJSONWebKey(importing: key, format: format)
+        try self.init(storage: decodedKey.storage)
+    }
+    
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         switch algorithm {
         case .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384, .rsaSignaturePSSSHA512:
@@ -178,6 +209,13 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
     public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
         try publicKey.jsonWebKey().thumbprint(format: format, using: hashFunction)
     }
+    
+    public func exportKey(format: JSONWebKeyFormat) throws -> Data {
+        guard let key = try jsonWebKey() as? any JSONWebKeyExportable else {
+            throw JSONWebKeyError.operationNotAllowed
+        }
+        return try key.exportKey(format: format)
+    }
 }
 
 extension Certificate.SignatureAlgorithm {
@@ -220,6 +258,10 @@ extension Certificate: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         try publicKey.verifySignature(signature, for: data, using: algorithm)
     }
+    
+    public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
+        try publicKey.thumbprint(format: format, using: hashFunction)
+    }
 }
 
 extension Certificate: Expirable {
@@ -230,6 +272,58 @@ extension Certificate: Expirable {
         if currentDate < notValidBefore {
             throw JSONWebValidationError.tokenInvalidBefore(notBefore: notValidBefore)
         }
+    }
+}
+
+extension [Certificate] {
+    @discardableResult
+    public func verifyChain(currentDate: Date? = nil) async throws -> ValidatedCertificateChain {
+        var verifier = Verifier(rootCertificates: .init(dropFirst()), policy: {
+            if let currentDate {
+                RFC5280Policy(fixedExpiryValidationTime: currentDate)
+            } else {
+                RFC5280Policy()
+            }
+        })
+        let result = try await verifier.validate(chain: .init(self))
+        switch result {
+        case .validCertificate(let result):
+            return result
+        case .couldNotValidate:
+            throw CryptoKitError.authenticationFailure
+        }
+    }
+}
+
+extension ValidatedCertificateChain: Swift.Decodable, Swift.Encodable {}
+
+extension ValidatedCertificateChain: JSONWebValidatingKey {
+    private var x509Chain: [Certificate] { [Certificate](self) }
+    
+    public var storage: JSONWebValueStorage {
+        var key = AnyJSONWebKey(leaf.publicKey)
+        key.certificateChain = x509Chain
+        return key.storage
+    }
+    
+    /// Return the public key for a leaf certificate after it has been evaluated.
+    public var publicKey: Certificate.PublicKey {
+        leaf.publicKey
+    }
+    
+    public init(storage: JSONWebValueStorage) throws {
+        let key = AnyJSONWebKey(storage: storage)
+        self.init(uncheckedCertificateChain: key.certificateChain)
+    }
+    
+    public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
+        try publicKey.verifySignature(signature, for: data, using: algorithm)
+    }
+}
+
+extension ValidatedCertificateChain: Expirable {
+    public func verifyDate(_ currentDate: Date) throws {
+        try x509Chain.forEach { try $0.verifyDate(currentDate) }
     }
 }
 #endif

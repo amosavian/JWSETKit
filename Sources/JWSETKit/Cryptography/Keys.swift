@@ -185,9 +185,14 @@ extension JSONWebKey {
             // Algorithm-specific keys
             "kty", "crv",
         ]).union(keyFields)
-        let thumbprintStorage = key.storage
+        var thumbprintStorage = key.storage
             .filter(thumbprintKeys.contains)
             .normalizedField("e")
+        for keyField in keyFields {
+            if let value = thumbprintStorage[keyField] {
+                thumbprintStorage[keyField] = Data.castValue(value) ?? value
+            }
+        }
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
         let data = try encoder.encode(thumbprintStorage)
@@ -495,6 +500,7 @@ extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
         for specializer in AnyJSONWebKey.specializers {
             if let specialized = try specializer.deserialize(key: key, format: format) {
                 self.storage = specialized.storage
+                return
             }
         }
         throw JSONWebKeyError.unknownKeyType

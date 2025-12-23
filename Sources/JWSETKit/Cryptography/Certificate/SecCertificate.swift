@@ -5,18 +5,14 @@
 //  Created by Amir Abbas Mousavian on 9/9/23.
 //
 
-#if canImport(FoundationEssentials)
-import FoundationEssentials
-#else
-import Foundation
-#endif
 #if canImport(CommonCrypto)
 import CommonCrypto
 import CryptoKit
+import Foundation
+@preconcurrency import Security
 #if canImport(X509)
 import X509
 #endif
-import SwiftASN1
 
 extension Security.SecCertificate: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable, @unchecked Swift.Sendable {}
 
@@ -83,18 +79,26 @@ extension JSONWebContainer where Self: SecCertificate {
 extension SecCertificate: Expirable {
     /// The date before which this certificate is not valid.
     public var notValidBefore: Date {
-        guard let certificate = try? InternalCertificate(derEncoded: [UInt8](derRepresentation)[...]) else {
-            return .distantPast
+        if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, *) {
+            return (SecCertificateCopyNotValidBeforeDate(self) as Date?) ?? .distantPast
+        } else {
+            guard let certificate = try? InternalCertificate(derEncoded: [UInt8](derRepresentation)[...]) else {
+                return .distantPast
+            }
+            return certificate.notValidBefore
         }
-        return certificate.tbsCertificate.validity.notBefore
     }
 
     /// The date after which this certificate is not valid.
     public var notValidAfter: Date {
-        guard let certificate = try? InternalCertificate(derEncoded: [UInt8](derRepresentation)[...]) else {
-            return .distantFuture
+        if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, *) {
+            return (SecCertificateCopyNotValidAfterDate(self) as Date?) ?? .distantFuture
+        } else {
+            guard let certificate = try? InternalCertificate(derEncoded: [UInt8](derRepresentation)[...]) else {
+                return .distantFuture
+            }
+            return certificate.notValidAfter
         }
-        return certificate.tbsCertificate.validity.notAfter
     }
     
     public func verifyDate(_ currentDate: Date) throws {
@@ -122,6 +126,11 @@ extension SecTrust: JSONWebValidatingKey {
         return key.storage
     }
     
+    /// Leaf certiticate of certificate chain which is first one in array.
+    public var leaf: SecCertificate {
+        certificateChain.first.unsafelyUnwrapped
+    }
+
     /// Certificate chain
     public var certificateChain: [SecCertificate] {
         (SecTrustCopyCertificateChain(self) as? [SecCertificate]) ?? []
@@ -135,6 +144,31 @@ extension SecTrust: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         try publicKey?.verifySignature(signature, for: data, using: algorithm)
     }
+    
+    /// Verify validity of certificate chain with RFC 5280 policy.
+    public func verifyChain(currentDate: Date? = nil) async throws {
+        try await withCheckedThrowingContinuation { continuation in
+            let queue = DispatchQueue.global(qos: .userInitiated)
+            queue.async {
+                if let currentDate {
+                    SecTrustSetVerifyDate(self, currentDate as CFDate)
+                } else {
+                    SecTrustSetVerifyDate(self, Date() as CFDate)
+                }
+                SecTrustSetPolicies(self, [SecPolicyCreateBasicX509()] as CFArray)
+                let result = SecTrustEvaluateAsyncWithError(self, queue) { _, isValid, error in
+                    if isValid {
+                        continuation.resume()
+                    } else {
+                        continuation.resume(throwing: error.unsafelyUnwrapped)
+                    }
+                }
+                if result != errSecSuccess {
+                    continuation.resume(throwing: CryptoKitError.authenticationFailure)
+                }
+            }
+        }
+    }
 }
 
 extension SecCertificate {
@@ -147,6 +181,14 @@ extension JSONWebContainer where Self: SecTrust {
     public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
         let certificates: [SecCertificate] = try key.certificateChain.map(SecCertificate.makeWithCertificate)
+        self = try .init(certificates)
+    }
+    
+    /// Initiializes with certificate chain, which first element is leaf certificate.
+    public init(_ certificates: [SecCertificate]) throws {
+        guard !certificates.isEmpty else {
+            throw JSONWebKeyError.keyNotFound
+        }
         var result: SecTrust?
         SecTrustCreateWithCertificates(certificates as CFArray, SecPolicyCreateBasicX509(), &result)
         guard let result = result as? Self else {
@@ -171,140 +213,4 @@ public func == (lhs: SecCertificate, rhs: Certificate) -> Bool {
     lhs.x509 == rhs
 }
 #endif
-
-private struct Time: DERParseable, Sendable {
-    let value: Date
-    
-    init(value: Date) {
-        self.value = value
-    }
-    
-    init(derEncoded node: ASN1Node) throws {
-        switch node.identifier {
-        case GeneralizedTime.defaultIdentifier:
-            let time = try GeneralizedTime(derEncoded: node)
-            self = .init(value: .init(time))
-        case UTCTime.defaultIdentifier:
-            let time = try UTCTime(derEncoded: node)
-            self = .init(value: .init(time))
-        default:
-            throw ASN1Error.unexpectedFieldType(node.identifier)
-        }
-    }
-}
-
-private struct Validity: DERParseable, Sendable {
-    let notBefore: Date
-    let notAfter: Date
-    
-    init(notBefore: Date, notAfter: Date) {
-        self.notBefore = notBefore
-        self.notAfter = notAfter
-    }
-
-    init(derEncoded node: ASN1Node) throws {
-        self = try DER.sequence(node, identifier: .sequence) { nodes in
-            let notBefore = try Time(derEncoded: &nodes)
-            let notAfter = try Time(derEncoded: &nodes)
-            return Validity(notBefore: notBefore.value, notAfter: notAfter.value)
-        }
-    }
-}
-
-private struct InternalTBSCertificate: DERParseable, Sendable {
-    let validity: Validity
-    
-    init(validity: Validity) {
-        self.validity = validity
-    }
-    
-    init(derEncoded node: ASN1Node) throws {
-        self = try DER.sequence(node, identifier: .sequence) { nodes in
-            let version = try DER.decodeDefaultExplicitlyTagged(
-                &nodes,
-                tagNumber: 0,
-                tagClass: .contextSpecific,
-                defaultValue: Int(0)
-            )
-            guard (0 ... 2).contains(version) else {
-                throw ASN1Error.invalidASN1Object(reason: "Invalid X.509 version \(version)")
-            }
-            
-            _ /* serialNumber */ = nodes.next()
-            _ /* signature */ = nodes.next()
-            _ /* issuer */ = nodes.next()
-            let validity = try Validity(derEncoded: &nodes)
-            while nodes.next() != nil {
-                // Ignore remaining fields
-            }
-            return .init(validity: validity)
-        }
-    }
-}
-
-private struct InternalCertificate: DERParseable, Sendable {
-    let tbsCertificate: InternalTBSCertificate
-    
-    init(tbsCertificate: InternalTBSCertificate) {
-        self.tbsCertificate = tbsCertificate
-    }
-    
-    init(derEncoded node: ASN1Node) throws {
-        self = try DER.sequence(node, identifier: .sequence) { nodes in
-            guard let tbsCertificateNode = nodes.next() else {
-                throw ASN1Error.invalidASN1Object(reason: "Invalid certificate object, insufficient ASN.1 nodes")
-            }
-            let tbsCertificate = try InternalTBSCertificate(derEncoded: tbsCertificateNode)
-            while nodes.next() != nil {
-                // Ignore remaining fields
-            }
-            return .init(tbsCertificate: tbsCertificate)
-        }
-    }
-}
-
-extension Date {
-    @inlinable
-    init(fromUTCDate date: (year: Int, month: Int, day: Int, hours: Int, minutes: Int, seconds: Int)) {
-        self = Calendar(identifier: .gregorian)
-            .date(from: .init(
-                timeZone: .init(secondsFromGMT: 0).unsafelyUnwrapped,
-                year: date.year, month: date.month, day: date.day,
-                hour: date.hours, minute: date.minutes, second: date.seconds
-            )).unsafelyUnwrapped
-    }
-
-    @inlinable
-    var utcDate: (year: Int, month: Int, day: Int, hours: Int, minutes: Int, seconds: Int) {
-        let date = Calendar(identifier: .gregorian).dateComponents(in: .init(secondsFromGMT: 0).unsafelyUnwrapped, from: self)
-        return (
-            date.year.unsafelyUnwrapped,
-            date.month.unsafelyUnwrapped,
-            date.day.unsafelyUnwrapped,
-            date.hour.unsafelyUnwrapped,
-            date.minute.unsafelyUnwrapped,
-            date.second.unsafelyUnwrapped
-        )
-    }
-    
-    @inlinable
-    public init(_ time: GeneralizedTime) {
-        self.init(
-            fromUTCDate: (
-                year: time.year, month: time.month, day: time.day,
-                hours: time.hours, minutes: time.minutes, seconds: time.seconds
-            )
-        )
-    }
-
-    @inlinable
-    public init(_ time: UTCTime) {
-        self.init(
-            fromUTCDate: (
-                year: time.year, month: time.month, day: time.day,
-                hours: time.hours, minutes: time.minutes, seconds: time.seconds
-            )
-        )
-    }
-}
 #endif

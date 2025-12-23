@@ -427,13 +427,13 @@ extension JSONWebValueStorage {
 }
 
 extension JSONWebContainer {
-    public subscript(pointer: JSONPointer) -> (any Sendable)? {
+    public subscript(pointer pointer: JSONPointer) -> (any Sendable)? {
         storage[pointer]
     }
 }
 
 extension MutableJSONWebContainer {
-    public subscript(pointer: JSONPointer) -> (any Sendable)? {
+    public subscript(pointer pointer: JSONPointer) -> (any Sendable)? {
         get {
             storage[pointer]
         }

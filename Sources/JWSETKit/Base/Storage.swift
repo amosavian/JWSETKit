@@ -182,6 +182,12 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
         })
     }
     
+    func mapValues(_ transform: (any Sendable) throws -> any Sendable) rethrows -> JSONWebValueStorage {
+        try JSONWebValueStorage(self.storage.mapValues {
+            try transform($0)
+        })
+    }
+    
     /// Returns a new storage containing the key-value pairs of the storage that satisfy the given predicate.
     public func filter(_ isIncluded: (String) throws -> Bool) rethrows -> JSONWebValueStorage {
         try JSONWebValueStorage(self.storage.filter { try isIncluded($0.key) })

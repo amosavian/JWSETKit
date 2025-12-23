@@ -68,7 +68,7 @@ public struct JSONWebKeyAESCBCHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebS
         try validate()
     }
     
-    /// Returns a new AES-CBC with HMAC with random key.
+    /// Returns a new AES-CBC with HMAC with random key where each key (HMAC and AES) size is by given parameter.
     ///
     /// - Parameter keySize: Size of random key for AES-CBC in bits.
     public init(size: SymmetricKeySize) {

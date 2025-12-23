@@ -27,7 +27,6 @@ extension MutableJSONWebContainer {
             throw JSONWebValidationError.missingRequiredField(key: "x5u")
         }
         let data = try await httpClient.fetch(url: url)
-        // 
         return try PEMDocument.parseMultiple(pemString: .init(decoding: data, as: UTF8.self))
             .map(\.derBytes).map { Data($0).base64EncodedString() }
     }
@@ -42,13 +41,12 @@ extension MutableJSONWebContainer {
             }
             return try .init { container in
                 container["x5c"] = chain
-                container["x5u"] = self["x5u"]
+                container["x5u"] = self.storage["x5u"]
             }
         }
     }
 }
 
-#if canImport(X509) || canImport(CommonCrypto)
 extension MutableJSONWebKey {
     /// Returns certificate chain from embedded chain in `x5c` or fetched certificates from url (`x5u`).
     public var resolvedCertificateChain: JSONWebCertificateChain {
@@ -65,5 +63,4 @@ extension JOSEHeader {
         }
     }
 }
-#endif
 #endif
