@@ -79,7 +79,7 @@ extension JSONWebContainer where Self: SecCertificate {
 extension SecCertificate: Expirable {
     /// The date before which this certificate is not valid.
     public var notValidBefore: Date {
-        if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, *) {
+        if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) {
             return (SecCertificateCopyNotValidBeforeDate(self) as Date?) ?? .distantPast
         } else {
             guard let certificate = try? InternalCertificate(derEncoded: [UInt8](derRepresentation)[...]) else {
@@ -91,7 +91,7 @@ extension SecCertificate: Expirable {
 
     /// The date after which this certificate is not valid.
     public var notValidAfter: Date {
-        if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, *) {
+        if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) {
             return (SecCertificateCopyNotValidAfterDate(self) as Date?) ?? .distantFuture
         } else {
             guard let certificate = try? InternalCertificate(derEncoded: [UInt8](derRepresentation)[...]) else {
