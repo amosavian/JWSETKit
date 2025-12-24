@@ -74,8 +74,6 @@ extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWe
     public func jsonWebKey() throws -> any JSONWebValidatingKey {
         if let key = P256.Signing.PublicKey(self) {
             return key
-        } else if let key = P256.Signing.PublicKey(self) {
-            return key
         } else if let key = P384.Signing.PublicKey(self) {
             return key
         } else if let key = P521.Signing.PublicKey(self) {

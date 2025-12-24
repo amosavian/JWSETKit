@@ -37,17 +37,16 @@ struct AlgorithmsTests {
     }
     
 #if compiler(>=6.2) || !canImport(CryptoKit)
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, visionOS 26.0, *)
     @Test
-#else
-    @Test(.enabled(if: false))
-#endif
-    @available(macOS 26.0, *)
     func detectMLDSAAlgorithms() throws {
         #expect(try JSONWebMLDSAPrivateKey(algorithm: .mldsa65Signature).resolveAlgorithm(nil) == .mldsa65Signature)
         #expect(try MLDSA65.PrivateKey().resolveAlgorithm(nil) == .mldsa65Signature)
         #expect(try JSONWebMLDSAPrivateKey(algorithm: .mldsa87Signature).resolveAlgorithm(nil) == .mldsa87Signature)
         #expect(try MLDSA87.PrivateKey().resolveAlgorithm(nil) == .mldsa87Signature)
     }
+#endif
+    
     
     @Test
     func detectSymmetricAlgorithms() throws {
