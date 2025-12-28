@@ -80,7 +80,7 @@ enum HTTPClientFetch: HTTPFetch {
     static func fetch(url: URL) async throws -> Data {
         let request = HTTPClientRequest(url: url.absoluteString)
         let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
-        if response.status == .ok {
+        if (200 ..< 300).contains(response.status.code) {
             var body = try await response.body.collect(upTo: 64 * 1024 * 1024) // 64 MB
             return Data(body.readBytes(length: body.readableBytes) ?? .init())
         } else {

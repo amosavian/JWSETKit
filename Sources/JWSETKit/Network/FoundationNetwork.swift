@@ -36,7 +36,7 @@ enum URLSessionHTTPFetch: HTTPFetch {
             throw HTTPError.connectionError
         }
         switch response.statusCode {
-        case 200:
+        case 200 ..< 300:
             return data
         default:
             throw HTTPError.fromStatus(response.statusCode)
