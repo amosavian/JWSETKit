@@ -69,4 +69,34 @@ struct StorageTests {
         let secret = try SharedSecret(from: data)
         #expect(data == secret.data)
     }
+
+    // MARK: Hashing Tests
+
+    @Test
+    func hashCollisionForSameKeyAndDifferentNestedValues() {
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["key": ["a", "b"]]
+        
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["key": ["nested": "value"]]
+        
+        let h1 = storage1.hashValue
+        let h2 = storage2.hashValue
+        
+        #expect(h1 != h2)
+    }
+    
+    @Test
+    func hashCollisionForSameKeyAndDifferentValues() {
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["a": 1]
+        
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["a": 2]
+        
+        let h1 = storage1.hashValue
+        let h2 = storage2.hashValue
+        
+        #expect(h1 != h2)
+    }
 }
