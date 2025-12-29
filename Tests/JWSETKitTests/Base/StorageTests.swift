@@ -127,4 +127,23 @@ struct StorageTests {
 
         #expect(h1 == h2)
     }
+
+    @Test
+    func hashNonHashableConformingEncodableValue() {
+        struct NonHashableConformingEncodable: Encodable, Sendable {
+            let id: Int
+            let name: String
+        }
+
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["obj": NonHashableConformingEncodable(id: 1, name: "test")]
+
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["obj": NonHashableConformingEncodable(id: 1, name: "test")]
+
+        #expect(storage1.hashValue == storage2.hashValue)
+
+        storage2.storage = ["obj": NonHashableConformingEncodable(id: 2, name: "test")]
+        #expect(storage1.hashValue != storage2.hashValue)
+    }
 }
