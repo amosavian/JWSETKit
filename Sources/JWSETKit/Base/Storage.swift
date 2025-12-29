@@ -178,8 +178,8 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     
     private static func hashValue(_ value: any Sendable, into hasher: inout Hasher) {
         switch value {
-        case let value as any Hashable:
-            hasher.combine(value)
+        case let value as JSONWebValueStorage:
+            value.hash(into: &hasher)
         case let value as [any Sendable]:
             hasher.combine(value.count)
             for element in value {
@@ -194,8 +194,8 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
                     hashValue(subValue, into: &hasher)
                 }
             }
-        case let value as JSONWebValueStorage:
-            value.hash(into: &hasher)
+        case let value as any Hashable:
+            hasher.combine(value)
         default:
             // Fallback to stable string representation if possible, or skip
             // Using AnyCodable to get a stable representation if it's at least Encodable
