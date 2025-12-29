@@ -87,6 +87,20 @@ struct StorageTests {
     }
     
     @Test
+    func hashCollisionForSameKeyAndSameNestedValues() {
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["key": ["a", "b"]]
+
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["key": ["a", "b"]]
+
+        let h1 = storage1.hashValue
+        let h2 = storage2.hashValue
+
+        #expect(h1 == h2)
+    }
+
+    @Test
     func hashCollisionForSameKeyAndDifferentValues() {
         var storage1 = JSONWebValueStorage()
         storage1.storage = ["a": 1]
@@ -98,5 +112,19 @@ struct StorageTests {
         let h2 = storage2.hashValue
         
         #expect(h1 != h2)
+    }
+
+    @Test
+    func hashCollisionForSameKeyAndSameValues() {
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["a": 1]
+
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["a": 1]
+
+        let h1 = storage1.hashValue
+        let h2 = storage2.hashValue
+
+        #expect(h1 == h2)
     }
 }
