@@ -165,8 +165,44 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     }
     
     public func hash(into hasher: inout Hasher) {
-        let hashable = storage as any Hashable
-        hasher.combine(hashable)
+        // Sort keys to ensure stable hashing
+        let keys = storage.keys.sorted()
+        hasher.combine(keys.count)
+        for key in keys {
+            hasher.combine(key)
+            if let value = storage[key] {
+                JSONWebValueStorage.hashValue(value, into: &hasher)
+            }
+        }
+    }
+    
+    private static func hashValue(_ value: any Sendable, into hasher: inout Hasher) {
+        switch value {
+        case let value as JSONWebValueStorage:
+            value.hash(into: &hasher)
+        case let value as [any Sendable]:
+            hasher.combine(value.count)
+            for element in value {
+                hashValue(element, into: &hasher)
+            }
+        case let value as [String: any Sendable]:
+            let keys = value.keys.sorted()
+            hasher.combine(keys.count)
+            for key in keys {
+                hasher.combine(key)
+                if let subValue = value[key] {
+                    hashValue(subValue, into: &hasher)
+                }
+            }
+        case let value as any Hashable:
+            hasher.combine(value)
+        default:
+            // Fallback to stable string representation if possible, or skip
+            // Using AnyCodable to get a stable representation if it's at least Encodable
+            if value is any Encodable, let data = try? JSONEncoder().encode(AnyCodable(value)) {
+                hasher.combine(data)
+            }
+        }
     }
     
     /// Creates a storage by merging the given storages into this storage,

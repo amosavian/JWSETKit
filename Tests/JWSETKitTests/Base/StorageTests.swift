@@ -69,4 +69,132 @@ struct StorageTests {
         let secret = try SharedSecret(from: data)
         #expect(data == secret.data)
     }
+
+    // MARK: Hashing Tests
+
+    @Test
+    func hashCollisionForSameKeyAndDifferentNestedValues() {
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["key": ["a", "b"]]
+        
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["key": ["nested": "value"]]
+        
+        let h1 = storage1.hashValue
+        let h2 = storage2.hashValue
+        
+        #expect(h1 != h2)
+    }
+    
+    @Test
+    func hashCollisionForSameKeyAndSameNestedValues() {
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["key": ["a", "b"]]
+
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["key": ["a", "b"]]
+
+        let h1 = storage1.hashValue
+        let h2 = storage2.hashValue
+
+        #expect(h1 == h2)
+    }
+
+    @Test
+    func hashCollisionForSameKeyAndDifferentValues() {
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["a": 1]
+        
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["a": 2]
+        
+        let h1 = storage1.hashValue
+        let h2 = storage2.hashValue
+        
+        #expect(h1 != h2)
+    }
+
+    @Test
+    func hashCollisionForSameKeyAndSameValues() {
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["a": 1]
+
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["a": 1]
+
+        let h1 = storage1.hashValue
+        let h2 = storage2.hashValue
+
+        #expect(h1 == h2)
+    }
+
+    @Test
+    func hashNonHashableConformingEncodableValue() {
+        struct NonHashableConformingEncodable: Encodable, Sendable {
+            let id: Int
+            let name: String
+        }
+
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["obj": NonHashableConformingEncodable(id: 1, name: "test")]
+
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["obj": NonHashableConformingEncodable(id: 1, name: "test")]
+
+        #expect(storage1.hashValue == storage2.hashValue)
+
+        storage2.storage = ["obj": NonHashableConformingEncodable(id: 2, name: "test")]
+        #expect(storage1.hashValue != storage2.hashValue)
+    }
+
+    @Test
+    func hashValueNestedStorage() {
+        var nested1 = JSONWebValueStorage()
+        nested1.storage = ["a": 1]
+        
+        var nested2 = JSONWebValueStorage()
+        nested2.storage = ["a": 1]
+        
+        var storage1 = JSONWebValueStorage()
+        storage1.storage = ["nested": nested1]
+        
+        var storage2 = JSONWebValueStorage()
+        storage2.storage = ["nested": nested2]
+        
+        #expect(storage1.hashValue == storage2.hashValue)
+        
+        nested2.storage = ["a": 2]
+        storage2.storage = ["nested": nested2]
+        #expect(storage1.hashValue != storage2.hashValue)
+    }
+
+    @Test
+    func hashValueDeeplyNestedStorage() {
+        var s3 = JSONWebValueStorage()
+        s3.storage = ["end": 3]
+        
+        var s2 = JSONWebValueStorage()
+        s2.storage = ["mid": s3]
+        
+        var s1 = JSONWebValueStorage()
+        s1.storage = ["top": s2]
+        
+        let h1 = s1.hashValue
+        
+        var s3b = JSONWebValueStorage()
+        s3b.storage = ["end": 3]
+        
+        var s2b = JSONWebValueStorage()
+        s2b.storage = ["mid": s3b]
+        
+        var s1b = JSONWebValueStorage()
+        s1b.storage = ["top": s2b]
+        
+        #expect(h1 == s1b.hashValue)
+        
+        s3b.storage = ["end": 4]
+        s2b.storage = ["mid": s3b]
+        s1b.storage = ["top": s2b]
+        #expect(h1 != s1b.hashValue)
+    }
 }
