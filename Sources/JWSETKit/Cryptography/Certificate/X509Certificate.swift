@@ -6,11 +6,9 @@
 //
 
 #if canImport(X509)
+import CryptoExtras
 @_spi(FixedExpiryValidationTime)
 import X509
-#if canImport(CryptoExtras)
-import CryptoExtras
-#endif
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -39,14 +37,7 @@ extension Certificate.PublicKey: JSONWebValidatingKey, JSONWebKeyRSAType, JSONWe
         case (.some(.octetKeyPair), .some(.ed25519)):
             try self.init(Curve25519.Signing.PublicKey(key))
         case (.some(.rsa), _):
-#if canImport(CommonCrypto)
-            let der = try SecKey(key).externalRepresentation
-            try self.init(derEncoded: der)
-#elseif canImport(CryptoExtras)
             try self.init(_RSA.Signing.PublicKey(key))
-#else
-            #error("Unimplemented")
-#endif
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -120,14 +111,7 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
             self.init(Curve25519.Signing.PrivateKey())
         case .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384, .rsaSignaturePSSSHA512,
              .rsaSignaturePKCS1v15SHA256, .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512:
-#if canImport(CommonCrypto)
-            let secKey = try SecKey(algorithm: algorithm)
-            try self.init(secKey)
-#elseif canImport(CryptoExtras)
             try self.init(_RSA.Signing.PrivateKey(keySize: .bits2048))
-#else
-            #error("Unimplemented")
-#endif
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }
@@ -146,14 +130,7 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
         case (.some(.octetKeyPair), .some(.ed25519)):
             try self.init(Curve25519.Signing.PrivateKey(key))
         case (.some(.rsa), _):
-#if canImport(CommonCrypto)
-            let secKey = try SecKey(key)
-            try self.init(secKey)
-#elseif canImport(CryptoExtras)
             try self.init(_RSA.Signing.PrivateKey(key))
-#else
-            #error("Unimplemented")
-#endif
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -192,13 +169,7 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
         case (.octetKeyPair, .ed25519):
             return try Curve25519.Signing.PrivateKey(importing: der, format: .pkcs8)
         case (.rsa, _):
-#if canImport(CommonCrypto)
-            return try SecKey(derRepresentation: Data(der), keyType: .rsa)
-#elseif canImport(CryptoExtras)
             return try _RSA.Signing.PrivateKey(derRepresentation: der)
-#else
-            #error("Unimplemented")
-#endif
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -273,14 +244,36 @@ extension Certificate: Expirable {
     }
 }
 
-extension [Certificate] {
+extension Verifier {
+    public mutating func validate(
+        chain: JSONWebCertificateChain,
+        diagnosticCallback: ((VerificationDiagnostic) -> Void)? = nil
+    ) async -> CertificateValidationResult {
+        await validate(
+            leaf: chain.leaf,
+            intermediates: .init(chain.certificateChain.dropFirst()),
+            diagnosticCallback: diagnosticCallback
+        )
+    }
+}
+
+extension Collection where Element == Certificate {
+    /// Verify validity of certificate chain with RFC 5280 policy and validate the leaf certificate
+    /// presented by a server during a TLS handshake, if hostname is provided.
+    ///
+    /// - Parameters:
+    ///   - currentDate: The fixed time to compare against when determining if the certificates in the chain have expired.
+    ///   - hostName: The hostname used to connect to the server.
     @discardableResult
-    public func verifyChain(currentDate: Date? = nil) async throws -> ValidatedCertificateChain {
+    public func verifyChain(currentDate: Date? = nil, hostName: String? = nil) async throws -> ValidatedCertificateChain {
         var verifier = Verifier(rootCertificates: .init(dropFirst()), policy: {
             if let currentDate {
                 RFC5280Policy(fixedExpiryValidationTime: currentDate)
             } else {
                 RFC5280Policy()
+            }
+            if let hostName {
+                ServerIdentityPolicy(serverHostname: hostName, serverIP: nil)
             }
         })
         let result = try await verifier.validate(chain: .init(self))
@@ -290,6 +283,17 @@ extension [Certificate] {
         case .couldNotValidate:
             throw CryptoKitError.authenticationFailure
         }
+    }
+}
+
+extension JSONWebCertificateChain {
+    public init<T>(_ certificates: T) throws where T: Collection, T.Element == Certificate {
+        guard let leaf = certificates.first else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        var key = AnyJSONWebKey(leaf.publicKey)
+        key.certificateChainData = try certificates.map { try $0.derRepresentation }
+        self.storage = key.storage
     }
 }
 

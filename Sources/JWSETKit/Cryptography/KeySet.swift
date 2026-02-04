@@ -418,7 +418,7 @@ extension JSONWebKey {
         if let x5t = header.certificateThumbprint, x5t == (try? thumbprint(format: .spki, using: hashFunction(of: x5t)).data) {
             return true
         }
-        if let x5t = try? JSONWebCertificateChain(header.certificateChain).thumbprint(format: .spki, using: SHA256.self), x5t == (try? thumbprint(format: .spki, using: SHA256.self)) {
+        if let x5t = try? JSONWebCertificateChain(header.certificateChainData).thumbprint(format: .spki, using: SHA256.self), x5t == (try? thumbprint(format: .spki, using: SHA256.self)) {
             return true
         }
         return false

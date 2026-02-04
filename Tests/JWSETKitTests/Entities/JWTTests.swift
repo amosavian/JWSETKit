@@ -70,14 +70,14 @@ struct JWTTests {
         var headers = HTTPHeaders()
         headers.authorizationToken = jwt
         #expect(headers.authorizationToken == jwt)
-        #expect(headers["Authorization"].first == "Bearer \(jwtString)")
+        #expect(headers.first(name: "authorization") == "Bearer \(jwtString)")
     }
 #endif
     
 #if canImport(Foundation.NSURLSession) || canImport(FoundationNetworking) || canImport(AsyncHTTPClient)
     @Test
     func jwkSetFetch() async throws {
-        let keySet = try await JSONWebKeySet(url: .init(string: "https://appleid.apple.com/auth/keys")!)
+        let keySet = try await JSONWebKeySet(provider: .apple)
         #expect(!keySet.isEmpty)
     }
 #endif

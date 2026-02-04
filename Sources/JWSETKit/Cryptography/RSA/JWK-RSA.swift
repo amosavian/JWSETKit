@@ -154,7 +154,7 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
 #if canImport(CommonCrypto)
             return try SecKey(from: self).exportKey(format: .pkcs8)
 #elseif canImport(CryptoExtras)
-            return try _RSA.Signing.PublicKey(from: self).exportKey(format: .pkcs8)
+            return try _RSA.Signing.PrivateKey(from: self).exportKey(format: .pkcs8)
 #else
             #error("Unimplemented")
 #endif

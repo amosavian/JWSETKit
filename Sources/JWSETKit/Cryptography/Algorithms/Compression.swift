@@ -10,9 +10,6 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
-#if canImport(Compression)
-import Compression
-#endif
 
 /// A protocol to provide compress/decompress data to support JWE content compression.
 public protocol JSONWebCompressor: Sendable {
@@ -58,6 +55,7 @@ extension JSONWebCompressionAlgorithm {
         .deflate: ZlibCompressor<DeflateCompressionCodec>.self,
     ]
 #else
+    #warning("No compression library found.")
     // This should never happen as Compression is available on Darwin platforms
     // and Zlib is used on non-Darwin platform.
     private static let compressors: AtomicValue<[Self: any JSONWebCompressor.Type]> = [:]

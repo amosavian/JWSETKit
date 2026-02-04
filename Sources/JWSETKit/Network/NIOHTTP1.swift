@@ -19,15 +19,15 @@ extension HTTPHeaders {
     /// The `Authorization` http header in `Bearer` with given JSON Web Token (JWT).
     public var authorizationToken: JSONWebToken? {
         get {
-            let value = (self["Authorization"].first)?
+            let value = first(name: "authorization")?
                 .replacingOccurrences(of: "Bearer ", with: "", options: [.anchored])
             return value.flatMap(JSONWebToken.init)
         }
         set {
             if let token = newValue.map({ "Bearer \($0.description)" }) {
-                replaceOrAdd(name: "Authorization", value: token)
+                replaceOrAdd(name: "authorization", value: token)
             } else {
-                remove(name: "Authorization")
+                remove(name: "authorization")
             }
         }
     }
@@ -81,7 +81,8 @@ enum HTTPClientFetch: HTTPFetch {
         let request = HTTPClientRequest(url: url.absoluteString)
         let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
         if (200 ..< 300).contains(response.status.code) {
-            var body = try await response.body.collect(upTo: 64 * 1024 * 1024) // 64 MB
+            let bytes = response.headers.first(name: "content-length").flatMap(Int.init)
+            var body = try await response.body.collect(upTo: bytes ?? 64 * 1024 * 1024) // 64 MB by default
             return Data(body.readBytes(length: body.readableBytes) ?? .init())
         } else {
             throw HTTPError.fromStatus(response.status.code)

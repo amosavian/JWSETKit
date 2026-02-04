@@ -18,9 +18,15 @@ This guide helps you migrate from [vapor/jwt](https://github.com/vapor/jwt) to J
 | ES256K (secp256k1)            | ❌ | ✅ |
 | HPKE encryption               | ❌ | ✅ |
 | Post-quantum (ML-DSA)         | ✅ | ✅ |
-| Vapor integration             | ✅ | ❌ |
 | Apple platforms               | ✅ | ✅ |
 | Linux                         | ✅ | ✅ |
+
+
+| Feature                                   | vapor/jwt | JWSETKit |
+|-------------------------------------------|:---------:|:--------:|
+| NIOHTTP1 header extensions                | ✅ | ✅ |
+| Cloud provider JWKS (Apple, Google, etc.) | ✅ | ✅ |
+| JWKS caching with HTTP headers            | ✅ | ❌ |
 
 ## Concept Mapping
 
@@ -33,10 +39,10 @@ This guide helps you migrate from [vapor/jwt](https://github.com/vapor/jwt) to J
 | `Insecure.RSA.PublicKey`             | ``JSONWebRSAPublicKey``    | RSA public key |
 | `ES*PrivateKey` / `EdDSA.PrivateKey` | ``JSONWebECPrivateKey``    | Private EC/EdDSA keys |
 | `ES*PublicKey` / `EdDSA.PublicKey`   | ``JSONWebECPublicKey``     | Public EC/EdDSA keys |
-| `MLDSA65PrivateKey`                  | ``JSONWebMLDSAPrivateKey`` | Post-quantum keys |
-| `MLDSA87PrivateKey`                  | ``JSONWebMLDSAPublicKey``  | Post-quantum keys |
+| `MLDSA*PrivateKey`                   | ``JSONWebMLDSAPrivateKey`` | Post-quantum keys |
+| `MLDSA*PublicKey`                    | ``JSONWebMLDSAPublicKey``  | Post-quantum keys |
 
-> You can use ``Crypto`` keys directly and you don't need to wrap them. e.g. Use ``P256``
+> You can use ``Crypto`` keys directly and you don't need to wrap them. e.g. Use ``P256.Signing.PublicKey``
 
 ### Payload Types
 
@@ -423,9 +429,174 @@ try jwt.verifyAudience(includes: "expected-audience")  // Audience verification
 // Check issuer manually: jwt.payload.issuer == "expected"
 ```
 
-### No Vapor Integration
+## Vapor Integration
 
-JWSETKit doesn't include Vapor-specific extensions. For Vapor apps, you'll need to create your own middleware or helpers to integrate with the request/response cycle.
+JWSETKit provides NIOHTTP1 `HTTPHeaders` extensions that work directly in Vapor applications.
+
+### Migrating from req.jwt to req.headers
+
+**vapor/jwt:**
+```swift
+let payload = try await req.jwt.verify(as: MyPayload.self)
+```
+
+**JWSETKit:**
+```swift
+// Verify token directly from request headers
+try req.headers.verifyAuthorizationToken(using: keySet, for: "expected-audience")
+
+// Access the verified token
+let jwt = req.headers.authorizationToken!
+let subject = jwt.payload.subject
+```
+
+### Predefined Cloud Provider JWKS
+
+Fetch JWKS from major identity providers:
+
+```swift
+// Apple Sign-In
+let appleKeys = try await JSONWebKeySet(provider: .apple)
+
+// Google Identity
+let googleKeys = try await JSONWebKeySet(provider: .google)
+
+// Firebase Auth
+let firebaseKeys = try await JSONWebKeySet(provider: .firebase)
+
+// Microsoft/Azure
+let microsoftKeys = try await JSONWebKeySet(provider: .microsoft)
+```
+
+### Features Not Provided
+
+The following vapor/jwt features are Vapor-specific and not provided by JWSETKit:
+
+#### Application/Request Extensions
+
+| vapor/jwt             | JWSETKit Alternative |
+| --------------------- | --- |
+| `app.jwt.keys`        | Manage `JSONWebKeySet` in your own storage |
+| `req.jwt.verify(as:)` | `req.headers.verifyAuthorizationToken()` |
+| `req.jwt.sign(_:)`    | Create JWT and set `req.headers.authorizationToken` |
+
+#### JWTAuthenticator Middleware
+
+vapor/jwt provides `JWTAuthenticator` protocol conforming to Vapor's `AsyncBearerAuthenticator`:
+
+```swift
+// vapor/jwt - JWTAuthenticator protocol
+public protocol JWTAuthenticator: AsyncBearerAuthenticator {
+    associatedtype Payload: JWTPayload
+    func authenticate(jwt: Payload, for request: Request) async throws
+}
+
+// Usage
+struct MyAuthenticator: JWTAuthenticator {
+    typealias Payload = MyPayload
+    func authenticate(jwt: MyPayload, for request: Request) async throws {
+        request.auth.login(jwt)
+    }
+}
+```
+
+JWSETKit alternative - create your own authenticator using `AsyncBearerAuthenticator`:
+
+```swift
+// JWSETKit
+struct MyAuthenticator: AsyncBearerAuthenticator {
+    let keySet: JSONWebKeySet
+
+    func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
+        try request.headers.verifyAuthorizationToken(using: keySet)
+        let jwt = request.headers.authorizationToken!
+        // Login with your user type based on jwt.payload
+    }
+}
+```
+
+#### JWKS Caching (EndpointCache)
+
+vapor/jwt uses Vapor's `EndpointCache<JWKS>` which automatically caches JWKS responses.
+If you're using Vapor with JWSETKit, you can use Vapor's `EndpointCache` directly:
+
+```swift
+import Vapor
+import JWSETKit
+
+// Create cache for Apple JWKS
+let appleKeysCache = EndpointCache<JSONWebKeySet>(uri: "https://appleid.apple.com/auth/keys")
+
+// In a route handler
+func protected(req: Request) async throws -> Response {
+    let keys = try await appleKeysCache.get(on: req).get()
+    try req.headers.verifyAuthorizationToken(using: keys, for: "com.myapp")
+    // ...
+}
+```
+
+#### Cloud Provider Token Claims
+
+vapor/jwt-kit provides specialized token types like `AppleIdentityToken` with pre-defined claims:
+
+```swift
+// vapor/jwt-kit AppleIdentityToken structure
+struct AppleIdentityToken: JWTPayload {
+    let issuer: IssuerClaim           // "https://appleid.apple.com"
+    let audience: AudienceClaim       // Your app's client_id
+    let subject: SubjectClaim         // Unique user identifier
+    let issuedAt: IssuedAtClaim
+    let expires: ExpirationClaim
+    let nonce: String?
+    let email: String?
+    let emailVerified: Bool?
+    let isPrivateEmail: Bool?
+    let realUserStatus: UserDetectionStatus?
+}
+```
+
+JWSETKit includes OIDC standard claims via ``JSONWebTokenClaimsPublicOIDCStandardParameters``:
+
+```swift
+let jwt = try JSONWebToken(from: tokenString)
+try jwt.verify(using: appleKeys, for: "com.myapp")
+
+// Standard registered claims
+let issuer = jwt.payload.issuer
+let subject = jwt.payload.subject
+
+// OIDC standard claims (built-in)
+let email = jwt.payload.email
+let isVerified = jwt.payload.isEmailVerified
+let name = jwt.payload.name
+let givenName = jwt.payload.givenName
+let familyName = jwt.payload.familyName
+let pictureURL = jwt.payload.pictureURL
+
+// Apple-specific claims (define extension for non-standard claims)
+struct AppleIdentityTokenParameters: JSONWebContainerParameters {
+    var isPrivateEmail: Bool?
+    var realUserStatus: Int?
+
+    static let keys: [PartialKeyPath<Self>: String] = [
+        \.isPrivateEmail: "is_private_email",
+        \.realUserStatus: "real_user_status",
+    ]
+}
+
+extension JSONWebTokenClaims {
+    subscript<T>(dynamicMember keyPath: SendableKeyPath<AppleIdentityTokenParameters, T?>) -> T? {
+        get { storage[stringKey(keyPath)] }
+        set { storage[stringKey(keyPath)] = newValue }
+    }
+}
+
+// Usage
+let isPrivateEmail = jwt.payload.isPrivateEmail
+let realUserStatus = jwt.payload.realUserStatus
+```
+
+See <doc:7-Extending-Container> for more details on extending containers.
 
 ## Topics
 

@@ -270,7 +270,7 @@ enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
 
 enum JSONWebKeyCertificateChainSpecializer: JSONWebKeySpecializer {
     static func specialize(_ key: AnyJSONWebKey) throws -> (any JSONWebKey)? {
-        if !key.certificateChain.isEmpty {
+        if !key.certificateChainData.isEmpty {
             return try JSONWebCertificateChain(key)
         }
         return nil

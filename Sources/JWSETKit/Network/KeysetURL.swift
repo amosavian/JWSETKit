@@ -12,14 +12,46 @@ import Foundation
 #endif
 import Crypto
 
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
-#if canImport(AsyncHTTPClient)
-import AsyncHTTPClient
-#endif
-
 #if canImport(Foundation.NSURLSession) || canImport(FoundationNetworking) || canImport(AsyncHTTPClient)
+/// Predefined JWKS providers for major identity platforms.
+public struct JSONWebKeySetProvider: Hashable, Sendable {
+    /// The URL of the JWKS endpoint.
+    public let url: URL
+    
+    /// Creates a custom JWKS provider with the given URL.
+    ///
+    /// - Parameter url: The URL of the JWKS endpoint.
+    public init(url: URL) {
+        self.url = url
+    }
+    
+    init(_ string: String) {
+        self.init(url: URL(string: string).unsafelyUnwrapped)
+    }
+    
+    /// Apple Sign-In JWKS endpoint.
+    ///
+    /// Used for verifying tokens from Sign in with Apple.
+    public static let apple = JSONWebKeySetProvider("https://appleid.apple.com/auth/keys")
+    
+    /// Google Identity JWKS endpoint.
+    ///
+    /// Used for verifying Google OAuth2 and Google Identity tokens.
+    public static let google = JSONWebKeySetProvider("https://www.googleapis.com/oauth2/v3/certs")
+    
+    /// Firebase Authentication JWKS endpoint.
+    ///
+    /// Used for verifying Firebase Auth ID tokens.
+    public static let firebase = JSONWebKeySetProvider(
+        "https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com"
+    )
+    
+    /// Microsoft/Azure AD JWKS endpoint.
+    ///
+    /// Used for verifying Microsoft identity platform tokens.
+    public static let microsoft = JSONWebKeySetProvider("https://login.microsoftonline.com/common/discovery/keys")
+}
+
 extension JSONWebKeySet {
     /// Initializes JWKSet using given contents of given URL.
     ///
@@ -30,6 +62,25 @@ extension JSONWebKeySet {
     public init(url: URL) async throws {
         let data = try await httpClient.fetch(url: url)
         self = try JSONDecoder().decode(Self.self, from: data)
+    }
+    
+    /// Initializes JWKSet by fetching from a predefined identity provider.
+    ///
+    /// - Parameter provider: The identity provider to fetch JWKS from.
+    ///
+    /// - Throws: `DecodingError` if the data is not valid JSON or not a JWKSet.
+    /// - Throws: `URLError` if the URL is not reachable.
+    ///
+    /// Example usage:
+    /// ```swift
+    /// // Fetch Apple Sign-In keys
+    /// let appleKeys = try await JSONWebKeySet(provider: .apple)
+    ///
+    /// // Fetch Google Identity keys
+    /// let googleKeys = try await JSONWebKeySet(provider: .google)
+    /// ```
+    public init(provider: JSONWebKeySetProvider) async throws {
+        try await self.init(url: provider.url)
     }
 }
 

@@ -95,7 +95,7 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     }
     
     /// Returns value of given key decoded using base64.
-    public subscript(_ member: String, urlEncoded: Bool = true) -> Data? {
+    public subscript(_ member: String, urlEncoded urlEncoded: Bool = true) -> Data? {
         get {
             guard let value = self[member] as String? else { return nil }
             if urlEncoded {
@@ -113,7 +113,7 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     }
     
     /// Returns values of given key decoded using base64.
-    public subscript(_ member: String, urlEncoded: Bool = true) -> [Data] {
+    public subscript(_ member: String, urlEncoded urlEncoded: Bool = true) -> [Data] {
         get {
             let values = self[member] as [String]
             if urlEncoded {
@@ -199,7 +199,7 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
         default:
             // Fallback to stable string representation if possible, or skip
             // Using AnyCodable to get a stable representation if it's at least Encodable
-            if value is any Encodable, let data = try? JSONEncoder().encode(AnyCodable(value)) {
+            if let data = try? JSONEncoder().encode(AnyCodable(value)) {
                 hasher.combine(data)
             }
         }

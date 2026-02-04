@@ -11,9 +11,6 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
-#if canImport(CommonCrypto)
-import CommonCrypto
-#endif
 
 /// JSON Web Key (JWK) container for AES-GCM keys for encryption/decryption.
 @frozen

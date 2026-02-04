@@ -21,10 +21,13 @@ import CommonCrypto
 
 #if canImport(X509)
 public typealias CertificateType = Certificate
+typealias InternalCertificateType = CertificateType
 #elseif canImport(CommonCrypto)
 public typealias CertificateType = SecCertificate
+typealias InternalCertificateType = CertificateType
 #else
 public typealias CertificateType = Data
+typealias InternalCertificateType = InternalCertificate
 #endif
 
 /// JSON Web Key (JWK) container for X509 Certificate chain.
@@ -36,24 +39,24 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
     
     /// Leaf certiticate of certificate chain which is first one in array.
     public var leaf: CertificateType {
-#if canImport(X509) || canImport(CommonCrypto)
         // As we verify key when initializing, we shall assume key is valid
-        (try? .init(from: self)).unsafelyUnwrapped
-#else
         // swiftformat:disable:next redundantSelf
         self.certificateChain.first.unsafelyUnwrapped
+    }
+    
+    var leafCertificate: InternalCertificateType {
+        get throws {
+#if canImport(X509) || canImport(CommonCrypto)
+            return leaf
+#else
+            return try InternalCertificate(leaf)
 #endif
+        }
     }
     
     var leafKey: any JSONWebValidatingKey {
         get throws {
-#if canImport(X509)
-            return leaf.publicKey
-#elseif canImport(CommonCrypto)
-            return try leaf.publicKey
-#else
-            return try InternalCertificate(derEncoded: [UInt8](leaf)).publicKey
-#endif
+            try leafCertificate.publicKey
         }
     }
     
@@ -62,26 +65,21 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
         try validate()
     }
     
-    public init(_ certificates: [CertificateType]) throws {
+    public init<T>(_ certificates: T) throws where T: Collection, T.Element: DataProtocol {
         guard let leaf = certificates.first else {
             throw JSONWebKeyError.keyNotFound
         }
-#if canImport(X509)
-        var key = AnyJSONWebKey(leaf.publicKey)
-#elseif canImport(CommonCrypto)
-        var key = try AnyJSONWebKey(leaf.publicKey)
-#else
-        var key = try AnyJSONWebKey(InternalCertificate(derEncoded: [UInt8](leaf)).publicKey)
-#endif
-        key.certificateChain = certificates
+        var key = try AnyJSONWebKey(InternalCertificate(leaf).publicKey)
+        key.certificateChainData = certificates.map { Data($0) }
         self.storage = key.storage
     }
     
     public func validate() throws {
         // swiftformat:disable:next redundantSelf
-        guard !self.certificateChain.isEmpty else {
+        guard let leaf = self.certificateChainData.first else {
             throw JSONWebKeyError.keyNotFound
         }
+        _ = try InternalCertificate(leaf).publicKey
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
@@ -92,17 +90,22 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
         try leafKey.thumbprint(format: format, using: hashFunction)
     }
     
-/// Verify validity of certificate chain with RFC 5280 policy.
 #if !canImport(X509) && !canImport(CommonCrypto)
     @available(*, unavailable, message: "This function relies on swift-certificate or Apple's CommonCrypto framework.")
 #endif
-    public func verifyChain(currentDate: Date? = nil) async throws {
+    /// Verify validity of certificate chain with RFC 5280 policy and validate the leaf certificate
+    /// presented by a server during a TLS handshake, if hostname is provided.
+    ///
+    /// - Parameters:
+    ///   - currentDate: The fixed time to compare against when determining if the certificates in the chain have expired.
+    ///   - hostName: The hostname used to connect to the server.
+    public func verifyChain(currentDate: Date? = nil, hostName: String? = nil) async throws {
 #if canImport(X509)
         // swiftformat:disable:next redundantSelf
         let chain = self.certificateChain
-        _ = try await chain.verifyChain(currentDate: currentDate)
+        _ = try await chain.verifyChain(currentDate: currentDate, hostName: hostName)
 #elseif canImport(CommonCrypto)
-        try await SecTrust(from: self).verifyChain(currentDate: currentDate)
+        try await SecTrust(from: self).verifyChain(currentDate: currentDate, hostName: hostName)
 #else
         throw JSONWebKeyError.operationNotAllowed
 #endif
@@ -111,48 +114,54 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
 
 extension JSONWebCertificateChain: Expirable {
     public func verifyDate(_ currentDate: Date) throws {
-#if canImport(X509) || canImport(CommonCrypto)
-        try leaf.verifyDate(currentDate)
-#else
-        try InternalCertificate(derEncoded: [UInt8](leaf)).verifyDate(currentDate)
-#endif
+        try leafCertificate.verifyDate(currentDate)
     }
 }
-
-#if canImport(X509)
-extension Verifier {
-    public mutating func validate(
-        chain: JSONWebCertificateChain,
-        diagnosticCallback: ((VerificationDiagnostic) -> Void)? = nil
-    ) async -> CertificateValidationResult {
-        await validate(
-            leaf: chain.leaf,
-            intermediates: .init(chain.certificateChain.dropFirst()),
-            diagnosticCallback: diagnosticCallback
-        )
-    }
-}
-#endif
 
 // MARK: - Certificate parser
 
-private struct Time: DERParseable, Sendable {
-    let value: Date
+private struct Time: RawRepresentable, DERParseable, DERImplicitlyTaggable, Sendable {
+    static var defaultIdentifier: ASN1Identifier {
+        .generalizedTime
+    }
     
-    init(value: Date) {
-        self.value = value
+    let rawValue: Date
+    
+    init(rawValue: Date) {
+        self.rawValue = rawValue
+    }
+    
+    init(derEncoded: ASN1Node, withIdentifier _: ASN1Identifier) throws {
+        try self.init(derEncoded: derEncoded)
     }
     
     init(derEncoded node: ASN1Node) throws {
+        let components: DateComponents
         switch node.identifier {
         case GeneralizedTime.defaultIdentifier:
-            let time = try GeneralizedTime(derEncoded: node)
-            self = .init(value: .init(time))
+            components = try DateComponents(GeneralizedTime(derEncoded: node))
         case UTCTime.defaultIdentifier:
-            let time = try UTCTime(derEncoded: node)
-            self = .init(value: .init(time))
+            components = try DateComponents(UTCTime(derEncoded: node))
         default:
             throw ASN1Error.unexpectedFieldType(node.identifier)
+        }
+        guard let date = Calendar(identifier: .gregorian).date(from: components) else {
+            throw ASN1Error.invalidASN1Object(
+                reason: "Invalid Date"
+            )
+        }
+        self = .init(rawValue: date)
+    }
+    
+    func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier) throws {
+        let components = Calendar(identifier: .gregorian).dateComponents(in: .utc, from: rawValue)
+        switch identifier {
+        case GeneralizedTime.defaultIdentifier:
+            try GeneralizedTime(components).serialize(into: &coder)
+        case UTCTime.defaultIdentifier:
+            try UTCTime(components).serialize(into: &coder)
+        default:
+            throw ASN1Error.unexpectedFieldType(identifier)
         }
     }
 }
@@ -170,7 +179,7 @@ private struct Validity: DERParseable, Sendable {
         self = try DER.sequence(node, identifier: .sequence) { nodes in
             let notBefore = try Time(derEncoded: &nodes)
             let notAfter = try Time(derEncoded: &nodes)
-            return Validity(notBefore: notBefore.value, notAfter: notAfter.value)
+            return Validity(notBefore: notBefore.rawValue, notAfter: notAfter.rawValue)
         }
     }
 }
@@ -252,6 +261,10 @@ struct InternalCertificate: DERParseable, Sendable, Expirable {
         }
     }
     
+    init<D>(_ data: D) throws where D: DataProtocol {
+        try self.init(derEncoded: [UInt8](data))
+    }
+    
     func verifyDate(_ currentDate: Date) throws {
         if currentDate > notValidAfter {
             throw JSONWebValidationError.tokenExpired(expiry: notValidAfter)
@@ -262,47 +275,60 @@ struct InternalCertificate: DERParseable, Sendable, Expirable {
     }
 }
 
-extension Date {
+extension TimeZone {
     @inlinable
-    init(fromUTCDate date: (year: Int, month: Int, day: Int, hours: Int, minutes: Int, seconds: Int)) {
-        self = Calendar(identifier: .gregorian)
-            .date(from: .init(
-                timeZone: .init(secondsFromGMT: 0).unsafelyUnwrapped,
-                year: date.year, month: date.month, day: date.day,
-                hour: date.hours, minute: date.minutes, second: date.seconds
-            )).unsafelyUnwrapped
-    }
-    
+    static var utc: TimeZone { .init(secondsFromGMT: 0).unsafelyUnwrapped }
+}
+
+extension DateComponents {
+    /// Initializes from components of `GeneralizedTime`.
     @inlinable
-    var utcDate: (year: Int, month: Int, day: Int, hours: Int, minutes: Int, seconds: Int) {
-        let date = Calendar(identifier: .gregorian).dateComponents(in: .init(secondsFromGMT: 0).unsafelyUnwrapped, from: self)
-        return (
-            date.year.unsafelyUnwrapped,
-            date.month.unsafelyUnwrapped,
-            date.day.unsafelyUnwrapped,
-            date.hour.unsafelyUnwrapped,
-            date.minute.unsafelyUnwrapped,
-            date.second.unsafelyUnwrapped
+    public init(_ date: GeneralizedTime) {
+        self.init(
+            timeZone: .utc,
+            year: date.year, month: date.month, day: date.day,
+            hour: date.hours, minute: date.minutes, second: date.seconds
         )
     }
     
+    /// Initializes from components of `UTCTime`.
     @inlinable
-    public init(_ time: GeneralizedTime) {
+    public init(_ date: UTCTime) {
         self.init(
-            fromUTCDate: (
-                year: time.year, month: time.month, day: time.day,
-                hours: time.hours, minutes: time.minutes, seconds: time.seconds
-            )
+            timeZone: .utc,
+            year: date.year, month: date.month, day: date.day,
+            hour: date.hours, minute: date.minutes, second: date.seconds
         )
     }
-    
+}
+
+extension GeneralizedTime {
+    /// Initializes from components of `DateComponents`.
     @inlinable
-    public init(_ time: UTCTime) {
-        self.init(
-            fromUTCDate: (
-                year: time.year, month: time.month, day: time.day,
-                hours: time.hours, minutes: time.minutes, seconds: time.seconds
-            )
+    public init(_ components: DateComponents) throws {
+        try self.init(
+            year: components.year ?? 0,
+            month: components.month ?? 0,
+            day: components.day ?? 0,
+            hours: components.hour ?? 0,
+            minutes: components.minute ?? 0,
+            seconds: components.second ?? 0,
+            fractionalSeconds: 0
+        )
+    }
+}
+
+extension UTCTime {
+    /// Initializes from components of `DateComponents`.
+    @inlinable
+    public init(_ components: DateComponents) throws {
+        try self.init(
+            year: components.year ?? 0,
+            month: components.month ?? 0,
+            day: components.day ?? 0,
+            hours: components.hour ?? 0,
+            minutes: components.minute ?? 0,
+            seconds: components.second ?? 0
         )
     }
 }

@@ -246,7 +246,7 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
         case .secp256k1:
             return P256K.Signing.PrivateKey.self
 #endif
-        case .ed25519, .x25519:
+        case .ed25519:
             return Curve25519.Signing.PrivateKey.self
         default:
             throw JSONWebKeyError.unknownKeyType

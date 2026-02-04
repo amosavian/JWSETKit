@@ -23,6 +23,8 @@ import Bionic
 import WASILibc
 #if canImport(pthread)
 import pthread
+#elseif canImport(wasi_pthread)
+import wasi_pthread
 #endif
 #else
 #error("Unable to identify your C library.")
@@ -57,7 +59,71 @@ public protocol Locking<Context, Value>: Sendable {
     subscript(lockedFor _: Context) -> Value { get set }
 }
 
-#if !canImport(WASILibc) || canImport(pthread)
+#if canImport(Darwin)
+public final class OSUnfairLock<Value>: Locking, @unchecked Sendable {
+    @usableFromInline
+    let lock: os_unfair_lock_t
+    
+    @usableFromInline
+    var value: Value
+    
+    public init(initialValue: consuming Value) {
+        self.lock = .allocate(capacity: 1)
+        self.value = initialValue
+        lock.initialize(to: os_unfair_lock())
+    }
+    
+    deinit {
+        lock.deinitialize(count: 1)
+        lock.deallocate()
+    }
+    
+    @inlinable
+    public func tryLock(_: LockContextEmpty) -> Bool {
+        os_unfair_lock_trylock(lock)
+    }
+    
+    @inlinable
+    public func lock(_: LockContextEmpty) {
+        os_unfair_lock_lock(lock)
+    }
+    
+    @inlinable
+    public func unlock() {
+        os_unfair_lock_unlock(lock)
+    }
+    
+    public func withLock<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R {
+        lock(context)
+        defer { unlock() }
+        return try handler(&value)
+    }
+    
+    public func withLockIfAvailable<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R? {
+        guard tryLock(context) else { return nil }
+        defer { unlock() }
+        return try handler(&value)
+    }
+    
+    @inlinable
+    public subscript(lockedFor context: LockContextEmpty) -> Value {
+        _read {
+            lock(context)
+            defer { unlock() }
+            yield value
+        }
+        _modify {
+            lock(context)
+            defer { unlock() }
+            yield &value
+        }
+    }
+}
+
+public typealias OSUnfairLockedValue<Value> = LockedValue<LockContextEmpty, Value, OSUnfairLock<Value>>
+#endif
+
+#if !canImport(WASILibc) || canImport(pthread) || canImport(wasi_pthread)
 @frozen
 public enum PthreadReadWriteContextLock: ReadWriteLockContext {
     case read
@@ -150,73 +216,7 @@ public final class PthreadReadWriteLock<Value>: Locking, @unchecked Sendable {
 }
 
 public typealias PthreadReadWriteLockedValue<Value> = LockedValue<PthreadReadWriteContextLock, Value, PthreadReadWriteLock<Value>>
-#endif
 
-#if canImport(Darwin)
-public final class OSUnfairLock<Value>: Locking, @unchecked Sendable {
-    @usableFromInline
-    let lock: os_unfair_lock_t
-    
-    @usableFromInline
-    var value: Value
-    
-    public init(initialValue: consuming Value) {
-        self.lock = .allocate(capacity: 1)
-        self.value = initialValue
-        lock.initialize(to: os_unfair_lock())
-    }
-    
-    deinit {
-        lock.deinitialize(count: 1)
-        lock.deallocate()
-    }
-    
-    @inlinable
-    public func tryLock(_: LockContextEmpty) -> Bool {
-        os_unfair_lock_trylock(lock)
-    }
-    
-    @inlinable
-    public func lock(_: LockContextEmpty) {
-        os_unfair_lock_lock(lock)
-    }
-    
-    @inlinable
-    public func unlock() {
-        os_unfair_lock_unlock(lock)
-    }
-    
-    public func withLock<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R {
-        lock(context)
-        defer { unlock() }
-        return try handler(&value)
-    }
-    
-    public func withLockIfAvailable<R>(_ context: LockContextEmpty, _ handler: (inout Value) throws -> R) rethrows -> R? {
-        guard tryLock(context) else { return nil }
-        defer { unlock() }
-        return try handler(&value)
-    }
-    
-    @inlinable
-    public subscript(lockedFor context: LockContextEmpty) -> Value {
-        _read {
-            lock(context)
-            defer { unlock() }
-            yield value
-        }
-        _modify {
-            lock(context)
-            defer { unlock() }
-            yield &value
-        }
-    }
-}
-
-public typealias OSUnfairLockedValue<Value> = LockedValue<LockContextEmpty, Value, OSUnfairLock<Value>>
-#endif
-
-#if !canImport(WASILibc) || canImport(pthread)
 public final class PthreadMutex<Value>: Locking, @unchecked Sendable {
     @usableFromInline
     let lock: UnsafeMutablePointer<pthread_mutex_t>
@@ -336,7 +336,7 @@ public typealias SingleThreadLockedValue<Value> = LockedValue<LockContextEmpty, 
 
 #if canImport(Darwin)
 public typealias AtomicValue = OSUnfairLockedValue
-#elseif !canImport(WASILibc) || canImport(pthread)
+#elseif !canImport(WASILibc) || canImport(pthread) || canImport(wasi_pthread)
 public typealias AtomicValue = PthreadReadWriteLockedValue
 #else
 public typealias AtomicValue = SingleThreadLockedValue

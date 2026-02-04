@@ -14,9 +14,6 @@ import Crypto
 #if canImport(CommonCrypto)
 import CommonCrypto
 #endif
-#if canImport(X509)
-import X509
-#endif
 
 /// Presenter possesses a particular key and that the recipient can cryptographically
 /// confirm that the presenter has possession of that key as described in
@@ -120,13 +117,6 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
     public static func certificateThumbprint(_ key: any JSONWebKey) throws -> Self {
         try .certificateThumbprint(key.thumbprint(format: .spki, using: SHA256.self).data)
     }
-
-#if canImport(X509)
-    /// SHA-256 hash of the Certificate public key.
-    public static func certificateThumbprint(_ key: Certificate) throws -> Self {
-        try .certificateThumbprint(key.thumbprint(format: .spki, using: SHA256.self).data)
-    }
-#endif
     
 #if canImport(CommonCrypto)
     /// SHA-256 hash of the Certificate public key.

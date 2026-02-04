@@ -84,6 +84,14 @@ extension P256K {
                 self.impl = try .init(derRepresentation: derRepresentation)
             }
             
+            /// Creates a secp256k1 public key for key agreement from a ElligatorSwift representation.
+            ///
+            /// - Parameters:
+            ///   - elligatorSwiftRepresentation: A 64-byte ElligatorSwift representation of the key.
+            public init<Bytes: RandomAccessCollection>(elligatorSwiftRepresentation: Bytes) throws(CryptoKitMetaError) where Bytes.Element == UInt8 {
+                self.impl = try .init(elligatorSwiftRepresentation: elligatorSwiftRepresentation)
+            }
+            
             init(impl: Secp256K1BackingPublic) {
                 self.impl = impl
             }
@@ -107,6 +115,9 @@ extension P256K {
             /// A Privacy-Enhanced Mail (PEM) representation of the public key.
             public var pemRepresentation: String { impl.pemRepresentation }
 #endif
+            
+            /// A 64-byte ElligatorSwift representation of the public key.
+            public var elligatorSwiftRepresentation: Data { impl.elligatorSwiftRepresentation }
         }
 
         /// A secp256k1 private key used for key agreement.

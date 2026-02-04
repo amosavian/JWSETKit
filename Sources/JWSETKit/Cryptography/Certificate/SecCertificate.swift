@@ -10,27 +10,13 @@ import CommonCrypto
 import CryptoKit
 import Foundation
 @preconcurrency import Security
-#if canImport(X509)
-import X509
-#endif
 
 extension Security.SecCertificate: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable, @unchecked Swift.Sendable {}
 
 extension SecCertificate: JSONWebValidatingKey {
-#if canImport(X509)
-    @usableFromInline
-    var x509: Certificate {
-        (try? Certificate(self)).unsafelyUnwrapped
-    }
-#endif
-    
     public var storage: JSONWebValueStorage {
         var key = (try? AnyJSONWebKey(publicKey)) ?? .init()
-#if canImport(X509)
-        key.certificateChain = [x509]
-#else
-        key.certificateChain = [self]
-#endif
+        key.certificateChainData = [derRepresentation]
         return key.storage
     }
     
@@ -82,7 +68,7 @@ extension SecCertificate: Expirable {
         if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) {
             return (SecCertificateCopyNotValidBeforeDate(self) as Date?) ?? .distantPast
         } else {
-            guard let certificate = try? InternalCertificate(derEncoded: [UInt8](derRepresentation)[...]) else {
+            guard let certificate = try? InternalCertificate(derRepresentation) else {
                 return .distantPast
             }
             return certificate.notValidBefore
@@ -94,7 +80,7 @@ extension SecCertificate: Expirable {
         if #available(iOS 18.0, macOS 15.0, watchOS 11.0, tvOS 18.0, visionOS 2.0, *) {
             return (SecCertificateCopyNotValidAfterDate(self) as Date?) ?? .distantFuture
         } else {
-            guard let certificate = try? InternalCertificate(derEncoded: [UInt8](derRepresentation)[...]) else {
+            guard let certificate = try? InternalCertificate(derRepresentation) else {
                 return .distantFuture
             }
             return certificate.notValidAfter
@@ -111,18 +97,31 @@ extension SecCertificate: Expirable {
     }
 }
 
+extension JSONWebValueStorage {
+    /// Returns values of given key.
+    public subscript(_ member: String) -> [SecCertificate] {
+        get {
+            guard let value: [String] = self[member] else { return [] }
+            return value.compactMap(SecCertificate.castValue)
+        }
+        set {
+            if newValue.isEmpty {
+                remove(key: member)
+            } else {
+                updateValue(key: member, value: newValue)
+            }
+        }
+    }
+}
+
 extension Security.SecTrust: Swift.Decodable, Swift.Encodable {}
 
 extension SecTrust: JSONWebValidatingKey {
     public var storage: JSONWebValueStorage {
-        guard var key = (try? certificateChain.first?.publicKey).map(AnyJSONWebKey.init) else {
+        guard var key = publicKey.map(AnyJSONWebKey.init) else {
             return .init()
         }
-#if canImport(X509)
-        key.certificateChain = certificateChain.map { $0.x509 }
-#else
-        key.certificateChain = certificateChain
-#endif
+        key.certificateChainData = certificateChain.map { $0.derRepresentation }
         return key.storage
     }
     
@@ -145,17 +144,26 @@ extension SecTrust: JSONWebValidatingKey {
         try publicKey?.verifySignature(signature, for: data, using: algorithm)
     }
     
-    /// Verify validity of certificate chain with RFC 5280 policy.
-    public func verifyChain(currentDate: Date? = nil) async throws {
+    /// Verify validity of certificate chain with RFC 5280 policy and validate the leaf certificate
+    /// presented by a server during a TLS handshake, if hostname is provided.
+    ///
+    /// - Parameters:
+    ///   - currentDate: The fixed time to compare against when determining if the certificates in the chain have expired.
+    ///   - hostName: The hostname used to connect to the server.
+    public func verifyChain(currentDate: Date? = nil, hostName: String? = nil) async throws {
         try await withCheckedThrowingContinuation { continuation in
             let queue = DispatchQueue.global(qos: .userInitiated)
             queue.async {
+                var policies = [SecPolicyCreateBasicX509()]
                 if let currentDate {
                     SecTrustSetVerifyDate(self, currentDate as CFDate)
                 } else {
                     SecTrustSetVerifyDate(self, Date() as CFDate)
                 }
-                SecTrustSetPolicies(self, [SecPolicyCreateBasicX509()] as CFArray)
+                if let hostName {
+                    policies.append(SecPolicyCreateSSL(true, hostName as CFString))
+                }
+                SecTrustSetPolicies(self, policies as CFArray)
                 let result = SecTrustEvaluateAsyncWithError(self, queue) { _, isValid, error in
                     if isValid {
                         continuation.resume()
@@ -204,7 +212,20 @@ extension SecTrust: Expirable {
     }
 }
 
+extension JSONWebCertificateChain {
+    public init(_ certificates: [SecCertificate]) throws {
+        guard let leaf = certificates.first else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        var key = try AnyJSONWebKey(leaf.publicKey)
+        key.certificateChainData = certificates.map(\.derRepresentation)
+        self.storage = key.storage
+    }
+}
+
 #if canImport(X509)
+import X509
+
 public func == (lhs: Certificate, rhs: SecCertificate) -> Bool {
     lhs == rhs.x509
 }

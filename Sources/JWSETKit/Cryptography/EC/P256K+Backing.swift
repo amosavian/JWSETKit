@@ -99,6 +99,22 @@ enum Secp256K1BackingPublic: Hashable {
         try self.init(x963Representation: parsed.key.bytes)
     }
     
+    init<Bytes: RandomAccessCollection>(elligatorSwiftRepresentation: Bytes) throws(CryptoKitMetaError) where Bytes.Element == UInt8 {
+        let bytes = Array(elligatorSwiftRepresentation)
+        var pubkey = secp256k1_pubkey()
+        let result = try bytes.withUnsafeBytes { buffer in
+            guard let baseAddress = buffer.baseAddress else {
+                throw CryptoKitError.incorrectKeySize
+            }
+            return secp256k1_ellswift_decode(P256K.context, &pubkey, baseAddress)
+        }
+        if result == 1 {
+            self = .x963(pubkey)
+        } else {
+            throw CryptoKitError.incorrectKeySize
+        }
+    }
+    
     init(impl: secp256k1_pubkey) {
         self = .x963(impl)
     }
@@ -164,6 +180,17 @@ enum Secp256K1BackingPublic: Hashable {
         return pemDocument.pemString
     }
 #endif
+    
+    var elligatorSwiftRepresentation: Data {
+        var result = [UInt8](repeating: 0, count: 64)
+        var pubkey = key
+        let randomKey = SymmetricKey(size: .bits128)
+        _ = randomKey.withUnsafeBytes { buffer in
+            secp256k1_ellswift_encode(P256K.context, &result, &pubkey, buffer.baseAddress.unsafelyUnwrapped)
+        }
+        
+        return Data(result)
+    }
 }
 
 struct Secp256K1BackingPrivate: Hashable {

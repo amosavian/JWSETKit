@@ -187,6 +187,15 @@ public struct JSONWebKeyRegisteredParameters: JSONWebContainerParameters {
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
     public var certificateChain: [CertificateType]
     
+    /// The "x5c" (X.509 certificate chain) Header Parameter contains
+    /// the X.509 public key certificate or certificate chain [RFC5280] corresponding
+    /// to the key used to digitally sign the JWS.
+    ///
+    /// The certificate or certificate chain is represented as a JSON array of certificate value strings.
+    /// Each string in the array is a `base64-encoded` (Section 4 of [RFC4648]
+    /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
+    var certificateChainData: [Data]
+    
     /// The "`x5t`"/"`x5t#S256`" (X.509 certificate SHA-1/256 thumbprint)
     /// Header Parameter is a `base64url-encoded` SHA-1/256 thumbprint
     /// (a.k.a. digest) of the `DER` encoding of the X.509 certificate [RFC5280]
@@ -200,7 +209,8 @@ public struct JSONWebKeyRegisteredParameters: JSONWebContainerParameters {
     public static let keys: [SendablePartialKeyPath<Self>: String] = [
         \.keyType: "kty", \.keyUsage: "use", \.keyOperations: "key_ops",
         \.algorithm: "alg", \.curve: "crv", \.keyId: "kid",
-        \.certificateURL: "x5u", \.certificateChain: "x5c", \.certificateThumbprint: "x5t",
+        \.certificateURL: "x5u", \.certificateChain: "x5c", \.certificateChainData: "x5c",
+        \.certificateThumbprint: "x5t",
         \.expiry: "exp", \.issuedAt: "iat", \.revoked: "revoked",
     ]
 }
@@ -321,8 +331,7 @@ extension JSONWebKey {
 #if canImport(CommonCrypto)
     @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
-        guard let value: [String] = storage[stringKey(keyPath)] else { return [] }
-        return value.compactMap(SecCertificate.castValue)
+        storage[stringKey(keyPath)]
     }
 #endif
 }
@@ -387,8 +396,8 @@ extension MutableJSONWebKey {
         }
         set {
             switch keyPath {
-            case \.certificateChain:
-                storage[stringKey(keyPath)] = newValue.map { $0.base64EncodedString() }
+            case \.certificateChain, \.certificateChainData:
+                storage[stringKey(keyPath), urlEncoded: false] = newValue
             default:
                 storage[stringKey(keyPath)] = newValue
             }
@@ -399,8 +408,7 @@ extension MutableJSONWebKey {
     @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
         get {
-            guard let value: [String] = storage[stringKey(keyPath)] else { return [] }
-            return value.compactMap(SecCertificate.castValue)
+            storage[stringKey(keyPath)]
         }
         set {
             storage[stringKey(keyPath)] = newValue

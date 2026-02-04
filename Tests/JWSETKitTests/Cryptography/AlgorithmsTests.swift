@@ -47,7 +47,6 @@ struct AlgorithmsTests {
     }
 #endif
     
-    
     @Test
     func detectSymmetricAlgorithms() throws {
         #expect(JSONWebKeyHMAC<SHA384>().keyValue?.size == .bits384)

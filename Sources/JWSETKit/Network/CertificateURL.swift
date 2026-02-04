@@ -13,13 +13,6 @@ import Foundation
 import Crypto
 import SwiftASN1
 
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
-#if canImport(AsyncHTTPClient)
-import AsyncHTTPClient
-#endif
-
 #if canImport(Foundation.NSURLSession) || canImport(FoundationNetworking) || canImport(AsyncHTTPClient)
 extension MutableJSONWebContainer {
     fileprivate func loadCertificateFromURL() async throws -> [String] {

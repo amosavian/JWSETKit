@@ -338,12 +338,12 @@ extension RFC5480AlgorithmIdentifier {
         parameters: nil
     )
     
-    static let mldsa65 = RFC5480AlgorithmIdentifier(
+    public static let mldsa65 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mldsa65,
         parameters: nil
     )
     
-    static let mldsa87 = RFC5480AlgorithmIdentifier(
+    public static let mldsa87 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mldsa87,
         parameters: nil
     )

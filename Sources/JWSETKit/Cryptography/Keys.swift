@@ -465,7 +465,7 @@ public struct AnyJSONWebKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWebKeyCur
     /// Initializes `AnyJSONWebKey` from symmetric key parameters.
     ///
     /// - Parameter key: symmetric key that type-erased JWK must be initialized from
-    public init(_ key: SymmetricKey) throws {
+    public init(_ key: SymmetricKey) {
         self.storage = .init()
         self.keyType = .symmetric
         self.keyValue = key

@@ -270,7 +270,7 @@ extension Certificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
         case let value as Data:
             return try? .init(derEncoded: value)
         case let value as String:
-            guard let value = Data(urlBase64Encoded: value) else {
+            guard let value = Data(base64Encoded: value) else {
                 return nil
             }
             return try? .init(derEncoded: value)
@@ -294,7 +294,7 @@ extension SecCertificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self? {
         switch value {
         case let value as String:
-            guard let value = Data(urlBase64Encoded: value) else {
+            guard let value = Data(base64Encoded: value) else {
                 return nil
             }
             return try? .init(derEncoded: value)

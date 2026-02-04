@@ -16,11 +16,19 @@ protocol HTTPFetch {
     static func fetch(url: URL) async throws -> Data
 }
 
+enum NoHTTPFetch: HTTPFetch {
+    static func fetch(url _: URL) async throws -> Data {
+        throw HTTPError.connectionError
+    }
+}
+
 var httpClient: any HTTPFetch.Type {
 #if canImport(Foundation.NSURLSession) || canImport(FoundationNetworking)
     return URLSessionHTTPFetch.self
 #elseif canImport(AsyncHTTPClient)
     return HTTPClientFetch.self
+#else
+    return NoHTTPFetch.self
 #endif
 }
 
