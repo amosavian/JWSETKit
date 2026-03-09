@@ -36,7 +36,7 @@ struct RFC7520SignatureTests {
         xUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_f\
         cIe8u9ipH84ogoree7vjbU5y18kDquDg
         """
-        var jws = JWS(jwsString)!
+        var jws = try #require(JWS(jwsString))
         try jws.updateSignature(using: RFC7520ExampleKeys.rsaSignPrivateKey.signingKey)
         #expect(jws.signatures[0].signature == signature.decoded)
     }
@@ -54,7 +54,7 @@ struct RFC7520SignatureTests {
         xUAhb6L2aXic1U12podGU0KLUQSE_oI-ZnmKJ3F4uOZDnd6QZWJushZ41Axf_f\
         cIe8u9ipH84ogoree7vjbU5y18kDquDg
         """
-        let jws = JWS(jwsString)!
+        let jws = try #require(JWS(jwsString))
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.rsaSignPublicKey.validatingKey) }
     }
     
@@ -65,7 +65,7 @@ struct RFC7520SignatureTests {
         hhbXBsZSJ9\
         .\(payload).
         """
-        var jws = JWS(jwsString)!
+        var jws = try #require(JWS(jwsString))
         try jws.updateSignature(using: RFC7520ExampleKeys.rsaSignPrivateKey.signingKey)
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.rsaSignPublicKey.validatingKey) }
     }
@@ -83,7 +83,7 @@ struct RFC7520SignatureTests {
         0qI0n6uiP1aCN_2_jLAeQTlqRHtfa64QQSUmFAAjVKPbByi7xho0uTOcbH510a\
         6GYmJUAfmWjwZ6oD4ifKo8DYM-X72Eaw
         """
-        let jws = JWS(jwsString)!
+        let jws = try #require(JWS(jwsString))
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.rsaSignPublicKey.validatingKey) }
     }
     
@@ -94,7 +94,7 @@ struct RFC7520SignatureTests {
         hhbXBsZSJ9\
         .\(payload).
         """
-        var jws = JWS(jwsString)!
+        var jws = try #require(JWS(jwsString))
         try jws.updateSignature(using: RFC7520ExampleKeys.ecPrivateKey.signingKey)
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.ecPublicKey.validatingKey) }
     }
@@ -109,7 +109,7 @@ struct RFC7520SignatureTests {
         u9Plon7KRTzoNEuT4Va2cmL1eJAQy3mtPBu_u_sDDyYjnAMDxXPn7XrT0lw-kv\
         AD890jl8e2puQens_IEKBpHABlsbEPX6sFY8OcGDqoRuBomu9xQ2
         """
-        let jws = JWS(jwsString)!
+        let jws = try #require(JWS(jwsString))
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.ecPublicKey.validatingKey) }
     }
     
@@ -123,7 +123,7 @@ struct RFC7520SignatureTests {
         let signature = """
         s0h6KThzkfBBBkLspW1h84VsJZFTsPPqMDA7g1Md7p0
         """
-        var jws = JWS(jwsString)!
+        var jws = try #require(JWS(jwsString))
         try jws.updateSignature(using: RFC7520ExampleKeys.macSymmetricKey.signingKey)
         #expect(jws.signatures[0].signature == signature.decoded)
     }
@@ -136,7 +136,7 @@ struct RFC7520SignatureTests {
         .\(payload).\
         s0h6KThzkfBBBkLspW1h84VsJZFTsPPqMDA7g1Md7p0
         """
-        let jws = JWS(jwsString)!
+        let jws = try #require(JWS(jwsString))
         #expect(throws: Never.self) { try jws.verifySignature(using: RFC7520ExampleKeys.macSymmetricKey.validatingKey) }
     }
     
@@ -148,7 +148,7 @@ struct RFC7520SignatureTests {
         ..\
         s0h6KThzkfBBBkLspW1h84VsJZFTsPPqMDA7g1Md7p0
         """
-        let jws = JWS(jwsString)!
+        let jws = try #require(JWS(jwsString))
         #expect(jws.payload.encoded == .init())
         
         let encoder = JSONEncoder()

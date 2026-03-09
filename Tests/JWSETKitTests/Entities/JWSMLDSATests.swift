@@ -100,7 +100,7 @@ struct JWSMLDSATests {
         """.decoded
         let protected = "eyJhbGciOiJNTC1EU0EtNjUiLCJraWQiOiJTdWl1MjlxYmZ1YUJhUjRBdHMtYzZYUUJlUEJfT3BBeEF3Y1RSXzBLWFZNIn0".decoded
         let keys = [ExampleKeys.publicMLDSA65, ExampleKeys.publicMLDSA87]
-        let jws = try! JSONWebSignature(
+        let jws = try JSONWebSignature(
             signatures: [.init(
                 protected: protected,
                 signature: signature
@@ -219,7 +219,7 @@ struct JWSMLDSATests {
         """.decoded
         let protected = "eyJhbGciOiJNTC1EU0EtODciLCJraWQiOiJ0Um4xSk5Ja2dNc0FCVlFCbFhlREh4QUljY2xoLTJJWDBVZERFelB0NVhVIn0".decoded
         let keys = [ExampleKeys.publicMLDSA65, ExampleKeys.publicMLDSA87]
-        let jws = try! JSONWebSignature(
+        let jws = try JSONWebSignature(
             signatures: [.init(
                 protected: protected,
                 signature: signature

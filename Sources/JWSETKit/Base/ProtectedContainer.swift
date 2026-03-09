@@ -89,11 +89,10 @@ public protocol TypedProtectedWebContainer<Container>: ProtectedWebContainer {
 
 extension TypedProtectedWebContainer {
     public var debugDescription: String {
-        let valueDescription: String
-        if let value = value as? (any CustomDebugStringConvertible) {
-            valueDescription = value.debugDescription
+        let valueDescription: String = if let value = value as? (any CustomDebugStringConvertible) {
+            value.debugDescription
         } else {
-            valueDescription = "\(value)"
+            "\(value)"
         }
         return "(Protected: \(encoded.urlBase64EncodedString()), Value: \(valueDescription))"
     }

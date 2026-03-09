@@ -1,8 +1,8 @@
 //
-//  ASN1.swift
+//  Extensions.swift
+//  JWSETKit
 //
-//
-//  Created by Amir Abbas Mousavian on 9/9/23.
+//  Created by Amir Abbas Mousavian on 2026/3/9.
 //
 
 #if canImport(FoundationEssentials)
@@ -47,13 +47,13 @@ extension DERImplicitlyTaggable {
     ///
     /// - Parameter derEncoded: DER encoded object.
     @usableFromInline
-    init<D>(derEncoded: D) throws where D: DataProtocol {
+    package init<D>(derEncoded: D) throws where D: DataProtocol {
         try self.init(derEncoded: [UInt8](derEncoded))
     }
     
     /// DER serialized data representation of object.
     @usableFromInline
-    var derRepresentation: Data {
+    package var derRepresentation: Data {
         get throws {
             var derSerializer = DER.Serializer()
             try serialize(into: &derSerializer)

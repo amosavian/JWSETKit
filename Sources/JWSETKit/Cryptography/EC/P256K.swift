@@ -12,31 +12,41 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
-import LibSECP256k1
-import SwiftASN1
+import CryptoP256K
 
 extension P256K.Signing.PublicKey: Hashable, Codable {}
 
 extension P256K.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentified {
-    public static var algorithm: any JSONWebAlgorithm { .ecdsaSignatureSecp256k1SHA256 }
-    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .ecdsaSecp256k1 }
-    static var curve: JSONWebKeyCurve { .secp256k1 }
+    public static var algorithm: any JSONWebAlgorithm {
+        .ecdsaSignatureSecp256k1SHA256
+    }
+
+    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier {
+        .ecdsaSecp256k1
+    }
+
+    static var curve: JSONWebKeyCurve {
+        .secp256k1
+    }
 }
 
 extension P256K.KeyAgreement.PublicKey: Hashable, Codable {}
 
 extension P256K.KeyAgreement.PublicKey: CryptoECPublicKey {
-    static var curve: JSONWebKeyCurve { .secp256k1 }
+    static var curve: JSONWebKeyCurve {
+        .secp256k1
+    }
 }
 
 extension P256K.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let ecdsaSignature: P256K.Signing.ECDSASignature
-        // swiftformat:disable:next redundantSelf
-        if signature.count == (self.curve?.coordinateSize ?? 0) * 2 {
-            ecdsaSignature = try .init(rawRepresentation: signature)
+            // swiftformat:disable:next redundantSelf
+            = if signature.count == (self.curve?.coordinateSize ?? 0) * 2
+        {
+            try .init(rawRepresentation: signature)
         } else {
-            ecdsaSignature = try .init(derRepresentation: signature)
+            try .init(derRepresentation: signature)
         }
         if !isValidSignature(ecdsaSignature, for: SHA256.hash(data: data)) {
             throw CryptoKitError.authenticationFailure

@@ -185,7 +185,7 @@ public struct JSONWebKeyRegisteredParameters: JSONWebContainerParameters {
     /// The certificate or certificate chain is represented as a JSON array of certificate value strings.
     /// Each string in the array is a `base64-encoded` (Section 4 of [RFC4648]
     /// -- not base64url-encoded) DER [ITU.X690.2008] PKIX certificate value.
-    public var certificateChain: [CertificateType]
+    public var certificateChain: JSONWebCertificateChain?
     
     /// The "x5c" (X.509 certificate chain) Header Parameter contains
     /// the X.509 public key certificate or certificate chain [RFC5280] corresponding
@@ -322,18 +322,11 @@ extension JSONWebKey {
     public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebKeyRegisteredParameters, Data?>) -> Data? {
         switch keyPath {
         case \.certificateThumbprint where storage.contains(key: .x5tS256):
-            return storage[.x5tS256]
+            storage[.x5tS256]
         default:
-            return storage[stringKey(keyPath)]
+            storage[stringKey(keyPath)]
         }
     }
-    
-#if canImport(CommonCrypto)
-    @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
-        storage[stringKey(keyPath)]
-    }
-#endif
 }
 
 extension MutableJSONWebKey {
@@ -374,9 +367,9 @@ extension MutableJSONWebKey {
         get {
             switch keyPath {
             case \.certificateThumbprint where storage.contains(key: .x5tS256):
-                return storage[.x5tS256]
+                storage[.x5tS256]
             default:
-                return storage[stringKey(keyPath)]
+                storage[stringKey(keyPath)]
             }
         }
         set {
@@ -403,18 +396,6 @@ extension MutableJSONWebKey {
             }
         }
     }
-    
-#if canImport(CommonCrypto)
-    @_documentation(visibility: private)
-    public subscript(dynamicMember keyPath: SendableKeyPath<JoseHeaderJWSRegisteredParameters, [SecCertificate]>) -> [SecCertificate] {
-        get {
-            storage[stringKey(keyPath)]
-        }
-        set {
-            storage[stringKey(keyPath)] = newValue
-        }
-    }
-#endif
 }
 
 extension JSONWebKeyRSAType {

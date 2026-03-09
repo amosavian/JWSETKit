@@ -40,13 +40,6 @@ extension SymmetricKey: JSONWebKeySymmetric {
     }
 }
 
-extension ContiguousBytes {
-    @usableFromInline
-    var data: Data {
-        withUnsafeBytes { Data($0) }
-    }
-}
-
 extension SymmetricKey {
     public var size: SymmetricKeySize {
         .init(bitCount: bitCount)

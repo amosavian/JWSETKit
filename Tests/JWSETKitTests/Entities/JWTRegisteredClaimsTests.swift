@@ -11,7 +11,9 @@ import Testing
 
 #if canImport(Darwin)
 extension JSONWebContainerCustomParameters {
-    var iat: Date? { fatalError() }
+    var iat: Date? {
+        fatalError()
+    }
 }
 #endif
 
@@ -41,7 +43,7 @@ struct JWTRegisteredClaimsTests {
         #expect(claims.subjectURL?.host == nil)
         
         #expect(claims.audience == ["https://client.example.org/cb"])
-        #expect(claims.audienceURL == [URL(string: "https://client.example.org/cb")!])
+        #expect(try claims.audienceURL == [#require(URL(string: "https://client.example.org/cb"))])
         
         #expect(claims.expiry == Date(timeIntervalSince1970: 1_311_281_970))
         #expect(claims.exp == Date(timeIntervalSince1970: 1_311_281_970))
@@ -64,7 +66,7 @@ struct JWTRegisteredClaimsTests {
         var claims = JSONWebTokenClaims(storage: .init())
         claims.issuerURL = URL(string: "https://self-issued.me")
         claims.subject = "NzbLsXh8uDCcd-6MNwXF4W_7noWXFZAfHkxZsRGC9Xs"
-        claims.audienceURL = [URL(string: "https://client.example.org/cb")!]
+        claims.audienceURL = try [#require(URL(string: "https://client.example.org/cb"))]
         claims.expiry = Date(timeIntervalSince1970: 1_311_281_970)
         claims.issuedAt = Date(timeIntervalSince1970: 1_311_280_970)
         claims.notBefore = Date(timeIntervalSince1970: 1_311_280_970)

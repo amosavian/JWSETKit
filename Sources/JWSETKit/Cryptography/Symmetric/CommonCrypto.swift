@@ -133,13 +133,13 @@ extension Int32 {
     fileprivate var cryptoKitError: CryptoKitError? {
         switch Int(self) {
         case kCCSuccess:
-            return nil
+            nil
         case kCCParamError:
-            return CryptoKitError.incorrectParameterSize
+            CryptoKitError.incorrectParameterSize
         case kCCBufferTooSmall:
-            return CryptoKitError.incorrectKeySize
+            CryptoKitError.incorrectKeySize
         default:
-            return CryptoKitError.underlyingCoreCryptoError(error: self)
+            CryptoKitError.underlyingCoreCryptoError(error: self)
         }
     }
 }

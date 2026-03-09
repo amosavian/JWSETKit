@@ -11,6 +11,10 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
+#if P256K
+import CryptoP256K
+#endif
 
 /// JSON Web Key (JWK) container for different types of Elliptic-Curve public keys consists of P-256, P-384, P-521, Ed25519.
 @frozen

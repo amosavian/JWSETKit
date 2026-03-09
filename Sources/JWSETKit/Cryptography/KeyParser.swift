@@ -11,6 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
 import SwiftASN1
 
 extension AnyJSONWebKey {
@@ -81,12 +82,20 @@ protocol JSONWebKeySpecializerByType: JSONWebKeySpecializer {
 }
 
 extension JSONWebKeySpecializerByType {
-    public static var supportedKeyCurves: [JSONWebKeyCurve]? { nil }
-    static var supportedAlgorithms: [any JSONWebAlgorithm]? { nil }
-    static var objectIdentifierGroup: String? { nil }
+    public static var supportedKeyCurves: [JSONWebKeyCurve]? {
+        nil
+    }
+
+    static var supportedAlgorithms: [any JSONWebAlgorithm]? {
+        nil
+    }
+
+    static var objectIdentifierGroup: String? {
+        nil
+    }
     
     static var asn1OIDGroup: ASN1ObjectIdentifier? {
-        if let objectIdentifierGroup = objectIdentifierGroup,
+        if let objectIdentifierGroup,
            let oidGroup = try? ASN1ObjectIdentifier(dotRepresentation: objectIdentifierGroup)
         {
             return oidGroup
@@ -118,10 +127,10 @@ extension JSONWebKeySpecializerByType {
         
         switch format {
         case .pkcs8:
-            guard let privateKeyType = privateKeyType else { return nil }
+            guard let privateKeyType else { return nil }
             return try privateKeyType.init(importing: key, format: format)
         case .spki:
-            guard let publicKeyType = publicKeyType else { return nil }
+            guard let publicKeyType else { return nil }
             return try publicKeyType.init(importing: key, format: format)
         default:
             return nil
@@ -134,16 +143,16 @@ extension JSONWebKeySpecializerByType {
             guard supportedKeyCurves?.contains(curve) ?? false else { return nil }
         }
         
-        if let supportedAlgorithms = supportedAlgorithms, let algorithm = key.algorithm {
+        if let supportedAlgorithms, let algorithm = key.algorithm {
             guard supportedAlgorithms.contains(where: { $0.rawValue == algorithm.rawValue }) else {
                 return nil
             }
         }
         
         if key.storage.contains(key: privateKeyParameter) {
-            guard let privateKeyType = privateKeyType else { return nil }
+            guard let privateKeyType else { return nil }
             return try privateKeyType.init(key)
-        } else if let publicKeyType = publicKeyType {
+        } else if let publicKeyType {
             return try publicKeyType.init(key)
         } else {
             return nil
@@ -167,10 +176,10 @@ extension JSONWebKeySpecializerByType {
         
         switch format {
         case .pkcs8:
-            guard let privateKeyType = privateKeyType else { return nil }
+            guard let privateKeyType else { return nil }
             return try privateKeyType.init(importing: key, format: format)
         case .spki:
-            guard let publicKeyType = publicKeyType else { return nil }
+            guard let publicKeyType else { return nil }
             return try publicKeyType.init(importing: key, format: format)
         default:
             return nil
@@ -261,9 +270,9 @@ enum JSONWebKeySymmetricSpecializer: JSONWebKeySpecializer {
     static func deserialize<D>(key: D, format: JSONWebKeyFormat) throws -> (any JSONWebKey)? where D: DataProtocol {
         switch format {
         case .raw:
-            return try AnyJSONWebKey(SymmetricKey(importing: key, format: .raw)).specialized()
+            try AnyJSONWebKey(SymmetricKey(importing: key, format: .raw)).specialized()
         case .pkcs8, .spki, .jwk:
-            return nil
+            nil
         }
     }
 }

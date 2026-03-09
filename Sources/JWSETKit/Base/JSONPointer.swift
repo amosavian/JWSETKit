@@ -65,9 +65,13 @@ public struct JSONPointer: Hashable, Sendable, RandomAccessCollection, CustomStr
         return "/" + components.map { Self.escape($0.stringValue) }.joined(separator: "/")
     }
     
-    public var startIndex: Int { components.startIndex }
+    public var startIndex: Int {
+        components.startIndex
+    }
     
-    public var endIndex: Int { components.endIndex }
+    public var endIndex: Int {
+        components.endIndex
+    }
     
     public subscript(position: Int) -> Component {
         components[position]
@@ -229,7 +233,7 @@ extension JSONWebValueStorage {
             value(at: pointer)
         }
         set {
-            guard let newValue = newValue else {
+            guard let newValue else {
                 removeValue(at: pointer)
                 return
             }

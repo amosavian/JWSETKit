@@ -11,14 +11,23 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
 import SwiftASN1
 
 extension Crypto.Curve25519.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension Curve25519.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentified {
-    static var curve: JSONWebKeyCurve { .ed25519 }
-    public static var algorithm: any JSONWebAlgorithm { .eddsaSignature }
-    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .ed25519 }
+    static var curve: JSONWebKeyCurve {
+        .ed25519
+    }
+
+    public static var algorithm: any JSONWebAlgorithm {
+        .eddsaSignature
+    }
+
+    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier {
+        .ed25519
+    }
     
     public var storage: JSONWebValueStorage {
         var result = AnyJSONWebKey()
@@ -40,7 +49,9 @@ extension Curve25519.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmId
 extension Crypto.Curve25519.KeyAgreement.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension Curve25519.KeyAgreement.PublicKey: CryptoECPublicKey {
-    static var curve: JSONWebKeyCurve { .x25519 }
+    static var curve: JSONWebKeyCurve {
+        .x25519
+    }
     
     public var storage: JSONWebValueStorage {
         var result = AnyJSONWebKey()
@@ -70,8 +81,13 @@ extension Curve25519.Signing.PublicKey: JSONWebValidatingKey {
 extension Curve25519.Signing.PublicKey: CryptoEdKeyPortable {}
 
 extension Curve25519.KeyAgreement.PublicKey: CryptoEdKeyPortable {
-    public static var algorithm: any JSONWebAlgorithm { .ecdhEphemeralStatic }
-    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .x25519 }
+    public static var algorithm: any JSONWebAlgorithm {
+        .ecdhEphemeralStatic
+    }
+
+    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier {
+        .x25519
+    }
 }
 
 extension Crypto.Curve25519.Signing.PrivateKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}

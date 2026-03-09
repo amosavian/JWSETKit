@@ -5,13 +5,13 @@
 //  Created by Amir Abbas Mousavian on 2025/11/30.
 //
 
-#if P256K
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
 import LibSECP256k1
 import SwiftASN1
 
@@ -163,11 +163,17 @@ enum Secp256K1BackingPublic: Hashable {
         return Data(result)
     }
     
-    var rawRepresentation: Data { serialize().dropFirst() }
+    var rawRepresentation: Data {
+        serialize().dropFirst()
+    }
     
-    var x963Representation: Data { serialize() }
+    var x963Representation: Data {
+        serialize()
+    }
     
-    var compressedRepresentation: Data { serialize(compressed: true) }
+    var compressedRepresentation: Data {
+        serialize(compressed: true)
+    }
     
     var derRepresentation: Data {
         let spki = SubjectPublicKeyInfo(algorithmIdentifier: .ecdsaSecp256k1, key: Array(x963Representation))
@@ -204,6 +210,10 @@ struct Secp256K1BackingPrivate: Hashable {
         return result
     }
     
+    func hash(into hasher: inout Hasher) {
+        key.withUnsafeBytes { hasher.combine(bytes: $0) }
+    }
+    
     static func isCompactRepresentable(_ key: SymmetricKey) -> Bool {
         var pubkey = secp256k1_pubkey()
         key.withUnsafeBytes {
@@ -214,7 +224,7 @@ struct Secp256K1BackingPrivate: Hashable {
     
     private static func isValid(_ key: SymmetricKey, compactRepresentable: Bool) -> Bool {
         key.withUnsafeBytes {
-            secp256k1_ec_seckey_verify(P256K.context, $0.baseAddress.unsafelyUnwrapped) == 0 && (!compactRepresentable || Self.isCompactRepresentable(key))
+            secp256k1_ec_seckey_verify(P256K.context, $0.baseAddress.unsafelyUnwrapped) == 0 && (!compactRepresentable || isCompactRepresentable(key))
         }
     }
 
@@ -317,10 +327,14 @@ struct Secp256K1BackingPrivate: Hashable {
     }
 
     /// A data representation of the private key.
-    var rawRepresentation: Data { key.data }
+    var rawRepresentation: Data {
+        key.data
+    }
     
     /// An ANSI x9.63 representation of the private key.
-    var x963Representation: Data { publicKey.x963Representation + key.data }
+    var x963Representation: Data {
+        publicKey.x963Representation + key.data
+    }
 
     /// A Distinguished Encoding Rules (DER) encoded representation of the private key.
     var derRepresentation: Data {
@@ -336,4 +350,3 @@ struct Secp256K1BackingPrivate: Hashable {
     }
 #endif
 }
-#endif

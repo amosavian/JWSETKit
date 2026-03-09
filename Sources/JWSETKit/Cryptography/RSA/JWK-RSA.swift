@@ -11,6 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
 import SwiftASN1
 #if canImport(CommonCrypto)
 import CommonCrypto
@@ -315,22 +316,21 @@ enum RSAHelper {
         guard let modulus = key.modulus, let publicExponent = key.exponent else {
             throw CryptoKitError.incorrectKeySize
         }
-        let components: [Data]
-        if let privateExponent = key.privateExponent,
-           let prime1 = key.firstPrimeFactor,
-           let prime2 = key.secondPrimeFactor,
-           let exponent1 = key.firstFactorCRTExponent,
-           let exponent2 = key.secondFactorCRTExponent,
-           let coefficient = key.firstCRTCoefficient
+        let components: [Data] = if let privateExponent = key.privateExponent,
+                                    let prime1 = key.firstPrimeFactor,
+                                    let prime2 = key.secondPrimeFactor,
+                                    let exponent1 = key.firstFactorCRTExponent,
+                                    let exponent2 = key.secondFactorCRTExponent,
+                                    let coefficient = key.firstCRTCoefficient
         {
-            components = [
+            [
                 Data([0x00]),
                 modulus, publicExponent,
                 privateExponent, prime1, prime2,
                 exponent1, exponent2, coefficient,
             ]
         } else {
-            components = [modulus, publicExponent]
+            [modulus, publicExponent]
         }
         var result = DER.Serializer()
         try result.appendIntegers(components)

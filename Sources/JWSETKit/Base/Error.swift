@@ -51,36 +51,36 @@ public enum JSONWebKeyError: JSONWebError, Sendable {
     public func localizedError(for locale: Locale) -> String {
         switch self {
         case .unknownAlgorithm:
-            return .init(
+            .init(
                 localizingKey: "errorUnknownAlgorithm",
                 value: "Given signature/encryption algorithm is no supported.",
                 locale: locale
             )
         case .unknownKeyType:
-            return .init(
+            .init(
                 localizingKey: "errorUnknownKeyType", value: "Key type is not supported.",
                 locale: locale
             )
         case .decryptionFailed:
-            return .init(
+            .init(
                 localizingKey: "errorDecryptionFailed",
                 value: "Decrypting cipher-text using given key is not possible.",
                 locale: locale
             )
         case .keyNotFound:
-            return .init(
+            .init(
                 localizingKey: "errorKeyNotFound",
                 value: "Failed to find given key.",
                 locale: locale
             )
         case .operationNotAllowed:
-            return .init(
+            .init(
                 localizingKey: "errorOperationNotAllowed",
                 value: "Operation Not Allowed.",
                 locale: locale
             )
         case .invalidKeyFormat:
-            return .init(
+            .init(
                 localizingKey: "errorInvalidKeyFormat",
                 value: "Invalid Key Format",
                 locale: locale
@@ -121,53 +121,53 @@ public enum JSONWebValidationError: JSONWebError, Sendable {
     public func localizedError(for locale: Locale) -> String {
         switch self {
         case .tokenExpired(let date):
-            return .init(
+            .init(
                 localizingKey: "errorExpiredToken",
                 value: "Token is invalid after %@",
                 locale: locale,
                 date.formatted(locale: locale)
             )
         case .tokenInvalidBefore(let date):
-            return .init(
+            .init(
                 localizingKey: "errorNotBeforeToken",
                 value: "Token is invalid before %@",
                 locale: locale,
                 date.formatted(locale: locale)
             )
         case .audienceNotIntended(let audience):
-            return .init(
+            .init(
                 localizingKey: "errorInvalidAudience",
                 value: "Audience \"%@\" is not intended for the token.",
                 locale: locale,
                 audience
             )
         case .missingRequiredField(let key):
-            return .init(
+            .init(
                 localizingKey: "errorMissingField",
                 value: "Required \"%@\" field is missing.",
                 locale: locale,
                 key
             )
         case .duplicateDisclosureDigest:
-            return .init(
+            .init(
                 localizingKey: "errorDuplicateDigest",
                 value: "Duplicate disclosure digest found in SD-JWT.",
                 locale: locale
             )
         case .orphanDisclosure:
-            return .init(
+            .init(
                 localizingKey: "errorOrphanDisclosure",
                 value: "Disclosure has no matching digest in SD-JWT payload.",
                 locale: locale
             )
         case .keyBindingRequired:
-            return .init(
+            .init(
                 localizingKey: "errorKeyBindingRequired",
                 value: "Key binding JWT is required but not present.",
                 locale: locale
             )
         case .invalidKeyBinding:
-            return .init(
+            .init(
                 localizingKey: "errorInvalidKeyBinding",
                 value: "Key binding JWT validation failed",
                 locale: locale
@@ -196,26 +196,26 @@ public enum HTTPError: JSONWebError {
     public func localizedError(for locale: Locale) -> String {
         switch self {
         case .unknownError:
-            return .init(
+            .init(
                 localizingKey: "errorHTTPUnknown",
                 value: "HTTP request failed.",
                 locale: locale
             )
         case .connectionError:
-            return .init(
+            .init(
                 localizingKey: "errorHTTPConnection",
                 value: "HTTP connection failed.",
                 locale: locale
             )
         case .clientError(code: let code):
-            return .init(
+            .init(
                 localizingKey: "errorHTTPClientStatus",
                 value: "HTTP client error with status %@",
                 locale: locale,
                 code
             )
         case .serverError(code: let code):
-            return .init(
+            .init(
                 localizingKey: "errorHTTPServerStatus",
                 value: "HTTP server error with status %@",
                 locale: locale,

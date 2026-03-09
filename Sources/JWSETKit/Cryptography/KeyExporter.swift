@@ -11,6 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
 
 /// A string describing the data format of the key to import/export.
 public enum JSONWebKeyFormat: String, Codable, Hashable {
@@ -134,8 +135,13 @@ public protocol JSONWebKeyAlgorithmIdentified: JSONWebKey {
 }
 
 extension JSONWebPrivateKey where Self: JSONWebKeyAlgorithmIdentified, PublicKey: JSONWebKeyAlgorithmIdentified {
-    public static var algorithm: any JSONWebAlgorithm { PublicKey.algorithm }
-    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier { PublicKey.algorithmIdentifier }
+    public static var algorithm: any JSONWebAlgorithm {
+        PublicKey.algorithm
+    }
+
+    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier {
+        PublicKey.algorithmIdentifier
+    }
 }
 
 public protocol JSONWebKeySymmetric: JSONWebKeyImportable, JSONWebKeyExportable, Hashable {

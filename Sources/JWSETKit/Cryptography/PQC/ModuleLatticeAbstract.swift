@@ -11,6 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
 
 public protocol JSONWebKeyAlgorithmKeyPairPublic: JSONWebKey, JSONWebKeyAlgorithmKeyPairType {}
 

@@ -91,6 +91,26 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
         }
     }
     
+    /// Returns JWK thumbprint of key, calculated  from key if embedded or from `jkt` if available.
+    public var jwkThumbprint: Data? {
+        switch self {
+        case .key(let key):
+            return try? key.thumbprint(format: .jwk, using: SHA256.self).data
+        case .keyId(let keyId):
+            let thumbprintPrefix = "urn:ietf:params:oauth:jwk-thumbprint:sha-256:"
+            if keyId.hasPrefix(thumbprintPrefix),
+               let thumbprint = Data(urlBase64Encoded: keyId.dropFirst(thumbprintPrefix.count))
+            {
+                return thumbprint
+            }
+            return nil
+        case .keyThumbprint(let thumbprint):
+            return thumbprint
+        default:
+            return nil
+        }
+    }
+    
     /// Creates a claim with a public key value.
     ///
     /// - Parameter value: The keyinstance to be used as the `jwk` claim. If key is a private
@@ -151,6 +171,38 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
             contentEncryptionAlgorithm: contentEncryptionAlgorithm
         )
         return .encryptedKey(jwe)
+    }
+    
+    /// Creates confirmation from key using given key id strategy.
+    ///
+    /// - Note: Confirmations that contain encrypted key are not supported to be produced by this method.
+    ///
+    /// - Parameters:
+    ///   - strategy: Confirmation strategy.
+    ///   - key: The confirmation key.
+    /// - Returns: `cnf` created according to given key and strategy.
+    public static func strategy(_ strategy: JOSEHeader.KeyIdStrategy, using key: any JSONWebKey) -> Self? {
+        switch strategy {
+        case .id:
+            guard let keyId = key.keyId else {
+                return nil
+            }
+            return .keyId(keyId)
+        case .customId(let keyId):
+            return .keyId(keyId)
+        case .keySet(url: let url):
+            return .url(url, keyId: key.keyId)
+        case .thumbprint:
+            return try? .keyThumbprint(key)
+        case .idWithThumbprintFallback:
+            if let keyId = key.keyId {
+                return .keyId(keyId)
+            } else {
+                return try? .keyThumbprint(key)
+            }
+        case .embedded:
+            return .key(key)
+        }
     }
     
     public init(from decoder: any Decoder) throws {
@@ -299,6 +351,33 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
             return result
         } else {
             throw JSONWebKeyError.keyNotFound
+        }
+    }
+    
+    /// Returns if the given key is matched by id or thumbprint to `cnf`.
+    ///
+    /// - Important: This method returns true if the `cnf` is encrypted or must be
+    ///         resolved by url.
+    ///
+    /// - Parameter key: The key that should be
+    /// - Returns: The key is matched to `cnf` or not
+    public func isValidKey(_ key: any JSONWebKey) -> Bool {
+        switch self {
+        case .key(let confirmationKey):
+            let cnfThumb = try? confirmationKey.thumbprint(format: .jwk, using: SHA256.self)
+            let keyThumb = try? key.thumbprint(format: .jwk, using: SHA256.self)
+            return cnfThumb == keyThumb
+        case .encryptedKey:
+            return true
+        case .url(_, let keyId):
+            return key.keyId == keyId
+        case .keyId(let keyId):
+            return key.keyId == keyId
+        case .keyThumbprint(let thumbprint):
+            let keyThumb = try? key.thumbprint(format: .jwk, using: SHA256.self).data
+            return keyThumb == thumbprint
+        case .certificateThumbprint(let thumbprint):
+            return key.certificateThumbprint == thumbprint
         }
     }
 }

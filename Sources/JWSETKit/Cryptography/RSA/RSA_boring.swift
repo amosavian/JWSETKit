@@ -638,11 +638,11 @@ extension ArbitraryPrecisionInteger.BackingStorage {
     convenience init(hexString: String) throws {
         self.init()
         try hexString.withCString { hexStringPtr in
-            /// `BN_hex2bin` takes a `BIGNUM **` so we need a double WUMP dance.
+            // `BN_hex2bin` takes a `BIGNUM **` so we need a double WUMP dance.
             try withUnsafeMutablePointer(to: &self._backing) { backingPtr in
                 var backingPtr: UnsafeMutablePointer<BIGNUM>? = backingPtr
                 try withUnsafeMutablePointer(to: &backingPtr) { backingPtrPtr in
-                    /// `BN_hex2bin` returns the number of bytes of `in` processed or zero on error.
+                    // `BN_hex2bin` returns the number of bytes of `in` processed or zero on error.
                     guard CCryptoBoringSSL_BN_hex2bn(backingPtrPtr, hexStringPtr) == hexString.count else {
                         throw CryptoKitError.incorrectParameterSize
                     }

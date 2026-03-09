@@ -18,7 +18,9 @@ public protocol JSONWebContainerParameters {
 }
 
 extension JSONWebContainerParameters {
-    public static var localizableKeys: [SendablePartialKeyPath<Self>] { [] }
+    public static var localizableKeys: [SendablePartialKeyPath<Self>] {
+        []
+    }
 }
 
 extension JSONWebContainer {
@@ -53,6 +55,7 @@ extension AnyKeyPath {
 
 extension String {
 #if canImport(Foundation.NSRegularExpression)
+    // swiftformat:disable:next docComments
     // The pattern is valid and it never fails.
     private static let regex = (try? NSRegularExpression(pattern: "([a-z0-9])([A-Z])", options: [])).unsafelyUnwrapped
 #endif

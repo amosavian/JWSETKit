@@ -5,7 +5,6 @@
 //  Created by Amir Abbas Mousavian on 2025/11/30.
 //
 
-#if P256K
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
@@ -73,7 +72,7 @@ extension P256K {
             public init<Bytes: ContiguousBytes>(compressedRepresentation: Bytes) throws(CryptoKitMetaError) {
                 try self.init(x963Representation: compressedRepresentation.data)
             }
-
+            
 #if !hasFeature(Embedded)
             /// Creates a P-256 public key for signing from a Privacy-Enhanced Mail
             /// (PEM) representation.
@@ -84,7 +83,7 @@ extension P256K {
                 self.impl = try .init(pemRepresentation: pemRepresentation)
             }
 #endif
-
+            
             /// Creates a P-256 public key for signing from a Distinguished Encoding
             /// Rules (DER) encoded representation.
             ///
@@ -107,29 +106,43 @@ extension P256K {
             }
             
             /// A compact representation of the public key.
-            public var compactRepresentation: Data? { impl.compactRepresentation }
+            public var compactRepresentation: Data? {
+                impl.compactRepresentation
+            }
             
             /// A full representation of the public key.
-            public var rawRepresentation: Data { impl.rawRepresentation }
+            public var rawRepresentation: Data {
+                impl.rawRepresentation
+            }
             
             /// An ANSI x9.63 representation of the public key.
-            public var x963Representation: Data { impl.x963Representation }
-
+            public var x963Representation: Data {
+                impl.x963Representation
+            }
+            
             /// A compressed representation of the public key.
-            public var compressedRepresentation: Data { impl.compressedRepresentation }
+            public var compressedRepresentation: Data {
+                impl.compressedRepresentation
+            }
             
             /// A Distinguished Encoding Rules (DER) encoded representation of the public key.
-            public var derRepresentation: Data { impl.derRepresentation }
-
+            public var derRepresentation: Data {
+                impl.derRepresentation
+            }
+            
 #if !hasFeature(Embedded)
             /// A Privacy-Enhanced Mail (PEM) representation of the public key.
-            public var pemRepresentation: String { impl.pemRepresentation }
+            public var pemRepresentation: String {
+                impl.pemRepresentation
+            }
 #endif
             
             /// A 64-byte ElligatorSwift representation of the public key.
-            public var elligatorSwiftRepresentation: Data { impl.elligatorSwiftRepresentation }
+            public var elligatorSwiftRepresentation: Data {
+                impl.elligatorSwiftRepresentation
+            }
         }
-
+        
         /// A P-256 private key used to create cryptographic signatures.
         public struct PrivateKey: Sendable {
             let impl: Secp256K1BackingPrivate
@@ -146,7 +159,7 @@ extension P256K {
             public init(compactRepresentable: Bool = true) {
                 self.impl = .init(compactRepresentable: compactRepresentable)
             }
-
+            
             /// Creates a P-256 private key for signing from an ANSI x9.63
             /// representation.
             ///
@@ -155,7 +168,7 @@ extension P256K {
             public init<Bytes: ContiguousBytes>(x963Representation: Bytes) throws(CryptoKitMetaError) {
                 self.impl = try .init(x963Representation: x963Representation)
             }
-
+            
             /// Creates a P-256 private key for signing from a collection of bytes.
             ///
             /// - Parameters:
@@ -164,7 +177,7 @@ extension P256K {
             public init<Bytes: ContiguousBytes>(rawRepresentation: Bytes) throws(CryptoKitMetaError) {
                 self.impl = try .init(rawRepresentation: rawRepresentation)
             }
-
+            
 #if !hasFeature(Embedded)
             /// Creates a P-256 private key for signing from a Privacy-Enhanced Mail
             /// PEM) representation.
@@ -175,7 +188,7 @@ extension P256K {
                 self.impl = try .init(pemRepresentation: pemRepresentation)
             }
 #endif
-
+            
             /// Creates a P-256 private key for signing from a Distinguished Encoding
             /// Rules (DER) encoded representation.
             ///
@@ -184,22 +197,32 @@ extension P256K {
             public init<Bytes: RandomAccessCollection>(derRepresentation: Bytes) throws(CryptoKitMetaError) where Bytes.Element == UInt8 {
                 self.impl = try .init(derRepresentation: derRepresentation)
             }
-
+            
             /// The corresponding public key.
-            public var publicKey: P256K.Signing.PublicKey { .init(impl: impl.publicKey) }
-
+            public var publicKey: P256K.Signing.PublicKey {
+                .init(impl: impl.publicKey)
+            }
+            
             /// A data representation of the private key.
-            public var rawRepresentation: Data { impl.rawRepresentation }
+            public var rawRepresentation: Data {
+                impl.rawRepresentation
+            }
             
             /// An ANSI x9.63 representation of the private key.
-            public var x963Representation: Data { impl.x963Representation }
-
+            public var x963Representation: Data {
+                impl.x963Representation
+            }
+            
             /// A Distinguished Encoding Rules (DER) encoded representation of the private key.
-            public var derRepresentation: Data { impl.derRepresentation }
-
+            public var derRepresentation: Data {
+                impl.derRepresentation
+            }
+            
 #if !hasFeature(Embedded)
             /// A Privacy-Enhanced Mail (PEM) representation of the private key.
-            public var pemRepresentation: String { impl.pemRepresentation }
+            public var pemRepresentation: String {
+                impl.pemRepresentation
+            }
 #endif
         }
     }
@@ -216,7 +239,7 @@ extension P256K.Signing {
             secp256k1_ecdsa_signature_parse_compact(P256K.context, &signature, [UInt8](rawRepresentation))
             return signature
         }
-
+        
         /// Creates a P256K digital signature from a raw representation.
         ///
         /// - Parameters:
@@ -226,7 +249,7 @@ extension P256K.Signing {
             guard rawRepresentation.count == 2 * P256K.coordinateByteCount else {
                 throw CryptoKitError.incorrectParameterSize
             }
-
+            
             self.rawRepresentation = Data(rawRepresentation)
         }
         
@@ -234,7 +257,7 @@ extension P256K.Signing {
             guard dataRepresentation.count == 2 * P256K.coordinateByteCount else {
                 throw CryptoKitError.incorrectParameterSize
             }
-
+            
             self.rawRepresentation = dataRepresentation
         }
         
@@ -244,14 +267,14 @@ extension P256K.Signing {
             secp256k1_ecdsa_signature_serialize_compact(P256K.context, &rawRepresentation, &signature)
             self.rawRepresentation = Data(rawRepresentation)
         }
-
+        
         var composite: (r: Data, s: Data) {
             let combined = rawRepresentation
             assert(combined.count % 2 == 0)
             let half = combined.count / 2
             return (combined.prefix(half), combined.suffix(half))
         }
-
+        
         /// Creates a P256K digital signature from a Distinguished Encoding
         /// Rules (DER) encoded representation.
         ///
@@ -261,37 +284,34 @@ extension P256K.Signing {
         public init<D: DataProtocol>(derRepresentation: D) throws(CryptoKitMetaError) {
             var signature = secp256k1_ecdsa_signature()
             let derRepresentation = [UInt8](derRepresentation)
-            var rawRepresentation = [UInt8](repeating: 0, count: 64)
-
+            
             // Parse the DER signature
             let parseResult = secp256k1_ecdsa_signature_parse_der(P256K.context, &signature, derRepresentation, derRepresentation.count)
             guard parseResult == 1 else {
                 throw CryptoKitError.incorrectParameterSize
             }
-
+            
             // Normalize the signature to ensure low-s form (prevent malleability)
             // This converts high-s signatures to low-s form
             var normalizedSignature = secp256k1_ecdsa_signature()
             secp256k1_ecdsa_signature_normalize(P256K.context, &normalizedSignature, &signature)
-            signature = normalizedSignature
-
-            // Serialize to compact form
-            secp256k1_ecdsa_signature_serialize_compact(P256K.context, &rawRepresentation, &signature)
-            self.rawRepresentation = Data(rawRepresentation)
+            try self.init(normalizedSignature)
         }
-
-/// Invokes the given closure with a buffer pointer covering the raw
-/// bytes of the signature.
+        
 #if hasFeature(Embedded)
+        /// Invokes the given closure with a buffer pointer covering the raw
+        /// bytes of the signature.
         public func withUnsafeBytes<R, E: Error>(_ body: (UnsafeRawBufferPointer) throws(E) -> R) throws(E) -> R {
             try rawRepresentation.withUnsafeBytes(body)
         }
 #else
+        /// Invokes the given closure with a buffer pointer covering the raw
+        /// bytes of the signature.
         public func withUnsafeBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
             try rawRepresentation.withUnsafeBytes(body)
         }
 #endif
-
+        
         /// A Distinguished Encoding Rules (DER) encoded representation of a
         /// P256K digital signature.
         public var derRepresentation: Data {
@@ -407,4 +427,16 @@ extension P256K.Signing.PublicKey {
         return secp256k1_schnorrsig_verify(P256K.context, signature, message, message.count, &pubkey) == 1
     }
 }
-#endif
+
+extension ContiguousBytes {
+    @usableFromInline
+    var data: Data {
+        withUnsafeBytes { Data($0) }
+    }
+    
+    mutating func setBytes<D: DataProtocol>(_ bytes: D) {
+        withUnsafeBytes { buffer in
+            UnsafeMutableRawBufferPointer(mutating: buffer).copyBytes(from: bytes.prefix(buffer.count))
+        }
+    }
+}

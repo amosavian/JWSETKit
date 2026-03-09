@@ -78,11 +78,11 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     public subscript<T: ValueType>(_ member: String) -> [T] {
         get {
             if let array = storage[member] as? [T] {
-                return array
+                array
             } else if let array = storage[member] as? [Any] {
-                return array.compactMap { JSONWebValueStorage.cast(value: $0, as: T.self) }
+                array.compactMap { JSONWebValueStorage.cast(value: $0, as: T.self) }
             } else {
-                return []
+                []
             }
         }
         set {
@@ -281,7 +281,7 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     }
     
     static func cast<T>(value: Any?, as type: T.Type) -> T? where T: ValueType {
-        guard let value = value else { return nil }
+        guard let value else { return nil }
         if let value = value as? T {
             return value
         }
@@ -327,7 +327,7 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     
     @usableFromInline
     mutating func updateValue<T>(key: String, value: T?) where T: Sendable {
-        guard let value = value else {
+        guard let value else {
             remove(key: key)
             return
         }
@@ -344,13 +344,13 @@ extension Equatable {
     func isEqual(to other: (any Equatable)?) -> Bool {
         switch (self, other) {
         case (_, let other as Self):
-            return self == other
+            self == other
         case (_, let other as any RawRepresentable<Self>):
-            return self == other.rawValue
+            self == other.rawValue
         case (_ as any RawRepresentable, let other?):
-            return other.isEqual(to: self)
+            other.isEqual(to: self)
         default:
-            return false
+            false
         }
     }
 }

@@ -7,26 +7,26 @@
 
 #if canImport(CommonCrypto)
 import CommonCrypto
+import CryptoASN1
 import CryptoKit
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #else
 import Foundation
 #endif
-import SwiftASN1
 
 extension Security.SecKey: Swift.Decodable, Swift.Encodable {}
 
 extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
     public var storage: JSONWebValueStorage {
         if let storage = try? jsonWebKey().storage {
-            return storage
+            storage
         } else {
             // Key is not accessible directly, e.g. stored in Secure Enclave.
             //
             // In order to get key type and other necessary information in signing
             // process, public key is returned which contains these values.
-            return publicKey.storage
+            publicKey.storage
         }
     }
     
@@ -100,7 +100,8 @@ extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
                 throw CryptoKitError.incorrectKeySize
             }
             return try Self.createECFromComponents(
-                [xCoordinate, yCoordinate, ecKey.privateKey].compactMap { $0 })
+                [xCoordinate, yCoordinate, ecKey.privateKey].compactMap(\.self)
+            )
         case .rsa:
             let pkcs1 = try RSAHelper.pkcs1Representation(key)
             return try SecKey(derRepresentation: pkcs1, keyType: .rsa)

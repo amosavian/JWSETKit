@@ -12,7 +12,7 @@ import Testing
 
 @Suite
 struct JWTPopClaimsTests {
-    // Sample JSON data for various confirmation types
+    /// Sample JSON data for various confirmation types
     let jwkConfirmationJSON = """
     {
         "cnf": {
@@ -255,7 +255,7 @@ struct JWTPopClaimsTests {
     
     @Test
     func jWKSetUrl() throws {
-        let testUrl = URL(string: "https://example.com/jwks.json")!
+        let testUrl = try #require(URL(string: "https://example.com/jwks.json"))
         
         let claims = try JSONWebTokenClaims {
             $0.confirmation = .url(testUrl, keyId: "some-key")

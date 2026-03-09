@@ -138,6 +138,11 @@ extension JSONWebSelectiveDisclosureToken {
     /// - The `_sd_alg` claim indicating the hash algorithm used
     /// - An array of disclosures that can be selectively revealed
     ///
+    /// - Note: When a holder public key is presented, the default confirmation strategy
+    ///     is embedding entire key as issuer signature preserves integrity and prevent
+    ///     manipulation. To reduce payload size, a different strategy like id or thumbprint
+    ///     is desirable when key can be provided using JWKS url endpoint.
+    ///
     /// Example:
     /// ```swift
     /// let sdJWT = try JSONWebSelectiveDisclosureToken(
@@ -149,25 +154,39 @@ extension JSONWebSelectiveDisclosureToken {
     ///
     /// - Parameters:
     ///   - claims: The full JWT claims to include
-    ///   - policy: Defines which claims should be selectively disclosable (default: `.default`)
+    ///   - policy: Defines which claims should be selectively disclosable (default: `.standard`)
     ///   - header: Custom JOSE header (default: empty, `typ` will be set to `sd+jwt`)
     ///   - algorithm: Signature algorithm (if nil, inferred from key)
     ///   - hashAlgorithm: Hash algorithm for disclosure digests (default: SHA-256)
     ///   - decoyCount: Number of decoy digests to add for privacy (default: random 0-4)
+    ///   - holderKey: Presenter's key to be added to `cnf` defined by strategy.
+    ///   - confirmationStrategy: Defines how `cnf` is set from original holder key,
+    ///         that can be either id, thumbprint or embed entire key. Default is `.embedded`.
     ///   - signingKey: The issuer's signing key
     /// - Throws: `JSONWebKeyError` if key operations fail, `CryptoKitError` for cryptographic failures
-    public init<SK: JSONWebSigningKey>(
+    public init<SK: JSONWebSigningKey, HK: JSONWebValidatingKey>(
         claims: JSONWebTokenClaims,
         policy: DisclosurePolicy = .standard,
         header: JOSEHeader = .init(),
         algorithm: JSONWebSignatureAlgorithm? = nil,
         hashAlgorithm: any NamedHashFunction.Type = SHA256.self,
         decoyCount: Int = .random(in: 0 ... 4),
+        holderKey: HK? = P256.Signing.PublicKey?.none,
+        confirmationStrategy: JOSEHeader.KeyIdStrategy = .embedded,
         using signingKey: SK
     ) throws {
         var finalClaims = claims
         let disclosureList = try finalClaims.conceal(policy: policy, using: hashAlgorithm)
-        finalClaims.disclosureHashAlgorithm = hashAlgorithm.identifier
+        finalClaims.disclosureHashAlgorithm = hashAlgorithm != SHA256.self ? hashAlgorithm.identifier : nil
+        if let holderKey {
+            if let confirmation = finalClaims.confirmation {
+                if !confirmation.isValidKey(holderKey) {
+                    throw JSONWebValidationError.invalidKeyBinding
+                }
+            } else {
+                finalClaims.confirmation = .strategy(confirmationStrategy, using: holderKey)
+            }
+        }
         try Self.addDecoys(count: decoyCount, to: &finalClaims, using: hashAlgorithm)
         
         var header = header
@@ -196,6 +215,11 @@ extension JSONWebSelectiveDisclosureToken {
     /// This is a convenience initializer that creates a disclosure policy from the given paths.
     /// Use this when you want explicit control over which claims are selectively disclosable.
     ///
+    /// - Note: When a holder public key is presented, the default confirmation strategy
+    ///     is embedding entire key as issuer signature preserves integrity and prevent
+    ///     manipulation. To reduce payload size, a different strategy like id or thumbprint
+    ///     is desirable when key can be provided using JWKS url endpoint.
+    ///
     /// Example:
     /// ```swift
     /// let sdJWT = try JSONWebSelectiveDisclosureToken(
@@ -212,15 +236,20 @@ extension JSONWebSelectiveDisclosureToken {
     ///   - algorithm: Signature algorithm (if nil, inferred from key if possible)
     ///   - hashAlgorithm: Hash algorithm for disclosure digests (default: SHA-256)
     ///   - decoyCount: Number of decoy digests to add for privacy (default: random 0-4)
+    ///   - holderKey: Presenter's key to be added to `cnf` defined by strategy.
+    ///   - confirmationStrategy: Defines how `cnf` is set from original holder key,
+    ///         that can be either id, thumbprint or embed entire key. Default is `.embedded`.
     ///   - signingKey: The issuer's signing key
     /// - Throws: `JSONWebKeyError` if key operations fail, `CryptoKitError` for cryptographic failures
-    public init<SK: JSONWebSigningKey>(
+    public init<SK: JSONWebSigningKey, HK: JSONWebValidatingKey>(
         claims: JSONWebTokenClaims,
         concealedPaths: Set<JSONPointer>,
         header: JOSEHeader = .init(),
         algorithm: JSONWebSignatureAlgorithm? = nil,
         hashAlgorithm: any NamedHashFunction.Type = SHA256.self,
         decoyCount: Int = .random(in: 0 ... 4),
+        holderKey: HK? = P256.Signing.PublicKey?.none,
+        confirmationStrategy: JOSEHeader.KeyIdStrategy = .embedded,
         using signingKey: SK
     ) throws {
         try self.init(
@@ -230,6 +259,8 @@ extension JSONWebSelectiveDisclosureToken {
             algorithm: algorithm,
             hashAlgorithm: hashAlgorithm,
             decoyCount: decoyCount,
+            holderKey: holderKey,
+            confirmationStrategy: confirmationStrategy,
             using: signingKey
         )
     }
@@ -286,10 +317,10 @@ extension JSONWebSelectiveDisclosureToken {
     public func presenting(paths: Set<JSONPointer>) throws -> JSONWebSelectiveDisclosureToken {
         let disclosureList = try disclosureList
         var selectedHashes = Set<Data>()
-
+        
         for path in paths {
             guard let parentPath = path.parent, let lastComponent = path.last else { continue }
-
+            
             if let index = lastComponent.intValue {
                 // Array element: look for {"...": hash} marker at the index
                 if let parentArray = payload.value.storage[parentPath] as? [Any],
@@ -308,17 +339,16 @@ extension JSONWebSelectiveDisclosureToken {
                 }
             } else {
                 // Object claim: look in parent's _sd array
-                let sdArray: [String]?
-                if parentPath.isRoot {
-                    sdArray = payload.value.storage.storage["_sd"] as? [String]
+                let sdArray: [String]? = if parentPath.isRoot {
+                    payload.value.storage.storage["_sd"] as? [String]
                 } else if let parentDict = payload.value.storage[parentPath] as? [String: Any] {
-                    sdArray = parentDict["_sd"] as? [String]
+                    parentDict["_sd"] as? [String]
                 } else {
-                    sdArray = nil
+                    nil
                 }
-
+                
                 guard let sdArray else { continue }
-
+                
                 let key = lastComponent.stringValue
                 // Find disclosure with matching key and hash in _sd
                 for disclosure in disclosures where disclosure.key == key {
@@ -330,12 +360,12 @@ extension JSONWebSelectiveDisclosureToken {
                 }
             }
         }
-
+        
         let selectedDisclosures = disclosures.filter { disclosure in
             let hash = disclosure.digest(using: disclosureList.hashFunction)
             return selectedHashes.contains(hash)
         }
-
+        
         return JSONWebSelectiveDisclosureToken(
             jwt: jwt,
             disclosures: selectedDisclosures,
@@ -366,19 +396,29 @@ extension JSONWebSelectiveDisclosureToken {
     /// - `nonce` claim with the verifier-provided nonce
     /// - `sd_hash` claim with the hash over the SD-JWT presentation
     ///
+    /// - Important: The given holder key's public pair must be same as `cnf` in case it is populated.
+    ///
     /// - Parameters:
     ///   - holderKey: The holder's signing key for the KB-JWT.
     ///   - algorithm: Signature algorithm for the KB-JWT.
     ///   - nonce: Verifier-provided nonce for freshness, random bas64-url string when `nil` is provided..
     ///   - audience: The intended verifier's identifier.
     /// - Returns: A new SD-JWT with the key binding JWT attached.
-    /// - Throws: Encoding or signing errors.
+    /// - Throws: Encoding or signing errors. `CryptoKitError.authenticationFailure` if
+    ///         `holderKey` is not the private pair key of `cnf`.
     public func withKeyBinding(
         using holderKey: some JSONWebSigningKey,
         algorithm: JSONWebSignatureAlgorithm? = nil,
         nonce: String? = nil,
         audience: String
     ) throws -> JSONWebSelectiveDisclosureToken {
+        if let confirmation = jwt.payload.confirmation?.jwkThumbprint {
+            let holderKeyThumbprint = try holderKey.thumbprint(format: .jwk, using: SHA256.self).data
+            guard confirmation == holderKeyThumbprint else {
+                throw CryptoKitError.authenticationFailure
+            }
+        }
+       
         let nonce = nonce ?? Data.random(length: 12).urlBase64EncodedString()
         let kbClaims = try JSONWebTokenClaims {
             $0.issuedAt = Date()
@@ -438,6 +478,8 @@ extension JSONWebSelectiveDisclosureToken {
         try keyBinding.verifyDate()
         if let confirmation = payload.confirmation {
             try keyBinding.verifySignature(using: confirmation.matchKey(from: holderKeySet ?? .init()))
+        } else if let holderKeySet, holderKeySet.count == 1, let key = holderKeySet.first as? any JSONWebValidatingKey {
+            try keyBinding.verifySignature(using: key)
         }
         
         if let expectedNonce {

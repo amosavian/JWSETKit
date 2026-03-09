@@ -55,9 +55,10 @@ extension JSONWebCompressionAlgorithm {
         .deflate: ZlibCompressor<DeflateCompressionCodec>.self,
     ]
 #else
-    #warning("No compression library found.")
     // This should never happen as Compression is available on Darwin platforms
     // and Zlib is used on non-Darwin platform.
+    #warning("No compression library found.")
+    
     private static let compressors: AtomicValue<[Self: any JSONWebCompressor.Type]> = [:]
 #endif
     
@@ -88,6 +89,11 @@ extension JSONWebCompressionAlgorithm {
 
 /// Deflate (conforming to RFC 1951)
 public enum DeflateCompressionCodec: CompressionCodec {
-    public static var algorithm: JSONWebCompressionAlgorithm { .deflate }
-    public static var pageSize: Int { 65536 }
+    public static var algorithm: JSONWebCompressionAlgorithm {
+        .deflate
+    }
+
+    public static var pageSize: Int {
+        65536
+    }
 }

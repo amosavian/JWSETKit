@@ -50,6 +50,28 @@ public struct JSONWebKeySetProvider: Hashable, Sendable {
     ///
     /// Used for verifying Microsoft identity platform tokens.
     public static let microsoft = JSONWebKeySetProvider("https://login.microsoftonline.com/common/discovery/keys")
+    
+    private struct OpenIDDiscovery: Codable, Hashable {
+        private enum CodingKeys: String, CodingKey {
+            case jwksURI = "jwks_uri"
+        }
+
+        var jwksURI: URL
+    }
+    
+    /// Fetches JWKS URL from OpenID configuration from given URL
+    ///
+    /// - Parameter url: Base URL of OpenID IAM provider
+    /// - Returns: Provider from `jwks_uri` of OpenID configuration
+    public static func openID(_ url: URL) async throws -> Self {
+        guard let configurationURL = URL(string: "/.well-known/openid-configuration", relativeTo: url) else {
+            throw HTTPError.unknownError
+        }
+        
+        let data = try await httpClient.fetch(url: configurationURL)
+        let jwksURL = try JSONDecoder().decode(OpenIDDiscovery.self, from: data).jwksURI
+        return .init(url: jwksURL)
+    }
 }
 
 extension JSONWebKeySet {

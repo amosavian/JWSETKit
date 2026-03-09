@@ -70,7 +70,8 @@ struct JOSEHeaderJWSTests {
         #expect(claims.keyId == "2011-04-29")
         #expect(claims.certificateURL == URL(string: "http://example.com/janedoe"))
         #expect(claims.certificateThumbprint == "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck=".decoded)
-        #expect(claims.certificateChain == [Self.cert1, Self.cert2])
+        let chain = try JSONWebCertificateChain([Self.cert1, Self.cert2])
+        #expect(claims.certificateChain == chain)
         #expect(claims.type == .jwt)
         #expect(claims.contentType == .init(rawValue: "application/json"))
         #expect(claims.critical == ["b64"])
@@ -86,7 +87,7 @@ struct JOSEHeaderJWSTests {
         claims.keyId = "2011-04-29"
         claims.certificateURL = URL(string: "http://example.com/janedoe")
         claims.certificateThumbprint = "We5K4CMGHXgX4urupYm/Zq2gIhm7d6MdNTEyRu+b6Ck=".decoded
-        claims.certificateChain = [Self.cert1, Self.cert2]
+        claims.certificateChain = try .init([Self.cert1, Self.cert2])
         claims.type = .jwt
         claims.contentType = .init(rawValue: "json")
         claims.critical = ["b64"]

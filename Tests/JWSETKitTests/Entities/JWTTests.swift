@@ -56,7 +56,7 @@ struct JWTTests {
     @Test
     func authorizationNSURLSession() throws {
         let jwt = try JSONWebToken(from: jwtString)
-        var request = URLRequest(url: .init(string: "https://www.example.com/")!)
+        var request = try URLRequest(url: #require(.init(string: "https://www.example.com/")))
         request.authorizationToken = jwt
         #expect(request.authorizationToken == jwt)
         #expect(request.value(forHTTPHeaderField: "Authorization") == "Bearer \(jwtString)")

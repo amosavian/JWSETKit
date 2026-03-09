@@ -50,16 +50,41 @@ let package = Package(
             ]
         ),
         .target(
+            name: "CryptoASN1",
+            dependencies: [
+                .product(name: "SwiftASN1", package: "swift-asn1"),
+                .product(name: "Crypto", package: "swift-crypto"),
+            ],
+            resources: [
+                .process("PrivacyInfo.xcprivacy"),
+            ],
+            swiftSettings: [.enableUpcomingFeature("ExistentialAny")]
+        ),
+        .target(
+            name: "CryptoP256K",
+            dependencies: [
+                .product(name: "SwiftASN1", package: "swift-asn1"),
+                .product(name: "Crypto", package: "swift-crypto"),
+                .product(name: "LibSECP256k1", package: "secp256k1"),
+                .target(name: "CryptoASN1"),
+            ],
+            resources: [
+                .process("PrivacyInfo.xcprivacy"),
+            ],
+            swiftSettings: [.enableUpcomingFeature("ExistentialAny")]
+        ),
+        .target(
             name: "JWSETKit",
             dependencies: [
                 .product(name: "Collections", package: "swift-collections"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "Crypto", package: "swift-crypto"),
                 .product(name: "X509", package: "swift-certificates", condition: .when(platforms: .darwin + .nonWasm, traits: ["X509"])),
-                .product(name: "LibSECP256k1", package: "secp256k1", condition: .when(traits: ["P256K"])),
+                .target(name: "CryptoASN1"),
+                .target(name: "CryptoP256K", condition: .when(traits: ["P256K"])),
                 // Linux support
                 .product(name: "CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
-                .byName(name: "Czlib", condition: .when(platforms: .nonWasm)),
+                .target(name: "Czlib", condition: .when(platforms: .nonWasm)),
                 .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["HTTP"])),
             ],
             resources: [

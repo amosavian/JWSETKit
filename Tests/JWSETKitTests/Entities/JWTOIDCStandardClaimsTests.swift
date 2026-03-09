@@ -105,7 +105,7 @@ struct JWTOIDCStandardClaimsTests {
     }
     
     @Test
-    func localized() throws {
+    func localized() {
         var claims = JSONWebTokenClaims(storage: .init())
         let enLocale = Locale(identifier: "en")
         let faLocale = Locale(identifier: "fa")

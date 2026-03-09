@@ -154,30 +154,6 @@ public struct JSONWebSelectiveDisclosure: Hashable, ExpressibleByArrayLiteral, S
         self = disclosure
     }
     
-    public init(from decoder: any Decoder) throws {
-        if let encoded = try? decoder.singleValueContainer().decode(String.self) {
-            try self.init(encoded: encoded)
-            return
-        }
-        var container = try decoder.unkeyedContainer()
-        guard let salt = try Data(urlBase64Encoded: container.decode(String.self)) else {
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Salt is not encoded correctly.")
-        }
-        let key: JSONWebValueStorage.Key?
-        let value: any Sendable
-        switch container.count {
-        case 2:
-            key = nil
-            value = try container.decode(AnyCodable.self).value
-        case 3:
-            key = try container.decode(JSONWebValueStorage.Key.self)
-            value = try container.decode(AnyCodable.self).value
-        default:
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Length of disclosure array is not interpretable.")
-        }
-        try self.init(key, value: value, salt: salt)
-    }
-    
     /// Creates a disclosure from its Base64URL-encoded representation.
     ///
     /// This initializer preserves the original encoded value bytes to ensure consistent hashing.
@@ -246,21 +222,10 @@ public struct JSONWebSelectiveDisclosure: Hashable, ExpressibleByArrayLiteral, S
         hashFunction.hash(data: Data(encoded.utf8)).data
     }
     
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.unkeyedContainer()
-        try container.encode(salt.urlBase64EncodedString())
-        if let key { try container.encode(key) }
-        try container.encode(AnyCodable(value))
-    }
-    
     public func hash(into hasher: inout Hasher) {
         hasher.combine(salt)
         hasher.combine(key)
         hasher.combine(encodedValue)
-    }
-    
-    public static func == (lhs: Self, rhs: Self) -> Bool {
-        lhs.salt == rhs.salt && lhs.key == rhs.key && lhs.encodedValue == rhs.encodedValue
     }
 }
 

@@ -27,7 +27,7 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     public let tag: Data
     
     public var regions: [Data] {
-        [nonce, ciphertext, tag].map { $0 }
+        [nonce, ciphertext, tag].map(\.self)
     }
     
     /// A combined element composed of the nonce, encrypted data, and authentication tag.
@@ -45,11 +45,11 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
     
     public subscript(position: Int) -> UInt8 {
         if position < nonce.count {
-            return nonce[position]
+            nonce[position]
         } else if position < nonce.count + ciphertext.count {
-            return ciphertext[position - nonce.count]
+            ciphertext[position - nonce.count]
         } else {
-            return tag[position]
+            tag[position]
         }
     }
     
@@ -99,10 +99,6 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
         self.nonce = Data(data.prefix(nonceLength))
         self.ciphertext = Data(data.dropFirst(nonceLength).dropLast(tagLength))
         self.tag = Data(data.suffix(tagLength))
-    }
-    
-    public static func == (lhs: SealedData, rhs: SealedData) -> Bool {
-        lhs.nonce == rhs.nonce && lhs.ciphertext == rhs.ciphertext && lhs.tag == rhs.tag
     }
 }
 

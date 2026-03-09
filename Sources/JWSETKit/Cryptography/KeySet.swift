@@ -149,7 +149,7 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     /// Returns the key matches with given keyId.
     ///
     /// - Note: If the keyID is an URI of JWK thumbprint, it will be matched
-    //     with thumbprint even if `kid` field is not set.
+    ///     with thumbprint even if `kid` field is not set.
     /// - Parameter keyId: The keyId of the key.
     /// - Returns: The key matches with given keyId.
     public subscript(keyId keyId: some StringProtocol) -> (any JSONWebKey)? {
@@ -196,12 +196,10 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     /// - Returns: The key set that contains keys that can be used
     ///     to verify/decrypt.
     public func matches(for header: JOSEHeader) -> JSONWebKeySet {
-        var candidates: JSONWebKeySet
-        
-        if let algorithm = header.algorithm {
-            candidates = filter(algorithm: algorithm)
+        let candidates: JSONWebKeySet = if let algorithm = header.algorithm {
+            filter(algorithm: algorithm)
         } else {
-            candidates = self
+            self
         }
         if let keyId = header.keyId, let key = candidates[keyId: keyId] {
             return [key]

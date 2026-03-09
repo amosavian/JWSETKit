@@ -55,6 +55,12 @@ struct RFC9901ComplianceTests {
             using: issuerKey
         )
         
+        let standardPolicySDJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            using: issuerKey
+        )
+        
+        #expect(try sdJWT.disclosedPayload == standardPolicySDJWT.disclosedPayload)
         // Verify 8 top-level disclosures were created (not counting array elements here)
         #expect(sdJWT.disclosures.count >= 8)
         
@@ -103,7 +109,7 @@ struct RFC9901ComplianceTests {
         
         let fullSDJWT = try JSONWebSelectiveDisclosureToken(
             claims: claims,
-            concealedPaths: ["/given_name", "/family_name", "/email", "/phone_number"],
+            holderKey: holderKey,
             using: issuerKey
         )
         
@@ -116,7 +122,6 @@ struct RFC9901ComplianceTests {
         // Add key binding as in Section 5.2
         let presentationWithKB = try presentation.withKeyBinding(
             using: holderKey,
-            algorithm: .ecdsaSignatureP256SHA256,
             nonce: "1234567890",
             audience: "https://verifier.example.org"
         )
@@ -134,10 +139,12 @@ struct RFC9901ComplianceTests {
         #expect(presentationWithKB.keyBinding?.payload.selectiveDisclosureHash != nil)
         
         // Verify key binding
-        try presentationWithKB.verifyKeyBinding(
-            expectedNonce: "1234567890",
-            expectedAudience: "https://verifier.example.org"
-        )
+        #expect(throws: Never.self) {
+            try presentationWithKB.verifyKeyBinding(
+                expectedNonce: "1234567890",
+                expectedAudience: "https://verifier.example.org"
+            )
+        }
     }
     
     // MARK: - Appendix A.2: Complex Structured SD-JWT

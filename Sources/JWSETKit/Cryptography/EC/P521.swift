@@ -15,25 +15,36 @@ import Crypto
 extension Crypto.P521.Signing.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P521.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentified {
-    static var curve: JSONWebKeyCurve { .p521 }
-    public static var algorithm: any JSONWebAlgorithm { .ecdsaSignatureP521SHA512 }
-    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier { .ecdsaP521 }
+    static var curve: JSONWebKeyCurve {
+        .p521
+    }
+
+    public static var algorithm: any JSONWebAlgorithm {
+        .ecdsaSignatureP521SHA512
+    }
+
+    public static var algorithmIdentifier: RFC5480AlgorithmIdentifier {
+        .ecdsaP521
+    }
 }
 
 extension Crypto.P521.KeyAgreement.PublicKey: Swift.Hashable, Swift.Equatable, Swift.Decodable, Swift.Encodable {}
 
 extension P521.KeyAgreement.PublicKey: CryptoECPublicKey {
-    static var curve: JSONWebKeyCurve { .p521 }
+    static var curve: JSONWebKeyCurve {
+        .p521
+    }
 }
 
 extension P521.Signing.PublicKey: JSONWebValidatingKey {
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         let ecdsaSignature: P521.Signing.ECDSASignature
-        // swiftformat:disable:next redundantSelf
-        if signature.count == (self.curve?.coordinateSize ?? 0) * 2 {
-            ecdsaSignature = try .init(rawRepresentation: signature)
+            // swiftformat:disable:next redundantSelf
+            = if signature.count == (self.curve?.coordinateSize ?? 0) * 2
+        {
+            try .init(rawRepresentation: signature)
         } else {
-            ecdsaSignature = try .init(derRepresentation: signature)
+            try .init(derRepresentation: signature)
         }
         if !isValidSignature(ecdsaSignature, for: SHA512.hash(data: data)) {
             throw CryptoKitError.authenticationFailure

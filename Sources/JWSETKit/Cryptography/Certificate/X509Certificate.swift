@@ -15,6 +15,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
 import SwiftASN1
 
 extension X509.Certificate.PublicKey: Swift.Decodable, Swift.Encodable {}
@@ -218,7 +219,7 @@ extension Certificate: JSONWebValidatingKey {
     
     public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
-        guard let certificate = key.certificateChain.first else {
+        guard let certificate = key.certificateChain?.leaf else {
             throw JSONWebKeyError.keyNotFound
         }
         self = certificate
@@ -244,20 +245,46 @@ extension Certificate: Expirable {
     }
 }
 
+extension Certificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
+    var jsonWebValue: String? {
+        try? derRepresentation.base64EncodedString()
+    }
+    
+    static func castValue(_ value: Any?) -> Certificate? {
+        switch value {
+        case let value as Self:
+            return value
+        case let value as Data:
+            return try? .init(derEncoded: value)
+        case let value as String:
+            guard let value = Data(base64Encoded: value) else {
+                return nil
+            }
+            return try? .init(derEncoded: value)
+        default:
+            return nil
+        }
+    }
+}
+
 extension Verifier {
     public mutating func validate(
         chain: JSONWebCertificateChain,
         diagnosticCallback: ((VerificationDiagnostic) -> Void)? = nil
     ) async -> CertificateValidationResult {
-        await validate(
-            leaf: chain.leaf,
-            intermediates: .init(chain.certificateChain.dropFirst()),
-            diagnosticCallback: diagnosticCallback
-        )
+        do {
+            return try await validate(
+                leaf: chain.leaf,
+                intermediates: .init(chain.certificates.dropFirst()),
+                diagnosticCallback: diagnosticCallback
+            )
+        } catch {
+            return .couldNotValidate([])
+        }
     }
 }
 
-extension Collection where Element == Certificate {
+extension Collection<Certificate> {
     /// Verify validity of certificate chain with RFC 5280 policy and validate the leaf certificate
     /// presented by a server during a TLS handshake, if hostname is provided.
     ///
@@ -286,6 +313,12 @@ extension Collection where Element == Certificate {
     }
 }
 
+extension [Certificate] {
+    init<D>(_ certificates: [D]) where D: DataProtocol {
+        self = certificates.compactMap(Certificate.castValue)
+    }
+}
+
 extension JSONWebCertificateChain {
     public init<T>(_ certificates: T) throws where T: Collection, T.Element == Certificate {
         guard let leaf = certificates.first else {
@@ -300,7 +333,9 @@ extension JSONWebCertificateChain {
 extension ValidatedCertificateChain: Swift.Decodable, Swift.Encodable {}
 
 extension ValidatedCertificateChain: JSONWebValidatingKey {
-    private var x509Chain: [Certificate] { [Certificate](self) }
+    private var x509Chain: [Certificate] {
+        [Certificate](self)
+    }
     
     public var storage: JSONWebValueStorage {
         var key = AnyJSONWebKey(leaf.publicKey)
@@ -315,7 +350,7 @@ extension ValidatedCertificateChain: JSONWebValidatingKey {
     
     public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
-        self.init(uncheckedCertificateChain: key.certificateChain)
+        self.init(uncheckedCertificateChain: [Certificate](key.certificateChainData))
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {

@@ -89,11 +89,11 @@ extension CryptoECKeyPortable {
     public func exportKey(format: JSONWebKeyFormat) throws -> Data {
         switch format {
         case .raw:
-            return x963Representation
+            x963Representation
         case .spki, .pkcs8:
-            return derRepresentation
+            derRepresentation
         case .jwk:
-            return try jwkRepresentation
+            try jwkRepresentation
         }
     }
 }

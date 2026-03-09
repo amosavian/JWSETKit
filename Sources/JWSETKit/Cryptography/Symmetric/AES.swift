@@ -48,11 +48,10 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, J
     }
     
     public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using _: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
-        let nonce: AES.GCM.Nonce?
-        if let iv {
-            nonce = try .init(data: iv)
+        let nonce: AES.GCM.Nonce? = if let iv {
+            try .init(data: iv)
         } else {
-            nonce = nil
+            nil
         }
         if let authenticating {
             return try .init(AES.GCM.seal(data, using: .init(self), nonce: nonce, authenticating: authenticating))
@@ -63,9 +62,9 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, J
     
     public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using _: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {
         if let authenticating {
-            return try AES.GCM.open(.init(data), using: .init(self), authenticating: authenticating)
+            try AES.GCM.open(.init(data), using: .init(self), authenticating: authenticating)
         } else {
-            return try AES.GCM.open(.init(data), using: .init(self))
+            try AES.GCM.open(.init(data), using: .init(self))
         }
     }
     

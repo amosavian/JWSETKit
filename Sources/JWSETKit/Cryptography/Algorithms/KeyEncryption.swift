@@ -246,7 +246,7 @@ extension JSONWebKeyEncryptionAlgorithm {
         Self.fastPathKeyRegistryClasses[self]?.private ?? Self.keyRegistryClasses[self]?.private
     }
     
-    // Length of key in bits, if applicable.
+    /// Length of key in bits, if applicable.
     public var keyLength: Int? {
         Self.fastPathKeyLengths[self] ?? Self.keyLengths[self]
     }
@@ -543,81 +543,129 @@ extension JSONWebKeyEncryptionAlgorithm {
     }
 }
 
-// Key Management
+// -MARK: Key Management
 extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     /// **Key Management**: RSAES OAEP using default parameters.
-    public static var rsaEncryptionOAEP: Self { "RSA-OAEP" }
+    public static var rsaEncryptionOAEP: Self {
+        "RSA-OAEP"
+    }
     
     /// **Key Management**: RSAES OAEP using SHA-256 and MGF1 with SHA-256.
-    public static var rsaEncryptionOAEPSHA256: Self { "RSA-OAEP-256" }
+    public static var rsaEncryptionOAEPSHA256: Self {
+        "RSA-OAEP-256"
+    }
     
     /// **Key Management**: RSA-OAEP using SHA-384 and MGF1 with SHA-384.
-    public static var rsaEncryptionOAEPSHA384: Self { "RSA-OAEP-384" }
+    public static var rsaEncryptionOAEPSHA384: Self {
+        "RSA-OAEP-384"
+    }
     
     /// **Key Management**: RSA-OAEP using SHA-512 and MGF1 with SHA-512.
-    public static var rsaEncryptionOAEPSHA512: Self { "RSA-OAEP-512" }
+    public static var rsaEncryptionOAEPSHA512: Self {
+        "RSA-OAEP-512"
+    }
     
     /// **Key Management**: RSAES-PKCS1-v1.5
     @available(*, deprecated, message: "This algorithm is intended to be deprecated regarding https://datatracker.ietf.org/doc/draft-ietf-jose-deprecate-none-rsa15/")
-    public static var rsaEncryptionPKCS1: Self { .unsafeRSAEncryptionPKCS1 }
+    public static var rsaEncryptionPKCS1: Self {
+        .unsafeRSAEncryptionPKCS1
+    }
     
-    static var unsafeRSAEncryptionPKCS1: Self { "RSA1_5" }
+    static var unsafeRSAEncryptionPKCS1: Self {
+        "RSA1_5"
+    }
     
     /// **Key Management**: AES Key-Wrap using 128-bit key.
-    public static var aesKeyWrap128: Self { "A128KW" }
+    public static var aesKeyWrap128: Self {
+        "A128KW"
+    }
     
     /// **Key Management**: AES Key-Wrap using 192-bit key.
-    public static var aesKeyWrap192: Self { "A192KW" }
+    public static var aesKeyWrap192: Self {
+        "A192KW"
+    }
     
     /// **Key Management**: AES Key-Wrap using 256-bit key.
-    public static var aesKeyWrap256: Self { "A256KW" }
+    public static var aesKeyWrap256: Self {
+        "A256KW"
+    }
     
     static func aesKeyWrap(bitCount: Int) -> Self {
         .init(rawValue: "A\(bitCount)KW")
     }
     
     /// **Key Management**: Key wrapping with AES GCM using 128-bit key
-    public static var aesGCM128KeyWrap: Self { "A128GCMKW" }
+    public static var aesGCM128KeyWrap: Self {
+        "A128GCMKW"
+    }
     
     /// **Key Management**: Key wrapping with AES GCM using 192-bit key
-    public static var aesGCM192KeyWrap: Self { "A192GCMKW" }
+    public static var aesGCM192KeyWrap: Self {
+        "A192GCMKW"
+    }
     
     /// **Key Management**: Key wrapping with AES GCM using 256-bit key
-    public static var aesGCM256KeyWrap: Self { "A256GCMKW" }
+    public static var aesGCM256KeyWrap: Self {
+        "A256GCMKW"
+    }
     
     static func aesGCMKeyWrap(bitCount: Int) -> Self {
         .init(rawValue: "A\(bitCount)GCMKW")
     }
     
     /// **Key Management**: PBES2 with HMAC SHA-256 and "A128KW" wrapping.
-    public static var pbes2hmac256: Self { "PBES2-HS256+A128KW" }
+    public static var pbes2hmac256: Self {
+        "PBES2-HS256+A128KW"
+    }
     
     /// **Key Management**: PBES2 with HMAC SHA-384 and "A192KW" wrapping.
-    public static var pbes2hmac384: Self { "PBES2-HS384+A192KW" }
+    public static var pbes2hmac384: Self {
+        "PBES2-HS384+A192KW"
+    }
     
     /// **Key Management**: PBES2 with HMAC SHA-512 and "A256KW" wrapping.
-    public static var pbes2hmac512: Self { "PBES2-HS512+A256KW" }
+    public static var pbes2hmac512: Self {
+        "PBES2-HS512+A256KW"
+    }
     
     static func pbes2hmac(keyBitCount: Int) -> Self {
         .init(rawValue: "PBES2-HS\(keyBitCount * 2)+A\(keyBitCount)KW")
     }
     
-    // **Key Management**:ECDH-ES using Concat KDF and CEK encrypted directly.
-    public static var ecdhEphemeralStatic: Self { "ECDH-ES" }
+    /// **Key Management**:ECDH-ES using Concat KDF and CEK encrypted directly.
+    public static var ecdhEphemeralStatic: Self {
+        "ECDH-ES"
+    }
     
-    // **Key Management**:ECDH-ES using Concat KDF and CEK wrapped with "A128KW".
-    public static var ecdhEphemeralStaticAESKeyWrap128: Self { .ecdhEphemeralStatic.keyWrapped(.aesKeyWrap128) }
+    /// **Key Management**:ECDH-ES using Concat KDF and CEK wrapped with "A128KW".
+    public static var ecdhEphemeralStaticAESKeyWrap128: Self {
+        .ecdhEphemeralStatic.keyWrapped(.aesKeyWrap128)
+    }
     
     /// **Key Management**: ECDH-ES using Concat KDF and CEK wrapped with "A192KW".
-    public static var ecdhEphemeralStaticAESKeyWrap192: Self { .ecdhEphemeralStatic.keyWrapped(.aesKeyWrap192) }
+    public static var ecdhEphemeralStaticAESKeyWrap192: Self {
+        .ecdhEphemeralStatic.keyWrapped(.aesKeyWrap192)
+    }
     
     /// **Key Management**: ECDH-ES using Concat KDF and CEK wrapped with "A256KW".
-    public static var ecdhEphemeralStaticAESKeyWrap256: Self { .ecdhEphemeralStatic.keyWrapped(.aesKeyWrap256) }
+    public static var ecdhEphemeralStaticAESKeyWrap256: Self {
+        .ecdhEphemeralStatic.keyWrapped(.aesKeyWrap256)
+    }
     
     /// **Key Management**: No encryption for content key.
-    public static var direct: Self { "dir" }
+    public static var direct: Self {
+        "dir"
+    }
     
-    static var internalMLKEM512: Self { "ML-KEM-512" }
-    static var internalMLKEM768: Self { "ML-KEM-768" }
-    static var internalMLKEM1024: Self { "ML-KEM-1024" }
+    static var internalMLKEM512: Self {
+        "ML-KEM-512"
+    }
+
+    static var internalMLKEM768: Self {
+        "ML-KEM-768"
+    }
+
+    static var internalMLKEM1024: Self {
+        "ML-KEM-1024"
+    }
 }

@@ -9,6 +9,9 @@ import Crypto
 import Foundation
 import Testing
 @testable import JWSETKit
+#if P256K
+@testable import CryptoP256K
+#endif
 
 @Suite
 struct AlgorithmsTests {
@@ -48,7 +51,7 @@ struct AlgorithmsTests {
 #endif
     
     @Test
-    func detectSymmetricAlgorithms() throws {
+    func detectSymmetricAlgorithms() {
         #expect(JSONWebKeyHMAC<SHA384>().keyValue?.size == .bits384)
         #expect(JSONWebKeyHMAC<SHA256>().resolveAlgorithm(nil) == .hmacSHA256)
         #expect(JSONWebKeyHMAC<SHA384>().resolveAlgorithm(nil) == .hmacSHA384)

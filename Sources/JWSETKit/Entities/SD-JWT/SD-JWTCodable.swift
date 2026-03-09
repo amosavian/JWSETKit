@@ -136,11 +136,11 @@ extension JSONWebSelectiveDisclosureToken: Codable {
     fileprivate func bestRepresentation() -> JSONWebSelectiveDisclosureTokenRepresentation {
         switch signatures.count {
         case 0:
-            return .compact
+            .compact
         case 1 where signatures.first?.unprotected == nil:
-            return .compact
+            .compact
         default:
-            return .json
+            .json
         }
     }
     
@@ -195,7 +195,7 @@ extension JSONWebSelectiveDisclosureToken: Codable {
         var headerContainer = encoder.container(keyedBy: JSONWebSignatureHeader.CodingKeys.self)
         try headerContainer.encode(signature.protected, forKey: .protected)
         var unprotectedStorage = signature.unprotected?.storage ?? JSONWebValueStorage()
-        unprotectedStorage["disclosures"] = disclosures.map { $0.encoded }
+        unprotectedStorage["disclosures"] = disclosures.map(\.encoded)
         if let keyBinding {
             unprotectedStorage["kb_jwt"] = try String(keyBinding)
         }
@@ -212,7 +212,7 @@ extension JSONWebSelectiveDisclosureToken: Codable {
         for (index, signature) in signatures.enumerated() {
             if index == 0 {
                 var unprotectedStorage = signature.unprotected?.storage ?? JSONWebValueStorage()
-                unprotectedStorage["disclosures"] = disclosures.map { $0.encoded }
+                unprotectedStorage["disclosures"] = disclosures.map(\.encoded)
                 if let keyBinding {
                     unprotectedStorage["kb_jwt"] = try String(keyBinding)
                 }

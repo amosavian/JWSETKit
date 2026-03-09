@@ -62,7 +62,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
         self.additionalAuthenticatedData = additionalAuthenticatedData
     }
     
-    /// Creates new JWE container.
+    /// Creates new compact representable JWE container.
     ///
     /// - Parameters:
     ///   - protected: JWE Protected Header.
@@ -151,7 +151,7 @@ public struct JSONWebEncryption: Hashable, Sendable {
             self.recipients = [.init(encryptedKey: mutatedEncryptedKey)]
         }
         
-        if let header = header, !header.storage.isEmpty {
+        if let header, !header.storage.isEmpty {
             if allowsModifyProtectedHeader {
                 protected = try .init(value: protected.value.merging(header, uniquingKeysWith: { $1 }))
                 authenticating = protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
@@ -205,7 +205,17 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ) throws {
         var protected = protected ?? JOSEHeader(algorithm: keyEncryptingAlgorithm, type: .jwe)
         protected.algorithm = keyEncryptingAlgorithm
-        // For HPKE Integrated Encryption, enc header must be absent
+        if protected.type == nil {
+            protected.type = .jwe
+        }
+        if contentEncryptionAlgorithm != .integrated {
+            protected.encryptionAlgorithm = contentEncryptionAlgorithm
+        } else if contentEncryptionAlgorithm == .integrated, keyEncryptingAlgorithm.isIntegratedHPKE {
+            // For HPKE Integrated Encryption, enc header must be absent
+            protected.encryptionAlgorithm = nil
+        } else {
+            throw JSONWebKeyError.operationNotAllowed
+        }
         protected.encryptionAlgorithm = contentEncryptionAlgorithm == .integrated ? nil : contentEncryptionAlgorithm
 
         try self.init(
@@ -387,11 +397,10 @@ extension String {
 
 extension ProtectedWebContainer {
     fileprivate func authenticating(additionalAuthenticatedData: Data?) -> Data {
-        let suffix: Data
-        if let additionalAuthenticatedData, !additionalAuthenticatedData.isEmpty {
-            suffix = Data(".".utf8) + additionalAuthenticatedData.urlBase64EncodedData()
+        let suffix: Data = if let additionalAuthenticatedData, !additionalAuthenticatedData.isEmpty {
+            Data(".".utf8) + additionalAuthenticatedData.urlBase64EncodedData()
         } else {
-            suffix = .init()
+            .init()
         }
         return encoded.urlBase64EncodedData() + suffix
     }

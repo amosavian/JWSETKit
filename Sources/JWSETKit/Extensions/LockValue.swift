@@ -4,8 +4,9 @@
 //
 //  Created by Amir Abbas Mousavian on 4/29/24.
 //  Modified by Ralph Haddis
-import OrderedCollections
+
 import Collections
+import OrderedCollections
 #if canImport(FoundationEssentials)
 import FoundationEssentials
 #if canImport(Darwin)
@@ -164,19 +165,18 @@ public final class PthreadReadWriteLock<Value>: Locking, @unchecked Sendable {
     public func tryLock(_ context: PthreadReadWriteContextLock) -> Bool {
         switch context {
         case .read:
-            return pthread_rwlock_tryrdlock(lock) == 0
+            pthread_rwlock_tryrdlock(lock) == 0
         case .write:
-            return pthread_rwlock_trywrlock(lock) == 0
+            pthread_rwlock_trywrlock(lock) == 0
         }
     }
     
     public func lock(_ context: PthreadReadWriteContextLock) throws {
-        let result: Int32
-        switch context {
+        let result: Int32 = switch context {
         case .read:
-            result = pthread_rwlock_rdlock(lock)
+            pthread_rwlock_rdlock(lock)
         case .write:
-            result = pthread_rwlock_wrlock(lock)
+            pthread_rwlock_wrlock(lock)
         }
         if result != 0 {
             throw POSIXError(POSIXError.Code(rawValue: result) ?? .ECANCELED, userInfo: [:])

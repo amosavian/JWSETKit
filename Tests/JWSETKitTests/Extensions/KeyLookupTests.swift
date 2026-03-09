@@ -12,7 +12,7 @@ import Testing
 @Suite
 struct KeyLookupTests {
     @Test
-    func jsonWebKeyNormalizer() throws {
+    func jsonWebKeyNormalizer() {
         #expect("camelCase".jsonWebKey == "camel_case")
         #expect("clientID".jsonWebKey == "client_id")
         #expect("authTime".jsonWebKey == "auth_time")

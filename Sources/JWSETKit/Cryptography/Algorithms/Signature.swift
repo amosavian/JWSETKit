@@ -168,83 +168,133 @@ extension JSONWebSignatureAlgorithm {
     }
 }
 
-// Signatures
+// -MARK: Signatures
 extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     /// **Signature**: No digital signature or MAC performed.
     @available(*, deprecated, message: "This algorithm is intended to be deprecated regarding https://datatracker.ietf.org/doc/draft-ietf-jose-deprecate-none-rsa15/")
-    public static var none: Self { .unsafeNone }
+    public static var none: Self {
+        .unsafeNone
+    }
     
-    static var unsafeNone: Self { "none" }
+    static var unsafeNone: Self {
+        "none"
+    }
     
     /// **Signature**: HMAC using SHA-256.
-    public static var hmacSHA256: Self { "HS256" }
+    public static var hmacSHA256: Self {
+        "HS256"
+    }
     
     /// **Signature**: HMAC using SHA-384.
-    public static var hmacSHA384: Self { "HS384" }
+    public static var hmacSHA384: Self {
+        "HS384"
+    }
     
     /// **Signature**: HMAC using SHA-512.
-    public static var hmacSHA512: Self { "HS512" }
+    public static var hmacSHA512: Self {
+        "HS512"
+    }
     
     static func hmac(bitCount: Int) -> Self {
         .init(rawValue: "HS\(bitCount)")
     }
     
     /// **Signature**: RSASSA-PKCS1-v1.5 using SHA-256.
-    public static var rsaSignaturePKCS1v15SHA256: Self { "RS256" }
+    public static var rsaSignaturePKCS1v15SHA256: Self {
+        "RS256"
+    }
     
     /// **Signature**: RSASSA-PKCS1-v1.5 using SHA-384.
-    public static var rsaSignaturePKCS1v15SHA384: Self { "RS384" }
+    public static var rsaSignaturePKCS1v15SHA384: Self {
+        "RS384"
+    }
     
     /// **Signature**: RSASSA-PKCS1-v1.5 using SHA-512 .
-    public static var rsaSignaturePKCS1v15SHA512: Self { "RS512" }
+    public static var rsaSignaturePKCS1v15SHA512: Self {
+        "RS512"
+    }
     
     /// **Signature**: RSASSA-PSS using SHA-256 and MGF1 with SHA-256.
-    public static var rsaSignaturePSSSHA256: Self { "PS256" }
+    public static var rsaSignaturePSSSHA256: Self {
+        "PS256"
+    }
     
     /// **Signature**: RSASSA-PSS using SHA-384 and MGF1 with SHA-384.
-    public static var rsaSignaturePSSSHA384: Self { "PS384" }
+    public static var rsaSignaturePSSSHA384: Self {
+        "PS384"
+    }
     
     /// **Signature**: RSASSA-PSS using SHA-512 and MGF1 with SHA-512.
-    public static var rsaSignaturePSSSHA512: Self { "PS512" }
+    public static var rsaSignaturePSSSHA512: Self {
+        "PS512"
+    }
     
     /// **Signature**: ECDSA using P-256 and SHA-256.
-    public static var ecdsaSignatureP256SHA256: Self { "ES256" }
+    public static var ecdsaSignatureP256SHA256: Self {
+        "ES256"
+    }
     
     /// **Signature**: EdDSA signature algorithms.
     ///
     /// - Important: Only Ed25519 is supported.
     /// - Warning: This key is deprecated in [RFC 9864](https://www.rfc-editor.org/rfc/rfc9864)
     ///     and is available for compatibility reason. Please use ``eddsa25519Signature`` instead when possible.
-    public static var eddsaSignature: Self { "EdDSA" }
+    public static var eddsaSignature: Self {
+        "EdDSA"
+    }
         
     /// **Signature**: EdDSA using Ed25519 curve signature algorithms
-    public static var eddsa25519Signature: Self { "Ed25519" }
+    public static var eddsa25519Signature: Self {
+        "Ed25519"
+    }
     
     /// **Signature**: ECDSA using P-384 and SHA-384.
-    public static var ecdsaSignatureP384SHA384: Self { "ES384" }
+    public static var ecdsaSignatureP384SHA384: Self {
+        "ES384"
+    }
     
     /// **Signature**: ECDSA using P-521 and SHA-512.
-    public static var ecdsaSignatureP521SHA512: Self { "ES512" }
+    public static var ecdsaSignatureP521SHA512: Self {
+        "ES512"
+    }
     
 #if P256K
     /// **Signature**: ECDSA using secp256k1 curve and SHA-256.
-    public static var ecdsaSignatureSecp256k1SHA256: Self { "ES256K" }
+    public static var ecdsaSignatureSecp256k1SHA256: Self {
+        "ES256K"
+    }
 #else
-    static var ecdsaSignatureSecp256k1SHA256: Self { "ES256K" }
+    static var ecdsaSignatureSecp256k1SHA256: Self {
+        "ES256K"
+    }
 #endif
     
     /// **Signature**: ML-DSA-44 as described in FIPS 204.
-    static var mldsa44Signature: Self { .internalMLDSA44Signature }
+    static var mldsa44Signature: Self {
+        .internalMLDSA44Signature
+    }
     
     /// **Signature**: ML-DSA-65 as described in FIPS 204.
     @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
-    public static var mldsa65Signature: Self { .internalMLDSA65Signature }
+    public static var mldsa65Signature: Self {
+        .internalMLDSA65Signature
+    }
     
     /// **Signature**: ML-DSA-87 as described in FIPS 204.
     @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
-    public static var mldsa87Signature: Self { .internalMLDSA87Signature }
+    public static var mldsa87Signature: Self {
+        .internalMLDSA87Signature
+    }
     
-    static var internalMLDSA44Signature: Self { "ML-DSA-44" }
-    static var internalMLDSA65Signature: Self { "ML-DSA-65" }
-    static var internalMLDSA87Signature: Self { "ML-DSA-87" }
+    static var internalMLDSA44Signature: Self {
+        "ML-DSA-44"
+    }
+
+    static var internalMLDSA65Signature: Self {
+        "ML-DSA-65"
+    }
+
+    static var internalMLDSA87Signature: Self {
+        "ML-DSA-87"
+    }
 }

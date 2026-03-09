@@ -26,11 +26,10 @@ extension MutableJSONWebContainer {
     
     fileprivate var _resolvedCertificateChain: JSONWebCertificateChain {
         get async throws {
-            let chain: [String]
-            if storage.contains(key: "x5c") {
-                chain = self["x5c"] ?? []
+            let chain: [String] = if storage.contains(key: "x5c") {
+                self["x5c"] ?? []
             } else {
-                chain = try await loadCertificateFromURL()
+                try await loadCertificateFromURL()
             }
             return try .init { container in
                 container["x5c"] = chain

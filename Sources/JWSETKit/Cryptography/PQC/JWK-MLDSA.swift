@@ -11,6 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
 
 /// JSON Web Key (JWK) container for different types of Post-Quantum public keys consists of MLDSA-65 and MLDSA-87.
 package struct JSONWebMLDSAPublicKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyPairType, JSONWebValidatingKey, Hashable, Sendable {

@@ -37,13 +37,13 @@ extension Bool: JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Bool? {
         switch value {
         case let value as Self:
-            return value
+            value
         case let value as String:
-            return Bool(value)
+            Bool(value)
         case let value as any BinaryInteger:
-            return Int(value) != 0
+            Int(value) != 0
         default:
-            return nil
+            nil
         }
     }
 }
@@ -59,13 +59,13 @@ extension JSONWebFieldDecodable where Self: DataProtocol & RangeReplaceableColle
     static func castValue(_ value: Any?) -> Self? {
         switch value {
         case let value as Self:
-            return value
+            value
         case let value as String:
-            return Self(urlBase64Encoded: value)
+            Self(urlBase64Encoded: value)
         case let value as any Collection<UInt8>:
-            return Self(value)
+            Self(value)
         default:
-            return nil
+            nil
         }
     }
 }
@@ -85,19 +85,19 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self? {
         switch value {
         case let value as any BinaryInteger:
-            return Date(timeIntervalSince1970: TimeInterval(value))
+            Date(timeIntervalSince1970: TimeInterval(value))
         case let value as any BinaryFloatingPoint:
-            return Date(timeIntervalSince1970: TimeInterval(value))
+            Date(timeIntervalSince1970: TimeInterval(value))
         case let value as Date:
-            return value
+            value
         case let value as String:
             if let value = TimeInterval(value) {
-                return Date(timeIntervalSince1970: value)
+                Date(timeIntervalSince1970: value)
             } else {
-                return Date(iso8601: value)
+                Date(iso8601: value)
             }
         default:
-            return nil
+            nil
         }
     }
     
@@ -160,13 +160,13 @@ extension Decimal: JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self? {
         switch value {
         case let value as any BinaryInteger:
-            return Decimal(exactly: value)
+            Decimal(exactly: value)
         case let value as any BinaryFloatingPoint:
-            return Decimal(Double(value))
+            Decimal(Double(value))
         case let value as String:
-            return Decimal(string: value)
+            Decimal(string: value)
         default:
-            return nil
+            nil
         }
     }
 }
@@ -180,11 +180,11 @@ extension Locale: JSONWebFieldEncodable, JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self? {
         switch value {
         case let value as Self:
-            return value
+            value
         case let value as String:
-            return Locale(bcp47: value)
+            Locale(bcp47: value)
         default:
-            return nil
+            nil
         }
     }
 }
@@ -198,11 +198,11 @@ extension TimeZone: JSONWebFieldEncodable, JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self? {
         switch value {
         case let value as Self:
-            return value
+            value
         case let value as String:
-            return TimeZone(identifier: value)
+            TimeZone(identifier: value)
         default:
-            return nil
+            nil
         }
     }
 }
@@ -215,11 +215,11 @@ extension URL: JSONWebFieldEncodable, JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self? {
         switch value {
         case let value as Self:
-            return value
+            value
         case let value as String:
-            return URL(string: value)
+            URL(string: value)
         default:
-            return nil
+            nil
         }
     }
 }
@@ -254,57 +254,3 @@ extension SymmetricKey: JSONWebFieldEncodable, JSONWebFieldDecodable {
         }
     }
 }
-
-#if canImport(X509)
-import X509
-
-extension Certificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
-    var jsonWebValue: String? {
-        try? derRepresentation.base64EncodedString()
-    }
-    
-    static func castValue(_ value: Any?) -> Certificate? {
-        switch value {
-        case let value as Self:
-            return value
-        case let value as Data:
-            return try? .init(derEncoded: value)
-        case let value as String:
-            guard let value = Data(base64Encoded: value) else {
-                return nil
-            }
-            return try? .init(derEncoded: value)
-        default:
-            return nil
-        }
-    }
-}
-#endif
-
-#if canImport(CommonCrypto)
-import CommonCrypto
-
-extension SecCertificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
-    @usableFromInline
-    var jsonWebValue: String? {
-        derRepresentation.base64EncodedString()
-    }
-    
-    @usableFromInline
-    static func castValue(_ value: Any?) -> Self? {
-        switch value {
-        case let value as String:
-            guard let value = Data(base64Encoded: value) else {
-                return nil
-            }
-            return try? .init(derEncoded: value)
-        case let value as Data:
-            return try? .init(derEncoded: value)
-        case let value as Self:
-            return value
-        default:
-            return nil
-        }
-    }
-}
-#endif

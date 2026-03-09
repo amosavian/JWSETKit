@@ -20,7 +20,9 @@ import CryptoExtras
 public struct JSONWebKeyAESCBCHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetricSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
     public var storage: JSONWebValueStorage
     
-    public var ivLength: Int { 16 }
+    public var ivLength: Int {
+        16
+    }
     
     public var tagLength: Int {
         ((try? SymmetricKey(self).bitCount) ?? 0) / 16

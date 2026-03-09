@@ -59,7 +59,7 @@ public protocol JSONWebKey: JSONWebContainer, Expirable {
     ///   - hashFunction: Algorithm of thumbprint hashing.
     ///
     /// - Returns: A new instance of thumbprint digest in `urn:ietf:params:oauth` namespace.
-    func thumbprintUri<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> String where H: HashFunction
+    func thumbprintUri<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> String where H: NamedHashFunction
 }
 
 private func isEqualKey(_ lhs: (any JSONWebKey)?, _ rhs: (any JSONWebKey)?) -> Bool {
@@ -72,47 +72,52 @@ private func isEqualKey(_ lhs: (any JSONWebKey)?, _ rhs: (any JSONWebKey)?) -> B
 }
 
 @_documentation(visibility: private)
-public func == <RHS: JSONWebKey>(lhs: any JSONWebKey, rhs: RHS) -> Bool {
+public func == (lhs: any JSONWebKey, rhs: some JSONWebKey) -> Bool {
     isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
-public func == <RHS: JSONWebKey>(lhs: (any JSONWebKey)?, rhs: RHS) -> Bool {
+public func == (lhs: (any JSONWebKey)?, rhs: some JSONWebKey) -> Bool {
     isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
-public func == <RHS: JSONWebKey>(lhs: any JSONWebKey, rhs: RHS?) -> Bool {
+public func == (lhs: any JSONWebKey, rhs: (some JSONWebKey)?) -> Bool {
     isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
-public func == <RHS: JSONWebKey>(lhs: (any JSONWebKey)?, rhs: RHS?) -> Bool {
+public func == (lhs: (any JSONWebKey)?, rhs: (some JSONWebKey)?) -> Bool {
     isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
-public func == <LHS: JSONWebKey>(lhs: LHS, rhs: any JSONWebKey) -> Bool {
+@_disfavoredOverload
+public func == (lhs: some JSONWebKey, rhs: any JSONWebKey) -> Bool {
     isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
-public func == <LHS: JSONWebKey>(lhs: LHS, rhs: (any JSONWebKey)?) -> Bool {
+@_disfavoredOverload
+public func == (lhs: some JSONWebKey, rhs: (any JSONWebKey)?) -> Bool {
     isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
-public func == <LHS: JSONWebKey>(lhs: LHS?, rhs: any JSONWebKey) -> Bool {
+@_disfavoredOverload
+public func == (lhs: (some JSONWebKey)?, rhs: any JSONWebKey) -> Bool {
     isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
-public func == <LHS: JSONWebKey>(lhs: LHS?, rhs: (any JSONWebKey)?) -> Bool {
+@_disfavoredOverload
+public func == (lhs: (some JSONWebKey)?, rhs: (any JSONWebKey)?) -> Bool {
     isEqualKey(lhs, rhs)
 }
 
 @_documentation(visibility: private)
-public func == <LHS: JSONWebKey, RHS: JSONWebKey>(lhs: LHS, rhs: RHS) -> Bool {
+@_disfavoredOverload
+public func == (lhs: some JSONWebKey, rhs: some JSONWebKey) -> Bool {
     isEqualKey(lhs, rhs)
 }
 
@@ -147,7 +152,7 @@ extension JSONWebKey {
         self = try Self(storage: container.decode(JSONWebValueStorage.self))
     }
     
-    @available(*, deprecated, renamed: "init(storage:)", message: "Use `init(storage:)` instead")
+    @available(*, unavailable, renamed: "init(storage:)", message: "Use `init(storage:)` instead")
     public static func create(from storage: JSONWebValueStorage) throws -> Self {
         try Self(storage: storage)
     }
@@ -200,14 +205,13 @@ extension JSONWebKey {
     }
     
     public func thumbprint<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> H.Digest where H: HashFunction {
-        let key: any JSONWebKey
-        switch self {
+        let key: any JSONWebKey = switch self {
         case let self as any JSONWebSigningKey:
-            key = self.publicKey
+            self.publicKey
         case let self as any JSONWebDecryptingKey:
-            key = self.publicKey
+            self.publicKey
         default:
-            key = self
+            self
         }
         switch format {
         case .spki:
@@ -223,12 +227,9 @@ extension JSONWebKey {
         }
     }
     
-    public func thumbprintUri<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> String where H: HashFunction {
+    public func thumbprintUri<H>(format: JSONWebKeyFormat, using hashFunction: H.Type) throws -> String where H: NamedHashFunction {
         let digest = try thumbprint(format: format, using: hashFunction)
         let digestValue = digest.data.urlBase64EncodedString()
-        guard let hashFunction = H.self as? any NamedHashFunction.Type else {
-            throw JSONWebKeyError.unknownAlgorithm
-        }
         return "urn:ietf:params:oauth:\(format)-thumbprint:\(hashFunction.identifier):\(digestValue)"
     }
 }
@@ -312,7 +313,9 @@ extension JSONWebDecryptingKey {
 public protocol JSONWebSymmetricDecryptingKey: JSONWebDecryptingKey, JSONWebKeySymmetric where PublicKey == Self {}
 
 extension JSONWebKeySymmetric where Self: JSONWebPrivateKey {
-    public var publicKey: Self { self }
+    public var publicKey: Self {
+        self
+    }
     
     public init() throws {
         try self.init(.init(size: .bits256))

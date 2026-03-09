@@ -15,7 +15,7 @@ struct JSONWebSelectiveDisclosureJWTTests {
     // MARK: - Basic Disclosure Tests
     
     @Test("Create selective disclosure")
-    func createSelectiveDisclosure() throws {
+    func createSelectiveDisclosure() {
         let disclosure = JSONWebSelectiveDisclosure(
             "email",
             value: "john.doe@example.com",
@@ -400,7 +400,7 @@ struct JSONWebSelectiveDisclosureJWTTests {
         #expect(presentation.keyBinding?.signatures.first?.protected.type == .keyBindingJWT)
         
         // Verify KB-JWT claims
-        let kbPayload = presentation.keyBinding!.payload
+        let kbPayload = try #require(presentation.keyBinding?.payload)
         #expect(kbPayload.nonce == "test-nonce-123")
         #expect(kbPayload.audience.contains("https://verifier.example.com"))
         #expect(kbPayload.selectiveDisclosureHash != nil)
@@ -725,7 +725,7 @@ struct JSONWebSelectiveDisclosureJWTTests {
 
         // Should contain KB-JWT at the end (not empty after last ~)
         let components = compactString.split(separator: "~", omittingEmptySubsequences: false)
-        let lastComponent = String(components.last!)
+        let lastComponent = try String(#require(components.last))
         #expect(!lastComponent.isEmpty)
         #expect(lastComponent.hasPrefix("ey")) // JWT prefix
     }
@@ -853,7 +853,7 @@ struct JSONWebSelectiveDisclosureJWTTests {
     }
 
     @Test("Disclosure digest determinism")
-    func disclosureDigestDeterminism() throws {
+    func disclosureDigestDeterminism() {
         // Same disclosure should produce same digest
         let salt = Data([0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08,
                          0x09, 0x0A, 0x0B, 0x0C, 0x0D, 0x0E, 0x0F, 0x10])

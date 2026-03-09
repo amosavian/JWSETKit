@@ -66,11 +66,11 @@ extension JSONWebTokenClaims {
             if let hashFunction = storage[stringKey(keyPath)]
                 .map(JSONWebHashAlgorithm.init(rawValue:))
             {
-                return hashFunction
+                hashFunction
             } else if storage.contains(key: "_sd") {
-                return SHA256.identifier
+                SHA256.identifier
             } else {
-                return nil
+                nil
             }
         }
         set {

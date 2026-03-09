@@ -79,7 +79,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
             let message = header.signedData(payload)
             let algorithm = JSONWebSignatureAlgorithm(header.protected.algorithm)
             let signature: Data
-            if algorithm == .none {
+            if algorithm == .unsafeNone {
                 signature = .init()
             } else if let algorithm, let key = keySet.matches(for: header.protected.value).first as? any JSONWebSigningKey {
                 signature = try key.signature(message, using: algorithm)
@@ -143,7 +143,7 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
         for signatureHeader in signatures {
             let message = signatureHeader.signedData(payload)
             var algorithm = JSONWebSignatureAlgorithm(signatureHeader.protected.algorithm)
-            if !strict, algorithm == .none, let unprotected = signatureHeader.unprotected {
+            if !strict, algorithm == .unsafeNone || algorithm == nil, let unprotected = signatureHeader.unprotected {
                 algorithm = JSONWebSignatureAlgorithm(unprotected.algorithm)
             }
             if let algorithm, let key = keySet.matches(for: signatureHeader.protected.value).first as? any JSONWebValidatingKey {
@@ -224,52 +224,65 @@ extension JOSEHeader {
         /// This is the default strategy. If the signing key has a `keyId` property set,
         /// it will be used as the `kid` header parameter.
         case id
-
+        
         /// Use a custom string as the key identifier.
         ///
-        /// - Parameter String: The custom identifier to use as the `kid` header parameter.
-        case customId(String)
-
+        /// - Parameter id: The custom identifier to use as the `kid` header parameter.
+        case customId(keyId: String)
+        
+        /// Use JWKS url and the key's `keyId` property if applicable.
+        ///
+        /// This is the default strategy. If the signing key has a `keyId` property set,
+        /// it will be used as the `kid` header parameter.
+        case keySet(url: URL)
+        
         /// Use the key's thumbprint as the identifier.
         ///
         /// Calculates and uses the JWK thumbprint of the signing key as the `kid` header parameter.
         /// This provides a standardized way to identify keys based on their cryptographic properties.
         case thumbprint
-
+        
         /// Use the key's `keyId` if available, otherwise fall back to thumbprint.
         ///
         /// First attempts to use the key's `keyId` property, and if that's not available,
         /// calculates and uses the key's thumbprint as the identifier.
         case idWithThumbprintFallback
-
+        
         /// Embed the full public key in the header instead of using an identifier.
         ///
         /// Places the complete public key in the `jwk` header parameter rather than
         /// using a `kid` identifier. Recipients can use the embedded key directly
         /// without needing to look it up.
+        ///
+        /// - Important: This method can be unsafe for validation as Man-In-The-Middle attack
+        ///      can be arranged by changing `kid` header and signature simultaneously.
         case embedded
     }
     
     public mutating func updateKeyId<SK>(using signingKey: SK, strategy: KeyIdStrategy? = .idWithThumbprintFallback) throws where SK: JSONWebSigningKey {
+        let keyId: String?
         switch strategy {
         case .id:
-            // swiftformat:disable:next redundantSelf
-            self.keyId = signingKey.keyId
+            keyId = signingKey.keyId
         case .customId(let id):
+            keyId = id
+        case .keySet(url: let url):
+            keyId = signingKey.keyId
             // swiftformat:disable:next redundantSelf
-            self.keyId = id
+            self.jsonWebKeySetUrl = url
         case .thumbprint:
-            // swiftformat:disable:next redundantSelf
-            self.keyId = try signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
+            keyId = try signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
         case .idWithThumbprintFallback:
-            // swiftformat:disable:next redundantSelf
-            self.keyId = try signingKey.keyId ?? signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
+            keyId = try signingKey.keyId ?? signingKey.thumbprintUri(format: .jwk, using: SHA256.self)
         case .embedded:
+            keyId = nil
             // swiftformat:disable:next redundantSelf
             self.key = signingKey
         case .none:
-            break
+            return
         }
+        // swiftformat:disable:next redundantSelf
+        self.keyId = keyId
     }
     
     public func updatedKeyId<SK>(using signingKey: SK, strategy: KeyIdStrategy? = .idWithThumbprintFallback) throws -> Self where SK: JSONWebSigningKey {

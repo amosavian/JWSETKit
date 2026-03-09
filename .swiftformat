@@ -30,7 +30,7 @@
 --self init-only
 --semicolons inline
 --stripunusedargs always
---swiftversion 5.1
+--swiftversion 6.0
 --trimwhitespace nonblank-lines
 --wraparguments preserve
 --wrapcollections preserve
@@ -38,3 +38,5 @@
 # rules
 
 --enable isEmpty
+--disable simplifyGenericConstraints
+--disable opaqueGenericParameters

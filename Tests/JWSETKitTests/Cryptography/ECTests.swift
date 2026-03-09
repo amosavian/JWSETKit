@@ -8,6 +8,7 @@
 import Crypto
 import Foundation
 import Testing
+@testable import CryptoP256K
 @testable import JWSETKit
 
 @Suite

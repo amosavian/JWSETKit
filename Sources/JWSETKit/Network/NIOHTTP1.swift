@@ -38,7 +38,7 @@ extension HTTPHeaders {
     ///   - keySet: A `JSONWebKeySet` object contains keys that would be used for validation.
     ///   - audience: The exact intended audience, if applicable.
     public func verifyAuthorizationToken(using keySet: JSONWebKeySet, for audience: String? = nil) throws {
-        guard let authorizationToken = authorizationToken else {
+        guard let authorizationToken else {
             throw CryptoKitError.authenticationFailure
         }
         try authorizationToken.verify(using: keySet, for: audience)

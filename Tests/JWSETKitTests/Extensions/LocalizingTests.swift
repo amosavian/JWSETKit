@@ -12,7 +12,7 @@ import Testing
 @Suite
 struct LocalizingTests {
     @Test
-    func errorLocalizing() throws {
+    func errorLocalizing() {
 #if canImport(Darwin)
         let date = Date(timeIntervalSince1970: 0)
         
@@ -29,7 +29,7 @@ struct LocalizingTests {
     }
     
     @Test
-    func testBestMatch() throws {
+    func testBestMatch() {
         #expect(Locale(bcp47: "fa-IR").identifier == "fa_IR")
         
         #expect(Locale(identifier: "fa-IR").bestMatch(in: [

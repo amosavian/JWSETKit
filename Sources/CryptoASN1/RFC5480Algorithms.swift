@@ -19,11 +19,11 @@ public struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable, Senda
     public static var defaultIdentifier: ASN1Identifier {
         .sequence
     }
-
+    
     public let algorithm: ASN1ObjectIdentifier
-
+    
     public let parameters: (any ParameterType)?
-
+    
     public init(algorithm: ASN1ObjectIdentifier, parameters: (any ParameterType)? = nil) {
         self.algorithm = algorithm
         self.parameters = parameters
@@ -43,12 +43,12 @@ public struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable, Senda
         self.algorithm = algorithm
         self.parameters = parameters
     }
-
+    
     init(algorithm: ASN1ObjectIdentifier, parameters: RSASSAPSSParams) {
         self.algorithm = algorithm
         self.parameters = parameters
     }
-
+    
     public init(derEncoded rootNode: ASN1Node, withIdentifier identifier: ASN1Identifier) throws {
         // The AlgorithmIdentifier block looks like this.
         //
@@ -66,7 +66,7 @@ public struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable, Senda
         // We don't bother with helpers: we just try to decode it directly.
         self = try DER.sequence(rootNode, identifier: identifier) { nodes in
             let algorithmOID = try ASN1ObjectIdentifier(derEncoded: &nodes)
-
+            
             let nodeParameters: (any ParameterType)? = try nodes.next().flatMap {
                 switch algorithmOID {
                 case .AlgorithmIdentifier.idEcPublicKey:
@@ -79,11 +79,11 @@ public struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable, Senda
                     ASN1ObjectIdentifier?.none
                 }
             }
-
+            
             return .init(algorithm: algorithmOID, parameters: nodeParameters)
         }
     }
-
+    
     private var shouldEncodeNullParameters: Bool {
         // For RSA algorithms the parameters MUST be present and MUST be NULL.
         // cited in PKCS #1 Appendix (as cited in RFC 5280).
@@ -110,7 +110,7 @@ public struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable, Senda
     public func serialize(into coder: inout DER.Serializer, withIdentifier identifier: ASN1Identifier) throws {
         try coder.appendConstructedNode(identifier: identifier) { coder in
             try coder.serialize(algorithm)
-            if let parameters = parameters {
+            if let parameters {
                 try coder.serialize(parameters)
             } else if shouldEncodeNullParameters {
                 try coder.serialize(ASN1Null())
@@ -119,110 +119,107 @@ public struct RFC5480AlgorithmIdentifier: DERImplicitlyTaggable, Hashable, Senda
     }
 }
 
-extension RFC5480AlgorithmIdentifier {
-    public var keyType: JSONWebKeyType {
-        get throws {
-            guard let result = AnyJSONWebAlgorithm(jsonWebAlgorithm)?.keyType else {
-                throw JSONWebKeyError.unknownAlgorithm
-            }
-            return result
-        }
-    }
-    
-    public var keyCurve: JSONWebKeyCurve? {
-        jsonWebAlgorithm?.curve
-    }
-    
-    private static let algorithms: AtomicValue<[Self: any JSONWebAlgorithm]> = [
-        .rsaEncryption: .unsafeRSAEncryptionPKCS1,
-        .rsaEncryptionSHA256: .rsaSignaturePKCS1v15SHA256,
-        .rsaEncryptionSHA384: .rsaSignaturePKCS1v15SHA384,
-        .rsaEncryptionSHA512: .rsaSignaturePKCS1v15SHA512,
-        .rsaPSS(SHA256.self): .rsaSignaturePSSSHA256,
-        .rsaPSS(SHA384.self): .rsaSignaturePSSSHA384,
-        .rsaPSS(SHA512.self): .rsaSignaturePSSSHA512,
-        .rsaOAEP(Insecure.SHA1.self): .rsaEncryptionOAEP,
-        .rsaOAEP(SHA256.self): .rsaEncryptionOAEPSHA256,
-        .rsaOAEP(SHA384.self): .rsaEncryptionOAEPSHA384,
-        .rsaOAEP(SHA512.self): .rsaEncryptionOAEPSHA512,
-        .ecdsaP256: .ecdsaSignatureP256SHA256,
-        .ecdsaP384: .ecdsaSignatureP384SHA384,
-        .ecdsaP521: .ecdsaSignatureP521SHA512,
-        .ecdsaSecp256k1: .ecdsaSignatureSecp256k1SHA256,
-        .ed25519: .eddsaSignature,
-        .ed448: .eddsaSignature,
-        .mldsa44: .internalMLDSA44Signature,
-        .mldsa65: .internalMLDSA65Signature,
-        .mldsa87: .internalMLDSA87Signature,
-    ]
-    
-    public var jsonWebAlgorithm: (any JSONWebAlgorithm)? {
-        Self.algorithms[self]
-    }
-    
-    /// Registers a new symmetric key for JWE content encryption.
-    ///
-    /// - Parameters:
-    ///   - algorithm: New algorithm name.
-    ///   - keyClass: Key class of symmetric key.
-    ///   - keyLength: The sizes that a symmetric cryptographic key can take.
-    public static func register(
-        _ algorithm: Self,
-        jsonWebAlgorithm: some JSONWebAlgorithm
-    ) {
-        algorithms[algorithm] = jsonWebAlgorithm
-    }
-    
-    init?(_ jsonWebAlgorithm: any JSONWebAlgorithm) {
-        if let value = Self.algorithms.first(where: { $1.rawValue == jsonWebAlgorithm.rawValue }) {
-            self = value.key
-        }
-        return nil
+extension [ASN1ObjectIdentifier] {
+    public enum AlgorithmIdentifier {
+        public static let rsa: [ASN1ObjectIdentifier] = [
+            .AlgorithmIdentifier.rsaEncryption,
+            .AlgorithmIdentifier.rsaPSS,
+            .AlgorithmIdentifier.sha256WithRSAEncryption,
+            .AlgorithmIdentifier.sha384WithRSAEncryption,
+            .AlgorithmIdentifier.sha512WithRSAEncryption,
+        ]
+        
+        public static let edwardsCurveAlgs: [ASN1ObjectIdentifier] = [
+            .AlgorithmIdentifier.idX25519,
+            .AlgorithmIdentifier.idX448,
+            .AlgorithmIdentifier.idEd25519,
+            .AlgorithmIdentifier.idEd448,
+        ]
+        
+        public static let moduleLatticeAlgs: [ASN1ObjectIdentifier] = moduleLatticeDSAs + moduleLatticeKEMs
+        
+        public static let moduleLatticeDSAs: [ASN1ObjectIdentifier] = [
+            .AlgorithmIdentifier.mldsa44,
+            .AlgorithmIdentifier.mldsa65,
+            .AlgorithmIdentifier.mldsa87,
+        ]
+        
+        public static let moduleLatticeKEMs: [ASN1ObjectIdentifier] = [
+            .AlgorithmIdentifier.mlkem512,
+            .AlgorithmIdentifier.mlkem768,
+            .AlgorithmIdentifier.mlkem1024,
+        ]
     }
 }
 
+extension ASN1ObjectIdentifier.AlgorithmIdentifier {
+    public static let rsaOAEP: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 1, 1, 7]
+    public static let mgf1: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 1, 1, 8]
+    public static let pSpecified: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 1, 1, 9]
+    public static let md5: ASN1ObjectIdentifier = [1, 2, 840, 113_549, 2, 5]
+    public static let idX25519: ASN1ObjectIdentifier = [1, 3, 101, 110]
+    public static let idX448: ASN1ObjectIdentifier = [1, 3, 101, 111]
+    public static let idEd25519: ASN1ObjectIdentifier = [1, 3, 101, 112]
+    public static let idEd448: ASN1ObjectIdentifier = [1, 3, 101, 113]
+    public static let sha1: ASN1ObjectIdentifier = [1, 3, 14, 3, 2, 26]
+    public static let sha256: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 2, 1]
+    public static let sha384: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 2, 2]
+    public static let sha512: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 2, 3]
+    public static let mldsa44: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 3, 17]
+    public static let mldsa65: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 3, 18]
+    public static let mldsa87: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 3, 19]
+    public static let mlkem512: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 4, 1]
+    public static let mlkem768: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 4, 2]
+    public static let mlkem1024: ASN1ObjectIdentifier = [2, 16, 840, 1, 101, 3, 4, 4, 3]
+}
+
+extension ASN1ObjectIdentifier.NamedCurves {
+    /// Represents the secp256k1 curve.
+    public static let secp256k1: ASN1ObjectIdentifier = [1, 3, 132, 0, 10]
+}
+
 extension RFC5480AlgorithmIdentifier {
-    static let sha1Identifier = RFC5480AlgorithmIdentifier(
+    public static let sha1Identifier = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.sha1,
         parameters: nil
     )
     
-    static let sha256Identifier = RFC5480AlgorithmIdentifier(
+    public static let sha256Identifier = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.sha256,
         parameters: nil
     )
     
-    static let sha384Identifier = RFC5480AlgorithmIdentifier(
+    public static let sha384Identifier = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.sha384,
         parameters: nil
     )
     
-    static let sha512Identifier = RFC5480AlgorithmIdentifier(
+    public static let sha512Identifier = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.sha512,
         parameters: nil
     )
     
-    static let mgf1SHA1Identifier = RFC5480AlgorithmIdentifier(
+    public static let mgf1SHA1Identifier = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mgf1,
         parameters: .sha1Identifier
     )
     
-    static let mgf1SHA256Identifier = RFC5480AlgorithmIdentifier(
+    public static let mgf1SHA256Identifier = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mgf1,
         parameters: sha256Identifier
     )
     
-    static let mgf1SHA384Identifier = RFC5480AlgorithmIdentifier(
+    public static let mgf1SHA384Identifier = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mgf1,
         parameters: .sha384Identifier
     )
     
-    static let mgf1SHA512Identifier = RFC5480AlgorithmIdentifier(
+    public static let mgf1SHA512Identifier = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mgf1,
         parameters: .sha512Identifier
     )
     
-    static func digestIdentifier<H: HashFunction>(_ hashFunction: H.Type) throws -> Self {
+    public static func digestIdentifier<H: HashFunction>(_ hashFunction: H.Type) throws -> Self {
         switch hashFunction {
         case is Insecure.SHA1.Type:
             .sha1Identifier
@@ -237,7 +234,7 @@ extension RFC5480AlgorithmIdentifier {
         }
     }
     
-    static func maskGenFunction1<H: HashFunction>(_ hashFunction: H.Type) throws -> Self {
+    public static func maskGenFunction1<H: HashFunction>(_ hashFunction: H.Type) throws -> Self {
         try .init(algorithm: .AlgorithmIdentifier.mgf1, parameters: .digestIdentifier(hashFunction))
     }
 }
@@ -257,7 +254,7 @@ extension RFC5480AlgorithmIdentifier {
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
         parameters: .NamedCurves.secp384r1
     )
-
+    
     public static let ecdsaP521 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEcPublicKey,
         parameters: .NamedCurves.secp521r1
@@ -273,32 +270,32 @@ extension RFC5480AlgorithmIdentifier {
         parameters: nil
     )
     
-    static let ed448 = RFC5480AlgorithmIdentifier(
+    public static let ed448 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idEd448,
         parameters: nil
     )
     
-    static let x448 = RFC5480AlgorithmIdentifier(
+    public static let x448 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.idX448,
         parameters: nil
     )
     
-    static let rsaEncryption = RFC5480AlgorithmIdentifier(
+    public static let rsaEncryption = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.rsaEncryption,
         parameters: nil
     )
     
-    static let rsaEncryptionSHA256 = RFC5480AlgorithmIdentifier(
+    public static let rsaEncryptionSHA256 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.sha256WithRSAEncryption,
         parameters: nil
     )
     
-    static let rsaEncryptionSHA384 = RFC5480AlgorithmIdentifier(
+    public static let rsaEncryptionSHA384 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.sha384WithRSAEncryption,
         parameters: nil
     )
     
-    static let rsaEncryptionSHA512 = RFC5480AlgorithmIdentifier(
+    public static let rsaEncryptionSHA512 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.sha512WithRSAEncryption,
         parameters: nil
     )
@@ -333,7 +330,7 @@ extension RFC5480AlgorithmIdentifier {
         )
     }
     
-    static let mldsa44 = RFC5480AlgorithmIdentifier(
+    public static let mldsa44 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mldsa44,
         parameters: nil
     )
@@ -348,18 +345,22 @@ extension RFC5480AlgorithmIdentifier {
         parameters: nil
     )
     
-    static let mlkem512 = RFC5480AlgorithmIdentifier(
+    public static let mlkem512 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mlkem512,
         parameters: nil
     )
     
-    static let mlkem768 = RFC5480AlgorithmIdentifier(
+    public static let mlkem768 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mlkem768,
         parameters: nil
     )
     
-    static let mlkem1024 = RFC5480AlgorithmIdentifier(
+    public static let mlkem1024 = RFC5480AlgorithmIdentifier(
         algorithm: .AlgorithmIdentifier.mlkem1024,
         parameters: nil
     )
+}
+
+package protocol DERKeyContainer {
+    var algorithmIdentifier: RFC5480AlgorithmIdentifier { get }
 }

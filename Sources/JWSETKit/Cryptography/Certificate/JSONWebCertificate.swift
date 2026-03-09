@@ -11,6 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
 import SwiftASN1
 #if canImport(X509)
 import X509
@@ -41,7 +42,20 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
     public var leaf: CertificateType {
         // As we verify key when initializing, we shall assume key is valid
         // swiftformat:disable:next redundantSelf
-        self.certificateChain.first.unsafelyUnwrapped
+        self.certificateChainData.first.flatMap(CertificateType.castValue(_:)).unsafelyUnwrapped
+    }
+    
+    ////// Certiticates of certificate chain.
+    public var certificates: [CertificateType] {
+        get throws {
+            // swiftformat:disable:next redundantSelf
+            try self.certificateChainData.compactMap {
+                guard let result = CertificateType.castValue($0) else {
+                    throw CryptoKitASN1Error.invalidPEMDocument
+                }
+                return result
+            }
+        }
     }
     
     var leafCertificate: InternalCertificateType {
@@ -65,7 +79,22 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
         try validate()
     }
     
+    /// Initializes from an array of `any DataProtocol`
+    ///
+    /// - Parameter certificates: Certificate chain with leaf as first element of array.
     public init<T>(_ certificates: T) throws where T: Collection, T.Element: DataProtocol {
+        guard let leaf = certificates.first else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        var key = try AnyJSONWebKey(InternalCertificate(leaf).publicKey)
+        key.certificateChainData = certificates.map { Data($0) }
+        self.storage = key.storage
+    }
+    
+    /// Initializes from an array of `any DataProtocol`
+    ///
+    /// - Parameter certificates: Certificate chain with leaf as first element of array.
+    public init<T>(_ certificates: T) throws where T: Collection, T.Element == any DataProtocol {
         guard let leaf = certificates.first else {
             throw JSONWebKeyError.keyNotFound
         }
@@ -101,14 +130,37 @@ public struct JSONWebCertificateChain: MutableJSONWebKey, JSONWebValidatingKey, 
     ///   - hostName: The hostname used to connect to the server.
     public func verifyChain(currentDate: Date? = nil, hostName: String? = nil) async throws {
 #if canImport(X509)
-        // swiftformat:disable:next redundantSelf
-        let chain = self.certificateChain
-        _ = try await chain.verifyChain(currentDate: currentDate, hostName: hostName)
+        _ = try await certificates.verifyChain(currentDate: currentDate, hostName: hostName)
 #elseif canImport(CommonCrypto)
         try await SecTrust(from: self).verifyChain(currentDate: currentDate, hostName: hostName)
 #else
         throw JSONWebKeyError.operationNotAllowed
 #endif
+    }
+    
+    public static func == (lhs: Self?, rhs: Self) -> Bool {
+        lhs?.certificateChainData.first == rhs.certificateChainData.first
+    }
+}
+
+extension JSONWebCertificateChain: JSONWebFieldEncodable, JSONWebFieldDecodable {
+    var jsonWebValue: [String] {
+        // swiftformat:disable:next redundantSelf
+        self.certificateChainData.map { $0.base64EncodedString() }
+    }
+    
+    static func castValue(_ value: Any?) -> JSONWebCertificateChain? {
+        guard let value else { return nil }
+        switch value {
+        case let value as [String]:
+            return try? JSONWebCertificateChain(value.compactMap { Data(base64Encoded: $0) })
+        case let value as [Data]:
+            return try? JSONWebCertificateChain(value)
+        case let value as [any DataProtocol]:
+            return try? JSONWebCertificateChain(value)
+        default:
+            return nil
+        }
     }
 }
 
@@ -167,10 +219,10 @@ private struct Time: RawRepresentable, DERParseable, DERImplicitlyTaggable, Send
 }
 
 private struct Validity: DERParseable, Sendable {
-    let notBefore: Date
-    let notAfter: Date
+    let notBefore: Time
+    let notAfter: Time
     
-    init(notBefore: Date, notAfter: Date) {
+    init(notBefore: Time, notAfter: Time) {
         self.notBefore = notBefore
         self.notAfter = notAfter
     }
@@ -179,7 +231,7 @@ private struct Validity: DERParseable, Sendable {
         self = try DER.sequence(node, identifier: .sequence) { nodes in
             let notBefore = try Time(derEncoded: &nodes)
             let notAfter = try Time(derEncoded: &nodes)
-            return Validity(notBefore: notBefore.rawValue, notAfter: notAfter.rawValue)
+            return Validity(notBefore: notBefore, notAfter: notAfter)
         }
     }
 }
@@ -223,11 +275,11 @@ struct InternalCertificate: DERParseable, Sendable, Expirable {
     private let tbsCertificate: InternalTBSCertificate
     
     var notValidBefore: Date {
-        tbsCertificate.validity.notBefore
+        tbsCertificate.validity.notBefore.rawValue
     }
     
     var notValidAfter: Date {
-        tbsCertificate.validity.notAfter
+        tbsCertificate.validity.notAfter.rawValue
     }
     
     var publicKeyInfo: SubjectPublicKeyInfo {
@@ -277,7 +329,9 @@ struct InternalCertificate: DERParseable, Sendable, Expirable {
 
 extension TimeZone {
     @inlinable
-    static var utc: TimeZone { .init(secondsFromGMT: 0).unsafelyUnwrapped }
+    static var utc: TimeZone {
+        .init(secondsFromGMT: 0).unsafelyUnwrapped
+    }
 }
 
 extension DateComponents {
@@ -287,7 +341,8 @@ extension DateComponents {
         self.init(
             timeZone: .utc,
             year: date.year, month: date.month, day: date.day,
-            hour: date.hours, minute: date.minutes, second: date.seconds
+            hour: date.hours, minute: date.minutes, second: date.seconds,
+            nanosecond: Int(date.fractionalSeconds * 1_000_000_000)
         )
     }
     
@@ -313,7 +368,7 @@ extension GeneralizedTime {
             hours: components.hour ?? 0,
             minutes: components.minute ?? 0,
             seconds: components.second ?? 0,
-            fractionalSeconds: 0
+            fractionalSeconds: components.nanosecond.map { Double($0) / 1_000_000_000 } ?? 0
         )
     }
 }

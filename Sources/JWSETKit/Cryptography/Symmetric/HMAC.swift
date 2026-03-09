@@ -37,7 +37,6 @@ public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetr
     /// - Parameter key: Symmetric key for operation.
     /// - Throws: `CryptoKitError.incorrectKeySize` if key size is less than hash byte count,
     ///     per[RFC 7518 section 3.2](https://www.rfc-editor.org/rfc/rfc7518#section-3.2) .
-
     public init(_ key: SymmetricKey) throws {
         guard H.Digest.byteCount <= key.bitCount / 8 else {
             throw CryptoKitError.incorrectKeySize

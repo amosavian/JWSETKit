@@ -163,27 +163,27 @@ extension JSONWebEncryption: Codable {
     fileprivate func bestRepresentation() -> JSONWebSignatureRepresentation {
         switch recipients.count {
         case 0, 1:
-            return .compact
+            .compact
         default:
-            return .json
+            .json
         }
     }
     
     fileprivate func encodeFunction(for representation: JSONWebEncryptionRepresentation) -> (_ encoder: any Encoder) throws -> Void {
         switch representation {
         case .compact:
-            return encodeAsString
+            encodeAsString
         case .json:
             switch recipients.count {
             case 0, 1:
-                return encodeAsFlattenedJSON
+                encodeAsFlattenedJSON
             default:
-                return encodeAsCompleteJSON
+                encodeAsCompleteJSON
             }
         case .jsonFlattened:
-            return encodeAsFlattenedJSON
+            encodeAsFlattenedJSON
         case .jsonGeneral:
-            return encodeAsCompleteJSON
+            encodeAsCompleteJSON
         }
     }
     

@@ -11,8 +11,6 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
-
-#if P256K
 import LibSECP256k1
 
 // MARK: - P256K + KeyAgreement
@@ -97,27 +95,41 @@ extension P256K {
             }
             
             /// A compact representation of the public key.
-            public var compactRepresentation: Data? { impl.compactRepresentation }
+            public var compactRepresentation: Data? {
+                impl.compactRepresentation
+            }
             
             /// A full representation of the public key.
-            public var rawRepresentation: Data { impl.rawRepresentation }
+            public var rawRepresentation: Data {
+                impl.rawRepresentation
+            }
             
             /// An ANSI x9.63 representation of the public key.
-            public var x963Representation: Data { impl.x963Representation }
+            public var x963Representation: Data {
+                impl.x963Representation
+            }
 
             /// A compressed representation of the public key.
-            public var compressedRepresentation: Data { impl.compressedRepresentation }
+            public var compressedRepresentation: Data {
+                impl.compressedRepresentation
+            }
             
             /// A Distinguished Encoding Rules (DER) encoded representation of the public key.
-            public var derRepresentation: Data { impl.derRepresentation }
+            public var derRepresentation: Data {
+                impl.derRepresentation
+            }
 
 #if !hasFeature(Embedded)
             /// A Privacy-Enhanced Mail (PEM) representation of the public key.
-            public var pemRepresentation: String { impl.pemRepresentation }
+            public var pemRepresentation: String {
+                impl.pemRepresentation
+            }
 #endif
             
             /// A 64-byte ElligatorSwift representation of the public key.
-            public var elligatorSwiftRepresentation: Data { impl.elligatorSwiftRepresentation }
+            public var elligatorSwiftRepresentation: Data {
+                impl.elligatorSwiftRepresentation
+            }
         }
 
         /// A secp256k1 private key used for key agreement.
@@ -181,17 +193,25 @@ extension P256K {
             }
 
             /// A data representation of the private key.
-            public var rawRepresentation: Data { impl.rawRepresentation }
+            public var rawRepresentation: Data {
+                impl.rawRepresentation
+            }
             
             /// An ANSI x9.63 representation of the private key.
-            public var x963Representation: Data { impl.x963Representation }
+            public var x963Representation: Data {
+                impl.x963Representation
+            }
 
             /// A Distinguished Encoding Rules (DER) encoded representation of the private key.
-            public var derRepresentation: Data { impl.derRepresentation }
+            public var derRepresentation: Data {
+                impl.derRepresentation
+            }
 
 #if !hasFeature(Embedded)
             /// A Privacy-Enhanced Mail (PEM) representation of the private key.
-            public var pemRepresentation: String { impl.pemRepresentation }
+            public var pemRepresentation: String {
+                impl.pemRepresentation
+            }
 #endif
         }
     }
@@ -218,7 +238,6 @@ extension P256K.KeyAgreement.PrivateKey: DiffieHellmanKeyAgreement {
         return try SharedSecret(from: secret)
     }
 }
-#endif
 
 extension SharedSecret {
     init<D: DataProtocol>(from bytes: D) throws {

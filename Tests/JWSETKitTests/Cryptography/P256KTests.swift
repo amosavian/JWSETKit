@@ -5,11 +5,10 @@
 //  Created by Amir Abbas Mousavian on 2025/11/30.
 //
 
-#if P256K
 import Crypto
 import Foundation
 import Testing
-@testable import JWSETKit
+@testable import CryptoP256K
 
 @Suite
 struct P256KTests {
@@ -118,7 +117,7 @@ struct P256KTests {
     // MARK: - Key Generation Tests
 
     @Test
-    func keyGeneration() throws {
+    func keyGeneration() {
         let privateKey = P256K.Signing.PrivateKey()
         let publicKey = privateKey.publicKey
 
@@ -416,7 +415,7 @@ struct P256KTests {
     // MARK: - ECDH Key Agreement Tests
 
     @Test
-    func ecdhKeyGeneration() throws {
+    func ecdhKeyGeneration() {
         let privateKey = P256K.KeyAgreement.PrivateKey()
         let publicKey = privateKey.publicKey
 
@@ -914,7 +913,7 @@ struct P256KTests {
     }
 
     @Test
-    func schnorrVerifyBIP340Vectors() throws {
+    func schnorrVerifyBIP340Vectors() {
         // Test against BIP340 test vectors
         for vector in Self.schnorrVectors {
             let publicKeyData = hexToData(vector.publicKey)
@@ -972,7 +971,7 @@ struct P256KTests {
     }
 
     @Test
-    func schnorrSignatureSizeValidation() throws {
+    func schnorrSignatureSizeValidation() {
         let publicKey = P256K.Signing.PrivateKey().publicKey
 
         // Test invalid signature sizes
@@ -986,4 +985,3 @@ struct P256KTests {
         #expect(!publicKey.isValidSchnorrSignature(correctSize, for: plaintext))
     }
 }
-#endif

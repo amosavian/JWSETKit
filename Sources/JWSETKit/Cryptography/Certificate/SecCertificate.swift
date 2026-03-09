@@ -48,7 +48,7 @@ extension SecCertificate: JSONWebValidatingKey {
 extension JSONWebContainer where Self: SecCertificate {
     public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
-        guard let certificate = key.certificateChain.first, let result = try SecCertificate.makeWithCertificate(certificate) as? Self else {
+        guard let certificate = key.certificateChain?.leaf, let result = try SecCertificate.makeWithCertificate(certificate) as? Self else {
             throw JSONWebKeyError.keyNotFound
         }
         self = result
@@ -97,6 +97,30 @@ extension SecCertificate: Expirable {
     }
 }
 
+extension SecCertificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
+    @usableFromInline
+    var jsonWebValue: String? {
+        derRepresentation.base64EncodedString()
+    }
+    
+    @usableFromInline
+    static func castValue(_ value: Any?) -> Self? {
+        switch value {
+        case let value as String:
+            guard let value = Data(base64Encoded: value) else {
+                return nil
+            }
+            return try? .init(derEncoded: value)
+        case let value as Data:
+            return try? .init(derEncoded: value)
+        case let value as Self:
+            return value
+        default:
+            return nil
+        }
+    }
+}
+
 extension JSONWebValueStorage {
     /// Returns values of given key.
     public subscript(_ member: String) -> [SecCertificate] {
@@ -121,7 +145,7 @@ extension SecTrust: JSONWebValidatingKey {
         guard var key = publicKey.map(AnyJSONWebKey.init) else {
             return .init()
         }
-        key.certificateChainData = certificateChain.map { $0.derRepresentation }
+        key.certificateChainData = certificateChain.map(\.derRepresentation)
         return key.storage
     }
     
@@ -188,7 +212,7 @@ extension SecCertificate {
 extension JSONWebContainer where Self: SecTrust {
     public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
-        let certificates: [SecCertificate] = try key.certificateChain.map(SecCertificate.makeWithCertificate)
+        let certificates: [SecCertificate] = try key.certificateChainData.map { try SecCertificate(derEncoded: $0) }
         self = try .init(certificates)
     }
     
@@ -230,6 +254,7 @@ public func == (lhs: Certificate, rhs: SecCertificate) -> Bool {
     lhs == rhs.x509
 }
 
+@_disfavoredOverload
 public func == (lhs: SecCertificate, rhs: Certificate) -> Bool {
     lhs.x509 == rhs
 }

@@ -65,7 +65,7 @@ extension JSONWebContentEncryptionAlgorithm {
         Self.fastPathKeyRegistryClasses[self] ?? Self.keyRegistryClasses[self]
     }
     
-    // Length of key in bits.
+    /// Length of key in bits.
     public var keyLength: SymmetricKeySize? {
         Self.fastPathKeyLengths[self] ?? Self.keyLengths[self]
     }
@@ -96,39 +96,53 @@ extension JSONWebContentEncryptionAlgorithm {
     ///
     /// - Returns: New random key.
     public func generateRandomKey() throws -> any JSONWebSymmetricSealingKey {
-        guard let keyClass = keyClass, let keyLength = keyLength else {
+        guard let keyClass, let keyLength else {
             throw JSONWebKeyError.unknownAlgorithm
         }
         return try keyClass.init(SymmetricKey(size: keyLength))
     }
 }
 
-// Content Encryption
+// -MARK: Content Encryption
 extension JSONWebAlgorithm where Self == JSONWebContentEncryptionAlgorithm {
     /// **Content Encryption**: Encryption is provided by KEK directly, e.g. when HPKE JWE Integrated Encryption is used.
-    public static var integrated: Self { "int" }
+    public static var integrated: Self {
+        "int"
+    }
     
     /// **Content Encryption**: AES GCM using 128-bit key.
-    public static var aesEncryptionGCM128: Self { "A128GCM" }
+    public static var aesEncryptionGCM128: Self {
+        "A128GCM"
+    }
     
     /// **Content Encryption**: AES GCM using 192-bit key.
-    public static var aesEncryptionGCM192: Self { "A192GCM" }
+    public static var aesEncryptionGCM192: Self {
+        "A192GCM"
+    }
     
     /// **Content Encryption**: AES GCM using 256-bit key.
-    public static var aesEncryptionGCM256: Self { "A256GCM" }
+    public static var aesEncryptionGCM256: Self {
+        "A256GCM"
+    }
     
     static func aesEncryptionGCM(bitCount: Int) -> Self {
         .init(rawValue: "A\(bitCount)GCM")
     }
     
     /// **Content Encryption**: `AES_128_CBC_HMAC_SHA_256` authenticated encryption algorithm.
-    public static var aesEncryptionCBC128SHA256: Self { "A128CBC-HS256" }
+    public static var aesEncryptionCBC128SHA256: Self {
+        "A128CBC-HS256"
+    }
     
     /// **Content Encryption**: `AES_192_CBC_HMAC_SHA_384` authenticated encryption algorithm.
-    public static var aesEncryptionCBC192SHA384: Self { "A192CBC-HS384" }
+    public static var aesEncryptionCBC192SHA384: Self {
+        "A192CBC-HS384"
+    }
     
     /// **Content Encryption**: `AES_256_CBC_HMAC_SHA_512` authenticated encryption algorithm.
-    public static var aesEncryptionCBC256SHA512: Self { "A256CBC-HS512" }
+    public static var aesEncryptionCBC256SHA512: Self {
+        "A256CBC-HS512"
+    }
     
     static func aesEncryptionCBCSHA(bitCount: Int) -> Self {
         .init(rawValue: "A\(bitCount)CBC-HS\(bitCount * 2)")

@@ -37,11 +37,10 @@ extension Bundle {
 
 extension String {
     init(localizingKey key: String, value: String, locale: Locale) {
-        let bundle: Bundle
-        if locale != .autoupdatingCurrent, locale != .current {
-            bundle = Bundle.module.forLocale(locale)
+        let bundle = if locale != .autoupdatingCurrent, locale != .current {
+            Bundle.module.forLocale(locale)
         } else {
-            bundle = Bundle.module
+            Bundle.module
         }
         self = bundle.localizedString(forKey: key, value: value, table: "")
     }
@@ -121,7 +120,7 @@ extension Locale {
     }
     
     func bestMatch(in locales: [Locale]) -> Locale? {
-        guard !locales.isEmpty, let languageIdentifier = languageIdentifier else { return nil }
+        guard !locales.isEmpty, let languageIdentifier else { return nil }
         let matchedLanguages = locales.filter { $0.languageIdentifier == languageIdentifier }
         switch matchedLanguages.count {
         case 0:
@@ -132,7 +131,7 @@ extension Locale {
             break
         }
         let matchedScript: [Locale]
-        if let writeScript = writeScript {
+        if let writeScript {
             matchedScript = matchedLanguages.filter { $0.writeScript == writeScript }
             switch matchedScript.count {
             case 0:
@@ -145,7 +144,7 @@ extension Locale {
         } else {
             matchedScript = matchedLanguages
         }
-        if let countryCode = countryCode {
+        if let countryCode {
             let matchedCountry = matchedScript.filter { $0.countryCode == countryCode }
             switch matchedCountry.count {
             case 0:

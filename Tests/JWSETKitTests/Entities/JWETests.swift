@@ -44,7 +44,7 @@ struct JWETests {
             Issue.record("Invalid algorithm")
             return
         }
-        let decryptedCEK = try RSA_OAEP_GCM.kek.decrypt(jwe.encryptedKey!, using: algorithm)
+        let decryptedCEK = try RSA_OAEP_GCM.kek.decrypt(#require(jwe.encryptedKey), using: algorithm)
         #expect(decryptedCEK == RSA_OAEP_GCM.cek.data)
         
         let data = try jwe.decrypt(using: RSA_OAEP_GCM.kek)
@@ -73,7 +73,7 @@ struct JWETests {
             Issue.record("Invalid algorithm")
             return
         }
-        let decryptedCEK = try AESKW_CBC.kek.decrypt(jwe.encryptedKey!, using: algorithm)
+        let decryptedCEK = try AESKW_CBC.kek.decrypt(#require(jwe.encryptedKey), using: algorithm)
         #expect(decryptedCEK == AESKW_CBC.cek.data)
         
         let data = try jwe.decrypt(using: AESKW_CBC.kek)
@@ -521,7 +521,7 @@ enum ECDH_ES_KW {
 }
 
 enum HPKE_0 {
-    // Integrated Encryption example from draft-ietf-jose-hpke-encrypt (no enc header)
+    /// Integrated Encryption example from draft-ietf-jose-hpke-encrypt (no enc header)
     static let jweString = """
     eyJhbGciOiJIUEtFLTAiLCJraWQiOiJ5Q25mYm1ZTVpjV3JLRHRfRGpOZWJSQ0IxdnhWb3F2NHVtSjRXSzhSWWprIn0.\
     BLAJX8adrFsDKaoJAc3iy2dq-6jEH3Uv-bSgqIoDeREqpWglMoTS67XsXere1ZYxiQKEFU6MbWe8O7vmdlSmcUk..\
@@ -532,7 +532,7 @@ enum HPKE_0 {
     dAXutnococ37A0Hr5esPLwHRTTrBFw.
     """
     
-    // Key Encryption example using HPKE-0-KE with A128GCM from draft Section 6.3
+    /// Key Encryption example using HPKE-0-KE with A128GCM from draft Section 6.3
     static let jweJSONString = """
     {
       "ciphertext": "uF1XBbVZWhYm_pDbeJvI_fkuqFJiKd1WMP3O_BAGOP-LkpTLE3Et2VQNcOpPAIBfyx8rUzshGqiOFOWzcoWZ3mIwYuDvvAW3-P1RCS8Dtq70JRvahO5O8sAN1vzJg8_dyBPnwsQY6Cy3RhMD6sSSCjjSw0FYmmx67IiI2zJ6Wr8z69k0f34ZTh43k4C-pTwaUSvjl2XI_YrUgdDVYmY_MJ5vmlPTcceMaefP8Onz_fx5xOcGfnVBVz2gpMQPuQL8k5Rk5KJvPGfFfN6hrgWkK_LDzi4lrfnIrvNsk3BCBeZPpc-n19-u7W4-GQxLjAlVyMHeGk5K4tU6gHB8PnnQ4ND5ZTtyXrJWQW-Qr1iFev6g",
@@ -553,7 +553,7 @@ enum HPKE_0 {
     }
     """
     
-    // Integrated Encryption key from Appendix A.1
+    /// Integrated Encryption key from Appendix A.1
     static let kek = try! JSONWebECPrivateKey(
         importing:
         """
@@ -569,7 +569,7 @@ enum HPKE_0 {
         """.data, format: .jwk
     )
     
-    // Key Encryption key from Appendix A.2
+    /// Key Encryption key from Appendix A.2
     static let kekKE = try! JSONWebECPrivateKey(
         importing:
         """
@@ -585,6 +585,6 @@ enum HPKE_0 {
         """.data, format: .jwk
     )
     
-    // Plaintext from draft examples (LOTR quote)
+    /// Plaintext from draft examples (LOTR quote)
     static let plainData = Data("You can trust us to stick with you through thick and thin\u{2013}to the bitter end. And you can trust us to keep any secret of yours\u{2013}closer than you keep it yourself. But you cannot trust us to let you face trouble alone, and go off without a word. We are your friends, Frodo.".utf8)
 }

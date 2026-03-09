@@ -43,7 +43,7 @@ let issuerKey = P256.Signing.PrivateKey()
 // Create SD-JWT - standard claims stay visible, others become disclosable
 let sdJWT = try JSONWebSelectiveDisclosureToken(
     claims: claims,
-    policy: .default,  // Uses standardVisibleClaims
+    policy: .standard,
     using: issuerKey
 )
 
@@ -60,26 +60,29 @@ Specify exactly which claims should be selectively disclosable:
 // Only make email disclosable
 let sdJWT = try JSONWebSelectiveDisclosureToken(
     claims: claims,
-    policy: .disclosable([.init(\.email)]),
+    concealedPaths: ["\email"],
     using: issuerKey
 )
 
 // Or specify additional visible claims
 let sdJWT = try JSONWebSelectiveDisclosureToken(
     claims: claims,
-    policy: .visible([".init(\.givenName)]),  // given_name stays visible
+    policy: .visible(["\givenName"]),  // given_name stays visible
     using: issuerKey
 )
 ```
 
 ### Adding Decoy Digests
 
-Add decoy digests to obscure the number of actual claims:
+By default, a random number of decoys between 0 and 4 is added
+every time a new SD-JWT is created.
+To determine number of decoy digests manually to obscure
+the number of actual claims:
 
 ```swift
 var sdJWT = try JSONWebSelectiveDisclosureToken(
     claims: claims,
-    policy: .default,
+    policy: .standard,
     decoyCount: 5
     using: issuerKey
 )
@@ -107,6 +110,13 @@ let sdJWT = try JSONWebSelectiveDisclosureToken(
 
 Select which claims to reveal when presenting to a verifier:
 
+### By Path Selection (Preferred method)
+
+```swift
+// Select claims by JSON Pointer paths
+let presentation = try sdJWT.presenting(paths: ["/given_name", "/email"])
+```
+
 ### By Disclosure Selection
 
 ```swift
@@ -119,13 +129,6 @@ let presentation = try sdJWT.presenting(
         $0.key == "given_name" || $0.key == "email"
     }
 )
-```
-
-### By Path Selection
-
-```swift
-// Select claims by JSON Pointer paths
-let presentation = try sdJWT.presenting(paths: ["/given_name", "/email"])
 ```
 
 ### With Key Binding
@@ -199,7 +202,7 @@ Per draft-ietf-oauth-sd-jwt-vc, these MUST NOT be selectively disclosed:
 
 ```swift
 // All non-standard claims are disclosable
-let policy = DisclosurePolicy.default
+let policy = DisclosurePolicy.standard
 
 // Only specified paths are disclosable
 let policy = DisclosurePolicy.disclosable(["/email", "/phone"])

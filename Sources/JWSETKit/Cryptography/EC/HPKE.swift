@@ -124,13 +124,12 @@ struct JSONWebHPKESender: JSONWebSealingKey, JSONWebEncryptingKey {
         guard let keyEncryptingAlgorithm = JSONWebKeyEncryptionAlgorithm(recipientHeader.algorithm) else {
             throw JSONWebKeyError.unknownAlgorithm
         }
-        let info: Data
-        if let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm {
+        let info: Data = if let contentEncryptionAlgorithm = recipientHeader.encryptionAlgorithm {
             // Key Encryption: info = "JOSE-HPKE rcpt" || 0xFF || enc_alg || 0xFF || extra_info
-            info = Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF] + extraInfo
+            Data("JOSE-HPKE rcpt".utf8) + [0xFF] + Data(contentEncryptionAlgorithm.rawValue.utf8) + [0xFF] + extraInfo
         } else {
             // Integrated Encryption: info defaults to empty octet sequence
-            info = extraInfo
+            extraInfo
         }
         self.sender = try .init(recipientKey: recipientKey, ciphersuite: .init(algorithm: keyEncryptingAlgorithm), info: info)
         var key = AnyJSONWebKey(recipientKey)
@@ -250,6 +249,10 @@ extension JSONWebKeyEncryptionAlgorithm {
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }
+    }
+    
+    var isIntegratedHPKE: Bool {
+        rawValue.hasPrefix("HPKE-") && !rawValue.hasSuffix("-KE")
     }
 }
 

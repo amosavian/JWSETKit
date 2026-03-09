@@ -316,7 +316,7 @@ struct JSONPointerTests {
     // MARK: - JSONWebValueStorage Integration Tests
     
     @Test
-    func storageGetValue() throws {
+    func storageGetValue() {
         var storage = JSONWebValueStorage()
         storage.storage = [
             "name": "John",
@@ -338,7 +338,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageGetRoot() throws {
+    func storageGetRoot() {
         var storage = JSONWebValueStorage()
         storage.storage = ["key": "value"]
         
@@ -347,7 +347,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageSetValue() throws {
+    func storageSetValue() {
         var storage = JSONWebValueStorage()
         storage.storage = ["address": ["city": "Old City"] as [String: any Sendable]]
         
@@ -356,7 +356,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageSetNewNestedValue() throws {
+    func storageSetNewNestedValue() {
         var storage = JSONWebValueStorage()
         storage.storage = [:]
         
@@ -366,7 +366,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageSetArrayValue() throws {
+    func storageSetArrayValue() {
         var storage = JSONWebValueStorage()
         storage.storage = ["items": ["a", "b", "c"]]
         
@@ -376,7 +376,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageRemoveValue() throws {
+    func storageRemoveValue() {
         var storage = JSONWebValueStorage()
         storage.storage = ["name": "John", "email": "john@example.com"]
         
@@ -386,7 +386,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageAllPaths() throws {
+    func storageAllPaths() {
         var storage = JSONWebValueStorage()
         storage.storage = [
             "name": "John",
@@ -401,7 +401,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageTopLevelPaths() throws {
+    func storageTopLevelPaths() {
         var storage = JSONWebValueStorage()
         storage.storage = [
             "name": "John",
@@ -416,7 +416,7 @@ struct JSONPointerTests {
     // MARK: - Additional Coverage Tests
     
     @Test
-    func storageSetNestedArrayValue() throws {
+    func storageSetNestedArrayValue() {
         var storage = JSONWebValueStorage()
         storage.storage = ["data": ["items": ["a", "b", "c"]] as [String: any Sendable]]
         
@@ -428,7 +428,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageSetValueInNewArray() throws {
+    func storageSetValueInNewArray() {
         var storage = JSONWebValueStorage()
         storage.storage = [:]
         
@@ -440,7 +440,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageSetValueWithArrayPadding() throws {
+    func storageSetValueWithArrayPadding() {
         var storage = JSONWebValueStorage()
         storage.storage = ["items": ["a"]]
         
@@ -452,7 +452,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageRemoveNestedValue() throws {
+    func storageRemoveNestedValue() {
         var storage = JSONWebValueStorage()
         storage.storage = [
             "address": [
@@ -468,7 +468,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageRemoveFromArray() throws {
+    func storageRemoveFromArray() {
         var storage = JSONWebValueStorage()
         storage.storage = ["items": ["a", "b", "c"]]
         
@@ -478,7 +478,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageGetNonExistentPath() throws {
+    func storageGetNonExistentPath() {
         var storage = JSONWebValueStorage()
         storage.storage = ["name": "John"]
         
@@ -489,7 +489,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageGetFromNestedStorage() throws {
+    func storageGetFromNestedStorage() {
         var storage = JSONWebValueStorage()
         var nested = JSONWebValueStorage()
         nested.storage = ["city": "Springfield"]
@@ -500,7 +500,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageRemoveRoot() throws {
+    func storageRemoveRoot() {
         var storage = JSONWebValueStorage()
         storage.storage = ["key": "value"]
         
@@ -509,7 +509,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageSetRoot() throws {
+    func storageSetRoot() {
         var storage = JSONWebValueStorage()
         storage.storage = ["old": "value"]
         
@@ -519,7 +519,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageAllPathsWithEmptyContainers() throws {
+    func storageAllPathsWithEmptyContainers() {
         var storage = JSONWebValueStorage()
         storage.storage = [
             "emptyDict": [:] as [String: any Sendable],
@@ -532,7 +532,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageNestedArrayInArray() throws {
+    func storageNestedArrayInArray() {
         var storage = JSONWebValueStorage()
         storage.storage = [
             "matrix": [
@@ -546,7 +546,7 @@ struct JSONPointerTests {
     }
     
     @Test
-    func storageRemoveFromNestedArray() throws {
+    func storageRemoveFromNestedArray() {
         var storage = JSONWebValueStorage()
         storage.storage = [
             "data": [

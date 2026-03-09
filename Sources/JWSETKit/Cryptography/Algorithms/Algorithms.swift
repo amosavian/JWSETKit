@@ -11,6 +11,7 @@ import FoundationEssentials
 import Foundation
 #endif
 import Crypto
+import CryptoASN1
 
 /// JSON Web Signature Algorithms.
 public protocol JSONWebAlgorithm: StringRepresentable {
@@ -27,7 +28,9 @@ public protocol JSONWebAlgorithm: StringRepresentable {
 }
 
 extension JSONWebAlgorithm {
-    public var curve: JSONWebKeyCurve? { nil }
+    public var curve: JSONWebKeyCurve? {
+        nil
+    }
     
     public init(rawValue: String) {
         self.init(rawValue.trimmingCharacters(in: .whitespacesAndNewlines))
@@ -35,37 +38,36 @@ extension JSONWebAlgorithm {
 }
 
 @_documentation(visibility: private)
-public func == <RHS: JSONWebAlgorithm>(lhs: any JSONWebAlgorithm, rhs: RHS) -> Bool {
+public func == (lhs: any JSONWebAlgorithm, rhs: some JSONWebAlgorithm) -> Bool {
     lhs.rawValue == rhs.rawValue
 }
 
 @_documentation(visibility: private)
-public func == <RHS: JSONWebAlgorithm>(lhs: (any JSONWebAlgorithm)?, rhs: RHS) -> Bool {
+public func == (lhs: (any JSONWebAlgorithm)?, rhs: some JSONWebAlgorithm) -> Bool {
     lhs?.rawValue == rhs.rawValue
 }
 
 @_documentation(visibility: private)
-public func == <LHS: JSONWebAlgorithm>(lhs: LHS, rhs: any JSONWebAlgorithm) -> Bool {
+@_disfavoredOverload
+public func == (lhs: some JSONWebAlgorithm, rhs: any JSONWebAlgorithm) -> Bool {
     lhs.rawValue == rhs.rawValue
 }
 
 @_documentation(visibility: private)
-public func == <LHS: JSONWebAlgorithm>(lhs: LHS, rhs: (any JSONWebAlgorithm)?) -> Bool {
+@_disfavoredOverload
+public func == (lhs: some JSONWebAlgorithm, rhs: (any JSONWebAlgorithm)?) -> Bool {
     lhs.rawValue == rhs?.rawValue
 }
 
 @_documentation(visibility: private)
-public func == <LHS: JSONWebAlgorithm, RHS: JSONWebAlgorithm>(lhs: LHS, rhs: RHS) -> Bool {
+@_disfavoredOverload
+public func == (lhs: some JSONWebAlgorithm, rhs: some JSONWebAlgorithm) -> Bool {
     lhs.rawValue == rhs.rawValue
 }
 
 @_documentation(visibility: private)
-public func ~= <JWA: JSONWebAlgorithm>(lhs: JWA, rhs: JWA) -> Bool {
-    lhs.rawValue == rhs.rawValue
-}
-
-@_documentation(visibility: private)
-public func ~= <LHS: JSONWebAlgorithm, RHS: JSONWebAlgorithm>(lhs: LHS, rhs: RHS) -> Bool {
+@_disfavoredOverload
+public func ~= (lhs: some JSONWebAlgorithm, rhs: some JSONWebAlgorithm) -> Bool {
     lhs.rawValue == rhs.rawValue
 }
 
@@ -289,4 +291,80 @@ extension JSONWebKeyOperation {
     
     /// Derive bits not to be used as a key.
     public static let deriveBits: Self = "deriveBits"
+}
+
+extension DERKeyContainer {
+    var keyType: JSONWebKeyType {
+        get throws {
+            try algorithmIdentifier.keyType
+        }
+    }
+    
+    var keyCurve: JSONWebKeyCurve? {
+        algorithmIdentifier.keyCurve
+    }
+}
+
+public typealias RFC5480AlgorithmIdentifier = CryptoASN1.RFC5480AlgorithmIdentifier
+
+extension RFC5480AlgorithmIdentifier {
+    public var keyType: JSONWebKeyType {
+        get throws {
+            guard let result = AnyJSONWebAlgorithm(jsonWebAlgorithm)?.keyType else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
+            return result
+        }
+    }
+    
+    public var keyCurve: JSONWebKeyCurve? {
+        jsonWebAlgorithm?.curve
+    }
+    
+    private static let algorithms: AtomicValue<[Self: any JSONWebAlgorithm]> = [
+        .rsaEncryption: .unsafeRSAEncryptionPKCS1,
+        .rsaEncryptionSHA256: .rsaSignaturePKCS1v15SHA256,
+        .rsaEncryptionSHA384: .rsaSignaturePKCS1v15SHA384,
+        .rsaEncryptionSHA512: .rsaSignaturePKCS1v15SHA512,
+        .rsaPSS(SHA256.self): .rsaSignaturePSSSHA256,
+        .rsaPSS(SHA384.self): .rsaSignaturePSSSHA384,
+        .rsaPSS(SHA512.self): .rsaSignaturePSSSHA512,
+        .rsaOAEP(Insecure.SHA1.self): .rsaEncryptionOAEP,
+        .rsaOAEP(SHA256.self): .rsaEncryptionOAEPSHA256,
+        .rsaOAEP(SHA384.self): .rsaEncryptionOAEPSHA384,
+        .rsaOAEP(SHA512.self): .rsaEncryptionOAEPSHA512,
+        .ecdsaP256: .ecdsaSignatureP256SHA256,
+        .ecdsaP384: .ecdsaSignatureP384SHA384,
+        .ecdsaP521: .ecdsaSignatureP521SHA512,
+        .ecdsaSecp256k1: .ecdsaSignatureSecp256k1SHA256,
+        .ed25519: .eddsaSignature,
+        .ed448: .eddsaSignature,
+        .mldsa44: .internalMLDSA44Signature,
+        .mldsa65: .internalMLDSA65Signature,
+        .mldsa87: .internalMLDSA87Signature,
+    ]
+    
+    public var jsonWebAlgorithm: (any JSONWebAlgorithm)? {
+        Self.algorithms[self]
+    }
+    
+    /// Registers a new symmetric key for JWE content encryption.
+    ///
+    /// - Parameters:
+    ///   - algorithm: New algorithm name.
+    ///   - keyClass: Key class of symmetric key.
+    ///   - keyLength: The sizes that a symmetric cryptographic key can take.
+    public static func register(
+        _ algorithm: Self,
+        jsonWebAlgorithm: some JSONWebAlgorithm
+    ) {
+        algorithms[algorithm] = jsonWebAlgorithm
+    }
+    
+    init?(_ jsonWebAlgorithm: any JSONWebAlgorithm) {
+        if let value = Self.algorithms.first(where: { $1 == jsonWebAlgorithm }) {
+            self = value.key
+        }
+        return nil
+    }
 }

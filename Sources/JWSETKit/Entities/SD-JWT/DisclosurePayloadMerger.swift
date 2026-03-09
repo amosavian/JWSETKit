@@ -292,13 +292,12 @@ extension JSONWebValueStorage {
 extension [String: any Sendable] {
     mutating func disclose(with disclosures: JSONWebSelectiveDisclosureList) throws {
         // Process _sd hashes at this level
-        let disclosureHashes: [Data]
-        if let dataHashes = self["_sd"] as? [Data] {
-            disclosureHashes = dataHashes
+        let disclosureHashes: [Data] = if let dataHashes = self["_sd"] as? [Data] {
+            dataHashes
         } else if let stringHashes = self["_sd"] as? [String] {
-            disclosureHashes = stringHashes.compactMap { Data(urlBase64Encoded: $0) }
+            stringHashes.compactMap { Data(urlBase64Encoded: $0) }
         } else {
-            disclosureHashes = []
+            []
         }
         
         for hash in disclosureHashes {

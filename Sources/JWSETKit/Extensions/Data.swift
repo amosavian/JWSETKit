@@ -30,9 +30,9 @@ extension DataProtocol {
     @inlinable
     var asContiguousBytes: any ContiguousBytes {
         if regions.count == 1, let data = regions.first {
-            return data
+            data
         } else {
-            return Data(self)
+            Data(self)
         }
     }
     
@@ -51,10 +51,9 @@ extension UnsafeMutableBufferPointer {
 }
 
 extension ContiguousBytes {
-    mutating func setBytes<D: DataProtocol>(_ bytes: D) {
-        withUnsafeBytes { buffer in
-            UnsafeMutableRawBufferPointer(mutating: buffer).copyBytes(from: bytes.prefix(buffer.count))
-        }
+    @usableFromInline
+    var data: Data {
+        withUnsafeBytes { Data($0) }
     }
 }
 
@@ -82,7 +81,7 @@ extension [Data] {
 infix operator =~=: ComparisonPrecedence
 
 @inlinable
-func =~= <LHS: Collection, RHS: Collection>(_ lhs: LHS, _ rhs: RHS) -> Bool where LHS.Element == UInt8, RHS.Element == UInt8 {
+func =~= (_ lhs: some Collection<UInt8>, _ rhs: some Collection<UInt8>) -> Bool {
     guard lhs.count == rhs.count else {
         return false
     }
