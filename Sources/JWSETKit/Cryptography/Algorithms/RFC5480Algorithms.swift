@@ -174,7 +174,7 @@ extension RFC5480AlgorithmIdentifier {
     }
     
     init?(_ jsonWebAlgorithm: any JSONWebAlgorithm) {
-        if let value = Self.algorithms.first(where: { $1 == jsonWebAlgorithm }) {
+        if let value = Self.algorithms.first(where: { $1.rawValue == jsonWebAlgorithm.rawValue }) {
             self = value.key
         }
         return nil
