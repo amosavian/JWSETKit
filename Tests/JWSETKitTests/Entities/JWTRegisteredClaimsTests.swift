@@ -17,7 +17,6 @@ extension JSONWebContainerCustomParameters {
 }
 #endif
 
-@Suite
 struct JWTRegisteredClaimsTests {
     let testClaims = """
     {

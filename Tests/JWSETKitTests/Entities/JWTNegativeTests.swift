@@ -11,7 +11,6 @@ import Testing
 @testable import JWSETKit
 
 /// Tests for invalid JWT claims and validation errors
-@Suite
 struct JWTNegativeTests {
     // MARK: - Test Helper
     

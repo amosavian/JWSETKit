@@ -13,7 +13,6 @@ import Testing
 import CommonCrypto
 #endif
 
-@Suite
 struct ThumbprintTests {
     let keyData: Data = .init("""
      {

@@ -11,7 +11,6 @@ import Testing
 #if canImport(CryptoExtras)
 import CryptoExtras
 
-@Suite
 struct RSACryptoTests {
     let privateKeyDER = """
     MIIEogIBAAKCAQBc8heBuESxpRARckQCuVNuiLsH5AX73F1lqNxpFsS+GPWl6rrT\

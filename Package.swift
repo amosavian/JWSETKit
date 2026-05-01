@@ -1,4 +1,4 @@
-// swift-tools-version: 6.0
+// swift-tools-version: 6.1
 // The swift-tools-version declares the minimum version of Swift required to build this package.
 
 import PackageDescription
@@ -17,6 +17,7 @@ let package = Package(
         .macOS(.v12),
         .tvOS(.v15),
         .macCatalyst(.v15),
+        .visionOS(.v1),
     ],
     products: [
         .library(
@@ -24,11 +25,19 @@ let package = Package(
             targets: ["JWSETKit"]
         ),
     ],
+    traits: [
+        "X509",
+        "P256K",
+        "HTTP",
+        .default(enabledTraits: []),
+    ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-collections.git", from: "1.3.0"),
-        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.5.0"),
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "4.2.0"),
-        .package(url: "https://github.com/apple/swift-certificates", from: "1.17.0"),
+        .package(url: "https://github.com/apple/swift-collections.git", from: "1.4.0"),
+        .package(url: "https://github.com/apple/swift-asn1.git", from: "1.7.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "4.5.0"),
+        .package(url: "https://github.com/apple/swift-certificates", from: "1.19.0"),
+        .package(url: "https://github.com/swift-bitcoin/secp256k1", exact: "0.7.0"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.31.0"),
     ],
     targets: [
         .systemLibrary(
@@ -70,11 +79,13 @@ let package = Package(
                 .product(name: "Collections", package: "swift-collections"),
                 .product(name: "SwiftASN1", package: "swift-asn1"),
                 .product(name: "Crypto", package: "swift-crypto"),
-                .product(name: "X509", package: "swift-certificates", condition: .when(platforms: .darwin + .nonWasm)),
+                .product(name: "X509", package: "swift-certificates", condition: .when(platforms: .darwin + .nonWasm, traits: ["X509"])),
                 .target(name: "CryptoASN1"),
+                .target(name: "CryptoP256K", condition: .when(traits: ["P256K"])),
                 // Linux support
                 .product(name: "CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
-                .byName(name: "Czlib", condition: .when(platforms: .nonWasm)),
+                .target(name: "Czlib", condition: .when(platforms: .nonWasm)),
+                .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["HTTP"])),
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy"),
@@ -83,7 +94,10 @@ let package = Package(
         ),
         .testTarget(
             name: "JWSETKitTests",
-            dependencies: ["JWSETKit"]
+            dependencies: [
+                "JWSETKit",
+                "CryptoP256K",
+            ]
         ),
     ]
 )

@@ -10,7 +10,6 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
-@Suite
 struct RFC7520EncryptionTests {
     let plainText = """
     You can trust us to stick with you through thick and \

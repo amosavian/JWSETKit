@@ -16,7 +16,6 @@ import CommonCrypto
 #endif
 @testable import JWSETKit
 
-@Suite
 struct JOSEHeaderJWSTests {
     let testClaims = """
     {

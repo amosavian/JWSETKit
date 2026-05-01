@@ -13,7 +13,6 @@ import Testing
 import CommonCrypto
 #endif
 
-@Suite
 struct RSATests {
     let privateKeyDER = """
     MIIEogIBAAKCAQBc8heBuESxpRARckQCuVNuiLsH5AX73F1lqNxpFsS+GPWl6rrT\

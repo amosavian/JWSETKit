@@ -10,7 +10,6 @@ import Testing
 @testable import JWSETKit
 
 #if compiler(>=6.2) || !canImport(CryptoKit)
-@Suite
 #else
 @Suite(.enabled(if: false))
 #endif

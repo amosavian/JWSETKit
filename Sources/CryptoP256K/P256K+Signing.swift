@@ -231,41 +231,100 @@ extension P256K {
 extension P256K.Signing {
     /// A P256K elliptic curve digital signature algorithm (ECDSA) signature.
     public struct ECDSASignature: ContiguousBytes, Sendable {
-        /// A raw data representation of a P256K digital signature.
-        public var rawRepresentation: Data
+        /// Indicates where recovery id must be place inside the signature representation.
+        ///
+        /// In Bitcoin, it is either header byte or most upper bit of S part. While
+        /// Etherium related formats places recovery id after signature.
+        public enum CompactRepresentationFormat: Hashable, Sendable {
+            /// Encoded recovery id at the end of signature, equals with `libsec256k1` default
+            /// compact representation.
+            ///
+            /// Total bytes count must be 65.
+            case raw
+            
+            /// Bitcoin encodes the recovery ID in a header byte that also indicates the key type,
+            /// which is offset by 27 or 31.
+            ///
+            /// Total bytes count must be 65.
+            case bitcoin
+            
+            /// Etherium signatures where a tail byte contains recovery id offset by 27.
+            ///
+            /// Total bytes count must be 65.
+            case etherium
+            
+            /// Etherium signatures that prevents cross-chain replay attacks by encoding
+            /// chain id in tail byte.
+            ///
+            /// Total bytes count is variable.
+            case eip155(chainId: Int)
+            
+            /// Etherium signatures that the recovery bit is packed into the highest bit of s.
+            ///
+            /// Total bytes count must be 64.
+            case eip2098
+            
+            var lengthRange: ClosedRange<Int> {
+                switch self {
+                case .raw, .bitcoin, .etherium:
+                    65 ... 65
+                case .eip155:
+                    65 ... 72
+                case .eip2098:
+                    64 ... 64
+                }
+            }
+        }
         
-        var signature: secp256k1_ecdsa_signature {
-            var signature = secp256k1_ecdsa_signature()
-            secp256k1_ecdsa_signature_parse_compact(P256K.context, &signature, [UInt8](rawRepresentation))
-            return signature
+        fileprivate var backing: Secp256K1BackingSignature
+        
+        /// A raw data representation of a P256K digital signature.
+        public var rawRepresentation: Data {
+            .init(backing.rawRepresentation)
+        }
+        
+        /// The recovery ID (0, 1, 2 or 3) if the signature is initialized with recovery ID.
+        public var recoveryId: UInt8? {
+            backing.recoveryId
         }
         
         /// Creates a P256K digital signature from a raw representation.
         ///
         /// - Parameters:
         ///   - rawRepresentation: A raw representation of the signature as a
-        /// collection of contiguous bytes.
-        public init<D: DataProtocol>(rawRepresentation: D) throws(CryptoKitMetaError) {
+        ///         collection of contiguous bytes.
+        ///   - recoveryId: The recovery ID (0, 1, 2 or 3) if the signature is initialized with recovery ID.
+        public init<D: DataProtocol, R: BinaryInteger & Sendable>(
+            rawRepresentation: D, recoveryId: R? = UInt8?.none
+        ) throws(CryptoKitMetaError) {
             guard rawRepresentation.count == 2 * P256K.coordinateByteCount else {
                 throw CryptoKitError.incorrectParameterSize
             }
+            let rawRepresentation = [UInt8](rawRepresentation)
             
-            self.rawRepresentation = Data(rawRepresentation)
-        }
-        
-        init(_ dataRepresentation: Data) throws(CryptoKitMetaError) {
-            guard dataRepresentation.count == 2 * P256K.coordinateByteCount else {
-                throw CryptoKitError.incorrectParameterSize
+            if let recoveryId = recoveryId.flatMap(CInt.init(exactly:)) {
+                var signature = secp256k1_ecdsa_recoverable_signature()
+                secp256k1_ecdsa_recoverable_signature_parse_compact(P256K.context, &signature, rawRepresentation, recoveryId)
+                try self.init(signature)
+            } else {
+                var signature = secp256k1_ecdsa_signature()
+                secp256k1_ecdsa_signature_parse_compact(P256K.context, &signature, rawRepresentation)
+                try self.init(signature)
             }
-            
-            self.rawRepresentation = dataRepresentation
         }
         
         init(_ signature: secp256k1_ecdsa_signature) throws(CryptoKitMetaError) {
-            var signature = signature
-            var rawRepresentation = [UInt8](repeating: 0, count: 64)
-            secp256k1_ecdsa_signature_serialize_compact(P256K.context, &rawRepresentation, &signature)
-            self.rawRepresentation = Data(rawRepresentation)
+            self.backing = .ecdsa(signature: signature)
+            backing.normalize()
+        }
+        
+        init(_ signature: secp256k1_ecdsa_recoverable_signature) throws(CryptoKitMetaError) {
+            self.backing = .recoverable(recoverableSignature: signature)
+            backing.normalize()
+        }
+        
+        init(_ backing: Secp256K1BackingSignature) {
+            self.backing = backing
         }
         
         var composite: (r: Data, s: Data) {
@@ -282,46 +341,112 @@ extension P256K.Signing {
         ///   - derRepresentation: The DER-encoded representation of the
         /// signature.
         public init<D: DataProtocol>(derRepresentation: D) throws(CryptoKitMetaError) {
-            var signature = secp256k1_ecdsa_signature()
-            let derRepresentation = [UInt8](derRepresentation)
-            
-            // Parse the DER signature
-            let parseResult = secp256k1_ecdsa_signature_parse_der(P256K.context, &signature, derRepresentation, derRepresentation.count)
-            guard parseResult == 1 else {
+            self.backing = try .init(derRepresentation: [UInt8](derRepresentation))
+        }
+        
+        /// Creates a P256K digital signature from a compact representation.
+        ///
+        /// - Parameters:
+        ///   - compactRepresentation: A compact formatted representation of the signature as a
+        ///         collection of contiguous bytes.
+        ///   - format: Representation format.
+        public init<D: DataProtocol>(
+            compactRepresentation: D, format: CompactRepresentationFormat
+        ) throws(CryptoKitMetaError) {
+            guard format.lengthRange.contains(compactRepresentation.count) else {
                 throw CryptoKitError.incorrectParameterSize
             }
-            
-            // Normalize the signature to ensure low-s form (prevent malleability)
-            // This converts high-s signatures to low-s form
-            var normalizedSignature = secp256k1_ecdsa_signature()
-            secp256k1_ecdsa_signature_normalize(P256K.context, &normalizedSignature, &signature)
-            try self.init(normalizedSignature)
+            let rawRepresentation: any DataProtocol
+            let recoveryId: UInt8
+            switch format {
+            case .raw:
+                rawRepresentation = compactRepresentation.prefix(64)
+                recoveryId = compactRepresentation.last.unsafelyUnwrapped
+            case .bitcoin:
+                rawRepresentation = compactRepresentation.suffix(64)
+                recoveryId = compactRepresentation.first.unsafelyUnwrapped - 27
+            case .etherium:
+                rawRepresentation = compactRepresentation.prefix(64)
+                recoveryId = compactRepresentation.last.unsafelyUnwrapped - 27
+            case .eip155:
+                rawRepresentation = compactRepresentation.prefix(64)
+                recoveryId = (compactRepresentation.last.unsafelyUnwrapped &- 35) & 0x01
+            case .eip2098:
+                var bytes = Data(compactRepresentation)
+                recoveryId = bytes[32] >> 7
+                bytes[32] &= 0x7F
+                rawRepresentation = bytes
+            }
+            try self.init(rawRepresentation: rawRepresentation, recoveryId: recoveryId)
         }
         
 #if hasFeature(Embedded)
         /// Invokes the given closure with a buffer pointer covering the raw
         /// bytes of the signature.
         public func withUnsafeBytes<R, E: Error>(_ body: (UnsafeRawBufferPointer) throws(E) -> R) throws(E) -> R {
-            try rawRepresentation.withUnsafeBytes(body)
+            try backing.rawRepresentation.withUnsafeBytes(body)
         }
 #else
         /// Invokes the given closure with a buffer pointer covering the raw
         /// bytes of the signature.
         public func withUnsafeBytes<R>(_ body: (UnsafeRawBufferPointer) throws -> R) rethrows -> R {
-            try rawRepresentation.withUnsafeBytes(body)
+            try backing.rawRepresentation.withUnsafeBytes(body)
         }
 #endif
         
         /// A Distinguished Encoding Rules (DER) encoded representation of a
         /// P256K digital signature.
         public var derRepresentation: Data {
-            var signature = secp256k1_ecdsa_signature()
-            var rawRepresentation = [UInt8](rawRepresentation)
-            var derLength = 72
-            var derRepresentation = [UInt8](repeating: 0, count: derLength)
-            secp256k1_ecdsa_signature_parse_compact(P256K.context, &signature, &rawRepresentation)
-            secp256k1_ecdsa_signature_serialize_der(P256K.context, &derRepresentation, &derLength, &signature)
-            return Data(derRepresentation).prefix(derLength)
+            backing.derRepresentation
+        }
+        
+        /// Recovers secp256k1 public used to sign message using hash and signature
+        /// when recovery ID is available.
+        ///
+        /// - Parameter signedMessageHash: 32-byte message hash which is signed.
+        /// - Returns: secp256k1 public key.
+        public func recoverPublicKey<D: DataProtocol>(from signedMessageHash: D) throws -> P256K.Signing.PublicKey {
+            let key = try backing.recoverPublicKey(from: [UInt8](signedMessageHash))
+            return .init(impl: key)
+        }
+        
+        /// Recovers secp256k1 public used to sign message using hash and signature
+        /// when recovery ID is available.
+        ///
+        /// - Parameter signedMessageHash: 32-byte message hash which is signed.
+        /// - Returns: secp256k1 public key.
+        public func recoverPublicKey<D: Digest>(from signedMessageHash: D) throws -> P256K.Signing.PublicKey {
+            try recoverPublicKey(from: [UInt8](signedMessageHash))
+        }
+        
+        /// Returns compact (including recovery bit) representation of signature.
+        ///
+        /// Total length can be 65 bytes for some formats which indicated including recovery bits.
+        ///
+        /// - Parameter format: Compact representation format which indicated recovery bits placement
+        /// - Returns: Signature's compact representation
+        public func compactRepresentation(format: CompactRepresentationFormat) throws -> Data {
+            guard let recoveryId else {
+                throw CryptoKitError.incorrectParameterSize
+            }
+            
+            switch format {
+            case .raw:
+                return rawRepresentation + [recoveryId]
+            case .bitcoin:
+                return [recoveryId + 27] + rawRepresentation
+            case .etherium:
+                return rawRepresentation + [recoveryId + 27]
+            case .eip155(let chainId):
+                let tail = (UInt(recoveryId) + 35 + 2 * UInt(chainId)).withBigEndianIntegerBytes { bytes in
+                    bytes.drop(while: { $0 == 0 })
+                }
+                return rawRepresentation + [UInt8](tail)
+            case .eip2098:
+                var result = rawRepresentation
+                result[32] |= (recoveryId & 0x01) << 7
+                return result
+            }
         }
     }
 }
@@ -338,14 +463,11 @@ extension P256K.Signing.PrivateKey {
     /// algorithm employs randomization to generate a different signature on
     /// every call, even for the same data and key.
     public func signature<D: Digest>(for digest: D) throws(CryptoKitMetaError) -> P256K.Signing.ECDSASignature {
-        var signature = secp256k1_ecdsa_signature()
-        let success = impl.key.withUnsafeBytes {
-            secp256k1_ecdsa_sign(P256K.context, &signature, [UInt8](digest.data), $0.baseAddress.unsafelyUnwrapped, secp256k1_nonce_function_rfc6979, nil)
+        guard D.byteCount == 32 else {
+            throw CryptoKitError.incorrectParameterSize
         }
-        if success != 1 {
-            throw CryptoKitError.incorrectKeySize
-        }
-        return try .init(signature)
+        let signature = try Secp256K1BackingSignature(key: impl, digest: [UInt8](digest), nonceFunction: secp256k1_nonce_function_rfc6979, nonceData: nil)
+        return .init(signature)
     }
     
     /// Generates an Schnorr signature of the digest you provide over the
@@ -393,7 +515,7 @@ extension P256K.Signing.PublicKey {
     /// - Returns: A Boolean value that’s `true` if the signature is valid for
     /// the given digest; otherwise, `false`.
     public func isValidSignature<D: Digest>(_ signature: P256K.Signing.ECDSASignature, for digest: D) -> Bool {
-        var signature = signature.signature
+        var signature = signature.backing.signature
         var pubkey = impl.key
         return secp256k1_ecdsa_verify(P256K.context, &signature, [UInt8](digest.data), &pubkey) == 1
     }

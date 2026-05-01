@@ -10,7 +10,6 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
-@Suite
 struct JWTPopClaimsTests {
     /// Sample JSON data for various confirmation types
     let jwkConfirmationJSON = """

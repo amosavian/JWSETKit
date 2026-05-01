@@ -327,13 +327,13 @@ struct JSONPointerTests {
             "phones": ["555-1234", "555-5678"],
         ]
         
-        let name: String? = storage[JSONPointer("/name")] as? String
+        let name: String? = storage[pointer: "/name"] as? String
         #expect(name == "John")
         
-        let street: String? = storage[JSONPointer("/address/street")] as? String
+        let street: String? = storage[pointer: "/address/street"] as? String
         #expect(street == "123 Main St")
         
-        let phone: String? = storage[JSONPointer("/phones/0")] as? String
+        let phone: String? = storage[pointer: "/phones/0"] as? String
         #expect(phone == "555-1234")
     }
     
@@ -342,7 +342,7 @@ struct JSONPointerTests {
         var storage = JSONWebValueStorage()
         storage.storage = ["key": "value"]
         
-        let root = storage[JSONPointer()]
+        let root = storage[pointer: ""]
         #expect((root as? [String: Any])?["key"] as? String == "value")
     }
     
@@ -351,7 +351,7 @@ struct JSONPointerTests {
         var storage = JSONWebValueStorage()
         storage.storage = ["address": ["city": "Old City"] as [String: any Sendable]]
         
-        storage[JSONPointer("/address/city")] = "New City"
+        storage[pointer: "/address/city"] = "New City"
         #expect((storage.storage["address"] as? [String: any Sendable])?["city"] as? String == "New City")
     }
     
@@ -360,7 +360,7 @@ struct JSONPointerTests {
         var storage = JSONWebValueStorage()
         storage.storage = [:]
         
-        storage[JSONPointer("/address/street")] = "123 Main St"
+        storage[pointer: "/address/street"] = "123 Main St"
         let address = storage.storage["address"] as? [String: Any]
         #expect(address?["street"] as? String == "123 Main St")
     }
@@ -370,7 +370,7 @@ struct JSONPointerTests {
         var storage = JSONWebValueStorage()
         storage.storage = ["items": ["a", "b", "c"]]
         
-        storage[JSONPointer("/items/1")] = "X"
+        storage[pointer: "/items/1"] = "X"
         let items = storage.storage["items"] as? [Any]
         #expect(items?[1] as? String == "X")
     }
@@ -380,7 +380,7 @@ struct JSONPointerTests {
         var storage = JSONWebValueStorage()
         storage.storage = ["name": "John", "email": "john@example.com"]
         
-        storage[JSONPointer("/email")] = nil
+        storage[pointer: "/email"] = nil
         #expect(storage.storage["email"] == nil)
         #expect(storage.storage["name"] as? String == "John")
     }
@@ -421,7 +421,7 @@ struct JSONPointerTests {
         storage.storage = ["data": ["items": ["a", "b", "c"]] as [String: any Sendable]]
         
         // Set a nested array value
-        storage[JSONPointer("/data/items/1")] = "X"
+        storage[pointer: "/data/items/1"] = "X"
         let data = storage.storage["data"] as? [String: any Sendable]
         let items = data?["items"] as? [any Sendable]
         #expect(items?[1] as? String == "X")
@@ -433,7 +433,7 @@ struct JSONPointerTests {
         storage.storage = [:]
         
         // Create a new array path with index
-        storage[JSONPointer("/items/0")] = "first"
+        storage[pointer: "/items/0"] = "first"
         let items = storage.storage["items"] as? [any Sendable]
         #expect(items?.count == 1)
         #expect(items?[0] as? String == "first")
@@ -445,7 +445,7 @@ struct JSONPointerTests {
         storage.storage = ["items": ["a"]]
         
         // Set value at index beyond current array length (should pad)
-        storage[JSONPointer("/items/3")] = "d"
+        storage[pointer: "/items/3"] = "d"
         let items = storage.storage["items"] as? [any Sendable]
         #expect(items?.count == 4)
         #expect(items?[3] as? String == "d")
@@ -461,7 +461,7 @@ struct JSONPointerTests {
             ] as [String: any Sendable],
         ]
         
-        storage[JSONPointer("/address/city")] = nil
+        storage[pointer: "/address/city"] = nil
         let address = storage.storage["address"] as? [String: any Sendable]
         #expect(address?["city"] == nil)
         #expect(address?["street"] as? String == "123 Main St")
@@ -472,7 +472,7 @@ struct JSONPointerTests {
         var storage = JSONWebValueStorage()
         storage.storage = ["items": ["a", "b", "c"]]
         
-        storage[JSONPointer("/items/1")] = nil
+        storage[pointer: "/items/1"] = nil
         let items = storage.storage["items"] as? [any Sendable]
         #expect(items?.count == 2) // "b" removed, array shrinks
     }
@@ -483,9 +483,9 @@ struct JSONPointerTests {
         storage.storage = ["name": "John"]
         
         // Non-existent paths should return nil
-        #expect(storage[JSONPointer("/email")] == nil)
-        #expect(storage[JSONPointer("/address/street")] == nil)
-        #expect(storage[JSONPointer("/items/0")] == nil)
+        #expect(storage[pointer: "/email"] == nil)
+        #expect(storage[pointer: "/address/street"] == nil)
+        #expect(storage[pointer: "/items/0"] == nil)
     }
     
     @Test
@@ -495,7 +495,7 @@ struct JSONPointerTests {
         nested.storage = ["city": "Springfield"]
         storage.storage = ["address": nested]
         
-        let city = storage[JSONPointer("/address/city")] as? String
+        let city = storage[pointer: "/address/city"] as? String
         #expect(city == "Springfield")
     }
     
@@ -504,7 +504,7 @@ struct JSONPointerTests {
         var storage = JSONWebValueStorage()
         storage.storage = ["key": "value"]
         
-        storage[JSONPointer()] = nil
+        storage[pointer: ""] = nil
         #expect(storage.storage.isEmpty)
     }
     
@@ -513,7 +513,7 @@ struct JSONPointerTests {
         var storage = JSONWebValueStorage()
         storage.storage = ["old": "value"]
         
-        storage[JSONPointer()] = ["new": "data"] as [String: any Sendable]
+        storage[pointer: ""] = ["new": "data"] as [String: any Sendable]
         #expect(storage.storage["new"] as? String == "data")
         #expect(storage.storage["old"] == nil)
     }
@@ -541,7 +541,7 @@ struct JSONPointerTests {
             ] as [[any Sendable]],
         ]
         
-        let value = storage[JSONPointer("/matrix/1/0")] as? String
+        let value = storage[pointer: "/matrix/1/0"] as? String
         #expect(value == "c")
     }
     
@@ -554,7 +554,7 @@ struct JSONPointerTests {
             ] as [String: any Sendable],
         ]
         
-        storage[JSONPointer("/data/items/1")] = nil
+        storage[pointer: "/data/items/1"] = nil
         let data = storage.storage["data"] as? [String: any Sendable]
         let items = data?["items"] as? [any Sendable]
         #expect(items?.count == 2)

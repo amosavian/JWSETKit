@@ -12,7 +12,6 @@ import Testing
 import NIOHTTP1
 #endif
 
-@Suite
 struct JWTTests {
     let jwtString = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiYXVkIjoiZ29vZ2xlLmNvbSIsIm5hbWUiOiJKb2huIERvZSIsImlhdCI6MTUxNjIzOTAyMiwibmJmIjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyNDkwMjJ9.vGoQSvaLlU1lh_rsJT-vCPG6DNe_a9rHeJiezXRswKQ"
     
@@ -75,7 +74,7 @@ struct JWTTests {
 #endif
     
 #if canImport(Foundation.NSURLSession) || canImport(FoundationNetworking) || canImport(AsyncHTTPClient)
-    @Test
+    @Test(.disabled())
     func jwkSetFetch() async throws {
         let keySet = try await JSONWebKeySet(provider: .apple)
         #expect(!keySet.isEmpty)

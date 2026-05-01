@@ -323,7 +323,7 @@ extension JSONWebSelectiveDisclosureToken {
             
             if let index = lastComponent.intValue {
                 // Array element: look for {"...": hash} marker at the index
-                if let parentArray = payload.value.storage[parentPath] as? [Any],
+                if let parentArray = payload.value.storage[pointer: parentPath] as? [Any],
                    parentArray.indices.contains(index),
                    let marker = parentArray[index] as? [String: Any],
                    marker.count == 1,
@@ -341,7 +341,7 @@ extension JSONWebSelectiveDisclosureToken {
                 // Object claim: look in parent's _sd array
                 let sdArray: [String]? = if parentPath.isRoot {
                     payload.value.storage.storage["_sd"] as? [String]
-                } else if let parentDict = payload.value.storage[parentPath] as? [String: Any] {
+                } else if let parentDict = payload.value.storage[pointer: parentPath] as? [String: Any] {
                     parentDict["_sd"] as? [String]
                 } else {
                     nil
