@@ -227,7 +227,7 @@ struct Secp256K1BackingPrivate: Hashable {
             secp256k1_ec_seckey_verify(P256K.context, $0.baseAddress.unsafelyUnwrapped) == 0 && (!compactRepresentable || isCompactRepresentable(key))
         }
     }
-
+    
     /// Creates a random P-256 private key for signing.
     ///
     /// Keys that use a compact point encoding enable shorter public keys, but aren’t
@@ -244,7 +244,7 @@ struct Secp256K1BackingPrivate: Hashable {
         } while Self.isValid(key, compactRepresentable: compactRepresentable)
         self.key = key
     }
-
+    
     /// Creates a P-256 private key for signing from an ANSI x9.63
     /// representation.
     ///
@@ -256,7 +256,7 @@ struct Secp256K1BackingPrivate: Hashable {
         }
         self.key = SymmetricKey(data: x963Representation.data.suffix(32))
     }
-
+    
     /// Creates a P-256 private key for signing from a collection of bytes.
     ///
     /// - Parameters:
@@ -268,7 +268,7 @@ struct Secp256K1BackingPrivate: Hashable {
         }
         self.key = SymmetricKey(data: rawRepresentation.data)
     }
-
+    
 #if !hasFeature(Embedded)
     /// Creates a P-256 private key for signing from a Privacy-Enhanced Mail
     /// PEM) representation.
@@ -277,7 +277,7 @@ struct Secp256K1BackingPrivate: Hashable {
     ///   - pemRepresentation: A PEM representation of the key.
     init(pemRepresentation: String) throws(CryptoKitMetaError) {
         let pem = try PEMDocument(pemString: pemRepresentation)
-
+        
         switch pem.discriminator {
         case "EC PRIVATE KEY":
             let parsed = try SEC1PrivateKey(derEncoded: Array(pem.derBytes))
@@ -293,7 +293,7 @@ struct Secp256K1BackingPrivate: Hashable {
         }
     }
 #endif
-
+    
     /// Creates a P-256 private key for signing from a Distinguished Encoding
     /// Rules (DER) encoded representation.
     ///
@@ -301,10 +301,10 @@ struct Secp256K1BackingPrivate: Hashable {
     ///   - derRepresentation: A DER-encoded representation of the key.
     init<Bytes: RandomAccessCollection>(derRepresentation: Bytes) throws(CryptoKitMetaError) where Bytes.Element == UInt8 {
         let bytes = Array(derRepresentation)
-
+        
         // We have to try to parse this twice because we have no information about what kind of key this is.
         // We try with PKCS#8 first, and then fall back to SEC.1.
-
+        
         do {
             let parsed = try PKCS8PrivateKey(derEncoded: Array(bytes))
             guard let privateKey = (parsed.privateKey as? SEC1PrivateKey)?.privateKey else {
@@ -316,7 +316,7 @@ struct Secp256K1BackingPrivate: Hashable {
             self = try .init(rawRepresentation: key.privateKey.bytes)
         }
     }
-
+    
     /// The corresponding public key.
     var publicKey: Secp256K1BackingPublic {
         var pubkey = secp256k1_pubkey()
@@ -325,7 +325,7 @@ struct Secp256K1BackingPrivate: Hashable {
         }
         return Secp256K1BackingPublic(impl: pubkey)
     }
-
+    
     /// A data representation of the private key.
     var rawRepresentation: Data {
         key.data
@@ -335,13 +335,13 @@ struct Secp256K1BackingPrivate: Hashable {
     var x963Representation: Data {
         publicKey.x963Representation + key.data
     }
-
+    
     /// A Distinguished Encoding Rules (DER) encoded representation of the private key.
     var derRepresentation: Data {
         let pkey = PKCS8PrivateKey(algorithm: .ecdsaSecp256k1, privateKey: Array(rawRepresentation), publicKey: Array(publicKey.x963Representation))
         return (try? pkey.derRepresentation) ?? .init()
     }
-
+    
 #if !hasFeature(Embedded)
     /// A Privacy-Enhanced Mail (PEM) representation of the private key.
     var pemRepresentation: String {
@@ -349,4 +349,115 @@ struct Secp256K1BackingPrivate: Hashable {
         return pemDocument.pemString
     }
 #endif
+}
+
+enum Secp256K1BackingSignature {
+    case ecdsa(signature: secp256k1_ecdsa_signature)
+    case recoverable(recoverableSignature: secp256k1_ecdsa_recoverable_signature)
+    
+    var signature: secp256k1_ecdsa_signature {
+        switch self {
+        case .ecdsa(let signature):
+            return signature
+        case .recoverable(var recoverableSignature):
+            var signature = secp256k1_ecdsa_signature()
+            secp256k1_ecdsa_recoverable_signature_convert(P256K.context, &signature, &recoverableSignature)
+            return signature
+        }
+    }
+    
+    var rawRepresentation: [UInt8] {
+        var result = [UInt8](repeating: 0, count: P256K.coordinateByteCount * 2)
+        switch self {
+        case .ecdsa(var signature):
+            secp256k1_ecdsa_signature_serialize_compact(P256K.context, &result, &signature)
+        case .recoverable(var recoverableSignature):
+            var recid: CInt = 0
+            secp256k1_ecdsa_recoverable_signature_serialize_compact(P256K.context, &result, &recid, &recoverableSignature)
+        }
+        return result
+    }
+    
+    var recoveryId: UInt8? {
+        switch self {
+        case .ecdsa:
+            return nil
+        case .recoverable(var recoverableSignature):
+            var result = [UInt8](repeating: 0, count: P256K.coordinateByteCount * 2)
+            var recid: CInt = 0
+            secp256k1_ecdsa_recoverable_signature_serialize_compact(P256K.context, &result, &recid, &recoverableSignature)
+            return UInt8(exactly: recid)
+        }
+    }
+    
+    var derRepresentation: Data {
+        var signature = self.signature
+        var derLength = 72
+        var derRepresentation = [UInt8](repeating: 0, count: derLength)
+        secp256k1_ecdsa_signature_serialize_der(P256K.context, &derRepresentation, &derLength, &signature)
+        return Data(derRepresentation).prefix(derLength)
+    }
+    
+    init(derRepresentation: [UInt8]) throws(CryptoKitMetaError) {
+        var signature = secp256k1_ecdsa_signature()
+        
+        // Parse the DER signature
+        let parseResult = secp256k1_ecdsa_signature_parse_der(P256K.context, &signature, derRepresentation, derRepresentation.count)
+        guard parseResult == 1 else {
+            throw CryptoKitError.incorrectParameterSize
+        }
+        self = .ecdsa(signature: signature)
+        normalize()
+    }
+    
+    init(key: Secp256K1BackingPrivate, digest: [UInt8], nonceFunction: secp256k1_nonce_function, nonceData: [UInt8]?) throws {
+        guard digest.count == 32 else {
+            throw CryptoKitError.incorrectParameterSize
+        }
+        var signature = secp256k1_ecdsa_recoverable_signature()
+        let success = key.key.withUnsafeBytes {
+            secp256k1_ecdsa_sign_recoverable(P256K.context, &signature, digest, $0.baseAddress.unsafelyUnwrapped, secp256k1_nonce_function_rfc6979, nil)
+        }
+        if success != 1 {
+            throw CryptoKitError.incorrectKeySize
+        }
+        self = .recoverable(recoverableSignature: signature)
+    }
+    
+    func recoverPublicKey(from signedMessageHash: [UInt8]) throws -> Secp256K1BackingPublic {
+        guard signedMessageHash.count == 32 else {
+            throw CryptoKitError.incorrectParameterSize
+        }
+        switch self {
+        case .ecdsa:
+            throw CryptoKitError.incorrectParameterSize
+        case .recoverable(var recoverableSignature):
+            var pubKey = secp256k1_pubkey()
+            let result = secp256k1_ecdsa_recover(
+                P256K.context, &pubKey,
+                &recoverableSignature,
+                signedMessageHash
+            )
+            guard result == 1 else {
+                throw CryptoKitError.incorrectParameterSize
+            }
+            return .init(impl: pubKey)
+        }
+    }
+    
+    mutating func normalize() {
+        switch self {
+        case .ecdsa(var signature):
+            var normalized = secp256k1_ecdsa_signature()
+            secp256k1_ecdsa_signature_normalize(P256K.context, &normalized, &signature)
+            self = .ecdsa(signature: normalized)
+        case .recoverable:
+            var result = secp256k1_ecdsa_recoverable_signature()
+            var signature = Self.ecdsa(signature: signature)
+            signature.normalize()
+            var rawRepresentation = signature.rawRepresentation
+            secp256k1_ecdsa_recoverable_signature_parse_compact(P256K.context, &result, &rawRepresentation, CInt(recoveryId.unsafelyUnwrapped))
+            self = .recoverable(recoverableSignature: result)
+        }
+    }
 }

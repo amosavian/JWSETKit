@@ -228,7 +228,7 @@ extension Set<JSONPointer> {
 }
 
 extension JSONWebValueStorage {
-    public subscript(pointer: JSONPointer) -> (any Sendable)? {
+    public subscript(pointer pointer: JSONPointer) -> (any Sendable)? {
         get {
             value(at: pointer)
         }
@@ -432,17 +432,17 @@ extension JSONWebValueStorage {
 
 extension JSONWebContainer {
     public subscript(pointer pointer: JSONPointer) -> (any Sendable)? {
-        storage[pointer]
+        storage[pointer: pointer]
     }
 }
 
 extension MutableJSONWebContainer {
     public subscript(pointer pointer: JSONPointer) -> (any Sendable)? {
         get {
-            storage[pointer]
+            storage[pointer: pointer]
         }
         set {
-            storage[pointer] = newValue
+            storage[pointer: pointer] = newValue
         }
     }
 }

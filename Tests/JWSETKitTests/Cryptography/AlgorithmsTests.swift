@@ -13,7 +13,6 @@ import Testing
 @testable import CryptoP256K
 #endif
 
-@Suite
 struct AlgorithmsTests {
     @Test
     func detectECAlgorithms() throws {

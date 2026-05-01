@@ -12,7 +12,6 @@ import Testing
 
 typealias JWS = JSONWebSignature<ProtectedDataWebContainer>
 
-@Suite
 struct RFC7520SignatureTests {
     let payload = """
     SXTigJlzIGEgZGFuZ2Vyb3VzIGJ1c2luZXNzLCBGcm9kbywgZ29pbmcgb3V0IH\

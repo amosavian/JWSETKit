@@ -38,5 +38,6 @@
 # rules
 
 --enable isEmpty
---disable simplifyGenericConstraints
 --disable opaqueGenericParameters
+--disable redundantSendable
+--disable simplifyGenericConstraints

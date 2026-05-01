@@ -11,7 +11,6 @@ import Testing
 @testable import CryptoP256K
 @testable import JWSETKit
 
-@Suite
 struct ECTests {
     let plaintext = Data("The quick brown fox jumps over the lazy dog.".utf8)
     

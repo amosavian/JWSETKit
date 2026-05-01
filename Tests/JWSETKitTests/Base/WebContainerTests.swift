@@ -9,7 +9,6 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
-@Suite
 struct WebContainerTests {
     let protected = "eyJpc3MiOiJqb2UiLA0KICJleHAiOjEzMDA4MTkzODAsDQogImh0dHA6Ly9leGFtcGxlLmNvbS9pc19yb290Ijp0cnVlfQ"
     

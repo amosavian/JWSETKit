@@ -30,7 +30,7 @@ extension RandomAccessCollection where Self.Element == UInt8 {
         while result.last == "=" {
             result.removeLast()
         }
-        return Data(result)
+        return result
     }
     
     /// Returns a URL-safe Base-64 encoded `Data` in String representation.

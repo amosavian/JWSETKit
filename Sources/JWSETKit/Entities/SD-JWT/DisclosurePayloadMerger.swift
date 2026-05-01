@@ -214,7 +214,7 @@ extension JSONWebValueStorage {
         disclosures: inout JSONWebSelectiveDisclosureList
     ) throws {
         // Navigate to parent and modify in place
-        guard let parent = self[parentPath] else { return }
+        guard let parent = self[pointer: parentPath] else { return }
         
         if var parentDict = parent as? [String: any Sendable] {
             var sdHashes: [String] = parentDict["_sd"] as? [String] ?? []
@@ -234,7 +234,7 @@ extension JSONWebValueStorage {
             if !sdHashes.isEmpty {
                 parentDict["_sd"] = sdHashes
             }
-            self[parentPath] = parentDict
+            self[pointer: parentPath] = parentDict
         } else if var parentArray = parent as? [any Sendable] {
             // Handle array element concealment
             for path in paths {
@@ -248,7 +248,7 @@ extension JSONWebValueStorage {
                 let hash = disclosures.append(disclosure)
                 parentArray[index] = ["...": hash.urlBase64EncodedString()]
             }
-            self[parentPath] = parentArray
+            self[pointer: parentPath] = parentArray
         }
     }
     

@@ -13,7 +13,7 @@ import Foundation
 import SwiftASN1
 
 extension ASN1Node.Content {
-    var primitive: ArraySlice<UInt8>? {
+    package var primitive: ArraySlice<UInt8>? {
         switch self {
         case .constructed:
             nil
@@ -22,7 +22,7 @@ extension ASN1Node.Content {
         }
     }
     
-    var sequence: [ASN1Node]? {
+    package var sequence: [ASN1Node]? {
         switch self {
         case .constructed(let nodes):
             Array(nodes)
@@ -33,7 +33,7 @@ extension ASN1Node.Content {
 }
 
 extension DER.Serializer {
-    mutating func appendIntegers(_ array: [Data]) throws {
+    package mutating func appendIntegers(_ array: [Data]) throws {
         try appendConstructedNode(identifier: .sequence) {
             for item in array {
                 try $0.serialize(ArraySlice<UInt8>(item))

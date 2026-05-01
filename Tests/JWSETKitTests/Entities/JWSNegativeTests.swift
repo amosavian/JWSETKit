@@ -11,7 +11,6 @@ import Testing
 @testable import JWSETKit
 
 /// Tests for invalid JWS inputs and error handling
-@Suite
 struct JWSNegativeTests {
     // MARK: - Test Fixture
     

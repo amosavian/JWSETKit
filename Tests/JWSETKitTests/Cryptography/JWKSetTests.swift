@@ -9,7 +9,6 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
-@Suite
 struct JWKSetTests {
     let jwksData: Data = .init("""
          {"keys":

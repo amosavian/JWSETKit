@@ -9,8 +9,10 @@ import Crypto
 import Foundation
 import Testing
 @testable import CryptoP256K
+#if P256K
+@testable import JWSETKit
+#endif
 
-@Suite
 struct P256KTests {
     let plaintext = Data("The quick brown fox jumps over the lazy dog.".utf8)
 
@@ -585,6 +587,7 @@ struct P256KTests {
 
     // MARK: - JWK Integration Tests
 
+#if P256K
     @Test
     func jwkSignAndVerify() throws {
         let privateKey = P256K.Signing.PrivateKey()
@@ -592,6 +595,7 @@ struct P256KTests {
         let signature = try privateKey.signature(plaintext, using: .ecdsaSignatureSecp256k1SHA256)
         try privateKey.publicKey.verifySignature(signature, for: plaintext, using: .ecdsaSignatureSecp256k1SHA256)
     }
+#endif
 
     // MARK: - Edge Cases
 
@@ -983,5 +987,199 @@ struct P256KTests {
         #expect(!publicKey.isValidSchnorrSignature(tooLong, for: plaintext))
         // correctSize signature with all zeros will be invalid, but it's the right size
         #expect(!publicKey.isValidSchnorrSignature(correctSize, for: plaintext))
+    }
+
+    // MARK: - ECDSA Compact Representation Tests
+
+    //
+    // Layout-only tests for ECDSASignature.CompactRepresentationFormat. Each format's
+    // byte layout is asserted against its public specification, not against whatever
+    // the current Swift implementation happens to produce.
+    //
+    // ECDSA validity against the message hash is NOT verified — that would require
+    // keccak256 (EIP-155) and Bitcoin signed-message framing (BIP-137), which are
+    // out of scope. The math itself is covered by existing Wycheproof tests.
+
+    // EIP-2098 Test Vector 1 (v=27, recId=0)
+    // Source: https://eips.ethereum.org/EIPS/eip-2098
+    // The 64-byte compact form is r || yParityAndS.
+    @Test
+    func compactRepresentationEIP2098VectorV27() throws {
+        let r = hexToData("68a020a209d3d56c46f38cc50a33f704f4a9a10a59377f8dd762ac66910e9b90")
+        let s = hexToData("7e865ad05c4035ab5792787d4a0297a43617ae897930a6fe4d822b8faea52064")
+        let yParityAndS = hexToData("7e865ad05c4035ab5792787d4a0297a43617ae897930a6fe4d822b8faea52064")
+        let raw = r + s
+        let expected = r + yParityAndS
+
+        // Encode: build sig with recId=0 (v=27 → recId=0). yParityAndS == s because top bit clear.
+        let sig = try P256K.Signing.ECDSASignature(rawRepresentation: raw, recoveryId: UInt8(0))
+        let compact = try sig.compactRepresentation(format: .eip2098)
+        #expect(compact == expected)
+        #expect(compact.count == 64)
+        #expect(compact[32] & 0x80 == 0x00)
+
+        // Decode: parse the 64-byte compact, assert raw + recId roundtrip
+        let parsed = try P256K.Signing.ECDSASignature(compactRepresentation: expected, format: .eip2098)
+        #expect(parsed.rawRepresentation == raw)
+        #expect(parsed.recoveryId == 0)
+    }
+
+    // EIP-2098 Test Vector 2 (v=28, recId=1)
+    // Source: https://eips.ethereum.org/EIPS/eip-2098
+    @Test
+    func compactRepresentationEIP2098VectorV28() throws {
+        let r = hexToData("9328da16089fcba9bececa81663203989f2df5fe1faa6291a45381c81bd17f76")
+        let s = hexToData("139c6d6b623b42da56557e5e734a43dc83345ddfadec52cbe24d0cc64f550793")
+        let yParityAndS = hexToData("939c6d6b623b42da56557e5e734a43dc83345ddfadec52cbe24d0cc64f550793")
+        let raw = r + s
+        let expected = r + yParityAndS
+
+        // Encode: recId=1 (v=28 → recId=1), top bit of yParityAndS set.
+        let sig = try P256K.Signing.ECDSASignature(rawRepresentation: raw, recoveryId: UInt8(1))
+        let compact = try sig.compactRepresentation(format: .eip2098)
+        #expect(compact == expected)
+        #expect(compact.count == 64)
+        #expect(compact[32] & 0x80 == 0x80)
+
+        // Decode: parse the 64-byte compact, assert raw s recovered (top bit cleared) and recId=1
+        let parsed = try P256K.Signing.ECDSASignature(compactRepresentation: expected, format: .eip2098)
+        #expect(parsed.rawRepresentation == raw)
+        #expect(parsed.recoveryId == 1)
+    }
+
+    // EIP-155 Vitalik example transaction, chainId=1
+    // Source: https://eips.ethereum.org/EIPS/eip-155
+    // v=37, recId = (37 - 35 - 2*1) = 0
+    @Test
+    func compactRepresentationEIP155ChainId1() throws {
+        let r = hexToData("28ef61340bd939bc2195fe537567866003e1a15d3c71ff63e1590620aa636276")
+        let s = hexToData("67cbe9d8997f761aecb703304b3800ccf555c9f3dc64214b297fb1966a3b6d83")
+        let raw = r + s
+        let chainId = 1
+        let v: UInt8 = 37 // 0 + 35 + 2*1
+        let expected = raw + Data([v])
+
+        // Encode
+        let sig = try P256K.Signing.ECDSASignature(rawRepresentation: raw, recoveryId: UInt8(0))
+        let compact = try sig.compactRepresentation(format: .eip155(chainId: chainId))
+        #expect(compact == expected)
+        #expect(compact.count == 65)
+        #expect(compact.last == v)
+
+        // Decode
+        let parsed = try P256K.Signing.ECDSASignature(compactRepresentation: expected, format: .eip155(chainId: chainId))
+        #expect(parsed.rawRepresentation == raw)
+        #expect(parsed.recoveryId == 0)
+    }
+
+    /// EIP-155 multi-byte tail boundary: chainId=111, recId=0 → v = 35 + 222 = 257 (0x0101).
+    /// The spec says v = recId + 35 + 2*chainId, with no width restriction. The encode path
+    /// uses big-endian no-leading-zeros; the decode path must parse the entire tail as a
+    /// big-endian integer to recover recId = (v - 35 - 2*chainId) & 1.
+    @Test
+    func compactRepresentationEIP155LargeChainId() throws {
+        // Reuse the Vitalik vector's r||s — values are irrelevant for layout.
+        let r = hexToData("28ef61340bd939bc2195fe537567866003e1a15d3c71ff63e1590620aa636276")
+        let s = hexToData("67cbe9d8997f761aecb703304b3800ccf555c9f3dc64214b297fb1966a3b6d83")
+        let raw = r + s
+        let chainId = 111
+        // v = 0 + 35 + 2*111 = 257 = 0x0101
+        let expectedTail = Data([0x01, 0x01])
+
+        // Encode
+        let sig = try P256K.Signing.ECDSASignature(rawRepresentation: raw, recoveryId: UInt8(0))
+        let compact = try sig.compactRepresentation(format: .eip155(chainId: chainId))
+        #expect(compact.count == 66)
+        #expect(compact.suffix(2) == expectedTail)
+        #expect(compact.prefix(64) == raw)
+
+        // Decode
+        let parsed = try P256K.Signing.ECDSASignature(compactRepresentation: compact, format: .eip155(chainId: chainId))
+        #expect(parsed.rawRepresentation == raw)
+        #expect(parsed.recoveryId == 0)
+    }
+
+    /// .raw format: libsecp256k1 default, [r(32) | s(32) | recId(1)], 65 bytes.
+    @Test
+    func compactRepresentationRawLayout() throws {
+        // Synthesize: signature(for:) calls secp256k1_ecdsa_sign_recoverable, populating recoveryId.
+        let priv = try P256K.Signing.PrivateKey(rawRepresentation: hexToData(Self.keyPairVectors[0].secretKey))
+        let sig = try priv.signature(for: plaintext)
+        let recId = try #require(sig.recoveryId)
+
+        // Encode layout: rawRepresentation || [recoveryId]
+        let compact = try sig.compactRepresentation(format: .raw)
+        #expect(compact.count == 65)
+        #expect(compact.prefix(64) == sig.rawRepresentation)
+        #expect(compact.last == recId)
+
+        // Decode roundtrip
+        let parsed = try P256K.Signing.ECDSASignature(compactRepresentation: compact, format: .raw)
+        #expect(parsed.rawRepresentation == sig.rawRepresentation)
+        #expect(parsed.recoveryId == recId)
+    }
+
+    // .bitcoin format: BIP-137 base form (uncompressed P2PKH), [27+recId(1) | r(32) | s(32)], 65 bytes.
+    // Source: https://github.com/bitcoin/bips/blob/master/bip-0137.mediawiki
+    // Note: BIP-137 also defines header bytes 31–34 (compressed P2PKH) and 35–38 (P2SH/segwit
+    // variants); the .bitcoin case implements only the 27/28 base form.
+    @Test
+    func compactRepresentationBitcoinLayout() throws {
+        let priv = try P256K.Signing.PrivateKey(rawRepresentation: hexToData(Self.keyPairVectors[0].secretKey))
+        let sig = try priv.signature(for: plaintext)
+        let recId = try #require(sig.recoveryId)
+
+        // Encode layout: [27 + recId] || rawRepresentation
+        let compact = try sig.compactRepresentation(format: .bitcoin)
+        #expect(compact.count == 65)
+        #expect(compact.first == 27 + recId)
+        #expect(compact.suffix(64) == sig.rawRepresentation)
+
+        // Decode roundtrip
+        let parsed = try P256K.Signing.ECDSASignature(compactRepresentation: compact, format: .bitcoin)
+        #expect(parsed.rawRepresentation == sig.rawRepresentation)
+        #expect(parsed.recoveryId == recId)
+    }
+
+    /// .etherium format: legacy pre-EIP-155, [r(32) | s(32) | 27+recId(1)], 65 bytes.
+    @Test
+    func compactRepresentationEtheriumLayout() throws {
+        let priv = try P256K.Signing.PrivateKey(rawRepresentation: hexToData(Self.keyPairVectors[0].secretKey))
+        let sig = try priv.signature(for: plaintext)
+        let recId = try #require(sig.recoveryId)
+
+        // Encode layout: rawRepresentation || [27 + recId]
+        let compact = try sig.compactRepresentation(format: .etherium)
+        #expect(compact.count == 65)
+        #expect(compact.prefix(64) == sig.rawRepresentation)
+        #expect(compact.last == 27 + recId)
+
+        // Decode roundtrip
+        let parsed = try P256K.Signing.ECDSASignature(compactRepresentation: compact, format: .etherium)
+        #expect(parsed.rawRepresentation == sig.rawRepresentation)
+        #expect(parsed.recoveryId == recId)
+    }
+
+    @Test
+    func compactRepresentationErrorCases() throws {
+        let raw = Data(repeating: 0x01, count: 64)
+
+        // Wrong-length decode for each format.
+        #expect(throws: (any Error).self) {
+            _ = try P256K.Signing.ECDSASignature(compactRepresentation: Data(repeating: 0, count: 64), format: .raw)
+        }
+        #expect(throws: (any Error).self) {
+            _ = try P256K.Signing.ECDSASignature(compactRepresentation: Data(repeating: 0, count: 63), format: .eip2098)
+        }
+        #expect(throws: (any Error).self) {
+            _ = try P256K.Signing.ECDSASignature(compactRepresentation: Data(repeating: 0, count: 73), format: .eip155(chainId: 1))
+        }
+
+        // compactRepresentation(format:) without recoveryId throws.
+        let sigWithoutRecId = try P256K.Signing.ECDSASignature(rawRepresentation: raw)
+        #expect(sigWithoutRecId.recoveryId == nil)
+        #expect(throws: (any Error).self) {
+            _ = try sigWithoutRecId.compactRepresentation(format: .raw)
+        }
     }
 }

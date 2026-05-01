@@ -10,7 +10,6 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
-@Suite
 struct JWSTests {
     let jws = try! JSONWebToken(
         signatures: [.init(protected: Data(urlBase64Encoded: "eyJhbGciOiJSUzI1NiJ9")!, signature: Data())],

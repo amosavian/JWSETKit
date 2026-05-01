@@ -9,7 +9,6 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
-@Suite
 struct CompressionTests {
     let decompressed = "Data compression test. This text must be compressed.".data
     let deflateCompressed = "c0ksSVRIzs8tKEotLs7Mz1MoSS0u0VMIycgsBjIrShRyS4tLFJJS4WpSU/QA".decoded

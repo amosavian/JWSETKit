@@ -11,7 +11,6 @@ import Testing
 @testable import JWSETKit
 
 /// Tests for invalid JWK formats and key parsing errors
-@Suite
 struct JWKNegativeTests {
     // MARK: - RSA Key Tests
     

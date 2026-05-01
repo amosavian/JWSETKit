@@ -11,7 +11,6 @@ import Testing
 @testable import JWSETKit
 
 /// Tests for invalid JWE inputs and decryption errors
-@Suite
 struct JWENegativeTests {
     // MARK: - Test Keys
     

@@ -10,7 +10,6 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
-@Suite
 struct JWETests {
     @Test
     func decode() throws {
