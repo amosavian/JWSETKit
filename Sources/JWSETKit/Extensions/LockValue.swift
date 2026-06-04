@@ -633,7 +633,7 @@ public protocol DictionaryInitialzable: ExpressibleByDictionaryLiteral {
 }
 
 extension Dictionary: DictionaryInitialzable {}
-extension OrderedDictionary: DictionaryInitialzable {}
+extension OrderedCollections.OrderedDictionary: DictionaryInitialzable {}
 
 extension LockedValue: ExpressibleByDictionaryLiteral where Value: ExpressibleByDictionaryLiteral & DictionaryInitialzable, Value.Key: Hashable {
     @inlinable
