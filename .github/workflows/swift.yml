@@ -11,7 +11,7 @@ on:
 
 jobs:
   build-and-test:
-    name: Swift ${{ matrix.swift }} on ${{ matrix.os }} (${{ matrix.traits-name }})
+    name: Swift ${{ matrix.swift }} on ${{ matrix.os }} (${{ matrix.arguments && 'all-traits' || 'no-traits' }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -19,57 +19,40 @@ jobs:
           - os: macos-26
             swift: "6.3"
             xcode: Xcode_26.4.1
-            traits-name: vanilla
-            traits-args: ""
           - os: macos-26
             swift: "6.3"
             xcode: Xcode_26.4.1
-            traits-name: all-traits
-            traits-args: "--traits X509,P256K,HTTP"
+            arguments: "--traits X509,P256K,HTTP"
+            coverage-report: true
           - os: macos-26
             swift: "6.2"
             xcode: Xcode_26.0.1
-            traits-name: vanilla
-            traits-args: ""
           - os: macos-26
             swift: "6.2"
             xcode: Xcode_26.0.1
-            traits-name: all-traits
-            traits-args: "--traits X509,P256K,HTTP"
+            arguments: "--traits X509,P256K,HTTP"
           - os: macos-15
             swift: "6.1"
             xcode: Xcode_16.3
-            traits-name: vanilla
-            traits-args: ""
           - os: macos-15
             swift: "6.1"
             xcode: Xcode_16.3
-            traits-name: all-traits
-            traits-args: "--traits X509,P256K,HTTP"
+            arguments: "--traits X509,P256K,HTTP"
           - os: ubuntu-latest
             swift: "6.3"
-            traits-name: vanilla
-            traits-args: ""
           - os: ubuntu-latest
             swift: "6.3"
-            traits-name: all-traits
-            traits-args: "--traits X509,P256K,HTTP"
+            arguments: "--traits X509,P256K,HTTP"
           - os: ubuntu-latest
             swift: "6.2"
-            traits-name: vanilla
-            traits-args: ""
           - os: ubuntu-latest
             swift: "6.2"
-            traits-name: all-traits
-            traits-args: "--traits X509,P256K,HTTP"
+            arguments: "--traits X509,P256K,HTTP"
           - os: ubuntu-latest
             swift: "6.1"
-            traits-name: vanilla
-            traits-args: ""
           - os: ubuntu-latest
             swift: "6.1"
-            traits-name: all-traits
-            traits-args: "--traits X509,P256K,HTTP"
+            arguments: "--traits X509,P256K,HTTP"
 
     steps:
     - uses: SwiftyLab/setup-swift@latest
@@ -82,12 +65,11 @@ jobs:
     - name: Get swift version
       run: swift --version
     - name: Build
-      run: swift build -v ${{ matrix.traits-args }}
+      run: swift build -v ${{ matrix.arguments }}
     - name: Run tests
-      run: swift test -v --enable-code-coverage ${{ matrix.traits-args }}
+      run: swift test -v ${{ matrix.coverage-report && '--enable-code-coverage' || '' }} ${{ matrix.arguments }}
     - name: Submit code coverage
-      if: matrix.os == 'macos-26' && matrix.swift == '6.3' && matrix.traits-name == 'all-traits'
+      if: matrix.coverage-report
       uses: vapor/swift-codecov-action@v0.3
       with:
         codecov_token: ${{ secrets.CODECOV_TOKEN }}
-

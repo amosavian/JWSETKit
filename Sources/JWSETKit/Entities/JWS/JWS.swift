@@ -435,6 +435,9 @@ extension JSONWebValidatingKey {
             default:
                 return nil
             }
+        case .ellipticCurve, .octetKeyPair:
+            // swiftformat:disable:next redundantSelf
+            return self.curve.flatMap(JSONWebSignatureAlgorithm.init(curve:))
         default:
             return nil
         }

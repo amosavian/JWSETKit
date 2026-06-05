@@ -113,7 +113,17 @@ extension JSONWebSignatureAlgorithm {
     public var curve: JSONWebKeyCurve? {
         Self.curves[self]
     }
-    
+
+    init?(curve: JSONWebKeyCurve) {
+        // Disambiguate curves shared by multiple algorithms
+        let match: Self? = switch curve {
+        case .ed25519: .eddsaSignature
+        default: Self.curves.wrappedValue.first(where: { $0.value == curve })?.key
+        }
+        guard let match else { return nil }
+        self = match
+    }
+
     /// Returns private class appropriate for algorithm.
     public var signingKeyClass: (any JSONWebSigningKey.Type)? {
         Self.fastPathKeyRegistryClasses[self]?.private ?? Self.keyRegistryClasses[self]?.private
@@ -269,18 +279,21 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     }
 #endif
     
-    /// **Signature**: ML-DSA-44 as described in FIPS 204.
+    /// **Signature**: ML-DSA-44 as described in [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final),
+    /// bound to JOSE by [RFC 9964](https://www.rfc-editor.org/rfc/rfc9964).
     static var mldsa44Signature: Self {
         .internalMLDSA44Signature
     }
-    
-    /// **Signature**: ML-DSA-65 as described in FIPS 204.
+
+    /// **Signature**: ML-DSA-65 as described in [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final),
+    /// bound to JOSE by [RFC 9964](https://www.rfc-editor.org/rfc/rfc9964).
     @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
     public static var mldsa65Signature: Self {
         .internalMLDSA65Signature
     }
-    
-    /// **Signature**: ML-DSA-87 as described in FIPS 204.
+
+    /// **Signature**: ML-DSA-87 as described in [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final),
+    /// bound to JOSE by [RFC 9964](https://www.rfc-editor.org/rfc/rfc9964).
     @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
     public static var mldsa87Signature: Self {
         .internalMLDSA87Signature

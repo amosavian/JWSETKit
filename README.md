@@ -1,8 +1,6 @@
 # JWSETKit
 
-A library for working with JSON Web Signature (JWS) and .
-**A modern, type-safe Swift library for JSON Web Token (JWT), JSON Web Signature (JWS),
- and JSON Web Encryption (JWE) with first-class Apple's CryptoKit support**
+**A modern, type-safe Swift library for JSON Web Token (JWT), JSON Web Signature (JWS), and JSON Web Encryption (JWE) with first-class Apple CryptoKit support.**
 
 [![Swift][swift-workflow-badge]][swift-workflow-url]
 [![CodeQL][codeql-workflow-badge]][codeql-workflow-url]
@@ -92,7 +90,7 @@ Add JWSETKit to your `Package.swift`:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", from: "1.0.0")
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "2.0.0")
 ]
 ```
 
@@ -110,7 +108,7 @@ For X509 certificate support (Swift 6.1+):
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", from: "1.0.0", traits: ["X509"])
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "2.0.0", traits: ["X509"])
 ]
 ```
 
@@ -120,7 +118,7 @@ For secp256k1 (ES256K) support (Swift 6.1+):
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", from: "1.0.0", traits: ["P256K"])
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "2.0.0", traits: ["P256K"])
 ]
 ```
 
@@ -283,7 +281,6 @@ print(disclosed.email)  // "john@example.com"
 | PS256     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
 | PS384     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
 | PS512     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
-| PS512     | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
 | EdDSA     | :white_check_mark: | :white_check_mark: | :x:                | :x:                 |
 | Ed25519   | :white_check_mark: | :white_check_mark: | :x:                | :x:                 |
 | Ed448     | :x:                | :x:                | :x:                | :x:                 |
@@ -351,9 +348,13 @@ JWSETKit is perfect for:
 ### 📖 [Full Documentation][docs]
 
 Browse our comprehensive guides:
-- [Getting Started Guide][docs]
-- [API Reference][docs]
-- [Security Best Practices](https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/security)
+
+- [Getting Started][docs]
+- [Cryptography Guide][docs-cryptography]
+- [Security Guidelines & Algorithm Selection][docs-security]
+- [Extending Containers][docs-extending]
+- [Migrating from Vapor JWTKit][docs-migration]
+- [API Reference][docs-api]
 
 ## 🤝 Contributing
 
@@ -398,7 +399,7 @@ This library implements the following JOSE standards:
 - [RFC 7517](https://www.rfc-editor.org/rfc/rfc7517) - JSON Web Key (JWK)
 - [RFC 7518](https://www.rfc-editor.org/rfc/rfc7518) - JSON Web Algorithms (JWA)
 - [RFC 7519](https://www.rfc-editor.org/rfc/rfc7519) - JSON Web Token (JWT)
-- [RFC 7520](https://www.rfc-editor.org/rfc/rfc7519) - Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)
+- [RFC 7520](https://www.rfc-editor.org/rfc/rfc7520) - Examples of Protecting Content Using JSON Object Signing and Encryption (JOSE)
 - [RFC 7797](https://www.rfc-editor.org/rfc/rfc7797) - JSON Web Signature (JWS) Unencoded Payload Option
 - [RFC 7800](https://www.rfc-editor.org/rfc/rfc7800) - Proof-of-Possession Key Semantics for JSON Web Tokens (JWTs)
 - [RFC 9864](https://www.rfc-editor.org/rfc/rfc9864) - Fully-Specified Algorithms for JOSE and COSE
@@ -440,6 +441,11 @@ This library implements the following JOSE standards:
 [platforms-badge]: https://img.shields.io/endpoint?url=https%3A%2F%2Fswiftpackageindex.com%2Fapi%2Fpackages%2Famosavian%2FJWSETKit%2Fbadge%3Ftype%3Dplatforms
 
 [docs]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation
+[docs-api]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit
+[docs-cryptography]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/3-cryptography
+[docs-security]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/5-securityguidelines
+[docs-extending]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/7-extending-container
+[docs-migration]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/8-migrationfromvaporjwt
 [jwt-kit]: https://github.com/vapor/jwt-kit
 [JOSESwift]: https://github.com/airsidemobile/JOSESwift
 [JWTDecode]: https://github.com/auth0/JWTDecode.swift
