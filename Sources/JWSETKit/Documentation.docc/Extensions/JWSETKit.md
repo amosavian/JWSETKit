@@ -23,11 +23,9 @@ To use JWSETKit, add the following dependency to your Package.swift:
 
 ```swift
 dependencies: [
-    .package(url: "https://github.com/amosavian/JWSETKit", .upToNextMinor(from: "0.24.0"))
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "2.0.0")
 ]
 ```
-
-Note that this repository does not have a 1.0 tag yet, so the API is not stable.
 
 You can then add the specific product dependency to your target:
 

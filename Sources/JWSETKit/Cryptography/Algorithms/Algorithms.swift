@@ -154,7 +154,8 @@ extension JSONWebKeyType {
     public static let octetKeyPair: Self = "OKP"
     
     /// The Algorithm Key Pair (AKP) Type is used to express Public and Private Keys for use with Algorithms.
-    /// See [draft-ietf-cose-dilithium](https://datatracker.ietf.org/doc/draft-ietf-cose-dilithium/) .
+    ///
+    /// Registered in [RFC 9964](https://www.rfc-editor.org/rfc/rfc9964) for use with ML-DSA in JOSE.
     public static let algorithmKeyPair: Self = "AKP"
 }
 

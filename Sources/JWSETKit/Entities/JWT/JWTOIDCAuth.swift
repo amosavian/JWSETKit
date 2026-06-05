@@ -10,6 +10,7 @@ import FoundationEssentials
 #else
 import Foundation
 #endif
+import Crypto
 
 /// Claims registered in [OpenID Connect Core 1.0](https://openid.net/specs/openid-connect-core-1_0.html#HybridIDToken2)
 public struct JSONWebTokenClaimsPublicOIDCAuthParameters: JSONWebContainerParameters {
@@ -149,5 +150,92 @@ extension JSONPointer {
     public init(_ keyPath: SendablePartialKeyPath<JSONWebTokenClaimsPublicOIDCAuthParameters>) {
         let key = JSONWebTokenClaimsPublicOIDCAuthParameters.keys[keyPath] ?? keyPath.name.jsonWebKey
         self.init(key: key)
+    }
+}
+
+extension String {
+    func strippingAuthScheme() -> String {
+        replacingOccurrences(of: "Bearer ", with: "", options: [.anchored, .caseInsensitive])
+            .replacingOccurrences(of: "DPoP ", with: "", options: [.anchored, .caseInsensitive])
+    }
+}
+
+extension JSONWebSignatureAlgorithm {
+    func leftHalfHash<D>(of value: D) throws -> Data where D: DataProtocol {
+        guard let hashFunction else {
+            throw JSONWebKeyError.unknownAlgorithm
+        }
+        let digest = hashFunction.hash(data: value).data
+        return digest.prefix(digest.count / 2)
+    }
+}
+
+extension JSONWebToken {
+    private var signatureAlgorithm: JSONWebSignatureAlgorithm {
+        get throws {
+            guard let algorithm = JSONWebSignatureAlgorithm(header.algorithm) else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
+            return algorithm
+        }
+    }
+
+    /// Computes and stores the `at_hash` claim for the given access token.
+    ///
+    /// The hash algorithm is derived from this ID Token's signing `alg` header per
+    /// OpenID Connect Core 1.0 §3.1.3.6. A leading `"Bearer "` prefix, if present, is
+    /// ignored. The computed value is stored as raw octets; serialization base64url-encodes
+    /// it automatically.
+    ///
+    /// - Parameter accessToken: The `access_token` value (optionally `"Bearer "`-prefixed).
+    /// - Throws: `JSONWebKeyError.unknownAlgorithm` if the ID Token's algorithm has no
+    ///   associated hash function.
+    public mutating func setAccessTokenHash(_ accessToken: String) throws {
+        payload.value.accessTokenHash = try signatureAlgorithm.leftHalfHash(of: Data(accessToken.strippingAuthScheme().utf8))
+    }
+
+    /// Computes and stores the `c_hash` claim for the given authorization code.
+    ///
+    /// The hash algorithm is derived from this ID Token's signing `alg` header per
+    /// OpenID Connect Core 1.0 §3.3.2.11.
+    ///
+    /// - Parameter code: The authorization `code` value.
+    /// - Throws: `JSONWebKeyError.unknownAlgorithm` if the ID Token's algorithm has no
+    ///   associated hash function.
+    public mutating func setCodeHash(_ code: String) throws {
+        payload.value.codeHash = try signatureAlgorithm.leftHalfHash(of: Data(code.utf8))
+    }
+
+    /// Verifies the stored `at_hash` claim matches the given access token.
+    ///
+    /// A leading `"Bearer "` prefix, if present, is ignored.
+    ///
+    /// - Parameter accessToken: The `access_token` value to verify against (optionally
+    ///   `"Bearer "`-prefixed).
+    /// - Throws: `JSONWebValidationError.missingRequiredField` if the token has no
+    ///   `at_hash` claim, or `CryptoKitError.authenticationFailure` if it does not match.
+    public func verifyAccessTokenHash(_ accessToken: String) throws {
+        guard let expected = payload.accessTokenHash else {
+            throw JSONWebValidationError.missingRequiredField(key: "at_hash")
+        }
+        let actual = try signatureAlgorithm.leftHalfHash(of: Data(accessToken.strippingAuthScheme().utf8))
+        guard actual == expected else {
+            throw CryptoKitError.authenticationFailure
+        }
+    }
+
+    /// Verifies the stored `c_hash` claim matches the given authorization code.
+    ///
+    /// - Parameter code: The authorization `code` value to verify against.
+    /// - Throws: `JSONWebValidationError.missingRequiredField` if the token has no
+    ///   `c_hash` claim, or `CryptoKitError.authenticationFailure` if it does not match.
+    public func verifyCodeHash(_ code: String) throws {
+        guard let expected = payload.codeHash else {
+            throw JSONWebValidationError.missingRequiredField(key: "c_hash")
+        }
+        let actual = try signatureAlgorithm.leftHalfHash(of: Data(code.utf8))
+        guard actual == expected else {
+            throw CryptoKitError.authenticationFailure
+        }
     }
 }

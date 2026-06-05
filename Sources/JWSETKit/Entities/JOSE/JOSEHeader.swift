@@ -159,6 +159,11 @@ extension JSONWebContentType {
     ///
     /// KB-JWT is used to bind an SD-JWT presentation to a holder's key.
     public static let keyBindingJWT: Self = "kb+jwt"
+
+    /// Payload contains a DPoP proof JWT as defined in RFC 9449.
+    ///
+    /// DPoP proofs demonstrate proof-of-possession of a key at the HTTP layer.
+    public static let dpop: Self = "dpop+jwt"
 }
 
 #if canImport(UniformTypeIdentifiers)

@@ -94,6 +94,8 @@ For selecting a suitable signature algorithm:
 - [NIST Guidelines for Cryptographic Algorithm and Key Size Selection](https://nvlpubs.nist.gov/nistpubs/SpecialPublications/NIST.SP.800-57pt1r5.pdf)
 - [JWT Best Practices - RFC 8725](https://www.rfc-editor.org/rfc/rfc8725.html)
 - [FIPS 204 - Module-Lattice-Based Digital Signature Standard](https://csrc.nist.gov/pubs/fips/204/final)
+- [RFC 9964 - ML-DSA for JSON Object Signing and Encryption (JOSE) and CBOR Object Signing and Encryption (COSE)](https://www.rfc-editor.org/rfc/rfc9964)
+- [draft-ietf-jose-hpke-encrypt-18 - Use of HPKE with JOSE](https://datatracker.ietf.org/doc/html/draft-ietf-jose-hpke-encrypt-18)
 
 ## Topics
 
