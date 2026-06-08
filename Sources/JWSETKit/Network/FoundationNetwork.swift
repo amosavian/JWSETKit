@@ -59,8 +59,7 @@ extension URLRequest {
     /// The `Authorization` http header in `Bearer` with given JSON Web Token (JWT).
     public var authorizationToken: JSONWebToken? {
         get {
-            (value(forHTTPHeaderField: "Authorization")?
-                .replacingOccurrences(of: "Bearer ", with: "", options: [.anchored]))
+            (value(forHTTPHeaderField: "Authorization")?.strippingAuthScheme())
                 .flatMap(JSONWebToken.init)
         }
         set {

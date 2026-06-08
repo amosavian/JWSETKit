@@ -60,6 +60,24 @@ extension JSONWebContainer {
         // No validation is required by default.
     }
     
+    /// Throws ``JSONWebValidationError/missingRequiredField(key:)`` if any of the given
+    /// claim keys is absent from storage.
+    ///
+    /// - Parameter fields: The storage keys that must be present.
+    func checkRequiredFields(_ fields: String...) throws {
+        try checkRequiredFields(fields)
+    }
+    
+    /// Throws ``JSONWebValidationError/missingRequiredField(key:)`` if any of the given
+    /// claim keys is absent from storage.
+    ///
+    /// - Parameter fields: The storage keys that must be present.
+    func checkRequiredFields(_ fields: [String]) throws {
+        for field in fields where !storage.contains(key: field) {
+            throw JSONWebValidationError.missingRequiredField(key: field)
+        }
+    }
+    
     /// Returns value of given key.
     public subscript<T: JSONWebValueStorage.ValueType>(_ member: String) -> T? {
         storage[member]

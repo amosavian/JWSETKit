@@ -170,18 +170,6 @@ extension JSONWebKey {
         try checkRequiredFields(keyType.requiredFields)
     }
     
-    func checkRequiredFields(_ fields: String...) throws {
-        try checkRequiredFields(fields)
-    }
-    
-    func checkRequiredFields(_ fields: [String]) throws {
-        for field in fields {
-            if !storage.contains(key: field) {
-                throw CryptoKitError.incorrectParameterSize
-            }
-        }
-    }
-    
     private static func jwkThumbprint<H>(of key: any JSONWebKey, using _: H.Type) throws -> H.Digest where H: HashFunction {
         // swiftformat:disable:next redundantSelf
         let keyFields = Set(key.keyType?.requiredFields ?? [])
