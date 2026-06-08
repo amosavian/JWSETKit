@@ -98,3 +98,11 @@ and their usage.
 - ``TypedProtectedWebContainer``
 - ``ProtectedJSONWebContainer``
 - ``ProtectedDataWebContainer``
+
+### Server-Side Integration
+
+- <doc:9-VaporIntegration>
+- <doc:10-HummingbirdIntegration>
+- <doc:8-MigrationFromVaporJWT>
+- <doc:11-DPoP>
+- ``DPoPProof``

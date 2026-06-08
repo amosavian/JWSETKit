@@ -11,6 +11,9 @@ import Testing
 #if canImport(NIOHTTP1)
 import NIOHTTP1
 #endif
+#if canImport(HTTPTypes)
+import HTTPTypes
+#endif
 
 struct JWTTests {
     let jwtString = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwiYXVkIjoiZ29vZ2xlLmNvbSIsIm5hbWUiOiJKb2huIERvZSIsImlhdCI6MTUxNjIzOTAyMiwibmJmIjoxNTE2MjM5MDIyLCJleHAiOjE1MTYyNDkwMjJ9.vGoQSvaLlU1lh_rsJT-vCPG6DNe_a9rHeJiezXRswKQ"
@@ -70,6 +73,17 @@ struct JWTTests {
         headers.authorizationToken = jwt
         #expect(headers.authorizationToken == jwt)
         #expect(headers.first(name: "authorization") == "Bearer \(jwtString)")
+    }
+#endif
+
+#if canImport(HTTPTypes)
+    @Test
+    func authorizationHTTPTypes() throws {
+        let jwt = try JSONWebToken(from: jwtString)
+        var fields = HTTPFields()
+        fields.authorizationToken = jwt
+        #expect(fields.authorizationToken == jwt)
+        #expect(fields[.authorization] == "Bearer \(jwtString)")
     }
 #endif
     

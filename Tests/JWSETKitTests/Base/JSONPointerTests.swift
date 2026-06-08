@@ -9,7 +9,6 @@ import Foundation
 import Testing
 @testable import JWSETKit
 
-@Suite
 struct JSONPointerTests {
     // MARK: - Initialization Tests
 

@@ -38,6 +38,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-certificates", from: "1.19.0"),
         .package(url: "https://github.com/swift-bitcoin/secp256k1", exact: "0.7.0"),
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.31.0"),
+        .package(url: "https://github.com/apple/swift-http-types.git", from: "1.6.0"),
     ],
     targets: [
         .systemLibrary(
@@ -86,6 +87,7 @@ let package = Package(
                 .product(name: "CryptoExtras", package: "swift-crypto", condition: .when(platforms: .nonDarwin)),
                 .target(name: "Czlib", condition: .when(platforms: .nonWasm)),
                 .product(name: "AsyncHTTPClient", package: "async-http-client", condition: .when(traits: ["HTTP"])),
+                .product(name: "HTTPTypes", package: "swift-http-types", condition: .when(traits: ["HTTP"])),
             ],
             resources: [
                 .process("PrivacyInfo.xcprivacy"),

@@ -1,8 +1,8 @@
 //
-//  NIOHTTP1.swift
+//  HTTPTypes.swift
 //  JWSETKit
 //
-//  Created by Amir Abbas Mousavian on 2025/12/16.
+//  Created by Amir Abbas Mousavian.
 //
 
 #if canImport(FoundationEssentials)
@@ -12,22 +12,18 @@ import Foundation
 #endif
 import Crypto
 
-#if canImport(NIOHTTP1)
-import NIOHTTP1
+#if canImport(HTTPTypes)
+import HTTPTypes
 
-extension HTTPHeaders {
+extension HTTPFields {
     /// The `Authorization` http header in `Bearer` with given JSON Web Token (JWT).
     public var authorizationToken: JSONWebToken? {
         get {
-            (first(name: "authorization")?.strippingAuthScheme())
+            (self[.authorization]?.strippingAuthScheme())
                 .flatMap(JSONWebToken.init)
         }
         set {
-            if let token = newValue.map({ "Bearer \($0.description)" }) {
-                replaceOrAdd(name: "authorization", value: token)
-            } else {
-                remove(name: "authorization")
-            }
+            self[.authorization] = newValue.map { "Bearer \($0.description)" }
         }
     }
     
@@ -68,24 +64,6 @@ extension HTTPHeaders {
     ///   - audience: The exact intended audience, if applicable.
     public func verifyAuthorizationToken(using key: some JSONWebValidatingKey, for audience: String? = nil) throws {
         try verifyAuthorizationToken(using: JSONWebKeySet(keys: [key]), for: audience)
-    }
-}
-#endif
-
-#if canImport(AsyncHTTPClient)
-import AsyncHTTPClient
-
-enum HTTPClientFetch: HTTPFetch {
-    static func fetch(url: URL) async throws -> Data {
-        let request = HTTPClientRequest(url: url.absoluteString)
-        let response = try await HTTPClient.shared.execute(request, timeout: .seconds(30))
-        if (200 ..< 300).contains(response.status.code) {
-            let bytes = response.headers.first(name: "content-length").flatMap(Int.init)
-            var body = try await response.body.collect(upTo: bytes ?? 64 * 1024 * 1024) // 64 MB by default
-            return Data(body.readBytes(length: body.readableBytes) ?? .init())
-        } else {
-            throw HTTPError.fromStatus(response.status.code)
-        }
     }
 }
 #endif

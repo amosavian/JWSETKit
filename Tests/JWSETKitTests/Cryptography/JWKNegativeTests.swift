@@ -21,7 +21,7 @@ struct JWKNegativeTests {
         {"kty":"RSA",
          "e":"AQAB"}
         """
-        #expect(throws: CryptoKitError.self) {
+        #expect(throws: JSONWebValidationError.self) {
             try JSONWebRSAPublicKey(importing: Data(jwk.utf8), format: .jwk)
         }
     }
@@ -33,7 +33,7 @@ struct JWKNegativeTests {
         {"kty":"RSA",
          "n":"0vx7agoebGcQSuuPiLJXZptN9nndrQmbXEps2aiAFbWhM78LhWx4cbbfAAtVT86zwu1RK7aPFFxuhDR1L6tSoc_BJECPebWKRXjBZCiFV4n3oknjhMstn64tZ_2W-5JsGY4Hc5n9yBXArwl93lqt7_RN5w6Cf0h4QyQ5v-65YGjQR0_FDW2QvzqY368QQMicAtaSqzs8KJZgnYb9c7d0zgdAZHzu6qMQvRL5hajrn1n91CbOpbISD08qNLyrdkt-bFTWhAI4vMQFh6WeZu0fM4lFd2NcRwr3XPksINHaQ-G_xBniIqbw0Ls1jF44-csFCur-kEgU8awapJzKnqDKgw"}
         """
-        #expect(throws: CryptoKitError.self) {
+        #expect(throws: JSONWebValidationError.self) {
             try JSONWebRSAPublicKey(importing: Data(jwk.utf8), format: .jwk)
         }
     }
@@ -48,7 +48,7 @@ struct JWKNegativeTests {
          "p":"83i-7IvMGXoMXCskv73TKr8637FiO7Z27zv8oj6pbWUQyLPQBQxtPVnwD20R-60eTDmD2ujnMt5PoqMrm8RfmNhVWDtjjMmCMjOpSXicFHj7XOuVIYQyqVWlWEh6dN36GVZYk93N8Bc9vY41xy8B9RzzOGVQzXvNEvn7O0nVbfs",
          "q":"wLb35x7hmQWZsWJmB_vle87ihgZ19S8lBEROLIsZG4ayZVe9Hi9gDVCOBmUDdaDYVTSNx_8Fyw1YYa9XGrGnDew00J28cRUoeBB_jKI1oma0Orv1T9aXIWxKwd4gvxFImOWr3QRL9KEBRzk2RatUBnmDZJTIAfwTs0g68UZHvtc"}
         """
-        #expect(throws: CryptoKitError.self) {
+        #expect(throws: JSONWebValidationError.self) {
             try JSONWebRSAPrivateKey(importing: Data(jwk.utf8), format: .jwk)
         }
     }
@@ -63,7 +63,7 @@ struct JWKNegativeTests {
          "crv":"P-256",
          "y":"4Etl6SRW2YiLUrN5vfvVHuhp7x8PxltmWWlbbM4IFyM"}
         """
-        #expect(throws: CryptoKitError.self) {
+        #expect(throws: JSONWebValidationError.self) {
             try JSONWebECPublicKey(importing: Data(jwk.utf8), format: .jwk)
         }
     }
@@ -76,7 +76,7 @@ struct JWKNegativeTests {
          "crv":"P-256",
          "x":"MKBCTNIcKUSDii11ySs3526iDZ8AiTo7Tu6KPAqv7D4"}
         """
-        #expect(throws: CryptoKitError.self) {
+        #expect(throws: JSONWebValidationError.self) {
             try JSONWebECPublicKey(importing: Data(jwk.utf8), format: .jwk)
         }
     }
@@ -95,7 +95,7 @@ struct JWKNegativeTests {
         #expect(publicKey.xCoordinate != nil)
         
         // But fail as private key
-        #expect(throws: CryptoKitError.self) {
+        #expect(throws: JSONWebValidationError.self) {
             try JSONWebECPrivateKey(importing: Data(jwk.utf8), format: .jwk)
         }
     }
@@ -109,7 +109,7 @@ struct JWKNegativeTests {
         {"kty":"OKP",
          "crv":"Ed25519"}
         """
-        #expect(throws: CryptoKitError.self) {
+        #expect(throws: JSONWebValidationError.self) {
             try JSONWebECPublicKey(importing: Data(jwk.utf8), format: .jwk)
         }
     }

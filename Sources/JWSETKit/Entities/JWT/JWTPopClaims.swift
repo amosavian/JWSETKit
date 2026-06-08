@@ -225,7 +225,7 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
             guard let jktData = Data(urlBase64Encoded: jkt) else {
                 throw DecodingError.dataCorruptedError(forKey: .jkt, in: container, debugDescription: "Base64 is invalid.")
             }
-            self = .certificateThumbprint(jktData)
+            self = .keyThumbprint(jktData)
         } else {
             self = try .keyId(container.decode(String.self, forKey: .kid))
         }
@@ -284,22 +284,36 @@ public enum JSONWebTokenConfirmation: Codable, Hashable, Sendable {
         try decryptedKey(using: keys.keys)
     }
     
-    /// Validates whether the given key matches the thumbprint stored in the proof of possession claims.
+    /// Validates whether the given key matches the confirmation stored in the proof of possession claims.
     ///
-    /// - Parameter key: A key to validate against the stored thumbprint.
-    /// - Throws: An error if the validation fails or if the thumbprint calculation encounters an error.
+    /// The comparison uses the appropriate thumbprint for the confirmation type: the X.509/SPKI
+    /// thumbprint for `x5t#S256`, and the RFC 7638 JWK thumbprint for `jkt`, an embedded `jwk`,
+    /// or a `kid` carrying a `jwk-thumbprint` URN.
+    ///
+    /// - Parameter key: A key to validate against the stored confirmation.
+    /// - Throws: `JSONWebKeyError.operationNotAllowed` if the key does not match, or
+    ///   `JSONWebKeyError.keyNotFound` if the confirmation cannot be validated locally (for
+    ///   example a `jku`/`kid`/`jwe` confirmation that requires resolving an external key).
     public func validateThumbprint(_ key: any JSONWebKey) throws {
         switch self {
         case .certificateThumbprint(let thumbprint):
             guard try key.thumbprint(format: .spki, using: SHA256.self).data == thumbprint else {
                 throw JSONWebKeyError.operationNotAllowed
             }
-        case .keyThumbprint(let thumbprint):
-            guard try key.thumbprint(format: .jwk, using: SHA256.self).data == thumbprint else {
+        case .key, .keyThumbprint, .keyId:
+            // `jkt`, an embedded `jwk`, or a `kid` carrying a `jwk-thumbprint` URN all reduce
+            // to comparing the RFC 7638 JWK thumbprint. A plain `kid` has no thumbprint and
+            // falls through to the `keyNotFound` guard below.
+            guard let expected = jwkThumbprint else {
+                throw JSONWebKeyError.keyNotFound
+            }
+            guard try key.thumbprint(format: .jwk, using: SHA256.self).data == expected else {
                 throw JSONWebKeyError.operationNotAllowed
             }
-        default:
-            break
+        case .url, .encryptedKey:
+            // `jku` and `jwe` confirmations cannot be validated by thumbprint alone; the
+            // caller must resolve the referenced key first.
+            throw JSONWebKeyError.keyNotFound
         }
     }
     

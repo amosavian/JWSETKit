@@ -279,7 +279,7 @@ Remove vapor/jwt and add JWSETKit:
 .package(url: "https://github.com/vapor/jwt.git", from: "4.0.0"),
 
 // After
-.package(url: "https://github.com/amosavian/JWSETKit", from: "1.0.0"),
+.package(url: "https://github.com/amosavian/JWSETKit", from: "2.0.0"),
 ```
 
 Update target dependencies:

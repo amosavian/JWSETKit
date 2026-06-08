@@ -191,7 +191,7 @@ extension JSONWebToken {
     /// - Throws: `JSONWebKeyError.unknownAlgorithm` if the ID Token's algorithm has no
     ///   associated hash function.
     public mutating func setAccessTokenHash(_ accessToken: String) throws {
-        payload.value.accessTokenHash = try signatureAlgorithm.leftHalfHash(of: Data(accessToken.strippingAuthScheme().utf8))
+        payload.accessTokenHash = try signatureAlgorithm.leftHalfHash(of: Data(accessToken.strippingAuthScheme().utf8))
     }
 
     /// Computes and stores the `c_hash` claim for the given authorization code.
@@ -203,7 +203,7 @@ extension JSONWebToken {
     /// - Throws: `JSONWebKeyError.unknownAlgorithm` if the ID Token's algorithm has no
     ///   associated hash function.
     public mutating func setCodeHash(_ code: String) throws {
-        payload.value.codeHash = try signatureAlgorithm.leftHalfHash(of: Data(code.utf8))
+        payload.codeHash = try signatureAlgorithm.leftHalfHash(of: Data(code.utf8))
     }
 
     /// Verifies the stored `at_hash` claim matches the given access token.

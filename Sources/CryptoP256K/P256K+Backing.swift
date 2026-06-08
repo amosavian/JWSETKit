@@ -391,7 +391,7 @@ enum Secp256K1BackingSignature {
     }
     
     var derRepresentation: Data {
-        var signature = self.signature
+        var signature = signature
         var derLength = 72
         var derRepresentation = [UInt8](repeating: 0, count: derLength)
         secp256k1_ecdsa_signature_serialize_der(P256K.context, &derRepresentation, &derLength, &signature)
@@ -416,7 +416,11 @@ enum Secp256K1BackingSignature {
         }
         var signature = secp256k1_ecdsa_recoverable_signature()
         let success = key.key.withUnsafeBytes {
-            secp256k1_ecdsa_sign_recoverable(P256K.context, &signature, digest, $0.baseAddress.unsafelyUnwrapped, secp256k1_nonce_function_rfc6979, nil)
+            if let nonceData {
+                secp256k1_ecdsa_sign_recoverable(P256K.context, &signature, digest, $0.baseAddress.unsafelyUnwrapped, nonceFunction, nonceData)
+            } else {
+                secp256k1_ecdsa_sign_recoverable(P256K.context, &signature, digest, $0.baseAddress.unsafelyUnwrapped, nonceFunction, nil)
+            }
         }
         if success != 1 {
             throw CryptoKitError.incorrectKeySize

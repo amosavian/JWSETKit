@@ -69,6 +69,12 @@ and verify JWS/JWT messages.
 - Key conversion and serialization
 - Support for key sets (JWKS)
 
+✅ **Server-Side Swift** (requires the `HTTP` trait)
+- Drop-in [Vapor][docs-vapor] and [Hummingbird][docs-hummingbird] integration via `HTTPHeaders` / `HTTPFields` extensions
+- Verify `Authorization` tokens directly from request headers
+- Remote JWKS fetching for Apple, Google, Firebase, Microsoft, and any OpenID Connect issuer
+- DPoP (RFC 9449) proof creation and verification
+
 ### Extended Cryptographic Support
 
 ✅ **CryptoKit Integration**
@@ -119,6 +125,18 @@ For secp256k1 (ES256K) support (Swift 6.1+):
 ```swift
 dependencies: [
     .package(url: "https://github.com/amosavian/JWSETKit", from: "2.0.0", traits: ["P256K"])
+]
+```
+
+### With HTTP Support (Server-Side)
+
+The `HTTP` trait enables networking helpers used for server-side integration:
+remote JWKS fetching, `AsyncHTTPClient` / `swift-http-types` support, and the
+DPoP request extensions. Enable it when integrating with **Vapor** or **Hummingbird**:
+
+```swift
+dependencies: [
+    .package(url: "https://github.com/amosavian/JWSETKit", from: "2.0.0", traits: ["HTTP"])
 ]
 ```
 
@@ -260,6 +278,7 @@ print(disclosed.email)  // "john@example.com"
 | JWT Expire/NotBefore Validity  | :white_check_mark: | :white_check_mark: | :white_check_mark: | :x:                 |
 | JSON Web Encryption (JWE)      | :white_check_mark: | :x:                | :white_check_mark: | :x:                 |
 | SD-JWT (RFC 9901)              | :white_check_mark: | :x:                | :x:                | :x:                 |
+| DPoP (RFC 9449)                | :white_check_mark: | :x:                | :x:                | :x:                 |
 | Support [CommonCrypto] Keys    | :white_check_mark: | :x:                | :x:                | :x:                 |
 | Support [CryptoKit] Keys       | :white_check_mark: | :x:                | :x:                | :x:                 |
 
@@ -338,6 +357,7 @@ JWSETKit is perfect for:
 - 🔑 **API Authentication** - Secure REST API authentication with JWT tokens
 - 🌐 **OAuth 2.0 / OpenID Connect** - Implement modern authentication flows
 - 📱 **Mobile App Security** - Token-based auth for iOS/macOS apps
+- 🖥️ **Server-Side Swift** - Drop-in [Vapor][docs-vapor] and [Hummingbird][docs-hummingbird] request authentication
 - 🔄 **Microservices** - Service-to-service authentication
 - 🎫 **Session Management** - Stateless session tokens
 - 🔐 **Data Encryption** - Protect sensitive data with JWE
@@ -353,7 +373,10 @@ Browse our comprehensive guides:
 - [Cryptography Guide][docs-cryptography]
 - [Security Guidelines & Algorithm Selection][docs-security]
 - [Extending Containers][docs-extending]
+- [Using JWSETKit with Vapor][docs-vapor]
 - [Migrating from Vapor JWTKit][docs-migration]
+- [Using JWSETKit with Hummingbird][docs-hummingbird]
+- [Using DPoP (RFC 9449)][docs-dpop]
 - [API Reference][docs-api]
 
 ## 🤝 Contributing
@@ -445,6 +468,9 @@ This library implements the following JOSE standards:
 [docs-cryptography]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/3-cryptography
 [docs-security]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/5-securityguidelines
 [docs-extending]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/7-extending-container
+[docs-vapor]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/9-vaporintegration
+[docs-hummingbird]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/10-hummingbirdintegration
+[docs-dpop]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/11-dpop
 [docs-migration]: https://swiftpackageindex.com/amosavian/JWSETKit/documentation/jwsetkit/8-migrationfromvaporjwt
 [jwt-kit]: https://github.com/vapor/jwt-kit
 [JOSESwift]: https://github.com/airsidemobile/JOSESwift

@@ -14,7 +14,7 @@ import Crypto
 import CryptoASN1
 
 /// JSON Web Key (JWK) container for different types of Post-Quantum public keys consists of MLDSA-65 and MLDSA-87.
-package struct JSONWebMLDSAPublicKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyPairType, JSONWebValidatingKey, Hashable, Sendable {
+public struct JSONWebMLDSAPublicKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyPairType, JSONWebValidatingKey, Hashable, Sendable {
     public var storage: JSONWebValueStorage
     
     var validatingKey: any JSONWebValidatingKey {
@@ -88,7 +88,7 @@ extension JSONWebMLDSAPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
 }
 
 /// JWK container for different types of Elliptic-Curve private keys consists of P-256, P-384, P-521, Ed25519.
-package struct JSONWebMLDSAPrivateKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyPairType, JSONWebSigningKey, Sendable {
+public struct JSONWebMLDSAPrivateKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyPairType, JSONWebSigningKey, Sendable {
     public var storage: JSONWebValueStorage
     
     public var publicKey: JSONWebMLDSAPublicKey {
