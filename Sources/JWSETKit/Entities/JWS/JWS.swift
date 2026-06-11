@@ -141,6 +141,9 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     ///     the security implications. See [RFC 8725 Section 3.1](https://www.rfc-editor.org/rfc/rfc8725.html#section-3.1) for details.
     ///
     ///     **Default**: `true` (secure by default)
+    ///
+    /// - Note: Critical header parameters (`crit`, RFC 7515 §4.1.11) are integrity-protected but are
+    ///   **not** enforced here beyond the `b64` extension (RFC 7797).
     public func verifySignature(using keySet: JSONWebKeySet, strict: Bool = true) throws {
         guard !signatures.isEmpty else {
             throw CryptoKitError.authenticationFailure

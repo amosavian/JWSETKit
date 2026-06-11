@@ -328,7 +328,18 @@ public struct JSONWebEncryption: Hashable, Sendable {
         }
         
         let authenticatingData = header.protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
-        let cek = try decryptContentEncryptionKey(combinedHeader, key, algorithm, recipient?.encryptedKey)
+        let cek: any JSONWebSealOpeningKey
+        if algorithm == .unsafeRSAEncryptionPKCS1, let keyLength = contentEncAlgorithm.keyLength {
+            // RSAES-PKCS1-v1_5 (`RSA1_5`) Bleichenbacher Padding Oracle mitigation.
+            if let unwrapped = try? decryptContentEncryptionKey(combinedHeader, key, algorithm, recipient?.encryptedKey),
+               (unwrapped as? SymmetricKey)?.bitCount == keyLength.bitCount {
+                cek = unwrapped
+            } else {
+                cek = SymmetricKey(size: keyLength)
+            }
+        } else {
+            cek = try decryptContentEncryptionKey(combinedHeader, key, algorithm, recipient?.encryptedKey)
+        }
         let content = try cek.open(sealed, authenticating: authenticatingData, using: contentEncAlgorithm)
         if let compressionAlgorithm = combinedHeader.compressionAlgorithm {
             guard let compressor = compressionAlgorithm.compressor else {

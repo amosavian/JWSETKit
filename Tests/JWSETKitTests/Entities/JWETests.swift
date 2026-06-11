@@ -169,12 +169,25 @@ struct JWETests {
             content: RSA_PKCS1_5_CBC.plainData,
             keyEncryptingAlgorithm: .unsafeRSAEncryptionPKCS1,
             keyEncryptionKey: RSA_PKCS1_5_CBC.kek.publicKey,
-            contentEncryptionAlgorithm: .aesEncryptionCBC256SHA512,
+            contentEncryptionAlgorithm: .aesEncryptionCBC128SHA256,
             contentEncryptionKey: RSA_PKCS1_5_CBC.cek
         )
         
         let data = try jwe.decrypt(using: RSA_PKCS1_5_CBC.kek)
         #expect(RSA_PKCS1_5_CBC.plainData == data)
+    }
+    
+    @Test
+    func rsa1_5_TamperedKeyFailsUniformly() throws {
+        var jwe = try JSONWebEncryption(from: RSA_PKCS1_5_CBC.jweString)
+        var tampered = jwe.encryptedKey!
+        // Flip bits in the wrapped key so PKCS#1 unwrap fails or produces garbage.
+        tampered[tampered.startIndex] ^= 0xFF
+        jwe.encryptedKey = tampered
+        
+        #expect(throws: CryptoKitError.self) {
+            try jwe.decrypt(using: RSA_PKCS1_5_CBC.kek)
+        }
     }
     
     @Test

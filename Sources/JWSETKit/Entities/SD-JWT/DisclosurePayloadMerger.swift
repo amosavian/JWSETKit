@@ -302,6 +302,9 @@ extension [String: any Sendable] {
         
         for hash in disclosureHashes {
             if let disclosure = disclosures[hash], let key = disclosure.key {
+                guard self[key] == nil, key != "_sd", key != "_sd_alg", key != "..." else {
+                    throw JSONWebValidationError.duplicateDisclosureDigest
+                }
                 self[key] = disclosure.value
             }
         }

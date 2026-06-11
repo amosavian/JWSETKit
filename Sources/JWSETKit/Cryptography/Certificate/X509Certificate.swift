@@ -111,7 +111,7 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
         case .eddsaSignature, .eddsa25519Signature:
             self.init(Curve25519.Signing.PrivateKey())
         case .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384, .rsaSignaturePSSSHA512,
-             .rsaSignaturePKCS1v15SHA256, .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512:
+                .rsaSignaturePKCS1v15SHA256, .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512:
             try self.init(_RSA.Signing.PrivateKey(keySize: .bits2048))
         default:
             throw JSONWebKeyError.unknownAlgorithm
@@ -289,11 +289,20 @@ extension Collection<Certificate> {
     /// presented by a server during a TLS handshake, if hostname is provided.
     ///
     /// - Parameters:
+    ///   - trustRoots: The trust anchors to validate the chain against. Defaults to the operating
+    ///     system's trust store. Pass an explicit ``CertificateStore`` to pin against a private CA.
     ///   - currentDate: The fixed time to compare against when determining if the certificates in the chain have expired.
     ///   - hostName: The hostname used to connect to the server.
     @discardableResult
-    public func verifyChain(currentDate: Date? = nil, hostName: String? = nil) async throws -> ValidatedCertificateChain {
-        var verifier = Verifier(rootCertificates: .init(dropFirst()), policy: {
+    public func verifyChain(
+        trustRoots: CertificateStore = .systemTrustRoots,
+        currentDate: Date? = nil,
+        hostName: String? = nil
+    ) async throws -> ValidatedCertificateChain {
+        guard let leaf = first else {
+            throw JSONWebKeyError.keyNotFound
+        }
+        var verifier = Verifier(rootCertificates: trustRoots, policy: {
             if let currentDate {
                 RFC5280Policy(fixedExpiryValidationTime: currentDate)
             } else {
@@ -303,7 +312,10 @@ extension Collection<Certificate> {
                 ServerIdentityPolicy(serverHostname: hostName, serverIP: nil)
             }
         })
-        let result = try await verifier.validate(chain: .init(self))
+        let result = await verifier.validate(
+            leaf: leaf,
+            intermediates: .init(dropFirst())
+        )
         switch result {
         case .validCertificate(let result):
             return result
