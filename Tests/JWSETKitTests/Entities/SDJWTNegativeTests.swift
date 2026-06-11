@@ -193,4 +193,38 @@ struct SDJWTNegativeTests {
         let values = disclosure.value as? [String]
         #expect(values == ["a", "b", "c"])
     }
+    
+    // MARK: - RFC 9901 §7.3 Claim Collision Tests
+    
+    @Test("Disclosure colliding with an existing clear-text claim is rejected")
+    func disclosureClaimCollisionRejected() throws {
+        // A disclosure tries to redefine a claim ("name") that already exists in clear text.
+        // RFC 9901 §7.3 requires the verifier to reject this rather than overwrite it.
+        let collidingDisclosure = JSONWebSelectiveDisclosure("name", value: "Attacker")
+        let disclosures = try JSONWebSelectiveDisclosureList([collidingDisclosure], hashFunction: SHA256.self)
+        
+        let payload: [String: any Sendable] = [
+            "name": "John Doe",
+            "_sd": disclosures.hashes,
+        ]
+        
+        #expect(throws: JSONWebValidationError.self) {
+            try payload.disclosed(with: disclosures)
+        }
+    }
+    
+    @Test("Disclosure using a reserved digest key is rejected")
+    func disclosureReservedKeyRejected() throws {
+        // A disclosure whose claim name is the reserved "_sd_alg" must be rejected.
+        let reservedDisclosure = JSONWebSelectiveDisclosure("_sd_alg", value: "sha-256")
+        let disclosures = try JSONWebSelectiveDisclosureList([reservedDisclosure], hashFunction: SHA256.self)
+        
+        let payload: [String: any Sendable] = [
+            "_sd": disclosures.hashes,
+        ]
+        
+        #expect(throws: JSONWebValidationError.self) {
+            try payload.disclosed(with: disclosures)
+        }
+    }
 }

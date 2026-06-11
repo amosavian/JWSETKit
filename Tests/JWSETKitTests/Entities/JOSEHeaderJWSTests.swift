@@ -124,9 +124,28 @@ struct JOSEHeaderJWSTests {
     func x509CertificateChainVerify() async throws {
         let cert1 = try Certificate(derEncoded: Self.cert1Data)
         let cert2 = try Certificate(derEncoded: Self.cert2Data)
-        let trust = [cert1, cert2]
+        // The leaf (cert1) is anchored against an explicitly supplied trust root (cert2),
+        // not against certificates embedded in the presented chain.
         await #expect(throws: Never.self) {
-            try await trust.verifyChain(currentDate: .init(timeIntervalSinceReferenceDate: 685_334_877))
+            try await [cert1].verifyChain(
+                trustRoots: .init([cert2]),
+                currentDate: .init(timeIntervalSinceReferenceDate: 685_334_877)
+            )
+        }
+    }
+    
+    @Test
+    func x509CertificateChainRejectsSelfAnchoredChain() async throws {
+        let cert1 = try Certificate(derEncoded: Self.cert1Data)
+        let cert2 = try Certificate(derEncoded: Self.cert2Data)
+        // A chain whose own embedded certificates are its only would-be anchors must NOT validate:
+        // trust must come from `trustRoots`, never from the attacker-supplied chain itself.
+        // With an empty trust store, no anchor is reachable and verification must fail.
+        await #expect(throws: (any Error).self) {
+            try await [cert1, cert2].verifyChain(
+                trustRoots: .init([]),
+                currentDate: .init(timeIntervalSinceReferenceDate: 685_334_877)
+            )
         }
     }
 #endif
