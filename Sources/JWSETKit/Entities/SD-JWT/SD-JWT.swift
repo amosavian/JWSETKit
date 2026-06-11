@@ -57,8 +57,23 @@ public struct JSONWebSelectiveDisclosureToken: Hashable, Sendable {
     /// - Throws: `CryptoKitError` if disclosure hashing fails.
     public var disclosureList: JSONWebSelectiveDisclosureList {
         get throws {
-            let hashFunction = payload.disclosureHashAlgorithm?.hashFunction ?? SHA256.self
-            return try JSONWebSelectiveDisclosureList(disclosures, hashFunction: hashFunction)
+            try JSONWebSelectiveDisclosureList(disclosures, hashFunction: disclosureHashFunction)
+        }
+    }
+    
+    /// Resolves the disclosure hash function from the issuer JWT's `_sd_alg` claim.
+    ///
+    /// Per RFC 9901 §4.1.1, an *absent* `_sd_alg` defaults to SHA-256. A *present* but unregistered
+    /// value (typo, downgrade attempt such as `"sha-1"`, etc.) must be rejected.
+    public var disclosureHashFunction: any HashFunction.Type {
+        get throws {
+            guard let hashAlgorithm = payload.disclosureHashAlgorithm else {
+                return SHA256.self
+            }
+            guard let hashFunction = hashAlgorithm.hashFunction else {
+                throw JSONWebKeyError.unknownAlgorithm
+            }
+            return hashFunction
         }
     }
     
@@ -376,7 +391,7 @@ extension JSONWebSelectiveDisclosureToken {
 
 extension JSONWebSelectiveDisclosureToken {
     private func calculateSDHash() throws -> any Digest {
-        let hashFunction = payload.disclosureHashAlgorithm?.hashFunction ?? SHA256.self
+        let hashFunction = try disclosureHashFunction
         let encoder = JSONEncoder.encoder
         encoder.userInfo[.sdJWTEncodedRepresentation] = JSONWebSelectiveDisclosureTokenRepresentation.compact
         let baseToken = JSONWebSelectiveDisclosureToken(jwt: jwt, disclosures: disclosures, keyBinding: nil)
@@ -480,6 +495,11 @@ extension JSONWebSelectiveDisclosureToken {
             try keyBinding.verifySignature(using: confirmation.matchKey(from: holderKeySet ?? .init()))
         } else if let holderKeySet, holderKeySet.count == 1, let key = holderKeySet.first as? any JSONWebValidatingKey {
             try keyBinding.verifySignature(using: key)
+        } else {
+            // No `cnf` claim attesting the holder key, and no unambiguous holder key to verify
+            // against. The KB-JWT signature cannot be checked, so the binding must be rejected
+            // rather than silently accepted — otherwise a self-signed KB-JWT would pass.
+            throw JSONWebValidationError.invalidKeyBinding
         }
         
         if let expectedNonce {

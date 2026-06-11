@@ -22,6 +22,9 @@ extension SymmetricKey {
         256: 310_000,
     ]
     
+    /// Upper bound for the PBES2 `p2c` iteration count.
+    static let maxPBES2IterationCount = 10_000_000
+    
     /// Generates a symmetric key using `PBKDF2` algorithm.
     ///
     /// - Parameters:

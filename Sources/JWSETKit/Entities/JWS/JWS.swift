@@ -124,6 +124,11 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
     
     /// Verifies all signatures in protected header(s) using given key set.
     ///
+    /// When the header carries no `kid` and the key set holds several keys of the matching
+    /// type/curve (e.g. during key rotation), verifying is done for every candidate. The
+    /// token may have been signed by any one of them, so try each in trial order and accept
+    /// on the first that validates as described in RFC 7515 Appendix D.
+    ///
     /// - Parameters:
     ///   - key: A `JSONWebKeySet` object contains keys that would be used for validation.
     ///   - strict: Controls algorithm header validation behavior.
@@ -140,18 +145,23 @@ public struct JSONWebSignature<Payload: ProtectedWebContainer>: Hashable, Sendab
         guard !signatures.isEmpty else {
             throw CryptoKitError.authenticationFailure
         }
+        var hadCandidate = false
         for signatureHeader in signatures {
             let message = signatureHeader.signedData(payload)
             var algorithm = JSONWebSignatureAlgorithm(signatureHeader.protected.algorithm)
             if !strict, algorithm == .unsafeNone || algorithm == nil, let unprotected = signatureHeader.unprotected {
                 algorithm = JSONWebSignatureAlgorithm(unprotected.algorithm)
             }
-            if let algorithm, let key = keySet.matches(for: signatureHeader.protected.value).first as? any JSONWebValidatingKey {
-                try key.verifySignature(signatureHeader.signature, for: message, using: algorithm)
-                return
+            guard let algorithm else { continue }
+            
+            for case let key as any JSONWebValidatingKey in keySet.matches(for: signatureHeader.protected.value) {
+                hadCandidate = true
+                if (try? key.verifySignature(signatureHeader.signature, for: message, using: algorithm)) != nil {
+                    return
+                }
             }
         }
-        throw JSONWebKeyError.keyNotFound
+        throw hadCandidate ? CryptoKitError.authenticationFailure : JSONWebKeyError.keyNotFound
     }
     
     /// Verifies all signatures for protected header(s) using given keys.

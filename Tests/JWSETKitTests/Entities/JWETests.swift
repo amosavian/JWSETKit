@@ -121,7 +121,7 @@ struct JWETests {
         let data = try jwe.decrypt(using: RSA_OAEP_GCM.kek)
         #expect(RSA_OAEP_GCM.plainData == data)
     }
-
+    
     @Test
     func encryptWithCEK_RSA_OAEP_AES_GCM() throws {
         let jwe = try JSONWebEncryption(
@@ -162,7 +162,7 @@ struct JWETests {
         let data = try jwe.decrypt(using: RSA_PKCS1_5_CBC.kek)
         #expect(RSA_PKCS1_5_CBC.plainData == data)
     }
-
+    
     @Test
     func encryptWithCEK_RSA_PKCS1_5_CBC() throws {
         let jwe = try JSONWebEncryption(
@@ -189,7 +189,7 @@ struct JWETests {
         let data = try jwe.decrypt(using: AESKW_CBC.kek)
         #expect(AESKW_CBC.plainData == data)
     }
-
+    
     @Test
     func encrypt_AESGCMKW_CBC() throws {
         let jwe = try JSONWebEncryption(
@@ -216,6 +216,47 @@ struct JWETests {
         
         let data = try jwe.decrypt(using: PBES2_GCM.kek)
         #expect(PBES2_GCM.plainData == data)
+    }
+    
+    @Test
+    func encrypt_PBES2_defaultIterationTiers() throws {
+        let cases: [(JSONWebKeyEncryptionAlgorithm, Int)] = [
+            (.pbes2hmac256, 600_000),
+            (.pbes2hmac384, 450_000),
+            (.pbes2hmac512, 310_000),
+        ]
+        for (algorithm, expectedCount) in cases {
+            let jwe = try JSONWebEncryption(
+                content: PBES2_GCM.plainData,
+                keyEncryptingAlgorithm: algorithm,
+                keyEncryptionKey: PBES2_GCM.kek.publicKey,
+                contentEncryptionAlgorithm: .aesEncryptionGCM128,
+                contentEncryptionKey: PBES2_GCM.cek
+            )
+            #expect(jwe.header.protected.value.pbes2Count == expectedCount)
+            #expect(try jwe.decrypt(using: PBES2_GCM.kek) == PBES2_GCM.plainData)
+        }
+    }
+    
+    @Test
+    func decrypt_PBES2_rejectsExcessiveIterationCount() throws {
+        var header = JOSEHeader(algorithm: JSONWebKeyEncryptionAlgorithm.pbes2hmac256, type: .jwe)
+        header.encryptionAlgorithm = .aesEncryptionGCM128
+        header.pbes2Count = SymmetricKey.maxPBES2IterationCount * 10
+        header.pbes2Salt = Data(repeating: 0, count: 16)
+        let protected = try ProtectedJSONWebContainer<JOSEHeader>(value: header)
+        let jweString = [
+            protected.encoded.urlBase64EncodedData(),
+            Data(repeating: 0, count: 24).urlBase64EncodedData(), // encrypted_key
+            Data(repeating: 0, count: 12).urlBase64EncodedData(), // iv
+            Data(repeating: 0, count: 16).urlBase64EncodedData(), // ciphertext
+            Data(repeating: 0, count: 16).urlBase64EncodedData(), // tag
+        ].joinedString(separator: Data(".".utf8))
+        
+        let jwe = try JSONWebEncryption(from: jweString)
+        #expect(throws: (any Error).self) {
+            try jwe.decrypt(using: PBES2_GCM.kek)
+        }
     }
     
     @Test

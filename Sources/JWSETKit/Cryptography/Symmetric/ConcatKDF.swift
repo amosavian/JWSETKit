@@ -19,13 +19,13 @@ extension SharedSecret {
     /// - Parameters:
     ///   - hashFunction: The hash function to use for key derivation.
     ///   - otherInfo: The other information to use for key derivation.
-    ///   - outputByteCount: The length in bytes of resulting symmetric key.
+    ///   - outputBitCount: The length **in bits** of the resulting symmetric key.
     ///
     /// - Returns: The derived symmetric key.
     public func concatDerivedSymmetricKey<H, OI>(
         using hashFunction: H.Type,
         otherInfo: OI,
-        outputByteCount keySize: Int
+        outputBitCount keySize: Int
     ) -> SymmetricKey where H: HashFunction, OI: DataProtocol {
         let hashSize = hashFunction.Digest.byteCount * 8
         let iterations = (keySize / hashSize) + (!keySize.isMultiple(of: hashSize) ? 1 : 0)
@@ -68,7 +68,7 @@ extension SharedSecret {
                 apv.lengthBytes, Data(apv),
                 Data(value: UInt32(keySize).bigEndian), // <- suppPubInfo
             ].joined()),
-            outputByteCount: keySize
+            outputBitCount: keySize
         )
     }
 }

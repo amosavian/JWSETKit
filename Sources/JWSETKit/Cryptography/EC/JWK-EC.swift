@@ -99,14 +99,14 @@ extension JSONWebKeyImportable {
         let coordinateSize: Int
         switch secgKey.first {
         case 0x02, 0x03:
-            coordinateSize = secgKey.count - 1 / (isPrivate ? 2 : 1)
+            coordinateSize = (secgKey.count - 1) / (isPrivate ? 2 : 1)
         case 0x04:
-            coordinateSize = secgKey.count - 1 / (isPrivate ? 3 : 2)
+            coordinateSize = (secgKey.count - 1) / (isPrivate ? 3 : 2)
         default:
             throw JSONWebKeyError.unknownAlgorithm
         }
         let probableCurves = JSONWebKeyCurve.registeredCurves
-            .filter { $0.rawValue.hasPrefix("P") || $0.rawValue.hasPrefix("secp") }
+            .filter { $0.rawValue.hasPrefix("P-") }
             .filter { $0.coordinateSize == coordinateSize }
         for probableCurve in probableCurves {
             if let type = try keyFinder(probableCurve) as? any JSONWebKeyImportable.Type, let exactKey = try? type.init(importing: secgKey, format: .raw) {
