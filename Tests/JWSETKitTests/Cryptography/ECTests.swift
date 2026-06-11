@@ -69,6 +69,20 @@ struct ECTests {
     }
     
     @Test
+    func rawImportRoundTrip() throws {
+        func roundTrip(_ priv: some CryptoECPrivateKey & CryptoECKeyPortable, expected curve: JSONWebKeyCurve) throws {
+            let pub = priv.publicKey as! any CryptoECKeyPortable
+            let importedPub = try JSONWebECPublicKey(importing: pub.x963Representation, format: .raw)
+            #expect(importedPub.curve == curve)
+            let importedPriv = try JSONWebECPrivateKey(importing: priv.x963Representation, format: .raw)
+            #expect(importedPriv.curve == curve)
+        }
+        try roundTrip(P256.Signing.PrivateKey(), expected: .p256)
+        try roundTrip(P384.Signing.PrivateKey(), expected: .p384)
+        try roundTrip(P521.Signing.PrivateKey(), expected: .p521)
+    }
+    
+    @Test
     func eddsa() throws {
         let key = Curve25519.Signing.PrivateKey()
         

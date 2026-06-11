@@ -369,10 +369,13 @@ extension JSONWebKeyEncryptionAlgorithm {
         var header = JOSEHeader()
         let iterations: Int
         if let pbes2Count = recipientHeader.pbes2Count {
+            guard pbes2Count > 0, pbes2Count <= SymmetricKey.maxPBES2IterationCount else {
+                throw CryptoKitError.incorrectParameterSize
+            }
             iterations = pbes2Count
         } else {
             // Default iterations count for PBES2 regarding OWASP 2023 recommendation.
-            iterations = SymmetricKey.defaultPBES2IterationCount[(keyEncryptingAlgorithm.keyLength ?? 128) / 2, default: 600_000]
+            iterations = SymmetricKey.defaultPBES2IterationCount[keyEncryptingAlgorithm.keyLength ?? 128, default: 600_000]
             header.pbes2Count = iterations
         }
         let pbes2Salt: Data
@@ -478,6 +481,9 @@ extension JSONWebKeyEncryptionAlgorithm {
         }
         guard let iterations = header.pbes2Count else {
             throw JSONWebKeyError.keyNotFound
+        }
+        guard iterations > 0, iterations <= SymmetricKey.maxPBES2IterationCount else {
+            throw CryptoKitError.incorrectParameterSize
         }
         let salt = Data(algorithm.rawValue.utf8) + [0x00] + (header.pbes2Salt ?? .init())
         kek = try SymmetricKey.passwordBased2DerivedSymmetricKey(

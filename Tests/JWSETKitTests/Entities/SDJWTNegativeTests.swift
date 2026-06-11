@@ -64,6 +64,46 @@ struct SDJWTNegativeTests {
         }
     }
     
+    // MARK: - _sd_alg Tests
+    
+    @Test("Present-but-unknown _sd_alg must throw, not silently default to SHA-256")
+    func unknownDisclosureHashAlgorithm() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.email = "john.doe@example.com"
+        }
+        var sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            concealedPaths: ["/email"],
+            using: issuerKey
+        )
+        sdJWT.payload.value.disclosureHashAlgorithm = "sha-1"
+        
+        #expect(throws: JSONWebKeyError.self) {
+            _ = try sdJWT.disclosureList
+        }
+    }
+    
+    @Test("Absent _sd_alg defaults to SHA-256")
+    func absentDisclosureHashAlgorithm() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.email = "john.doe@example.com"
+        }
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            concealedPaths: ["/email"],
+            using: issuerKey
+        )
+        #expect(sdJWT.payload.value.storage["_sd_alg"] as String? == nil)
+        #expect(sdJWT.payload.disclosureHashAlgorithm == SHA256.identifier)
+        #expect(throws: Never.self) {
+            _ = try sdJWT.disclosureList
+        }
+    }
+    
     // MARK: - Disclosure Creation Tests
     
     @Test("Disclosure with very long value")

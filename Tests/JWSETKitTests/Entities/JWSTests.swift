@@ -19,7 +19,7 @@ struct JWSTests {
     )
     
     let jwsDetachedString =
-        "eyJhbGciOiJIUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY"
+    "eyJhbGciOiJIUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY"
     
     typealias JWSDetached = JSONWebSignature<ProtectedDataWebContainer>
     
@@ -158,5 +158,17 @@ struct JWSTests {
         jws.signatures[0].protected.algorithm = .none
         jws.signatures[0].signature = .init()
         #expect(throws: JSONWebKeyError.self) { try jws.verifySignature(using: ExampleKeys.publicRSA2048) }
+    }
+    
+    @Test
+    func verifyMultiKeyNoKeyIdSecondCandidate() throws {
+        // Per RFC 7515 Appendix D, verification must try each candidate until one validates.
+        let signingKey = P256.Signing.PrivateKey()
+        var jws = jws
+        jws.signatures[0].protected.algorithm = .ecdsaSignatureP256SHA256
+        try jws.updateSignature(using: signingKey)
+        
+        let keySet = JSONWebKeySet(keys: [ExampleKeys.publicEC256, signingKey.publicKey])
+        #expect(throws: Never.self) { try jws.verifySignature(using: keySet) }
     }
 }
