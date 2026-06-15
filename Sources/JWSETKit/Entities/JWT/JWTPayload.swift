@@ -62,16 +62,6 @@ extension JSONWebTokenClaims: Expirable {
     }
 }
 
-extension JSONWebToken: Expirable {
-    /// Verifies the `exp` and `nbf` headers using current date.
-    ///
-    /// - Parameters:
-    ///   - currentDate: The date that headers will be check against. Default is current system date.
-    public func verifyDate(_ currentDate: Date) throws {
-        try payload.value.verifyDate(currentDate)
-    }
-}
-
 extension JSONWebToken {
     /// Verifies token validity and signature.
     ///
@@ -111,5 +101,79 @@ extension JSONWebToken {
     ///   - audience: The exact intended audience, if applicable.
     public func verify(using key: some JSONWebValidatingKey, for audience: String? = nil) throws {
         try verify(using: JSONWebKeySet(keys: [key]), for: audience)
+    }
+}
+
+extension JSONWebTokenClaims {
+    /// Sets JWT claims for Authorization token.
+    /// Issuing time and `jti` are set by current date and random string.
+    ///
+    /// - Parameters:
+    ///   - issuer: Issuer address or name
+    ///   - audience: Aduience the token intended for
+    ///   - subject: Identifies the principal that is the subject of the JWT.
+    ///   - expiresIn: Time interval that token is valid.
+    public func addBase(
+        issuer: String, audience: [String] = [],
+        authorizedParty: String? = nil, subject: String,
+        expiresIn: TimeInterval
+    ) -> Self {
+        var result = self
+        result.issuer = issuer
+        result.audience = audience
+        result.authorizedParty = authorizedParty
+        result.subject = subject
+        result.issuedAt = .init()
+        result.expiry = .init(timeIntervalSinceNow: expiresIn)
+        result.jwtUUID = .init()
+        return result
+    }
+    
+#if canImport(Foundation)
+    public func addUserInfo(
+        person: PersonNameComponents,
+        gender: String? = nil,
+        birthdate: Date? = nil,
+        zoneInfo: TimeZone? = nil,
+        locale: Locale? = nil,
+        address: JSONWebAddress? = nil
+    ) -> Self {
+        var result = self
+        let formatter = PersonNameComponentsFormatter()
+        formatter.locale = locale ?? .autoupdatingCurrent
+        result.name = formatter.string(from: person)
+        result.givenName = person.givenName
+        result.familyName = person.familyName
+        result.middleName = person.middleName
+        result.nickname = person.nickname
+        result.gender = gender
+        result.birthdate = birthdate
+        result.zoneInfo = zoneInfo
+        result.locale = locale
+        result.address = address
+        return result
+    }
+#endif
+    
+    public func addProfile(_ profile: URL?, picture: URL? = nil, website: URL? = nil) -> Self {
+        var result = self
+        result.profileURL = profile
+        result.pictureURL = picture
+        result.websiteURL = website
+        return result
+    }
+    
+    public func addEmail(_ email: String, isVerified: Bool) -> Self {
+        var result = self
+        result.email = email
+        result.isEmailVerified = isVerified
+        return result
+    }
+    
+    public func addPhoneNumber(_ phoneNumber: String, isVerified: Bool) -> Self {
+        var result = self
+        result.phoneNumber = phoneNumber
+        result.isPhoneNumberVerified = isVerified
+        return result
     }
 }

@@ -32,7 +32,7 @@ let package = Package(
         .default(enabledTraits: []),
     ],
     dependencies: [
-        .package(url: "https://github.com/apple/swift-collections.git", from: "1.4.0"),
+        .package(url: "https://github.com/apple/swift-collections.git", from: "1.6.0"),
         .package(url: "https://github.com/apple/swift-asn1.git", from: "1.7.0"),
         .package(url: "https://github.com/apple/swift-crypto.git", from: "4.5.0"),
         .package(url: "https://github.com/apple/swift-certificates", from: "1.19.0"),

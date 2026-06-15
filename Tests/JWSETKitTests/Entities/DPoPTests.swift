@@ -401,6 +401,19 @@ struct DPoPTests {
             try fields.verifyDPoPProof(method: .post, url: url)
         }
     }
+
+    @Test
+    func httpFieldsVerifyRejectsMultipleDPoPHeaders() throws {
+        // RFC 9449 §4.3 #1: there must not be more than one DPoP header field.
+        let proof = try DPoPProof(method: method, url: url, using: ExampleKeys.privateEC256)
+        var fields = HTTPFields()
+        fields.append(HTTPField(name: .dpop, value: proof.description))
+        fields.append(HTTPField(name: .dpop, value: proof.description))
+
+        #expect(throws: (any Error).self) {
+            try fields.verifyDPoPProof(method: .post, url: url)
+        }
+    }
 #endif
     
     // MARK: NIO HTTPHeaders
@@ -423,6 +436,19 @@ struct DPoPTests {
         #expect(headers.first(name: "authorization") == "DPoP \(accessToken)")
         #expect(headers.dpopProof != nil)
         #expect(throws: Never.self) {
+            try headers.verifyDPoPProof(method: .POST, url: url)
+        }
+    }
+
+    @Test
+    func httpHeadersVerifyRejectsMultipleDPoPHeaders() throws {
+        // RFC 9449 §4.3 #1: there must not be more than one DPoP header field.
+        let proof = try DPoPProof(method: method, url: url, using: ExampleKeys.privateEC256)
+        var headers = HTTPHeaders()
+        headers.add(name: "dpop", value: proof.description)
+        headers.add(name: "dpop", value: proof.description)
+
+        #expect(throws: (any Error).self) {
             try headers.verifyDPoPProof(method: .POST, url: url)
         }
     }

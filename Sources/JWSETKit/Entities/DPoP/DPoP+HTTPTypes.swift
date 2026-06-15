@@ -40,15 +40,16 @@ extension HTTPFields {
     ///   - url: The absolute target URI, compared to `htu` after normalization.
     ///   - nonce: When provided, the proof's `nonce` must equal it.
     ///   - currentDate: The reference time used to reject future-dated proofs.
-    /// - Throws: `CryptoKitError.authenticationFailure` if the `DPoP` header is absent, or
-    ///   a validation/crypto error when any check fails.
+    /// - Throws: `CryptoKitError.authenticationFailure` if the `DPoP` header is absent or
+    ///   appears more than once, or a validation/crypto error when any check fails.
     public func verifyDPoPProof(
         method: HTTPRequest.Method,
         url: URL,
         nonce: String? = nil,
         currentDate: Date = .init()
     ) throws {
-        guard let dpopProof else {
+        // RFC 9449 §4.3 #1: there is not more than one `DPoP` HTTP request header field.
+        guard self[fields: .dpop].count == 1, let dpopProof else {
             throw CryptoKitError.authenticationFailure
         }
         try dpopProof.verify(method: method.rawValue, url: url, accessToken: self[.authorization], nonce: nonce, currentDate: currentDate)

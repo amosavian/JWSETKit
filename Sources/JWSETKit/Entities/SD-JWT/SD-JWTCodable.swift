@@ -236,12 +236,22 @@ extension String {
     /// - Parameter sdJWT: SD-JWT object to be encoded.
     /// - Throws: `EncodingError` if encoding fails.
     public init(_ sdJWT: JSONWebSelectiveDisclosureToken) throws {
-        let encoder = JSONEncoder.encoder
-        encoder.userInfo[.sdJWTEncodedRepresentation] = JSONWebSelectiveDisclosureTokenRepresentation.compact
-        self = try String(String(decoding: encoder.encode(sdJWT), as: UTF8.self).dropFirst().dropLast())
+        self = try String(decoding: Data(compact: sdJWT), as: UTF8.self)
     }
 }
 
+extension Data {
+    /// Encodes SD-JWT to a compact encoded data.
+    ///
+    /// - Parameter compact: SD-JWT object to be encoded.
+    ///
+    /// - Throws: `EncodingError` if encoding fails.
+    public init(compact sdJWT: JSONWebSelectiveDisclosureToken) throws {
+        let encoder = JSONEncoder.encoder
+        encoder.userInfo[.sdJWTEncodedRepresentation] = JSONWebSelectiveDisclosureTokenRepresentation.compact
+        self = try encoder.encode(sdJWT).dropFirst().dropLast()
+    }
+}
 extension JSONWebSelectiveDisclosureToken: LosslessStringConvertible, CustomDebugStringConvertible {
     public init?(_ description: String) {
         guard let sdJWT = try? JSONDecoder().decode(JSONWebSelectiveDisclosureToken.self, from: Data(description.utf8)) else {

@@ -371,6 +371,16 @@ extension JSONWebSignature where Payload: TypedProtectedWebContainer {
     }
 }
 
+extension JSONWebSignature: Expirable where Payload: TypedProtectedWebContainer, Payload.Container: Expirable {
+    /// Verifies the payload using current date.
+    ///
+    /// - Parameters:
+    ///   - currentDate: The date that headers will be check against. Default is current system date.
+    public func verifyDate(_ currentDate: Date) throws {
+        try payload.value.verifyDate(currentDate)
+    }
+}
+
 extension String {
     /// Encodes JWS to a Base64URL compact encoded string.
     ///
@@ -378,13 +388,24 @@ extension String {
     ///
     /// - Throws: `EncodingError` if encoding fails.
     public init<Payload: ProtectedWebContainer>(_ jws: JSONWebSignature<Payload>) throws {
+        self = try String(decoding: Data(compact: jws), as: UTF8.self)
+    }
+}
+
+extension Data {
+    /// Encodes JWS to a Base64URL compact encoded data.
+    ///
+    /// - Parameter compact: JWS object to be encoded.
+    ///
+    /// - Throws: `EncodingError` if encoding fails.
+    public init<Payload: ProtectedWebContainer>(compact jws: JSONWebSignature<Payload>) throws {
         let encoder = JSONEncoder.encoder
         if jws.signatures.first?.protected.base64 == false {
             encoder.userInfo[.jwsEncodedRepresentation] = JSONWebSignatureRepresentation.compactDetached
         } else {
             encoder.userInfo[.jwsEncodedRepresentation] = JSONWebSignatureRepresentation.compact
         }
-        self = try String(String(decoding: encoder.encode(jws), as: UTF8.self).dropFirst().dropLast())
+        self = try encoder.encode(jws).dropFirst().dropLast()
     }
 }
 

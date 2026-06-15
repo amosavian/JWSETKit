@@ -389,12 +389,23 @@ public struct JSONWebEncryption: Hashable, Sendable {
 
 extension String {
     /// Encodes JWE to compact representation.
+    ///
     /// - Parameter jwe: JWE to be encoded.
     /// - Throws: Encoding error.
     public init(_ jwe: JSONWebEncryption) throws {
+        self = try String(decoding: Data(compact: jwe), as: UTF8.self)
+    }
+}
+
+extension Data {
+    /// Encodes JWE to compact representation.
+    ///
+    /// - Parameter compact: JWE to be encoded.
+    /// - Throws: Encoding error.
+    public init(compact jwe: JSONWebEncryption) throws {
         let encoder = JSONEncoder.encoder
-        encoder.userInfo[.jwsEncodedRepresentation] = JSONWebEncryptionRepresentation.compact
-        self = try String(String(decoding: encoder.encode(jwe), as: UTF8.self).dropFirst().dropLast())
+        encoder.userInfo[.jweEncodedRepresentation] = JSONWebEncryptionRepresentation.compact
+        self = try encoder.encode(jwe).dropFirst().dropLast()
     }
 }
 
