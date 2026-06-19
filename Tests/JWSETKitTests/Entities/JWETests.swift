@@ -180,7 +180,7 @@ struct JWETests {
     @Test
     func rsa1_5_TamperedKeyFailsUniformly() throws {
         var jwe = try JSONWebEncryption(from: RSA_PKCS1_5_CBC.jweString)
-        var tampered = jwe.encryptedKey!
+        var tampered = try #require(jwe.encryptedKey)
         // Flip bits in the wrapped key so PKCS#1 unwrap fails or produces garbage.
         tampered[tampered.startIndex] ^= 0xFF
         jwe.encryptedKey = tampered
@@ -258,13 +258,14 @@ struct JWETests {
         header.pbes2Count = SymmetricKey.maxPBES2IterationCount * 10
         header.pbes2Salt = Data(repeating: 0, count: 16)
         let protected = try ProtectedJSONWebContainer<JOSEHeader>(value: header)
-        let jweString = [
+        let jweData = [
             protected.encoded.urlBase64EncodedData(),
             Data(repeating: 0, count: 24).urlBase64EncodedData(), // encrypted_key
             Data(repeating: 0, count: 12).urlBase64EncodedData(), // iv
             Data(repeating: 0, count: 16).urlBase64EncodedData(), // ciphertext
             Data(repeating: 0, count: 16).urlBase64EncodedData(), // tag
-        ].joinedString(separator: Data(".".utf8))
+        ].joinedData(separator: Data(".".utf8))
+        let jweString = String(decoding: jweData, as: UTF8.self)
         
         let jwe = try JSONWebEncryption(from: jweString)
         #expect(throws: (any Error).self) {

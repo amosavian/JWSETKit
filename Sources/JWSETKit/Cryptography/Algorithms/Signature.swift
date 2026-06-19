@@ -50,7 +50,35 @@ extension JSONWebSignatureAlgorithm {
         .internalMLDSA87Signature: (JSONWebMLDSAPublicKey.self, JSONWebMLDSAPrivateKey.self),
     ]
     
-    private static let keyTypes: AtomicValue<[Self: JSONWebKeyType]> = [
+    private static let keyTypes: AtomicValue<[Self: JSONWebKeyType]> = .init(wrappedValue: fastPathKeyTypes)
+    
+    private static let curves: AtomicValue<[Self: JSONWebKeyCurve]> = .init(wrappedValue: fastPathCurves)
+    
+    private static let hashFunctions: AtomicValue<[Self: any HashFunction.Type]> = .init(wrappedValue: fastPathHashFunctions)
+    
+    private nonisolated(unsafe) static let fastPathKeyRegistryClasses: [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)] = [
+        .hmacSHA256: (JSONWebKeyHMAC<SHA256>.self, JSONWebKeyHMAC<SHA256>.self),
+        .rsaSignaturePSSSHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
+        .ecdsaSignatureP256SHA256: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
+    ]
+    
+    private static let fastPathHashFunctions: [Self: any HashFunction.Type] = [
+        .hmacSHA256: SHA256.self,
+        .hmacSHA384: SHA384.self,
+        .hmacSHA512: SHA512.self,
+        .ecdsaSignatureP256SHA256: SHA256.self,
+        .ecdsaSignatureP384SHA384: SHA384.self,
+        .ecdsaSignatureP521SHA512: SHA512.self,
+        .ecdsaSignatureSecp256k1SHA256: SHA256.self,
+        .rsaSignaturePSSSHA256: SHA256.self,
+        .rsaSignaturePSSSHA384: SHA384.self,
+        .rsaSignaturePSSSHA512: SHA512.self,
+        .rsaSignaturePKCS1v15SHA256: SHA256.self,
+        .rsaSignaturePKCS1v15SHA384: SHA384.self,
+        .rsaSignaturePKCS1v15SHA512: SHA512.self,
+    ]
+    
+    private static let fastPathKeyTypes: [Self: JSONWebKeyType] = [
         .unsafeNone: .empty,
         .hmacSHA256: .symmetric,
         .hmacSHA384: .symmetric,
@@ -71,49 +99,21 @@ extension JSONWebSignatureAlgorithm {
         .internalMLDSA87Signature: .algorithmKeyPair,
     ]
     
-    private static let curves: AtomicValue<[Self: JSONWebKeyCurve]> = [
+    private static let fastPathCurves: [Self: JSONWebKeyCurve] = [
         .ecdsaSignatureP256SHA256: .p256, .ecdsaSignatureP384SHA384: .p384,
         .ecdsaSignatureP521SHA512: .p521,
         .ecdsaSignatureSecp256k1SHA256: .secp256k1,
         .eddsaSignature: .ed25519, .eddsa25519Signature: .ed25519,
     ]
     
-    private static let hashFunctions: AtomicValue<[Self: any HashFunction.Type]> = [
-        .hmacSHA256: SHA256.self,
-        .hmacSHA384: SHA384.self,
-        .hmacSHA512: SHA512.self,
-        .ecdsaSignatureP256SHA256: SHA256.self,
-        .ecdsaSignatureP384SHA384: SHA384.self,
-        .ecdsaSignatureP521SHA512: SHA512.self,
-        .ecdsaSignatureSecp256k1SHA256: SHA256.self,
-        .rsaSignaturePSSSHA256: SHA256.self,
-        .rsaSignaturePSSSHA384: SHA384.self,
-        .rsaSignaturePSSSHA512: SHA512.self,
-        .rsaSignaturePKCS1v15SHA256: SHA256.self,
-        .rsaSignaturePKCS1v15SHA384: SHA384.self,
-        .rsaSignaturePKCS1v15SHA512: SHA512.self,
-    ]
-    
-    private nonisolated(unsafe) static let fastPathKeyRegistryClasses: [Self: (public: any JSONWebValidatingKey.Type, private: any JSONWebSigningKey.Type)] = [
-        .hmacSHA256: (JSONWebKeyHMAC<SHA256>.self, JSONWebKeyHMAC<SHA256>.self),
-        .rsaSignaturePSSSHA256: (JSONWebRSAPublicKey.self, JSONWebRSAPrivateKey.self),
-        .ecdsaSignatureP256SHA256: (JSONWebECPublicKey.self, JSONWebECPrivateKey.self),
-    ]
-    
-    private static let fastPathHashFunctions: [Self: any HashFunction.Type] = [
-        .hmacSHA256: SHA256.self,
-        .rsaSignaturePSSSHA256: SHA256.self,
-        .ecdsaSignatureP256SHA256: SHA256.self,
-    ]
-    
     public var keyType: JSONWebKeyType? {
-        Self.keyTypes[self]
+        Self.fastPathKeyTypes[self] ?? Self.keyTypes[self]
     }
     
     public var curve: JSONWebKeyCurve? {
-        Self.curves[self]
+        Self.fastPathCurves[self] ?? Self.curves[self]
     }
-
+    
     init?(curve: JSONWebKeyCurve) {
         // Disambiguate curves shared by multiple algorithms
         let match: Self? = switch curve {
@@ -123,7 +123,7 @@ extension JSONWebSignatureAlgorithm {
         guard let match else { return nil }
         self = match
     }
-
+    
     /// Returns private class appropriate for algorithm.
     public var signingKeyClass: (any JSONWebSigningKey.Type)? {
         Self.fastPathKeyRegistryClasses[self]?.private ?? Self.keyRegistryClasses[self]?.private
@@ -252,7 +252,7 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     public static var eddsaSignature: Self {
         "EdDSA"
     }
-        
+    
     /// **Signature**: EdDSA using Ed25519 curve signature algorithms
     public static var eddsa25519Signature: Self {
         "Ed25519"
@@ -284,14 +284,14 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     static var mldsa44Signature: Self {
         .internalMLDSA44Signature
     }
-
+    
     /// **Signature**: ML-DSA-65 as described in [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final),
     /// bound to JOSE by [RFC 9964](https://www.rfc-editor.org/rfc/rfc9964).
     @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
     public static var mldsa65Signature: Self {
         .internalMLDSA65Signature
     }
-
+    
     /// **Signature**: ML-DSA-87 as described in [FIPS 204](https://csrc.nist.gov/pubs/fips/204/final),
     /// bound to JOSE by [RFC 9964](https://www.rfc-editor.org/rfc/rfc9964).
     @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
@@ -302,11 +302,11 @@ extension JSONWebAlgorithm where Self == JSONWebSignatureAlgorithm {
     static var internalMLDSA44Signature: Self {
         "ML-DSA-44"
     }
-
+    
     static var internalMLDSA65Signature: Self {
         "ML-DSA-65"
     }
-
+    
     static var internalMLDSA87Signature: Self {
         "ML-DSA-87"
     }

@@ -13,9 +13,23 @@ import Foundation
 import Crypto
 
 /// JSON Web Key (JWK) container for AES-GCM keys for encryption/decryption.
-@frozen
 public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, JSONWebSymmetricDecryptingKey, Sendable {
-    public var storage: JSONWebValueStorage
+    public var storage: JSONWebValueStorage {
+        didSet { keyCache = .init() }
+    }
+    
+    private var keyCache = MaterializedKeyCache<SymmetricKey>()
+    
+    private var cryptoKitKey: SymmetricKey {
+        get throws {
+            if let cached = keyCache.key {
+                return cached
+            }
+            let materialized = try SymmetricKey(self)
+            keyCache.key = materialized
+            return materialized
+        }
+    }
     
     public init(algorithm: some JSONWebAlgorithm) throws {
         switch algorithm {
@@ -45,6 +59,7 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, J
         self.storage = .init()
         self.algorithm = .aesEncryptionGCM(bitCount: key.bitCount)
         self.keyValue = key
+        keyCache.key = key
     }
     
     public func seal<D, IV, AAD, JWA>(_ data: D, iv: IV?, authenticating: AAD?, using _: JWA) throws -> SealedData where D: DataProtocol, IV: DataProtocol, AAD: DataProtocol, JWA: JSONWebAlgorithm {
@@ -54,27 +69,36 @@ public struct JSONWebKeyAESGCM: MutableJSONWebKey, JSONWebSymmetricSealingKey, J
             nil
         }
         if let authenticating {
-            return try .init(AES.GCM.seal(data, using: .init(self), nonce: nonce, authenticating: authenticating))
+            return try .init(AES.GCM.seal(data, using: cryptoKitKey, nonce: nonce, authenticating: authenticating))
         } else {
-            return try .init(AES.GCM.seal(data, using: .init(self), nonce: nonce))
+            return try .init(AES.GCM.seal(data, using: cryptoKitKey, nonce: nonce))
         }
     }
     
     public func open<AAD, JWA>(_ data: SealedData, authenticating: AAD?, using _: JWA) throws -> Data where AAD: DataProtocol, JWA: JSONWebAlgorithm {
         if let authenticating {
-            try AES.GCM.open(.init(data), using: .init(self), authenticating: authenticating)
+            try AES.GCM.open(.init(data), using: cryptoKitKey, authenticating: authenticating)
         } else {
-            try AES.GCM.open(.init(data), using: .init(self))
+            try AES.GCM.open(.init(data), using: cryptoKitKey)
         }
     }
     
     public func encrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        let sealed = try AES.GCM.seal(data, using: .init(self))
+        let sealed = try AES.GCM.seal(data, using: cryptoKitKey)
         return sealed.combined ?? sealed.ciphertext
     }
     
     public func decrypt<D, JWA>(_ data: D, using _: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
-        try AES.GCM.open(.init(combined: data), using: .init(self))
+        try AES.GCM.open(.init(combined: data), using: cryptoKitKey)
+    }
+    
+    /// `keyCache` is a derived, reference-typed slot; identity is `storage` alone.
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.storage == rhs.storage
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(storage)
     }
 }
 

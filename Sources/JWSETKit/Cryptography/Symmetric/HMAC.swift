@@ -55,15 +55,25 @@ public struct JSONWebKeyHMAC<H: HashFunction>: MutableJSONWebKey, JSONWebSymmetr
         self.init()
     }
     
+    private var symmetricKey: SymmetricKey {
+        get throws {
+            // swiftformat:disable:next redundantSelf
+            guard let key = self.keyValue else {
+                throw CryptoKitError.incorrectKeySize
+            }
+            return key
+        }
+    }
+    
     public func signature<D: DataProtocol>(_ data: D, using _: JSONWebSignatureAlgorithm) throws -> Data {
-        var hmac = try HMAC<H>(key: .init(self))
+        var hmac = try HMAC<H>(key: symmetricKey)
         hmac.update(data: data)
         let mac = hmac.finalize()
         return Data(mac)
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using _: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        let isValid = try HMAC<H>.isValidAuthenticationCode(Data(signature), authenticating: data, using: .init(self))
+        let isValid = try HMAC<H>.isValidAuthenticationCode(Data(signature), authenticating: data, using: symmetricKey)
         guard isValid else {
             throw CryptoKitError.authenticationFailure
         }

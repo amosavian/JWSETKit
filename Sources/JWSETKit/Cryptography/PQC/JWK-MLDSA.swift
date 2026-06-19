@@ -89,7 +89,11 @@ extension JSONWebMLDSAPublicKey: JSONWebKeyImportable, JSONWebKeyExportable {
 
 /// JWK container for different types of Elliptic-Curve private keys consists of P-256, P-384, P-521, Ed25519.
 public struct JSONWebMLDSAPrivateKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyPairType, JSONWebSigningKey, Sendable {
-    public var storage: JSONWebValueStorage
+    public var storage: JSONWebValueStorage {
+        didSet { signingKeyCache = .init() }
+    }
+    
+    private var signingKeyCache = MaterializedKeyCache<any JSONWebSigningKey>()
     
     public var publicKey: JSONWebMLDSAPublicKey {
         JSONWebMLDSAPublicKey(from: self)
@@ -97,9 +101,14 @@ public struct JSONWebMLDSAPrivateKey: MutableJSONWebKey, JSONWebKeyAlgorithmKeyP
     
     var signingKey: any JSONWebSigningKey {
         get throws {
+            if let cached = signingKeyCache.key {
+                return cached
+            }
             // swiftformat:disable:next redundantSelf
-            try Self.signingType(self.algorithm)
+            let materialized = try Self.signingType(self.algorithm)
                 .init(from: self)
+            signingKeyCache.key = materialized
+            return materialized
         }
     }
     

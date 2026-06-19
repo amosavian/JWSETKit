@@ -91,25 +91,7 @@ extension CodingUserInfoKey {
 extension JSONWebSignature: Codable {
     public init(from decoder: any Decoder) throws {
         if let stringContainer = try? decoder.singleValueContainer(), let value = try? stringContainer.decode(String.self) {
-            let sections = try value
-                .components(separatedBy: ".")
-                .map {
-                    guard let data = Data(urlBase64Encoded: $0) else {
-                        throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "JWS String is not base64-encoded data."))
-                    }
-                    return data
-                }
-            guard sections.count == 3 else {
-                throw DecodingError.dataCorrupted(.init(codingPath: decoder.codingPath, debugDescription: "JWS String is not a three part data."))
-            }
-            self.payload = try Payload(encoded: sections[1])
-            self.signatures = try [
-                .init(
-                    protected: sections[0],
-                    unprotected: nil,
-                    signature: sections[2]
-                ),
-            ]
+            self = try JSONWebSignature(compactSerialization: value.utf8)
             return
         }
         
@@ -132,33 +114,49 @@ extension JSONWebSignature: Codable {
         }
     }
     
-    fileprivate func encode(_ encoder: any Encoder, parts: [Data]) throws {
-        var container = encoder.singleValueContainer()
-        let value = parts.joinedString(separator: Data(".".utf8))
-        try container.encode(value)
+    /// Parses a JWS Compact Serialization (`base64url(header).base64url(payload).base64url(sig)`).
+    ///
+    /// Strict per RFC 7515 §7.1: each section must be pure base64url with no embedded
+    /// whitespace/newlines (the decode itself rejects them — no extra pass).
+    init(compactSerialization bytes: some Collection<UInt8>) throws {
+        let sections = bytes.split(separator: UInt8(ascii: "."), omittingEmptySubsequences: false)
+        guard sections.count == 3 else {
+            throw DecodingError.corrupted("JWS String is not a three part data.")
+        }
+        guard let protected = Data(urlBase64Encoded: sections[0], options: []),
+              let payload = Data(urlBase64Encoded: sections[1], options: []),
+              let signature = Data(urlBase64Encoded: sections[2], options: [])
+        else {
+            throw DecodingError.corrupted("JWS String is not base64-encoded data.")
+        }
+        self.payload = try Payload(encoded: payload)
+        self.signatures = try [.init(protected: protected, unprotected: nil, signature: signature)]
+    }
+    
+    func compactSerialization(detached: Bool) throws -> Data {
+        guard let signature = signatures.first else {
+            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: [CodingKeys.signatures], debugDescription: .invalidHeaderError))
+        }
+        let payloadPart: Data = if detached {
+            .init()
+        } else {
+            payload.encoded.urlBase64EncodedData()
+        }
+        return [
+            signature.protected.encoded.urlBase64EncodedData(),
+            payloadPart,
+            signature.signature.urlBase64EncodedData(),
+        ].joinedData(separator: Data(".".utf8))
     }
     
     fileprivate func encodeAsString(_ encoder: any Encoder) throws {
-        guard let signature = signatures.first else {
-            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: .invalidHeaderError))
-        }
-        let plainPayload = signature.protected.base64 == false
-        try encode(encoder, parts: [
-            signature.protected.encoded.urlBase64EncodedData(),
-            plainPayload ? payload.encoded : payload.encoded.urlBase64EncodedData(),
-            signature.signature.urlBase64EncodedData(),
-        ])
+        var container = encoder.singleValueContainer()
+        try container.encode(String(decoding: compactSerialization(detached: false), as: UTF8.self))
     }
     
     fileprivate func encodeAsStringDetached(_ encoder: any Encoder) throws {
-        guard let signature = signatures.first else {
-            throw EncodingError.invalidValue(JSONWebSignatureHeader?.none as Any, .init(codingPath: encoder.codingPath + [CodingKeys.signatures], debugDescription: .invalidHeaderError))
-        }
-        try encode(encoder, parts: [
-            signature.protected.encoded.urlBase64EncodedData(),
-            .init(),
-            signature.signature.urlBase64EncodedData(),
-        ])
+        var container = encoder.singleValueContainer()
+        try container.encode(String(decoding: compactSerialization(detached: true), as: UTF8.self))
     }
     
     fileprivate func encodeAsCompleteJSON(_ encoder: any Encoder) throws {
@@ -254,4 +252,10 @@ extension JSONWebSignature: EncodableWithConfiguration {
 
 extension String {
     fileprivate static let invalidHeaderError: String = "Invalid JWS header."
+}
+
+extension DecodingError {
+    fileprivate static func corrupted(_ message: String) -> Self {
+        DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: message))
+    }
 }

@@ -60,4 +60,41 @@ struct AlgorithmsTests {
         #expect(SymmetricKey(size: .bits384).resolveAlgorithm(nil) == .hmacSHA384)
         #expect(SymmetricKey(size: .bits512).resolveAlgorithm(nil) == .hmacSHA512)
     }
+
+    // MARK: AES-GCM materialized-key cache hazards (cache must never outlive its key material).
+
+    @Test
+    func aesGCMMutatingKeyMaterialInvalidatesCache() throws {
+        let plaintext = Data("the quick brown fox".utf8)
+        let alg = JSONWebContentEncryptionAlgorithm.aesEncryptionGCM256
+        var key = try JSONWebKeyAESGCM(SymmetricKey(size: .bits256))
+        // Warm the cache, then seal with the original key.
+        let sealed = try key.seal(plaintext, iv: Data?.none, authenticating: Data?.none, using: alg)
+        #expect(try key.open(sealed, authenticating: Data?.none, using: alg) == plaintext)
+
+        // Reassign storage to unrelated key material — the cached key must NOT survive, else the old
+        // key's ciphertext would still open (a security hazard).
+        let other = try JSONWebKeyAESGCM(SymmetricKey(size: .bits256))
+        key.storage = other.storage
+        #expect(throws: (any Error).self) {
+            try key.open(sealed, authenticating: Data?.none, using: alg)
+        }
+        // The mutated key now seals/opens under the new material.
+        let resealed = try key.seal(plaintext, iv: Data?.none, authenticating: Data?.none, using: alg)
+        #expect(try key.open(resealed, authenticating: Data?.none, using: alg) == plaintext)
+    }
+
+    @Test
+    func aesGCMCopyThenMutateKeepsOriginalKey() throws {
+        let plaintext = Data("the quick brown fox".utf8)
+        let alg = JSONWebContentEncryptionAlgorithm.aesEncryptionGCM256
+        let original = try JSONWebKeyAESGCM(SymmetricKey(size: .bits256))
+        let sealed = try original.seal(plaintext, iv: Data?.none, authenticating: Data?.none, using: alg)
+
+        // Mutating a copy must not corrupt the original's cached key (the cache box is replaced
+        // wholesale in `storage.didSet`, not mutated in place).
+        var copy = original
+        copy.storage = try JSONWebKeyAESGCM(SymmetricKey(size: .bits256)).storage
+        #expect(try original.open(sealed, authenticating: Data?.none, using: alg) == plaintext)
+    }
 }

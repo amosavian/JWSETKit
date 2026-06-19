@@ -103,7 +103,7 @@ extension JSONWebAlgorithm {
 @frozen
 public struct AnyJSONWebAlgorithm: JSONWebAlgorithm {
     public let rawValue: String
-        
+    
     public var keyType: JSONWebKeyType? {
         specialized().keyType
     }
@@ -160,7 +160,9 @@ extension JSONWebKeyType {
 }
 
 extension JSONWebKeyType {
-    private static let requiredFields: AtomicValue<[Self: [String]]> = [
+    private static let requiredFields: AtomicValue<[Self: [String]]> = .init(wrappedValue: fastPathRequiredFields)
+    
+    private static let fastPathRequiredFields: [Self: [String]] = [
         .ellipticCurve: ["x", "y"],
         .rsa: ["n", "e"],
         .symmetric: ["k"],
@@ -169,7 +171,7 @@ extension JSONWebKeyType {
     ]
     
     var requiredFields: [String] {
-        Self.requiredFields[self] ?? []
+        Self.fastPathRequiredFields[self] ?? Self.requiredFields[self] ?? []
     }
 }
 
@@ -183,15 +185,11 @@ public struct JSONWebKeyCurve: StringRepresentable {
 }
 
 extension JSONWebKeyCurve {
-    private static let keySizes: AtomicValue<[Self: Int]> = [
-        .p256: 32, .ed25519: 32, .x25519: 32,
-        .p384: 48,
-        .p521: 66,
-        .secp256k1: 32,
-    ]
+    private static let keySizes: AtomicValue<[Self: Int]> = .init(wrappedValue: fastPathKeySizes)
     
     private static let fastPathKeySizes: [Self: Int] = [
         .p256: 32, .ed25519: 32, .x25519: 32,
+        .p384: 48, .p521: 66, .secp256k1: 32,
     ]
     
     /// Key size in bytes.

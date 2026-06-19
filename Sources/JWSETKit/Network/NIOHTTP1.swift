@@ -67,7 +67,7 @@ extension HTTPHeaders {
     ///   - key: A `JSONWebValidatingKey` object that would be used for validation.
     ///   - audience: The exact intended audience, if applicable.
     public func verifyAuthorizationToken(using key: some JSONWebValidatingKey, for audience: String? = nil) throws {
-        try verifyAuthorizationToken(using: JSONWebKeySet(keys: [key]), for: audience)
+        try verifyAuthorizationToken(using: JSONWebKeySet(key: key), for: audience)
     }
 }
 #endif

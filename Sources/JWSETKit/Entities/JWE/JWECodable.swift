@@ -81,7 +81,7 @@ extension JSONWebEncryption: Codable {
         case tag
     }
     
-    private init(string: String, codingPath: [any CodingKey]) throws {
+    init(string: String, codingPath: [any CodingKey] = []) throws {
         let sections = try string
             .components(separatedBy: ".")
             .map {
@@ -111,7 +111,7 @@ extension JSONWebEncryption: Codable {
             self.recipients = [recipient]
         }
         self.additionalAuthenticatedData = try container.decodeIfPresent(String.self, forKey: .aad)
-            .flatMap(Data.init(urlBase64Encoded:))
+            .flatMap { Data(urlBase64Encoded: $0) }
         let iv = try Data(urlBase64Encoded: container.decode(String.self, forKey: .iv))
         let ciphertext = try Data(urlBase64Encoded: container.decode(String.self, forKey: .ciphertext))
         let tag = try Data(urlBase64Encoded: container.decode(String.self, forKey: .tag))
@@ -126,9 +126,8 @@ extension JSONWebEncryption: Codable {
         }
     }
     
-    fileprivate func encodeAsString(_ encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        let value = [
+    func compactSerializedData() -> Data {
+        [
             header.protected.encoded,
             encryptedKey ?? .init(),
             sealed.nonce,
@@ -136,8 +135,12 @@ extension JSONWebEncryption: Codable {
             sealed.tag,
         ]
         .map { $0.urlBase64EncodedData() }
-        .joinedString(separator: .init(".".utf8))
-        try container.encode(value)
+        .joinedData(separator: .init(".".utf8))
+    }
+    
+    fileprivate func encodeAsString(_ encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(String(decoding: compactSerializedData(), as: UTF8.self))
     }
     
     fileprivate func encodeAsCompleteJSON(_ encoder: any Encoder) throws {

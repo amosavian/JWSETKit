@@ -23,15 +23,17 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     }
     
     fileprivate enum Identification: Hashable, Sendable {
+        /// A key without a `kid`, identified by its thumbprint.
         case thumbprint(Data)
-        case id(kid: String, kty: JSONWebKeyType, curve: JSONWebKeyCurve?, use: JSONWebKeyUsage?, thumbprint: Data)
-                
+        
+        /// A `kid`-identified key. Identity is `(kid, kty, curve, use)`.
+        case id(kid: String, kty: JSONWebKeyType, curve: JSONWebKeyCurve?, use: JSONWebKeyUsage?)
+        
         init(_ key: some JSONWebKey) {
-            let thumbprint = (try? key.thumbprint(format: .jwk, using: SHA256.self).data) ?? Data(UUID().uuidString.utf8)
             if let keyId = key.keyId, let kty = key.keyType {
-                self = .id(kid: keyId, kty: kty, curve: key.curve, use: key.keyUsage, thumbprint: thumbprint)
+                self = .id(kid: keyId, kty: kty, curve: key.curve, use: key.keyUsage)
             } else {
-                self = .thumbprint(thumbprint)
+                self = .thumbprint((try? key.thumbprint(format: .jwk, using: SHA256.self).data) ?? Data(UUID().uuidString.utf8))
             }
         }
         
@@ -39,11 +41,35 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
             switch self {
             case .thumbprint(let data):
                 hasher.combine(data)
-            case .id(let kid, _, _, _, _):
+            case .id(let kid, _, _, _):
                 hasher.combine(kid)
             }
         }
     }
+    
+    /// Backing storage with a small-set fast path, à la `String`'s short-string optimization.
+    ///
+    /// `empty`/`single` hold no `OrderedDictionary` and never compute a key's SHA-256 thumbprint —
+    /// the common sign/verify case (one key in hand) allocates nothing extra. The set promotes to
+    /// `multiple` — the fully-indexed, deduplicating `OrderedDictionary` — only on the second
+    /// distinct key, where keyed lookup and dedup actually earn their cost (JWKS, key rotation).
+    fileprivate enum Storage {
+        case empty
+        case single(any JSONWebKey)
+        case multiple(OrderedDictionary<Identification, any JSONWebKey>)
+        
+        /// Picks the smallest representation for a deduplicated dictionary, so single/empty sets
+        /// shed the `OrderedDictionary` (and its hash-table allocation).
+        static func normalized(_ keySet: OrderedDictionary<Identification, any JSONWebKey>) -> Storage {
+            switch keySet.count {
+            case 0: .empty
+            case 1: .single(keySet.values[0])
+            default: .multiple(keySet)
+            }
+        }
+    }
+    
+    fileprivate var storage: Storage
     
     /// The value of the "keys" parameter is an array of JWK values.
     ///
@@ -51,17 +77,30 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     /// an order of preference among them, although applications of JWK Sets
     /// can choose to assign a meaning to the order for their purposes, if desired.
     public var keys: [any JSONWebKey] {
-        keySet.values.elements
+        switch storage {
+        case .empty:
+            []
+        case .single(let key):
+            [key]
+        case .multiple(let keySet):
+            keySet.values.elements
+        }
     }
     
     public var publicKeyset: JSONWebKeySet {
-        let publicKeys = keySet.compactMapValues { key in
-            key.publicKey()
-        }
-        return Self(publicKeys)
+        Self(keys: keys.compactMap { $0.publicKey() })
     }
     
-    fileprivate var keySet: OrderedDictionary<Identification, any JSONWebKey>
+    /// Builds the deduplicating `OrderedDictionary` for the `multiple` case.
+    private static func index<T>(_ keys: T) -> OrderedDictionary<Identification, any JSONWebKey> where T: Sequence, T.Element == any JSONWebKey {
+        .init(
+            keys.map { (.init($0), $0) },
+            uniquingKeysWith: { first, second in
+                // Prefer private key over public one!
+                second.isAsymmetricPrivateKey ? second : first
+            }
+        )
+    }
     
     /// Initializes JWKSet using given array of key.
     ///
@@ -83,23 +122,30 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     
     /// Initializes an empty JWKSet.
     public init() {
-        self.init([])
+        self.storage = .empty
+    }
+    
+    /// Initializes a JWKSet holding exactly one key.
+    public init(key: some JSONWebKey) {
+        self.storage = .single(key)
     }
     
     private init<T>(_ keys: T) where T: Sequence, T.Element == any JSONWebKey {
-        self.keySet = .init(
-            keys.map {
-                (.init($0), $0)
-            },
-            uniquingKeysWith: { first, second in
-                // Prefer private key over public one!
-                second.isAsymmetricPrivateKey ? second : first
-            }
-        )
+        var iterator = keys.makeIterator()
+        guard let first = iterator.next() else {
+            self.storage = .empty
+            return
+        }
+        guard iterator.next() != nil else {
+            self.storage = .single(first)
+            return
+        }
+        // Two or more inputs: index + deduplicate, then normalize (dedup may collapse to one).
+        self.storage = .normalized(Self.index(keys))
     }
     
     private init(_ keySet: OrderedDictionary<Identification, any JSONWebKey>) {
-        self.keySet = keySet
+        self.storage = .normalized(keySet)
     }
     
     /// Initializes JWKSet using given array of key.
@@ -124,26 +170,24 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     public func hash(into hasher: inout Hasher) {
         forEach { hasher.combine($0) }
     }
-
+    
     /// Returns the key matches with given thumbprint.
     ///
     /// - Parameter thumbprint: The thumbprint of the key.
     public subscript(thumbprint thumbprint: Data) -> (any JSONWebKey)? {
-        if let key = keySet[.thumbprint(thumbprint)] {
-            return key
-        } else {
-            for (id, key) in keySet {
-                switch id {
-                case .id(_, _, _, _, let thumb):
-                    if thumb == thumbprint {
-                        return key
-                    }
-                case .thumbprint:
-                    break
-                }
+        switch storage {
+        case .empty:
+            return nil
+        case .single(let key):
+            return (try? key.thumbprint(format: .jwk, using: SHA256.self).data) == thumbprint ? key : nil
+        case .multiple(let keySet):
+            if let key = keySet[.thumbprint(thumbprint)] {
+                return key
+            }
+            return keySet.values.first {
+                (try? $0.thumbprint(format: .jwk, using: SHA256.self).data) == thumbprint
             }
         }
-        return nil
     }
     
     /// Returns the key matches with given keyId.
@@ -152,20 +196,23 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     ///     with thumbprint even if `kid` field is not set.
     /// - Parameter keyId: The keyId of the key.
     /// - Returns: The key matches with given keyId.
+    private static let jwkThumbprintPrefix = "urn:ietf:params:oauth:jwk-thumbprint:sha-256:"
+    
     public subscript(keyId keyId: some StringProtocol) -> (any JSONWebKey)? {
-        let jwkThumbprintPrefix = "urn:ietf:params:oauth:jwk-thumbprint:sha-256:"
-        let thumbprintPrefixLength = jwkThumbprintPrefix.count
-        if keyId.hasPrefix(jwkThumbprintPrefix),
-           let thumbprint = Data(urlBase64Encoded: keyId.dropFirst(thumbprintPrefixLength)),
+        if keyId.hasPrefix(Self.jwkThumbprintPrefix),
+           let thumbprint = Data(urlBase64Encoded: keyId.dropFirst(Self.jwkThumbprintPrefix.count)),
            let key = self[thumbprint: thumbprint]
         {
             return key
         }
-        return keySet.values.last { key in
-            guard let itemKeyId = key.keyId else {
-                return false
-            }
-            return itemKeyId == keyId
+        // Avoid materializing the `keys` array for the small-set cases.
+        switch storage {
+        case .empty:
+            return nil
+        case .single(let key):
+            return key.keyId.map { $0 == keyId } == true ? key : nil
+        case .multiple(let keySet):
+            return keySet.values.last { $0.keyId.map { $0 == keyId } == true }
         }
     }
     
@@ -174,10 +221,7 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     /// - Parameter isIncluded:
     /// - Returns:
     public func filter(_ isIncluded: (any JSONWebKey) -> Bool) -> JSONWebKeySet {
-        let dictionary = keySet.filter {
-            isIncluded($1)
-        }
-        return .init(dictionary)
+        .init(keys.filter(isIncluded))
     }
     
     /// Returns the key set that contains keys that can be used
@@ -196,19 +240,31 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     /// - Returns: The key set that contains keys that can be used
     ///     to verify/decrypt.
     public func matches(for header: JOSEHeader) -> JSONWebKeySet {
-        let candidates: JSONWebKeySet = if let algorithm = header.algorithm {
-            filter(algorithm: algorithm)
-        } else {
-            self
+        switch storage {
+        case .empty:
+            return []
+        case .single(let key):
+            return key.isCompatible(with: header) ? self : []
+        case .multiple:
+            if let key = first(where: { $0.isMatched(to: header) && $0.isCompatible(with: header) }) {
+                return [key]
+            }
+            return header.algorithm.map { filter(algorithm: $0) } ?? self
         }
-        if let keyId = header.keyId, let key = candidates[keyId: keyId] {
-            return [key]
+    }
+    
+    /// Resolves the single best-matching key for `header` without building an intermediate
+    /// `JSONWebKeySet`. Used by signing, which needs exactly one key; `matches(for:)` is for
+    /// verification, which may try several candidates (key rotation, RFC 7515 Appendix D).
+    func firstMatch(for header: JOSEHeader) -> (any JSONWebKey)? {
+        switch storage {
+        case .empty:
+            nil
+        case .single(let key):
+            key.isCompatible(with: header) ? key : nil
+        case .multiple:
+            matches(for: header).first
         }
-        
-        if let key = candidates.first(where: { $0.isMatched(to: header) }) {
-            return [key]
-        }
-        return candidates
     }
     
     /// Merges keyset with another keyset, If the are duplicate keys
@@ -218,8 +274,10 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     ///   - other: the other JWK set.
     ///   - combine: The closure that will be called for duplicate keys.
     public mutating func merge(_ other: JSONWebKeySet, uniquingKeysWith combine: (any JSONWebKey, any JSONWebKey) throws -> any JSONWebKey) rethrows {
-        try keySet.merge(other.keySet) {
-            try combine($0, $1)
+        try mutateIndexed { keySet in
+            try keySet.merge(other.indexed) {
+                try combine($0, $1)
+            }
         }
     }
     
@@ -231,9 +289,27 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     /// - combine: The closure that will be called for duplicate keys.
     /// - Returns: A new keyset that is the result of merging the keyset with another keyset.
     public func merging(_ other: JSONWebKeySet, uniquingKeysWith combine: (any JSONWebKey, any JSONWebKey) throws -> any JSONWebKey) rethrows -> JSONWebKeySet {
-        try .init(keySet.merging(other.keySet) {
-            try combine($0, $1)
-        })
+        var result = self
+        try result.merge(other, uniquingKeysWith: combine)
+        return result
+    }
+    
+    /// The keys as a deduplicating `OrderedDictionary`, materializing one for the small-set cases.
+    fileprivate var indexed: OrderedDictionary<Identification, any JSONWebKey> {
+        switch storage {
+        case .empty, .single:
+            Self.index(keys)
+        case .multiple(let keySet):
+            keySet
+        }
+    }
+    
+    /// Mutates the keys through an `OrderedDictionary` (materialized for small-set cases), then
+    /// renormalizes back to the smallest storage case so single/empty sets shed the dictionary.
+    private mutating func mutateIndexed(_ body: (inout OrderedDictionary<Identification, any JSONWebKey>) throws -> Void) rethrows {
+        var keySet = indexed
+        try body(&keySet)
+        self = .init(keySet)
     }
     
     /// Adds a new key to the keyset.
@@ -243,7 +319,7 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     ///
     /// - Parameter key: The new key to be appended.
     public mutating func append(_ key: some JSONWebKey) {
-        keySet[.init(key)] = key
+        mutateIndexed { $0[.init(key)] = key }
     }
     
     /// Returns a new keyset that is the result of appending a new key to the keyset.
@@ -266,7 +342,9 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     ///  - Returns: The index of the inserted key.
     @discardableResult
     public mutating func insert(_ key: some JSONWebKey, at index: Int) -> Int {
-        keySet.updateValue(key, forKey: .init(key), insertingAt: index).index
+        var result = 0
+        mutateIndexed { result = $0.updateValue(key, forKey: .init(key), insertingAt: index).index }
+        return result
     }
     
     /// Returns a new keyset that is the result of inserting a new key to the keyset at the specified position.
@@ -308,21 +386,18 @@ public struct JSONWebKeySet: Codable, Hashable, ExpressibleByArrayLiteral {
     /// - Returns: The removed key.
     @discardableResult
     public mutating func remove(thumbprint: Data) -> (any JSONWebKey)? {
-        if let key = keySet.removeValue(forKey: .thumbprint(thumbprint)) {
-            return key
-        } else {
-            for (id, _) in keySet {
-                switch id {
-                case .id(_, _, _, _, let thumb):
-                    if thumb == thumbprint {
-                        return keySet.removeValue(forKey: id)
-                    }
-                case .thumbprint:
-                    break
-                }
+        var removed: (any JSONWebKey)?
+        mutateIndexed { keySet in
+            if let key = keySet.removeValue(forKey: .thumbprint(thumbprint)) {
+                removed = key
+                return
+            }
+            for (id, key) in keySet where (try? key.thumbprint(format: .jwk, using: SHA256.self).data) == thumbprint {
+                removed = keySet.removeValue(forKey: id)
+                return
             }
         }
-        return nil
+        return removed
     }
     
     /// Returns a new keyset that is the result of removing key with given thumbprint in keyset.
@@ -342,51 +417,74 @@ public func == (lhs: some Sequence<any JSONWebKey>, rhs: some Sequence<any JSONW
 
 extension JSONWebKeySet: MutableCollection, RandomAccessCollection {
     public var indices: Range<Int> {
-        keySet.elements.indices
+        keys.indices
     }
     
     public var startIndex: Int {
-        keySet.elements.startIndex
+        0
     }
     
     public var endIndex: Int {
-        keySet.elements.endIndex
+        count
     }
     
     public var isEmpty: Bool {
-        keySet.elements.isEmpty
+        switch storage {
+        case .empty: true
+        case .single: false
+        case .multiple(let keySet): keySet.isEmpty
+        }
     }
     
     public var count: Int {
-        keySet.elements.count
+        switch storage {
+        case .empty: 0
+        case .single: 1
+        case .multiple(let keySet): keySet.count
+        }
+    }
+    
+    private mutating func withMutableKeys<R>(_ body: (inout [any JSONWebKey]) throws -> R) rethrows -> R {
+        var elements = keys
+        let result = try body(&elements)
+        self = .init(elements)
+        return result
     }
     
     public subscript(position: Int) -> any JSONWebKey {
         get {
-            keySet.values[position]
+            switch storage {
+            case .empty:
+                preconditionFailure("Index out of range")
+            case .single(let key):
+                precondition(position == 0, "Index out of range")
+                return key
+            case .multiple(let keySet):
+                return keySet.values[position]
+            }
         }
         set {
-            keySet.values[position] = newValue
+            withMutableKeys { $0[position] = newValue }
         }
     }
     
     public subscript(bounds: Range<Int>) -> JSONWebKeySet {
         get {
-            .init(keys: keys[bounds])
+            .init(keys: Array(keys[bounds]))
         }
         set {
-            bounds.forEach { keySet.values[$0] = newValue[$0 - bounds.lowerBound] }
+            withMutableKeys { elements in
+                bounds.forEach { elements[$0] = newValue[$0 - bounds.lowerBound] }
+            }
         }
     }
     
     public mutating func partition(by belongsInSecondPartition: (any JSONWebKey) throws -> Bool) rethrows -> Int {
-        try keySet.elements.partition {
-            try belongsInSecondPartition($0.value)
-        }
+        try withMutableKeys { try $0.partition(by: belongsInSecondPartition) }
     }
     
     public mutating func swapAt(_ i: Int, _ j: Int) {
-        keySet.elements.swapAt(i, j)
+        withMutableKeys { $0.swapAt(i, j) }
     }
 }
 
@@ -404,6 +502,14 @@ extension JSONWebKey {
         default:
             self
         }
+    }
+    
+    /// Whether this key can be used with the header's algorithm (matching key type and, when the
+    /// algorithm names a curve, curve). A header without an algorithm imposes no constraint.
+    fileprivate func isCompatible(with header: JOSEHeader) -> Bool {
+        guard let algorithm = header.algorithm, let keyType = algorithm.keyType else { return true }
+        // swiftformat:disable:next redundantSelf
+        return self.keyType == keyType && (algorithm.curve == nil || self.curve == algorithm.curve)
     }
     
     fileprivate func isMatched(to header: JOSEHeader) -> Bool {

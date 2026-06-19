@@ -1019,6 +1019,40 @@ struct JSONWebSelectiveDisclosureJWTTests {
         #expect(description.hasPrefix("ey"))
     }
     
+    @Test("SD-JWT init(from:) parses raw compact string/data like JWS/JWE")
+    func sdJWTInitFromCompact() throws {
+        let issuerKey = P256.Signing.PrivateKey()
+        let claims = try JSONWebTokenClaims {
+            $0.subject = "user123"
+            $0.email = "john.doe@example.com"
+        }
+        let sdJWT = try JSONWebSelectiveDisclosureToken(
+            claims: claims,
+            concealedPaths: ["/email"],
+            decoyCount: 2,
+            using: issuerKey
+        )
+        // Raw `~`-delimited compact serialization (no surrounding JSON quotes).
+        let compact = try String(sdJWT)
+        #expect(compact.hasPrefix("ey"))
+        
+        // LosslessStringConvertible round-trips the raw compact string (previously returned nil).
+        let fromLossless = try #require(JSONWebSelectiveDisclosureToken(compact))
+        #expect(fromLossless.disclosures.count == sdJWT.disclosures.count)
+        #expect(fromLossless.jwt.description == sdJWT.jwt.description)
+        
+        // init(from: String) and init(from: Data) accept the raw compact form, mirroring JWS/JWE.
+        let fromString = try JSONWebSelectiveDisclosureToken(from: compact)
+        #expect(fromString.disclosures.count == sdJWT.disclosures.count)
+        let fromData = try JSONWebSelectiveDisclosureToken(from: Data(compact.utf8))
+        #expect(fromData.jwt.description == sdJWT.jwt.description)
+        
+        // An invalid leading byte throws, matching JWS/JWE's "Invalid …" behavior.
+        #expect(throws: (any Error).self) {
+            try JSONWebSelectiveDisclosureToken(from: "not-a-token")
+        }
+    }
+    
     @Test("SD-JWT with SHA384 hash algorithm")
     func sdJWTWithSHA384() throws {
         let issuerKey = P256.Signing.PrivateKey()

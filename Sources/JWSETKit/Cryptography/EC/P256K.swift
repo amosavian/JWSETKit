@@ -20,11 +20,11 @@ extension P256K.Signing.PublicKey: CryptoECPublicKey, JSONWebKeyAlgorithmIdentif
     public static var algorithm: any JSONWebAlgorithm {
         .ecdsaSignatureSecp256k1SHA256
     }
-
+    
     public static var algorithmIdentifier: RFC5480AlgorithmIdentifier {
         .ecdsaSecp256k1
     }
-
+    
     static var curve: JSONWebKeyCurve {
         .secp256k1
     }
@@ -67,6 +67,10 @@ extension P256K.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdenti
         self.init(compactRepresentable: false)
     }
     
+    init() {
+        self.init(compactRepresentable: true)
+    }
+    
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         guard let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.unknownAlgorithm
@@ -85,6 +89,10 @@ extension P256K.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public typealias PublicKey = P256K.KeyAgreement.PublicKey
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
+    }
+    
+    init() {
+        self.init(compactRepresentable: true)
     }
 }
 

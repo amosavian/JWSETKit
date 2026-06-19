@@ -111,7 +111,7 @@ extension Certificate.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType, JSONWebK
         case .eddsaSignature, .eddsa25519Signature:
             self.init(Curve25519.Signing.PrivateKey())
         case .rsaSignaturePSSSHA256, .rsaSignaturePSSSHA384, .rsaSignaturePSSSHA512,
-                .rsaSignaturePKCS1v15SHA256, .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512:
+             .rsaSignaturePKCS1v15SHA256, .rsaSignaturePKCS1v15SHA384, .rsaSignaturePKCS1v15SHA512:
             try self.init(_RSA.Signing.PrivateKey(keySize: .bits2048))
         default:
             throw JSONWebKeyError.unknownAlgorithm
@@ -257,7 +257,7 @@ extension Certificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
         case let value as Data:
             return try? .init(derEncoded: value)
         case let value as String:
-            guard let value = Data(base64Encoded: value) else {
+            guard let value = Data(base64Encoded: value, options: .ignoreUnknownCharacters) else {
                 return nil
             }
             return try? .init(derEncoded: value)

@@ -257,4 +257,82 @@ struct RSATests {
         #expect(try chain.thumbprint(format: .jwk, using: SHA256.self).data == key.thumbprint(format: .jwk, using: SHA256.self).data)
         #expect(try chain.thumbprint(format: .spki, using: SHA256.self).data == key.thumbprint(format: .spki, using: SHA256.self).data)
     }
+    
+    // MARK: - Materialized-key cache (copy-on-write) hazards
+    
+    @Test
+    func cachedSigningKeyRoundTrips() throws {
+        let key = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        let pub = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        for _ in 0 ..< 3 {
+            let sig = try key.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+            try pub.verifySignature(sig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        }
+    }
+    
+    @Test
+    func copyThenMutateKeepsOriginalKey() throws {
+        let original = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        let pub = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        _ = try original.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        
+        var copy = original
+        copy.keyId = "rotated" // mutate copy.storage → copy detaches to a fresh cache box
+        
+        let originalSig = try original.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        try pub.verifySignature(originalSig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        let copySig = try copy.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        try pub.verifySignature(copySig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+    }
+    
+    @Test
+    func mutatingKeyMaterialInvalidatesCache() throws {
+        let original = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        _ = try original.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        
+        let other = try JSONWebRSAPrivateKey(algorithm: JSONWebSignatureAlgorithm.rsaSignaturePKCS1v15SHA256)
+        var copy = original
+        copy.storage = other.storage
+        
+        let sig = try copy.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        try other.publicKey.verifySignature(sig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        #expect(throws: (any Error).self) {
+            try original.publicKey.verifySignature(sig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        }
+    }
+    
+    @Test
+    func publicKeyMutatingKeyMaterialInvalidatesCache() throws {
+        let signer = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        let sig = try signer.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        
+        // Verify once to warm the public key's validating-key cache.
+        var pub = signer.publicKey
+        try pub.verifySignature(sig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        
+        // Reassign storage to an unrelated key — the cached validating key must NOT survive,
+        // otherwise the old key's signature would still verify (security hazard).
+        let other = try JSONWebRSAPrivateKey(algorithm: JSONWebSignatureAlgorithm.rsaSignaturePKCS1v15SHA256)
+        pub.storage = other.publicKey.storage
+        #expect(throws: (any Error).self) {
+            try pub.verifySignature(sig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        }
+        let otherSig = try other.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        try pub.verifySignature(otherSig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+    }
+    
+    @Test
+    func publicKeyCopyThenMutateKeepsOriginalKey() throws {
+        let signer = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+        let sig = try signer.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        
+        let original = signer.publicKey
+        try original.verifySignature(sig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        
+        // Mutating a copy detaches it to a fresh cache box; the original keeps verifying.
+        var copy = original
+        copy.keyId = "rotated"
+        try original.verifySignature(sig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        try copy.verifySignature(sig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
+    }
 }

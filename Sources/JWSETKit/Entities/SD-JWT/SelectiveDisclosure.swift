@@ -41,21 +41,27 @@ public struct JSONWebSelectiveDisclosure: Hashable, ExpressibleByArrayLiteral, S
     
     /// The Base64URL-encoded disclosure in the format: [salt, claim_name, claim_value]
     public var encoded: String {
-        let encoder = JSONEncoder()
-        encoder.dataEncodingStrategy = .custom { data, encoder in
-            var container = encoder.singleValueContainer()
-            try container.encode(data.urlBase64EncodedString())
-        }
-        // Reconstruct the JSON array using the stored value bytes
-        var json = Data("[".utf8)
-        try? json.append(encoder.encode(salt))
+        var quotedSalt = Data([UInt8(ascii: "\"")])
+        quotedSalt.append(salt.urlBase64EncodedData())
+        quotedSalt.append(UInt8(ascii: "\""))
+        
+        var elements = [quotedSalt]
         if let key {
-            json.append(Data(",".utf8))
-            try? json.append(encoder.encode(key))
+            let keyUTF8 = key.utf8
+            if keyUTF8.contains(where: { $0 < 0x20 || $0 == 0x22 || $0 == 0x5C || $0 == 0x2F }) {
+                if let keyJSON = try? JSONEncoder().encode(key) { elements.append(keyJSON) }
+            } else {
+                var quotedKey = Data([UInt8(ascii: "\"")])
+                quotedKey.append(contentsOf: keyUTF8)
+                quotedKey.append(UInt8(ascii: "\""))
+                elements.append(quotedKey)
+            }
         }
-        json.append(Data(",".utf8))
-        json.append(encodedValue)
-        json.append(Data("]".utf8))
+        elements.append(encodedValue)
+        
+        var json = Data([UInt8(ascii: "[")])
+        json.append(elements.joinedData(separator: Data([UInt8(ascii: ",")])))
+        json.append(UInt8(ascii: "]"))
         return json.urlBase64EncodedString()
     }
     

@@ -16,8 +16,40 @@ import Crypto
 public struct JSONWebTokenClaims: MutableJSONWebContainer, Sendable {
     public var storage: JSONWebValueStorage
     
+    private static let numericClaims: Set<String> = ["iat", "exp", "nbf", "auth_time", "updated_at"]
+
+    private static let booleanClaims: Set<String> = ["email_verified", "phone_number_verified"]
+    
     public init(storage: JSONWebValueStorage) {
         self.storage = storage
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        guard let container = try? decoder.container(keyedBy: AnyCodingKey.self) else {
+            self.storage = try JSONWebValueStorage(from: decoder)
+            try validate()
+            return
+        }
+        var values: [String: any Sendable] = .init(minimumCapacity: container.allKeys.count)
+        for key in container.allKeys {
+            values[key.stringValue] = try Self.decodeValue(from: container, forKey: key)
+        }
+        self.storage = .init(values)
+        try validate()
+    }
+    
+    /// Fastpath for known claims' decoding
+    private static func decodeValue(
+        from container: KeyedDecodingContainer<AnyCodingKey>,
+        forKey key: AnyCodingKey
+    ) throws -> (any Sendable)? {
+        if numericClaims.contains(key.stringValue) {
+            if let value = try? container.decode(Int.self, forKey: key) { return value }
+            if let value = try? container.decode(Double.self, forKey: key) { return value }
+        } else if booleanClaims.contains(key.stringValue) {
+            if let value = try? container.decode(Bool.self, forKey: key) { return value }
+        }
+        return try container.decode(AnyCodable.self, forKey: key).value
     }
 }
 
@@ -100,7 +132,7 @@ extension JSONWebToken {
     ///   - key: A `JSONWebValidatingKey` object that would be used for validation.
     ///   - audience: The exact intended audience, if applicable.
     public func verify(using key: some JSONWebValidatingKey, for audience: String? = nil) throws {
-        try verify(using: JSONWebKeySet(keys: [key]), for: audience)
+        try verify(using: JSONWebKeySet(key: key), for: audience)
     }
 }
 

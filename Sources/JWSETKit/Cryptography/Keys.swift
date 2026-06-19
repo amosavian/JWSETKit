@@ -259,7 +259,7 @@ extension JSONWebPrivateKey where Self: Equatable {
         lhs.publicKey == rhs.publicKey
     }
 }
- 
+
 extension JSONWebPrivateKey where Self: Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(publicKey)
@@ -471,7 +471,11 @@ public struct AnyJSONWebKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWebKeyCur
 extension JSONWebKey {
     @inlinable
     public init(from key: any JSONWebKey) throws {
-        try self.init(storage: key.storage)
+        if let key = key as? Self {
+            self = key
+        } else {
+            try self.init(storage: key.storage)
+        }
     }
     
     @inlinable
@@ -504,4 +508,16 @@ extension AnyJSONWebKey: JSONWebKeyImportable, JSONWebKeyExportable {
         
         return try key.exportKey(format: format)
     }
+}
+
+/// Caches the CryptoKit key materialized from a JWK's `storage` so repeated signatures or
+/// verifications don't re-parse it. The generic parameter is the stored key role: public
+/// (verify-only) keys use `any JSONWebValidatingKey`, private keys `any JSONWebSigningKey`, so
+/// each owner reads its cache back at the right type with no downcast.
+///
+/// The owning key replaces this box with a fresh one in `storage`'s `didSet` rather than
+/// clearing it in place. That gives copy-on-write semantics: a struct copy shares the box only
+/// until it mutates, so two copies never observe each other's materialized key.
+final class MaterializedKeyCache<Key>: @unchecked Sendable {
+    var key: Key?
 }

@@ -107,7 +107,7 @@ extension SecCertificate: JSONWebFieldEncodable, JSONWebFieldDecodable {
     static func castValue(_ value: Any?) -> Self? {
         switch value {
         case let value as String:
-            guard let value = Data(base64Encoded: value) else {
+            guard let value = Data(base64Encoded: value, options: .ignoreUnknownCharacters) else {
                 return nil
             }
             return try? .init(derEncoded: value)

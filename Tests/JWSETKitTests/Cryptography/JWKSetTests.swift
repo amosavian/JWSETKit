@@ -5,6 +5,7 @@
 //  Created by Amir Abbas Mousavian on 12/30/23.
 //
 
+import Crypto
 import Foundation
 import Testing
 @testable import JWSETKit
@@ -127,5 +128,121 @@ struct JWKSetTests {
     func encode() throws {
         let jwks = try JSONDecoder().decode(JSONWebKeySet.self, from: jwksData)
         _ = try JSONEncoder().encode(jwks)
+    }
+    
+    /// Guards the lazy-thumbprint optimization: a `kid`-identified key no longer stores its
+    /// thumbprint in the set's identity, so thumbprint-based lookup/removal must still find it
+    /// by computing the thumbprint on demand.
+    @Test
+    func thumbprintLookupForKeyWithKeyId() throws {
+        var key = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        key.keyId = "kid-1"
+        let thumbprint = try key.thumbprint(format: .jwk, using: SHA256.self).data
+        let set = JSONWebKeySet(keys: [key])
+        
+        // Direct thumbprint subscript on a kid-identified key.
+        #expect(set[thumbprint: thumbprint] != nil)
+        #expect(set[thumbprint: thumbprint]?.keyId == "kid-1")
+        
+        // The `urn:ietf:params:oauth:jwk-thumbprint:` keyId path routes through the same
+        // thumbprint lookup.
+        let uri = try key.thumbprintUri(format: .jwk, using: SHA256.self)
+        #expect(set[keyId: uri] != nil)
+        
+        // A non-matching thumbprint must not match.
+        #expect(set[thumbprint: Data(repeating: 0, count: 32)] == nil)
+        
+        // remove(thumbprint:) must also locate the kid-identified key.
+        var mutableSet = set
+        #expect(mutableSet.remove(thumbprint: thumbprint) != nil)
+        #expect(mutableSet.isEmpty)
+    }
+    
+    /// Scenario: a single keyless key. Identity is its thumbprint; lookup by keyId fails,
+    /// lookup by thumbprint succeeds.
+    @Test
+    func keylessKeyIdentity() throws {
+        let key = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        #expect(key.keyId == nil)
+        let thumbprint = try key.thumbprint(format: .jwk, using: SHA256.self).data
+        let set = JSONWebKeySet(keys: [key])
+        #expect(set.count == 1)
+        #expect(set[thumbprint: thumbprint] != nil)
+        #expect(set[keyId: "nonexistent"] == nil)
+    }
+    
+    /// Scenario: lookup by `kid` for a kid-identified key (the `matches(for:)` signing path).
+    @Test
+    func keyIdLookup() throws {
+        var key = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        key.keyId = "my-kid"
+        let set = JSONWebKeySet(keys: [key])
+        #expect(set[keyId: "my-kid"] != nil)
+        #expect(set[keyId: "my-kid"]?.keyId == "my-kid")
+        #expect(set[keyId: "other"] == nil)
+    }
+    
+    /// Scenario: two DISTINCT keys with DIFFERENT kids both coexist (no false dedup).
+    @Test
+    func twoKeysDistinctKeyIds() throws {
+        var k1 = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        k1.keyId = "kid-a"
+        var k2 = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        k2.keyId = "kid-b"
+        let set = JSONWebKeySet(keys: [k1, k2])
+        #expect(set.count == 2)
+        #expect(set[keyId: "kid-a"] != nil)
+        #expect(set[keyId: "kid-b"] != nil)
+    }
+    
+    /// Scenario: two keyless keys with different material both coexist (distinct thumbprints).
+    @Test
+    func twoKeylessKeysDistinctMaterial() throws {
+        let k1 = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        let k2 = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        let set = JSONWebKeySet(keys: [k1, k2])
+        #expect(set.count == 2)
+    }
+    
+    /// Behavior boundary: two keys sharing the same `kid` (and key type) collapse to one entry,
+    /// last-wins. Identity is `(kid, kty, curve, use)` — the JWK thumbprint is not part of it —
+    /// so a reused `kid` deduplicates. (A misconfiguration in practice; locked here.)
+    @Test
+    func sameKeyIdDeduplicates() throws {
+        var k1 = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        k1.keyId = "shared-kid"
+        var k2 = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        k2.keyId = "shared-kid"
+        let set = JSONWebKeySet(keys: [k1, k2])
+        #expect(set.count == 1)
+        #expect(set[keyId: "shared-kid"] != nil)
+    }
+    
+    /// `matches(for:)` resolves by `kid` in a multi-key set.
+    @Test
+    func matchesResolvesByKeyId() throws {
+        var a = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        a.keyId = "A"
+        var b = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        b.keyId = "B"
+        let set = JSONWebKeySet(keys: [a, b])
+        var hdrB = JOSEHeader(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256, type: .jwt)
+        hdrB.keyId = "B"
+        #expect(set.matches(for: hdrB).first?.keyId == "B")
+    }
+
+    /// The kid-first short-circuit must only accept an **algorithm-compatible** match: a header that
+    /// names a `kid` but with an incompatible algorithm (RSA vs the EC key) must NOT return that key.
+    @Test
+    func matchesRejectsKeyIdWithIncompatibleAlgorithm() throws {
+        var a = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        a.keyId = "A"
+        var b = try JSONWebECPrivateKey(algorithm: JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256)
+        b.keyId = "B"
+        let set = JSONWebKeySet(keys: [a, b])
+        var hdr = JOSEHeader(algorithm: JSONWebSignatureAlgorithm.rsaSignaturePKCS1v15SHA256, type: .jwt)
+        hdr.keyId = "B"
+        // EC key "B" is not RSA-compatible, so it must not be returned as the match.
+        #expect(set.matches(for: hdr).first?.keyId != "B")
     }
 }

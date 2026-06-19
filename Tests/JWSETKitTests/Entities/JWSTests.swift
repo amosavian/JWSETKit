@@ -19,7 +19,7 @@ struct JWSTests {
     )
     
     let jwsDetachedString =
-    "eyJhbGciOiJIUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY"
+        "eyJhbGciOiJIUzI1NiIsImI2NCI6ZmFsc2UsImNyaXQiOlsiYjY0Il19..A5dxf2s96_n5FLueVuW1Z_vh161FwXZC4YLPff6dmDY"
     
     typealias JWSDetached = JSONWebSignature<ProtectedDataWebContainer>
     

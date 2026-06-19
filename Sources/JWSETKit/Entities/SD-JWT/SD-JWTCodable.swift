@@ -76,33 +76,7 @@ extension JSONWebSelectiveDisclosureToken: Codable {
     
     public init(from decoder: any Decoder) throws {
         if let stringContainer = try? decoder.singleValueContainer(), let value = try? stringContainer.decode(String.self) {
-            let components = value.split(separator: "~", omittingEmptySubsequences: false)
-            guard !components.isEmpty else {
-                throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid SD-JWT compact serialization"))
-            }
-            let issuerJWT = try JSONWebToken(from: String(components[0]))
-            self.payload = issuerJWT.payload
-            self.signatures = issuerJWT.signatures
-            var disclosureComponents = Array(components.dropFirst())
-            if !disclosureComponents.isEmpty {
-                let lastComponent = String(disclosureComponents.last!)
-                if lastComponent.isEmpty {
-                    disclosureComponents.removeLast()
-                    self.keyBinding = nil
-                } else if lastComponent.hasPrefix("ey") {
-                    self.keyBinding = try JSONWebToken(from: lastComponent)
-                    disclosureComponents.removeLast()
-                } else {
-                    self.keyBinding = nil
-                }
-            } else {
-                self.keyBinding = nil
-            }
-            self.disclosures = try disclosureComponents.compactMap { component in
-                let disclosureString = String(component)
-                guard !disclosureString.isEmpty else { return nil }
-                return try JSONWebSelectiveDisclosure(encoded: disclosureString)
-            }
+            self = try .init(compactSerialization: value.utf8)
             return
         }
         
@@ -230,6 +204,74 @@ extension JSONWebSelectiveDisclosureToken: Codable {
     }
 }
 
+extension JSONWebSelectiveDisclosureToken {
+    /// Decodes an SD-JWT from data holding either a compact serialization (base64url, `~`-delimited)
+    /// or a JSON (Complete/Flattened) representation — mirroring `JSONWebSignature.init(from:)` and
+    /// `JSONWebEncryption.init(from:)`, dispatching on the first byte.
+    ///
+    /// - Parameter data: Compact serialization bytes or a JSON SD-JWT representation.
+    public init<D: DataProtocol>(from data: D) throws {
+        switch data.first {
+        case UInt8(ascii: "e"): // base64url of the issuer JOSE header always starts with "ey…"
+            try self.init(compactSerialization: data)
+        case UInt8(ascii: "{"):
+            self = try JSONDecoder().decode(Self.self, from: Data(data))
+        default:
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid SD-JWT."))
+        }
+    }
+    
+    /// Decodes an SD-JWT from a string holding either a compact serialization (base64url,
+    /// `~`-delimited) or a JSON (Complete/Flattened) representation — mirroring
+    /// `JSONWebSignature.init(from:)` and `JSONWebEncryption.init(from:)`, dispatching on the
+    /// first byte.
+    ///
+    /// - Parameter string: Compact serialization or a JSON SD-JWT representation.
+    public init<S: StringProtocol>(from string: S) throws {
+        switch string.utf8.first {
+        case UInt8(ascii: "e"): // base64url of the issuer JOSE header always starts with "ey…"
+            try self.init(compactSerialization: string.utf8)
+        case UInt8(ascii: "{"):
+            self = try JSONDecoder().decode(Self.self, from: Data(string.utf8))
+        default:
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid SD-JWT."))
+        }
+    }
+    
+    /// Decodes an SD-JWT from its compact serialization:
+    /// `<Issuer-JWT>~<Disclosure>~...~[<KB-JWT>]`.
+    init(compactSerialization bytes: some Collection<UInt8>) throws {
+        let value = String(decoding: bytes, as: UTF8.self)
+        let components = value.split(separator: "~", omittingEmptySubsequences: false)
+        guard !components.isEmpty else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid SD-JWT compact serialization"))
+        }
+        let issuerJWT = try JSONWebToken(from: String(components[0]))
+        self.payload = issuerJWT.payload
+        self.signatures = issuerJWT.signatures
+        var disclosureComponents = Array(components.dropFirst())
+        if !disclosureComponents.isEmpty {
+            let lastComponent = String(disclosureComponents.last!)
+            if lastComponent.isEmpty {
+                disclosureComponents.removeLast()
+                self.keyBinding = nil
+            } else if lastComponent.hasPrefix("ey") {
+                self.keyBinding = try JSONWebToken(from: lastComponent)
+                disclosureComponents.removeLast()
+            } else {
+                self.keyBinding = nil
+            }
+        } else {
+            self.keyBinding = nil
+        }
+        self.disclosures = try disclosureComponents.compactMap { component in
+            let disclosureString = String(component)
+            guard !disclosureString.isEmpty else { return nil }
+            return try JSONWebSelectiveDisclosure(encoded: disclosureString)
+        }
+    }
+}
+
 extension String {
     /// Encodes SD-JWT to a compact serialization string.
     ///
@@ -252,9 +294,10 @@ extension Data {
         self = try encoder.encode(sdJWT).dropFirst().dropLast()
     }
 }
+
 extension JSONWebSelectiveDisclosureToken: LosslessStringConvertible, CustomDebugStringConvertible {
     public init?(_ description: String) {
-        guard let sdJWT = try? JSONDecoder().decode(JSONWebSelectiveDisclosureToken.self, from: Data(description.utf8)) else {
+        guard let sdJWT = try? JSONWebSelectiveDisclosureToken(from: description) else {
             return nil
         }
         self = sdJWT

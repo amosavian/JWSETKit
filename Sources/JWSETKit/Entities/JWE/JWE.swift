@@ -142,9 +142,21 @@ public struct JSONWebEncryption: Hashable, Sendable {
             guard let contentEncryptionAlgorithm else {
                 throw JSONWebKeyError.unknownAlgorithm
             }
-            cek = try contentEncryptionKey ?? contentEncryptionAlgorithm.generateRandomKey()
-            guard let cekData = AnyJSONWebKey(cek).keyValue?.data else {
-                throw JSONWebKeyError.keyNotFound
+            let cekData: Data
+            if let contentEncryptionKey {
+                cek = contentEncryptionKey
+                guard let data = (cek as? any JSONWebKeySymmetric)?.keyValue?.data else {
+                    throw JSONWebKeyError.keyNotFound
+                }
+                cekData = data
+            } else {
+                // Generate the CEK.
+                guard let keyClass = contentEncryptionAlgorithm.keyClass, let keyLength = contentEncryptionAlgorithm.keyLength else {
+                    throw JSONWebKeyError.unknownAlgorithm
+                }
+                let symmetricKey = SymmetricKey(size: keyLength)
+                cekData = symmetricKey.data
+                cek = try keyClass.init(symmetricKey)
             }
             let mutatedEncryptedKey: Data
             (header, mutatedEncryptedKey) = try handler(recipientHeader, keyEncryptionKey, cekData)
@@ -210,14 +222,13 @@ public struct JSONWebEncryption: Hashable, Sendable {
         }
         if contentEncryptionAlgorithm != .integrated {
             protected.encryptionAlgorithm = contentEncryptionAlgorithm
-        } else if contentEncryptionAlgorithm == .integrated, keyEncryptingAlgorithm.isIntegratedHPKE {
+        } else if keyEncryptingAlgorithm.isIntegratedHPKE {
             // For HPKE Integrated Encryption, enc header must be absent
             protected.encryptionAlgorithm = nil
         } else {
             throw JSONWebKeyError.operationNotAllowed
         }
-        protected.encryptionAlgorithm = contentEncryptionAlgorithm == .integrated ? nil : contentEncryptionAlgorithm
-
+        
         try self.init(
             protected: .init(value: protected), unprotected: unprotected,
             nonce: nonce, content: content,
@@ -270,12 +281,12 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///
     /// - Parameter data: Either Base64URL encoded string of JWE or a JSON with Complete/Flattened JWE representation.
     public init<D: DataProtocol>(from data: D) throws {
-        if data.starts(with: Data("ey".utf8)) {
-            let container = Data("\"".utf8) + Data(data) + Data("\"".utf8)
-            self = try JSONDecoder().decode(JSONWebEncryption.self, from: container)
-        } else if data.starts(with: Data("{".utf8)) {
+        switch data.first {
+        case UInt8(ascii: "e"): // base64url of a JOSE header always starts with "ey…"
+            try self.init(string: String(decoding: data, as: UTF8.self))
+        case UInt8(ascii: "{"):
             self = try JSONDecoder().decode(JSONWebEncryption.self, from: Data(data))
-        } else {
+        default:
             throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid JWE."))
         }
     }
@@ -284,7 +295,14 @@ public struct JSONWebEncryption: Hashable, Sendable {
     ///
     /// - Parameter string: Base64URL encoded String.
     public init<S: StringProtocol>(from string: S) throws {
-        try self.init(from: Data(string.utf8))
+        switch string.utf8.first {
+        case UInt8(ascii: "e"): // base64url of a JOSE header always starts with "ey…"
+            try self.init(string: String(string))
+        case UInt8(ascii: "{"):
+            self = try JSONDecoder().decode(JSONWebEncryption.self, from: Data(string.utf8))
+        default:
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Invalid JWE."))
+        }
     }
     
     fileprivate func decryptContentEncryptionKey(_ combinedHeader: JOSEHeader, _ key: any JSONWebKey, _ algorithm: JSONWebKeyEncryptionAlgorithm, _ targetEncryptedKey: Data?) throws -> any JSONWebSealOpeningKey {
@@ -328,17 +346,17 @@ public struct JSONWebEncryption: Hashable, Sendable {
         }
         
         let authenticatingData = header.protected.authenticating(additionalAuthenticatedData: additionalAuthenticatedData)
-        let cek: any JSONWebSealOpeningKey
-        if algorithm == .unsafeRSAEncryptionPKCS1, let keyLength = contentEncAlgorithm.keyLength {
+        let cek: any JSONWebSealOpeningKey = if algorithm == .unsafeRSAEncryptionPKCS1, let keyLength = contentEncAlgorithm.keyLength {
             // RSAES-PKCS1-v1_5 (`RSA1_5`) Bleichenbacher Padding Oracle mitigation.
             if let unwrapped = try? decryptContentEncryptionKey(combinedHeader, key, algorithm, recipient?.encryptedKey),
-               (unwrapped as? SymmetricKey)?.bitCount == keyLength.bitCount {
-                cek = unwrapped
+               (unwrapped as? SymmetricKey)?.bitCount == keyLength.bitCount
+            {
+                unwrapped
             } else {
-                cek = SymmetricKey(size: keyLength)
+                SymmetricKey(size: keyLength)
             }
         } else {
-            cek = try decryptContentEncryptionKey(combinedHeader, key, algorithm, recipient?.encryptedKey)
+            try decryptContentEncryptionKey(combinedHeader, key, algorithm, recipient?.encryptedKey)
         }
         let content = try cek.open(sealed, authenticating: authenticatingData, using: contentEncAlgorithm)
         if let compressionAlgorithm = combinedHeader.compressionAlgorithm {
@@ -403,9 +421,7 @@ extension Data {
     /// - Parameter compact: JWE to be encoded.
     /// - Throws: Encoding error.
     public init(compact jwe: JSONWebEncryption) throws {
-        let encoder = JSONEncoder.encoder
-        encoder.userInfo[.jweEncodedRepresentation] = JSONWebEncryptionRepresentation.compact
-        self = try encoder.encode(jwe).dropFirst().dropLast()
+        self = jwe.compactSerializedData()
     }
 }
 

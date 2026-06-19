@@ -64,91 +64,11 @@ extension JSONWebKeyEncryptionAlgorithm {
         .ecdhEphemeralStaticAESKeyWrap256: (JSONWebKeyAESKW.self, JSONWebKeyAESKW.self),
     ]
     
-    private static let keyTypes: AtomicValue<[Self: JSONWebKeyType]> = [
-        .direct: .symmetric,
-        .aesKeyWrap128: .symmetric,
-        .aesKeyWrap192: .symmetric,
-        .aesKeyWrap256: .symmetric,
-        .aesGCM128KeyWrap: .symmetric,
-        .aesGCM192KeyWrap: .symmetric,
-        .aesGCM256KeyWrap: .symmetric,
-        .unsafeRSAEncryptionPKCS1: .rsa,
-        .rsaEncryptionOAEP: .rsa,
-        .rsaEncryptionOAEPSHA256: .rsa,
-        .rsaEncryptionOAEPSHA384: .rsa,
-        .rsaEncryptionOAEPSHA512: .rsa,
-        .pbes2hmac256: .symmetric,
-        .pbes2hmac384: .symmetric,
-        .pbes2hmac512: .symmetric,
-        .ecdhEphemeralStatic: .ellipticCurve,
-        .ecdhEphemeralStaticAESKeyWrap128: .ellipticCurve,
-        .ecdhEphemeralStaticAESKeyWrap192: .ellipticCurve,
-        .ecdhEphemeralStaticAESKeyWrap256: .ellipticCurve,
-        // HPKE Integrated Encryption
-        .internalHpkeP256SHA256AESGCM128: .ellipticCurve,
-        .internalHpkeP256SHA256AESGCM256: .ellipticCurve,
-        .internalHpkeP384SHA384AESGCM256: .ellipticCurve,
-        .internalHpkeP521SHA512AESGCM256: .ellipticCurve,
-        .internalHpkeCurve25519SHA256AESGCM128: .octetKeyPair,
-        .internalHpkeCurve25519SHA256ChachaPoly: .octetKeyPair,
-        // HPKE Key Encryption
-        .internalHpkeP256SHA256AESGCM128KE: .ellipticCurve,
-        .internalHpkeP256SHA256AESGCM256KE: .ellipticCurve,
-        .internalHpkeP384SHA384AESGCM256KE: .ellipticCurve,
-        .internalHpkeP521SHA512AESGCM256KE: .ellipticCurve,
-        .internalHpkeCurve25519SHA256AESGCM128KE: .octetKeyPair,
-        .internalHpkeCurve25519SHA256ChachaPolyKE: .octetKeyPair,
-    ]
+    private static let keyTypes: AtomicValue<[Self: JSONWebKeyType]> = .init(wrappedValue: fastPathKeyTypes)
     
-    private static let keyLengths: AtomicValue<[Self: Int]> = [
-        .aesKeyWrap128: SymmetricKeySize.bits128.bitCount,
-        .aesKeyWrap192: SymmetricKeySize.bits192.bitCount,
-        .aesKeyWrap256: SymmetricKeySize.bits256.bitCount,
-        .aesGCM128KeyWrap: SymmetricKeySize.bits128.bitCount,
-        .aesGCM192KeyWrap: SymmetricKeySize.bits192.bitCount,
-        .aesGCM256KeyWrap: SymmetricKeySize.bits256.bitCount,
-        .unsafeRSAEncryptionPKCS1: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
-        .rsaEncryptionOAEP: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
-        .rsaEncryptionOAEPSHA256: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
-        .rsaEncryptionOAEPSHA384: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
-        .rsaEncryptionOAEPSHA512: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
-        .pbes2hmac256: SymmetricKeySize.bits128.bitCount,
-        .pbes2hmac384: SymmetricKeySize.bits192.bitCount,
-        .pbes2hmac512: SymmetricKeySize.bits256.bitCount,
-        .ecdhEphemeralStaticAESKeyWrap128: SymmetricKeySize.bits128.bitCount,
-        .ecdhEphemeralStaticAESKeyWrap192: SymmetricKeySize.bits192.bitCount,
-        .ecdhEphemeralStaticAESKeyWrap256: SymmetricKeySize.bits256.bitCount,
-    ]
+    private static let keyLengths: AtomicValue<[Self: Int]> = .init(wrappedValue: fastPathKeyLengths)
     
-    private static let hashFunctions: AtomicValue<[Self: any HashFunction.Type]> = [
-        .aesKeyWrap128: SHA256.self,
-        .aesKeyWrap192: SHA384.self,
-        .aesKeyWrap256: SHA512.self,
-        .aesGCM128KeyWrap: SHA256.self,
-        .aesGCM192KeyWrap: SHA384.self,
-        .aesGCM256KeyWrap: SHA512.self,
-        .pbes2hmac256: SHA256.self,
-        .pbes2hmac384: SHA384.self,
-        .pbes2hmac512: SHA512.self,
-        .ecdhEphemeralStatic: SHA256.self,
-        .ecdhEphemeralStaticAESKeyWrap128: SHA256.self,
-        .ecdhEphemeralStaticAESKeyWrap192: SHA256.self,
-        .ecdhEphemeralStaticAESKeyWrap256: SHA256.self,
-        // HPKE Integrated Encryption
-        .internalHpkeP256SHA256AESGCM128: SHA256.self,
-        .internalHpkeP256SHA256AESGCM256: SHA256.self,
-        .internalHpkeP384SHA384AESGCM256: SHA384.self,
-        .internalHpkeP521SHA512AESGCM256: SHA512.self,
-        .internalHpkeCurve25519SHA256AESGCM128: SHA256.self,
-        .internalHpkeCurve25519SHA256ChachaPoly: SHA256.self,
-        // HPKE Key Encryption
-        .internalHpkeP256SHA256AESGCM128KE: SHA256.self,
-        .internalHpkeP256SHA256AESGCM256KE: SHA256.self,
-        .internalHpkeP384SHA384AESGCM256KE: SHA384.self,
-        .internalHpkeP521SHA512AESGCM256KE: SHA512.self,
-        .internalHpkeCurve25519SHA256AESGCM128KE: SHA256.self,
-        .internalHpkeCurve25519SHA256ChachaPolyKE: SHA256.self,
-    ]
+    private static let hashFunctions: AtomicValue<[Self: any HashFunction.Type]> = .init(wrappedValue: fastPathHashFunctions)
     
     private static let encryptedKeyHandlers: AtomicValue<[Self: EncryptedKeyHandler]> = [
         .aesGCM128KeyWrap: aesGCMKeyWrapEncryptedKey,
@@ -213,22 +133,89 @@ extension JSONWebKeyEncryptionAlgorithm {
     ]
     
     private static let fastPathKeyTypes: [Self: JSONWebKeyType] = [
+        .direct: .symmetric,
         .aesKeyWrap128: .symmetric,
+        .aesKeyWrap192: .symmetric,
         .aesKeyWrap256: .symmetric,
+        .aesGCM128KeyWrap: .symmetric,
+        .aesGCM192KeyWrap: .symmetric,
+        .aesGCM256KeyWrap: .symmetric,
+        .unsafeRSAEncryptionPKCS1: .rsa,
         .rsaEncryptionOAEP: .rsa,
         .rsaEncryptionOAEPSHA256: .rsa,
+        .rsaEncryptionOAEPSHA384: .rsa,
+        .rsaEncryptionOAEPSHA512: .rsa,
+        .pbes2hmac256: .symmetric,
+        .pbes2hmac384: .symmetric,
+        .pbes2hmac512: .symmetric,
+        .ecdhEphemeralStatic: .ellipticCurve,
+        .ecdhEphemeralStaticAESKeyWrap128: .ellipticCurve,
+        .ecdhEphemeralStaticAESKeyWrap192: .ellipticCurve,
+        .ecdhEphemeralStaticAESKeyWrap256: .ellipticCurve,
+        // HPKE Integrated Encryption
+        .internalHpkeP256SHA256AESGCM128: .ellipticCurve,
+        .internalHpkeP256SHA256AESGCM256: .ellipticCurve,
+        .internalHpkeP384SHA384AESGCM256: .ellipticCurve,
+        .internalHpkeP521SHA512AESGCM256: .ellipticCurve,
+        .internalHpkeCurve25519SHA256AESGCM128: .octetKeyPair,
+        .internalHpkeCurve25519SHA256ChachaPoly: .octetKeyPair,
+        // HPKE Key Encryption
+        .internalHpkeP256SHA256AESGCM128KE: .ellipticCurve,
+        .internalHpkeP256SHA256AESGCM256KE: .ellipticCurve,
+        .internalHpkeP384SHA384AESGCM256KE: .ellipticCurve,
+        .internalHpkeP521SHA512AESGCM256KE: .ellipticCurve,
+        .internalHpkeCurve25519SHA256AESGCM128KE: .octetKeyPair,
+        .internalHpkeCurve25519SHA256ChachaPolyKE: .octetKeyPair,
     ]
     
     private static let fastPathKeyLengths: [Self: Int] = [
         .aesKeyWrap128: SymmetricKeySize.bits128.bitCount,
+        .aesKeyWrap192: SymmetricKeySize.bits192.bitCount,
         .aesKeyWrap256: SymmetricKeySize.bits256.bitCount,
+        .aesGCM128KeyWrap: SymmetricKeySize.bits128.bitCount,
+        .aesGCM192KeyWrap: SymmetricKeySize.bits192.bitCount,
+        .aesGCM256KeyWrap: SymmetricKeySize.bits256.bitCount,
+        .unsafeRSAEncryptionPKCS1: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
         .rsaEncryptionOAEP: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
         .rsaEncryptionOAEPSHA256: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+        .rsaEncryptionOAEPSHA384: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+        .rsaEncryptionOAEPSHA512: JSONWebRSAPrivateKey.KeySize.defaultKeyLength.bitCount,
+        .pbes2hmac256: SymmetricKeySize.bits128.bitCount,
+        .pbes2hmac384: SymmetricKeySize.bits192.bitCount,
+        .pbes2hmac512: SymmetricKeySize.bits256.bitCount,
+        .ecdhEphemeralStaticAESKeyWrap128: SymmetricKeySize.bits128.bitCount,
+        .ecdhEphemeralStaticAESKeyWrap192: SymmetricKeySize.bits192.bitCount,
+        .ecdhEphemeralStaticAESKeyWrap256: SymmetricKeySize.bits256.bitCount,
     ]
     
     private static let fastPathHashFunctions: [Self: any HashFunction.Type] = [
         .aesKeyWrap128: SHA256.self,
+        .aesKeyWrap192: SHA384.self,
         .aesKeyWrap256: SHA512.self,
+        .aesGCM128KeyWrap: SHA256.self,
+        .aesGCM192KeyWrap: SHA384.self,
+        .aesGCM256KeyWrap: SHA512.self,
+        .pbes2hmac256: SHA256.self,
+        .pbes2hmac384: SHA384.self,
+        .pbes2hmac512: SHA512.self,
+        .ecdhEphemeralStatic: SHA256.self,
+        .ecdhEphemeralStaticAESKeyWrap128: SHA256.self,
+        .ecdhEphemeralStaticAESKeyWrap192: SHA256.self,
+        .ecdhEphemeralStaticAESKeyWrap256: SHA256.self,
+        // HPKE Integrated Encryption
+        .internalHpkeP256SHA256AESGCM128: SHA256.self,
+        .internalHpkeP256SHA256AESGCM256: SHA256.self,
+        .internalHpkeP384SHA384AESGCM256: SHA384.self,
+        .internalHpkeP521SHA512AESGCM256: SHA512.self,
+        .internalHpkeCurve25519SHA256AESGCM128: SHA256.self,
+        .internalHpkeCurve25519SHA256ChachaPoly: SHA256.self,
+        // HPKE Key Encryption
+        .internalHpkeP256SHA256AESGCM128KE: SHA256.self,
+        .internalHpkeP256SHA256AESGCM256KE: SHA256.self,
+        .internalHpkeP384SHA384AESGCM256KE: SHA384.self,
+        .internalHpkeP521SHA512AESGCM256KE: SHA512.self,
+        .internalHpkeCurve25519SHA256AESGCM128KE: SHA256.self,
+        .internalHpkeCurve25519SHA256ChachaPolyKE: SHA256.self,
     ]
     
     /// Key type, either RSA, Elliptic curve, Symmetric, etc.
@@ -412,7 +399,7 @@ extension JSONWebKeyEncryptionAlgorithm {
             let staticKey = try JSONWebECPrivateKey(from: kek)
             secret = try staticKey.sharedSecretFromKeyAgreement(with: ephemeralKey)
         } else if let curve = kek.curve {
-            let ephemeralKey = try JSONWebECPrivateKey(curve: curve)
+            let ephemeralKey = try JSONWebECPrivateKey(keyAgreementCurve: curve)
             let staticKey = try JSONWebECPublicKey(from: kek)
             header.ephemeralPublicKey = .init(ephemeralKey.publicKey)
             secret = try ephemeralKey.sharedSecretFromKeyAgreement(with: staticKey)
@@ -666,11 +653,11 @@ extension JSONWebAlgorithm where Self == JSONWebKeyEncryptionAlgorithm {
     static var internalMLKEM512: Self {
         "ML-KEM-512"
     }
-
+    
     static var internalMLKEM768: Self {
         "ML-KEM-768"
     }
-
+    
     static var internalMLKEM1024: Self {
         "ML-KEM-1024"
     }
