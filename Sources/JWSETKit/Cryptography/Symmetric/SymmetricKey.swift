@@ -83,11 +83,37 @@ extension SymmetricKey: JSONWebSymmetricSigningKey {
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
-        try key(algorithm).signature(data, using: algorithm)
+        guard let hashFunction = algorithm.hashFunction else {
+            return try key(algorithm).signature(data, using: algorithm)
+        }
+        return try hmac(hashFunction, for: data)
     }
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
-        try key(algorithm).verifySignature(signature, for: data, using: algorithm)
+        guard let hashFunction = algorithm.hashFunction else {
+            try key(algorithm).verifySignature(signature, for: data, using: algorithm)
+            return
+        }
+        guard try isValid(hashFunction, signature, for: data) else {
+            throw CryptoKitError.authenticationFailure
+        }
+    }
+    
+    private func hmac<H: HashFunction, D: DataProtocol>(_: H.Type, for data: D) throws -> Data {
+        guard H.Digest.byteCount <= bitCount / 8 else {
+            throw CryptoKitError.incorrectKeySize
+        }
+        var hmac = HMAC<H>(key: self)
+        hmac.update(data: data)
+        return Data(hmac.finalize())
+    }
+    
+    /// Uses CryptoKit's constant-time comparison, not a plain `==` on the MAC bytes.
+    private func isValid<H: HashFunction, S: DataProtocol, D: DataProtocol>(_: H.Type, _ signature: S, for data: D) throws -> Bool {
+        guard H.Digest.byteCount <= bitCount / 8 else {
+            throw CryptoKitError.incorrectKeySize
+        }
+        return HMAC<H>.isValidAuthenticationCode(Data(signature), authenticating: data, using: self)
     }
 }
 

@@ -65,6 +65,10 @@ extension P256.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentif
         self.init(compactRepresentable: false)
     }
     
+    init() {
+        self.init(compactRepresentable: true)
+    }
+    
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         guard let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.unknownAlgorithm
@@ -81,8 +85,13 @@ extension Crypto.P256.KeyAgreement.PrivateKey: Swift.Hashable, Swift.Equatable, 
 
 extension P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     public typealias PublicKey = P256.KeyAgreement.PublicKey
+    
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
+    }
+    
+    init() {
+        self.init(compactRepresentable: true)
     }
 }
 
@@ -113,6 +122,10 @@ extension SecureEnclave.P256.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAl
         try self.init(compactRepresentable: true)
     }
     
+    init() throws {
+        try self.init(compactRepresentable: true)
+    }
+    
     init(rawRepresentation _: Data) throws {
         throw JSONWebKeyError.operationNotAllowed
     }
@@ -138,6 +151,10 @@ extension SecureEnclave.P256.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     
     init(rawRepresentation _: Data) throws {
         throw JSONWebKeyError.operationNotAllowed
+    }
+    
+    init() throws {
+        try self.init(compactRepresentable: true)
     }
 }
 #endif

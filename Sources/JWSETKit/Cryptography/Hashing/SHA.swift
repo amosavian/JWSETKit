@@ -70,18 +70,10 @@ extension JSONWebHashAlgorithm {
                 SHA3_512.identifier: SHA3_512.self,
             ]
 #else
-            [
-                SHA256.identifier: SHA256.self,
-                SHA384.identifier: SHA384.self,
-                SHA512.identifier: SHA512.self,
-            ]
+            .init(wrappedValue: fastPathHashFunctions)
 #endif
         } else {
-            [
-                SHA256.identifier: SHA256.self,
-                SHA384.identifier: SHA384.self,
-                SHA512.identifier: SHA512.self,
-            ]
+            .init(wrappedValue: fastPathHashFunctions)
         }
     }()
     

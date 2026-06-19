@@ -22,6 +22,22 @@ struct Base64Tests {
     }
     
     @Test
+    func decodeIgnoresEmbeddedWhitespace() {
+        // 4 bytes → 6 Base64url chars → 2 `=` of padding. Embedded whitespace (line-wrapped
+        // `n`/`x5c` from multi-line literals or PEM wrapping) must not inflate the length used
+        // to compute that padding — otherwise strict decoders (swift-corelibs-foundation on
+        // Linux) reject the result while Darwin tolerates it.
+        let expected = Data([0x01, 0x02, 0x03, 0x04])
+        #expect(Data(urlBase64Encoded: "AQIDBA") == expected)
+        #expect(Data(urlBase64Encoded: "AQ IDBA", options: .ignoreUnknownCharacters) == expected)
+        #expect(Data(urlBase64Encoded: "AQ\n    ID\r\nBA", options: .ignoreUnknownCharacters) == expected)
+        // Standard Base-64 (`+`/`/`, with padding) wrapped across lines also decodes.
+        #expect(Data(base64Encoded: "AQ ID\nBA==", options: .ignoreUnknownCharacters) == expected)
+        // Strict decoding still rejects embedded whitespace.
+        #expect(Data(urlBase64Encoded: "AQ IDBA", options: []) == nil)
+    }
+
+    @Test
     func encode() {
         let encoded = "eyJ0eXAiOiJKV1QiLA0KICJhbGciOiJIUzI1NiJ9"
         let value = "{\"typ\":\"JWT\",\r\n \"alg\":\"HS256\"}"

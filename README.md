@@ -404,6 +404,16 @@ swift test
 swift build
 ```
 
+### Benchmarks
+
+JWSETKit ships a [performance benchmark suite](Benchmarks/README.md) built on
+`package-benchmark`, plus an opt-in head-to-head comparison against other Swift JOSE
+libraries:
+
+```bash
+swift package --package-path Benchmarks/Regression benchmark
+```
+
 ## 🌟 Support
 
 - 🐛 [Report Issues](https://github.com/amosavian/JWSETKit/issues)

@@ -153,7 +153,7 @@ extension JSONWebCertificateChain: JSONWebFieldEncodable, JSONWebFieldDecodable 
         guard let value else { return nil }
         switch value {
         case let value as [String]:
-            return try? JSONWebCertificateChain(value.compactMap { Data(base64Encoded: $0) })
+            return try? JSONWebCertificateChain(value.compactMap { Data(base64Encoded: $0, options: .ignoreUnknownCharacters) })
         case let value as [Data]:
             return try? JSONWebCertificateChain(value)
         case let value as [any DataProtocol]:

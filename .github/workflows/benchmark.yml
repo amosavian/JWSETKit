@@ -1,0 +1,96 @@
+name: Benchmarks
+
+on:
+  push:
+    branches: [ "main" ]
+  # On PRs the suite runs on demand: comment `/benchmark` on the PR (maintainers only).
+  issue_comment:
+    types: [ created ]
+
+# Informational only — this workflow never fails a PR on performance.
+jobs:
+  benchmark:
+    name: Run benchmarks (informational)
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    # Run on a push to main, OR on a `/benchmark` comment made on a PR by someone with
+    # write access (OWNER / MEMBER / COLLABORATOR) — never on plain issues or from outsiders.
+    if: >-
+      github.event_name == 'push' ||
+      (github.event_name == 'issue_comment' &&
+       github.event.issue.pull_request &&
+       startsWith(github.event.comment.body, '/benchmark') &&
+       contains(fromJSON('["OWNER", "MEMBER", "COLLABORATOR"]'), github.event.comment.author_association))
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      # issue_comment events check out the default branch by default, so resolve the PR head
+      # ref explicitly. For a push this input is empty and checkout uses the pushed commit.
+      - name: Resolve PR head ref
+        id: pr
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ref=$(gh pr view "${{ github.event.issue.number }}" \
+            --repo "${{ github.repository }}" --json headRefOid --jq .headRefOid)
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+      - name: React to trigger comment
+        if: github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh api --method POST \
+            "repos/${{ github.repository }}/issues/comments/${{ github.event.comment.id }}/reactions" \
+            -f content=rocket --silent || true
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ steps.pr.outputs.ref }}
+      - uses: SwiftyLab/setup-swift@38f54a76b70d989321de9dc7c840618c08cf56e9 # v1.14.0
+        with:
+          swift-version: "6.3"
+      - name: Install jemalloc
+        run: sudo apt-get update && sudo apt-get install -y libjemalloc-dev
+      - name: Get swift version
+        run: swift --version
+      - name: Run regression benchmarks
+        run: |
+          swift package --package-path Benchmarks/Regression --disable-sandbox benchmark \
+            2>&1 | tee benchmark-results.txt
+      - name: Publish results to job summary
+        if: always()
+        run: |
+          {
+            echo '## Benchmark results'
+            echo '```'
+            cat benchmark-results.txt
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Comment results back on the PR
+        if: always() && github.event_name == 'issue_comment'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          run_url="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          {
+            echo '### Benchmark results'
+            echo
+            echo '<details><summary>Regression suite output</summary>'
+            echo
+            echo '```'
+            cat benchmark-results.txt
+            echo '```'
+            echo
+            echo '</details>'
+            echo
+            echo "[Full run with job summary →]($run_url)"
+          } > pr-comment.md
+          gh pr comment "${{ github.event.issue.number }}" \
+            --repo "${{ github.repository }}" --body-file pr-comment.md
+      - name: Upload results artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: benchmark-results
+          path: benchmark-results.txt

@@ -283,4 +283,33 @@ struct MLDSATests {
         
         #expect(plaintext != signature)
     }
+    
+    // MARK: - Materialized-key cache (copy-on-write) hazards
+    
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
+    @Test
+    func cachedSigningKeyRoundTrips() throws {
+        let key = try JSONWebMLDSAPrivateKey(derRepresentation: mldsa65PrivateDER)
+        let pub = try JSONWebMLDSAPublicKey(derRepresentation: mldsa65PublicDER)
+        for _ in 0 ..< 3 {
+            let sig = try key.signature(plaintext, using: .mldsa65Signature)
+            try pub.verifySignature(sig, for: plaintext, using: .mldsa65Signature)
+        }
+    }
+    
+    @available(iOS 26.0, macOS 26.0, watchOS 26.0, tvOS 26.0, *)
+    @Test
+    func copyThenMutateKeepsOriginalKey() throws {
+        let original = try JSONWebMLDSAPrivateKey(derRepresentation: mldsa65PrivateDER)
+        let pub = try JSONWebMLDSAPublicKey(derRepresentation: mldsa65PublicDER)
+        _ = try original.signature(plaintext, using: .mldsa65Signature)
+        
+        var copy = original
+        copy.keyId = "rotated"
+        
+        let originalSig = try original.signature(plaintext, using: .mldsa65Signature)
+        try pub.verifySignature(originalSig, for: plaintext, using: .mldsa65Signature)
+        let copySig = try copy.signature(plaintext, using: .mldsa65Signature)
+        try pub.verifySignature(copySig, for: plaintext, using: .mldsa65Signature)
+    }
 }

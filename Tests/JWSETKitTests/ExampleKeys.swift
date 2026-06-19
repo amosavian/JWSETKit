@@ -511,7 +511,7 @@ extension String {
     }
     
     var decoded: Data {
-        Data(urlBase64Encoded: data).unsafelyUnwrapped
+        Data(urlBase64Encoded: data, options: [.ignoreUnknownCharacters]).unsafelyUnwrapped
     }
     
     var key: any JSONWebKey {

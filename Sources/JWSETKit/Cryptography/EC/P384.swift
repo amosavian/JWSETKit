@@ -65,6 +65,10 @@ extension P384.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyAlgorithmIdentif
         self.init(compactRepresentable: false)
     }
     
+    init() {
+        self.init(compactRepresentable: true)
+    }
+    
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
         guard let hashFunction = algorithm.hashFunction else {
             throw JSONWebKeyError.unknownAlgorithm
@@ -84,6 +88,10 @@ extension P384.KeyAgreement.PrivateKey: CryptoECPrivateKey {
     
     public init(algorithm _: some JSONWebAlgorithm) throws {
         self.init(compactRepresentable: false)
+    }
+    
+    init() {
+        self.init(compactRepresentable: true)
     }
 }
 

@@ -38,6 +38,7 @@ extension CryptoECPublicKey {
 
 protocol CryptoECPrivateKey: JSONWebKeyCurveType, JSONWebPrivateKey, Hashable where PublicKey: CryptoECPublicKey {
     var rawRepresentation: Data { get }
+    init() throws
     init(rawRepresentation: Data) throws
 }
 

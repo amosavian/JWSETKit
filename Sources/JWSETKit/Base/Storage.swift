@@ -119,7 +119,7 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
             if urlEncoded {
                 return values.compactMap { Data(urlBase64Encoded: $0) }
             } else {
-                return values.compactMap { Data(base64Encoded: $0) }
+                return values.compactMap { Data(base64Encoded: $0, options: .ignoreUnknownCharacters) }
             }
         }
         set {
@@ -148,10 +148,13 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     }
     
     public init(from decoder: any Decoder) throws {
-        let container = try decoder.singleValueContainer()
-        if let claims = try? container.decode([String: AnyCodable].self) {
-            self.storage = claims.mapValues { $0.value }
-        } else if let base64url = try? container.decode(String.self),
+        if let container = try? decoder.container(keyedBy: AnyCodingKey.self) {
+            var storage: [Key: any Sendable] = .init(minimumCapacity: container.allKeys.count)
+            for key in container.allKeys {
+                storage[key.stringValue] = try container.decode(AnyCodable.self, forKey: key).value
+            }
+            self.storage = storage
+        } else if let base64url = try? decoder.singleValueContainer().decode(String.self),
                   let data = Data(urlBase64Encoded: base64url)
         {
             self = try JSONDecoder().decode(Self.self, from: data)
@@ -230,8 +233,18 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
     }
     
     public func encode(to encoder: any Encoder) throws {
-        var container = encoder.singleValueContainer()
-        try container.encode(AnyCodable(storage))
+        var container = encoder.container(keyedBy: AnyCodingKey.self)
+        for (key, value) in storage {
+            let codingKey = AnyCodingKey(key)
+            switch value {
+            case let value as String: try container.encode(value, forKey: codingKey)
+            case let value as Bool: try container.encode(value, forKey: codingKey)
+            case let value as Int: try container.encode(value, forKey: codingKey)
+            case let value as Double: try container.encode(value, forKey: codingKey)
+            case let value as [String]: try container.encode(value, forKey: codingKey)
+            default: try container.encode(AnyCodable(value), forKey: codingKey)
+            }
+        }
     }
     
     public static func == (lhs: JSONWebValueStorage, rhs: JSONWebValueStorage) -> Bool {
@@ -248,7 +261,7 @@ public struct JSONWebValueStorage: Codable, Hashable, Collection, CustomReflecta
         }
         return true
     }
-
+    
     private static func valuesEqual(_ lhs: any Sendable, _ rhs: any Sendable) -> Bool {
         if let lhsEquatable = lhs as? any Equatable,
            lhsEquatable.isEqual(to: rhs as? any Equatable)

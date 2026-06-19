@@ -33,7 +33,14 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionCBC256SHA512: JSONWebKeyAESCBCHMAC<SHA512>.self,
     ]
     
-    private static let keyLengths: AtomicValue<[Self: SymmetricKeySize]> = [
+    private static let keyLengths: AtomicValue<[Self: SymmetricKeySize]> = .init(wrappedValue: fastPathKeyLengths)
+    
+    private nonisolated(unsafe) static let fastPathKeyRegistryClasses: [Self: any JSONWebSymmetricSealingKey.Type] = [
+        .aesEncryptionGCM256: JSONWebKeyAESGCM.self,
+        .aesEncryptionGCM128: JSONWebKeyAESGCM.self,
+    ]
+    
+    private static let fastPathKeyLengths: [Self: SymmetricKeySize] = [
         .aesEncryptionGCM128: .bits128,
         .aesEncryptionGCM192: .bits192,
         .aesEncryptionGCM256: .bits256,
@@ -43,16 +50,6 @@ extension JSONWebContentEncryptionAlgorithm {
         .aesEncryptionCBC128SHA256: .bits128 * 2,
         .aesEncryptionCBC192SHA384: .bits192 * 2,
         .aesEncryptionCBC256SHA512: .bits256 * 2,
-    ]
-    
-    private nonisolated(unsafe) static let fastPathKeyRegistryClasses: [Self: any JSONWebSymmetricSealingKey.Type] = [
-        .aesEncryptionGCM256: JSONWebKeyAESGCM.self,
-        .aesEncryptionGCM128: JSONWebKeyAESGCM.self,
-    ]
-    
-    private static let fastPathKeyLengths: [Self: SymmetricKeySize] = [
-        .aesEncryptionGCM256: .bits256,
-        .aesEncryptionGCM128: .bits128,
     ]
     
     /// Key type, either RSA, Elliptic curve, Symmetric, etc.

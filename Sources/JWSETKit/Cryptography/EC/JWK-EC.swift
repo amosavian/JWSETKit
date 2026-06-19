@@ -17,23 +17,42 @@ import CryptoP256K
 #endif
 
 /// JSON Web Key (JWK) container for different types of Elliptic-Curve public keys consists of P-256, P-384, P-521, Ed25519.
-@frozen
 public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWebValidatingKey, Sendable {
-    public var storage: JSONWebValueStorage
-    
-    var signingKey: any JSONWebValidatingKey {
-        get throws {
-            // swiftformat:disable:next redundantSelf
-            try Self.signingType(self.curve)
-                .init(from: self)
+    public var storage: JSONWebValueStorage {
+        didSet {
+            validatingKeyCache = .init()
+            keyAgreementKeyCache = .init()
         }
     }
     
+    private var validatingKeyCache = MaterializedKeyCache<any JSONWebValidatingKey>()
+    private var keyAgreementKeyCache = MaterializedKeyCache<any JSONWebKey>()
+    
+    var signingKey: any JSONWebValidatingKey {
+        get throws {
+            if let cached = validatingKeyCache.key {
+                return cached
+            }
+            // swiftformat:disable:next redundantSelf
+            let materialized = try Self.signingType(self.curve)
+                .init(from: self)
+            validatingKeyCache.key = materialized
+            return materialized
+        }
+    }
+    
+    /// Materialized CryptoKit key-agreement key, cached so a held recipient key derives many
+    /// shared secrets without re-importing (the costly P256 point validation) from JWK on each call.
     var keyAgreementKey: any JSONWebKey {
         get throws {
+            if let cached = keyAgreementKeyCache.key {
+                return cached
+            }
             // swiftformat:disable:next redundantSelf
-            try Self.keyAgreementType(self.curve)
+            let materialized = try Self.keyAgreementType(self.curve)
                 .init(from: self)
+            keyAgreementKeyCache.key = materialized
+            return materialized
         }
     }
     
@@ -87,6 +106,14 @@ public struct JSONWebECPublicKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWe
     
     public func verifySignature<S, D>(_ signature: S, for data: D, using algorithm: JSONWebSignatureAlgorithm) throws where S: DataProtocol, D: DataProtocol {
         try signingKey.verifySignature(signature, for: data, using: algorithm)
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.storage == rhs.storage
+    }
+    
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(storage)
     }
 }
 
@@ -201,10 +228,18 @@ extension JSONWebECPublicKey: HPKEDiffieHellmanPublicKey {
 
 /// JWK container for different types of Elliptic-Curve private keys consists of P-256, P-384, P-521, Ed25519.
 public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONWebSigningKey, Sendable {
-    public var storage: JSONWebValueStorage
+    public var storage: JSONWebValueStorage {
+        didSet {
+            signingKeyCache = .init()
+            keyAgreementKeyCache = .init()
+        }
+    }
     
     @EphemeralPublicKey
     private var ephemeralPublicKey
+    
+    private var signingKeyCache = MaterializedKeyCache<any JSONWebSigningKey>()
+    private var keyAgreementKeyCache = MaterializedKeyCache<any JSONWebKey>()
     
     public var publicKey: JSONWebECPublicKey {
         if let ephemeral = ephemeralPublicKey {
@@ -215,9 +250,30 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
     
     var signingKey: any JSONWebSigningKey {
         get throws {
+            if let cached = signingKeyCache.key {
+                return cached
+            }
             // swiftformat:disable:next redundantSelf
-            try Self.signingType(self.curve)
+            let materialized = try Self.signingType(self.curve)
                 .init(from: self)
+            signingKeyCache.key = materialized
+            return materialized
+        }
+    }
+    
+    /// Materialized CryptoKit key-agreement private key, cached so a held recipient key derives many
+    /// shared secrets without re-importing from JWK — the costly step, as CryptoKit re-derives the
+    /// public key (a scalar multiplication) on every `PrivateKey(rawRepresentation:)`.
+    var keyAgreementKey: any JSONWebKey {
+        get throws {
+            if let cached = keyAgreementKeyCache.key {
+                return cached
+            }
+            // swiftformat:disable:next redundantSelf
+            let materialized = try Self.keyAgreementType(self.curve)
+                .init(from: self)
+            keyAgreementKeyCache.key = materialized
+            return materialized
         }
     }
     
@@ -232,10 +288,22 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
     
     public init(curve: JSONWebKeyCurve) throws {
         let curve = try Self.signingType(curve)
-        self.storage = try curve.init(algorithm: .unsafeNone).storage
+        let key = try curve.init(algorithm: .unsafeNone)
+        self.storage = key.storage
         if let algorithm = (curve as? any JSONWebKeyAlgorithmIdentified.Type)?.algorithm {
             self.algorithm = algorithm
         }
+        signingKeyCache.key = key
+    }
+    
+    init(keyAgreementCurve curve: JSONWebKeyCurve) throws {
+        let curve = try Self.keyAgreementType(curve)
+        let key = try curve.init()
+        self.storage = key.storage
+        if let algorithm = (curve as? any JSONWebKeyAlgorithmIdentified.Type)?.algorithm {
+            self.algorithm = algorithm
+        }
+        keyAgreementKeyCache.key = key
     }
     
     static func signingType(_ curve: JSONWebKeyCurve?) throws -> any JSONWebSigningKey.Type {
@@ -252,6 +320,25 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
 #endif
         case .ed25519:
             return Curve25519.Signing.PrivateKey.self
+        default:
+            throw JSONWebKeyError.unknownKeyType
+        }
+    }
+    
+    static func keyAgreementType(_ curve: JSONWebKeyCurve?) throws -> any CryptoECPrivateKey.Type {
+        switch curve {
+        case .p256:
+            return P256.KeyAgreement.PrivateKey.self
+        case .p384:
+            return P384.KeyAgreement.PrivateKey.self
+        case .p521:
+            return P521.KeyAgreement.PrivateKey.self
+#if P256K
+        case .secp256k1:
+            return P256K.KeyAgreement.PrivateKey.self
+#endif
+        case .x25519:
+            return Curve25519.KeyAgreement.PrivateKey.self
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -274,25 +361,27 @@ public struct JSONWebECPrivateKey: MutableJSONWebKey, JSONWebKeyCurveType, JSONW
             privateKey = try .init(curve: publicKeyCureve)
             ephemeralPublicKey = privateKey.ephemeralPublicKey
         }
+        let secretKey = try privateKey.keyAgreementKey
+        let share = try publicKeyShare.keyAgreementKey
         // swiftformat:disable:next redundantSelf
         switch (privateKey.keyType, privateKey.curve) {
         case (JSONWebKeyType.ellipticCurve, .p256):
-            return try P256.KeyAgreement.PrivateKey(from: self)
-                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
+            return try P256.KeyAgreement.PrivateKey(from: secretKey)
+                .sharedSecretFromKeyAgreement(with: .init(from: share))
         case (JSONWebKeyType.ellipticCurve, .p384):
-            return try P384.KeyAgreement.PrivateKey(from: self)
-                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
+            return try P384.KeyAgreement.PrivateKey(from: secretKey)
+                .sharedSecretFromKeyAgreement(with: .init(from: share))
         case (JSONWebKeyType.ellipticCurve, .p521):
-            return try P521.KeyAgreement.PrivateKey(from: self)
-                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
+            return try P521.KeyAgreement.PrivateKey(from: secretKey)
+                .sharedSecretFromKeyAgreement(with: .init(from: share))
 #if P256K
         case (JSONWebKeyType.ellipticCurve, .secp256k1):
-            return try P256K.KeyAgreement.PrivateKey(from: self)
-                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
+            return try P256K.KeyAgreement.PrivateKey(from: secretKey)
+                .sharedSecretFromKeyAgreement(with: .init(from: share))
 #endif
         case (JSONWebKeyType.octetKeyPair, .x25519):
-            return try Curve25519.KeyAgreement.PrivateKey(from: self)
-                .sharedSecretFromKeyAgreement(with: .init(from: publicKeyShare))
+            return try Curve25519.KeyAgreement.PrivateKey(from: secretKey)
+                .sharedSecretFromKeyAgreement(with: .init(from: share))
         default:
             throw JSONWebKeyError.unknownKeyType
         }
@@ -356,11 +445,11 @@ enum ECHelper {
     static func ecWebKey(data: Data, keyLength: Int, isPrivateKey: Bool) throws -> any JSONWebKey {
         let components = try ecComponents(data, keyLength: keyLength)
         var key: some (MutableJSONWebKey & JSONWebKeyCurveType) = AnyJSONWebKey()
-
+        
         guard !components.isEmpty else {
             throw JSONWebKeyError.unknownKeyType
         }
-
+        
         key.keyType = .ellipticCurve
         key.curve = .init(rawValue: "P-\(components[0].count * 8)")
         
@@ -385,6 +474,6 @@ enum ECHelper {
         get { key }
         set { key = newValue }
     }
-
+    
     var key: JSONWebECPublicKey?
 }

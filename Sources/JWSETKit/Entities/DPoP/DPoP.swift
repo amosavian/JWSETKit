@@ -277,11 +277,11 @@ extension URL {
 
 extension URLComponents {
     private static let defaultPorts: [String: Int] = [
-        "http": 80, "https": 443
+        "http": 80, "https": 443,
     ]
     
     fileprivate mutating func dropDefaultPort() {
-        if let port = port, port == (scheme?.lowercased()).flatMap({ Self.defaultPorts[$0] }) {
+        if let port, port == (scheme?.lowercased()).flatMap({ Self.defaultPorts[$0] }) {
             self.port = nil
         }
     }

@@ -9,7 +9,6 @@
 @frozen
 struct AnyCodable: Codable, @unchecked Sendable {
     let value: (any Sendable)?
-    private var mirror: Mirror
     
     var codableValue: JSONWebValueStorage.Value? {
         guard let value else {
@@ -27,30 +26,38 @@ struct AnyCodable: Codable, @unchecked Sendable {
             self = value
         } else {
             self.value = value
-            self.mirror = value.customMirror
         }
     }
     
     @usableFromInline
     init(from decoder: any Decoder) throws {
         let container = try decoder.singleValueContainer()
-
+        
         if container.decodeNil() {
             self.init(Self?.none)
-        } else if let bool = try? container.decode(Bool.self) {
-            self.init(bool)
+        } else if let string = try? container.decode(String.self) {
+            self.init(string)
         } else if let int = try? container.decode(Int.self) {
             self.init(int)
+        } else if var unkeyed = try? decoder.unkeyedContainer() {
+            var array: [(any Sendable)?] = []
+            array.reserveCapacity(unkeyed.count ?? 0)
+            while !unkeyed.isAtEnd {
+                try array.append(unkeyed.decode(AnyCodable.self).value)
+            }
+            self.init(array)
         } else if let uint = try? container.decode(UInt.self) {
             self.init(uint)
         } else if let double = try? container.decode(Double.self) {
             self.init(double)
-        } else if let string = try? container.decode(String.self) {
-            self.init(string)
-        } else if let array = try? container.decode([AnyCodable].self) {
-            self.init(array.map(\.value))
-        } else if let dictionary = try? container.decode([String: AnyCodable].self) {
-            self.init(dictionary.mapValues { $0.value })
+        } else if let bool = try? container.decode(Bool.self) {
+            self.init(bool)
+        } else if let keyed = try? decoder.container(keyedBy: AnyCodingKey.self) {
+            var dictionary: [String: (any Sendable)?] = .init(minimumCapacity: keyed.allKeys.count)
+            for key in keyed.allKeys {
+                dictionary[key.stringValue] = try keyed.decode(AnyCodable.self, forKey: key).value
+            }
+            self.init(dictionary)
         } else {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Value cannot be decoded")
         }
@@ -59,17 +66,33 @@ struct AnyCodable: Codable, @unchecked Sendable {
     @usableFromInline
     func encode(to encoder: any Encoder) throws {
         var container = encoder.singleValueContainer()
-
+        
         switch value {
         case nil:
             try container.encodeNil()
+        case let value as String:
+            try container.encode(value)
+        case let value as Int:
+            try container.encode(value)
+        case let value as Bool:
+            try container.encode(value)
+        case let value as Double:
+            try container.encode(value)
         case let value as any JSONWebFieldEncodable:
             let encodableValue = value.jsonWebValue as any Encodable
             try container.encode(encodableValue)
         case let value as [(any Sendable)?]:
-            try container.encode(value.map { AnyCodable($0) })
+            var container = encoder.unkeyedContainer()
+            for element in value {
+                try container.encode(AnyCodable(element))
+            }
+            return
         case let value as [String: (any Sendable)?]:
-            try container.encode(value.mapValues { AnyCodable($0) })
+            var container = encoder.container(keyedBy: AnyCodingKey.self)
+            for (key, element) in value {
+                try container.encode(AnyCodable(element), forKey: AnyCodingKey(key))
+            }
+            return
         case let value as any Encodable:
             try container.encode(value)
         default:
@@ -82,6 +105,32 @@ struct AnyCodable: Codable, @unchecked Sendable {
 extension AnyCodable: CustomReflectable {
     @usableFromInline
     var customMirror: Mirror {
-        mirror
+        Mirror(reflecting: value as Any)
+    }
+}
+
+@frozen
+@usableFromInline
+struct AnyCodingKey: CodingKey {
+    @usableFromInline
+    let stringValue: String
+    
+    @usableFromInline
+    var intValue: Int? {
+        nil
+    }
+    
+    init(_ stringValue: String) {
+        self.stringValue = stringValue
+    }
+    
+    @usableFromInline
+    init(stringValue: String) {
+        self.stringValue = stringValue
+    }
+    
+    @usableFromInline
+    init(intValue: Int) {
+        self.stringValue = String(intValue)
     }
 }
