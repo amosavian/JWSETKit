@@ -139,9 +139,15 @@ extension JSONWebTokenClaims {
         address: JSONWebAddress? = nil
     ) -> Self {
         var result = self
+#if canImport(Darwin)
         let formatter = PersonNameComponentsFormatter()
         formatter.locale = locale ?? .autoupdatingCurrent
         result.name = formatter.string(from: person)
+#else
+        result.name = [person.givenName, person.middleName, person.familyName]
+            .compactMap(\.self)
+            .joined(separator: " ")
+#endif
         result.givenName = person.givenName
         result.familyName = person.familyName
         result.middleName = person.middleName
