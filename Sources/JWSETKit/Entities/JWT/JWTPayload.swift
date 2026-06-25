@@ -129,7 +129,7 @@ extension JSONWebTokenClaims {
         return result
     }
     
-#if canImport(Foundation)
+#if canImport(Darwin) || !canImport(FoundationEssentials)
     public func addUserInfo(
         person: PersonNameComponents,
         gender: String? = nil,
@@ -154,6 +154,32 @@ extension JSONWebTokenClaims {
         return result
     }
 #endif
+    
+    public func addUserInfo(
+        name: String,
+        givenName: String? = nil,
+        familyName: String? = nil,
+        middleName: String? = nil,
+        nickname: String? = nil,
+        gender: String? = nil,
+        birthdate: Date? = nil,
+        zoneInfo: TimeZone? = nil,
+        locale: Locale? = nil,
+        address: JSONWebAddress? = nil
+    ) -> Self {
+        var result = self
+        result.name = name
+        result.givenName = givenName
+        result.familyName = familyName
+        result.middleName = middleName
+        result.nickname = nickname
+        result.gender = gender
+        result.birthdate = birthdate
+        result.zoneInfo = zoneInfo
+        result.locale = locale
+        result.address = address
+        return result
+    }
     
     public func addProfile(_ profile: URL?, picture: URL? = nil, website: URL? = nil) -> Self {
         var result = self
