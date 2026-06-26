@@ -335,4 +335,60 @@ struct RSATests {
         try original.verifySignature(sig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
         try copy.verifySignature(sig, for: plaintext, using: .rsaSignaturePKCS1v15SHA256)
     }
+    
+    // MARK: - Minimal (n, e, d only) private JWK import — RFC 7518 §6.3.2
+    
+    /// A private RSA JWK carrying only the required `n`, `e`, `d` (no CRT params).
+    private var minimalPrivateKey: AnyJSONWebKey {
+        get throws {
+            let full = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER)
+            var minimal = AnyJSONWebKey()
+            minimal.keyType = .rsa
+            minimal.modulus = full.modulus
+            minimal.exponent = full.exponent
+            minimal.privateExponent = full.privateExponent
+            return minimal
+        }
+    }
+    
+#if canImport(CryptoExtras)
+    @Test
+    func minimalPrivateKeyImportRecoversCRT() throws {
+        let minimal = try minimalPrivateKey
+        let key = try JSONWebRSAPrivateKey(storage: minimal.storage)
+        #expect(key.firstPrimeFactor == nil) // stored form stays minimal
+        
+        let pub = try JSONWebRSAPublicKey(derRepresentation: publicKeyDER)
+        
+        // PKCS#1 and PSS signing both work via the recovered key.
+        let pkcs1 = try key.signature(plaintext, using: .rsaSignaturePKCS1v15SHA256)
+        #expect(throws: Never.self) { try pub.verifySignature(pkcs1, for: plaintext, using: .rsaSignaturePKCS1v15SHA256) }
+        let pss = try key.signature(plaintext, using: .rsaSignaturePSSSHA256)
+        #expect(throws: Never.self) { try pub.verifySignature(pss, for: plaintext, using: .rsaSignaturePSSSHA256) }
+        
+        // Decryption works too.
+        let ciphertext = try pub.encrypt(plaintext, using: .rsaEncryptionOAEP)
+        #expect(try key.decrypt(ciphertext, using: .rsaEncryptionOAEP) == plaintext)
+        
+        // Exporting materializes the full key, so the round-tripped DER carries CRT params.
+        let exported = try JSONWebRSAPrivateKey(derRepresentation: key.derRepresentation)
+        #expect(exported.firstPrimeFactor != nil)
+    }
+#else
+    @Test
+    func minimalPrivateKeyRejectedWithoutCryptoExtras() throws {
+        // SecKey cannot build a CRT-less key, so validation must reject it.
+        let minimal = try minimalPrivateKey
+        #expect(throws: (any Error).self) { try JSONWebRSAPrivateKey(storage: minimal.storage) }
+    }
+#endif
+    
+    @Test
+    func partialCRTParametersRejected() throws {
+        // All-or-nothing rule: a key with some — but not all — CRT params is invalid
+        // in every configuration.
+        var partial = try minimalPrivateKey
+        partial.firstPrimeFactor = try JSONWebRSAPrivateKey(derRepresentation: privateKeyDER).firstPrimeFactor
+        #expect(throws: (any Error).self) { try JSONWebRSAPrivateKey(storage: partial.storage) }
+    }
 }

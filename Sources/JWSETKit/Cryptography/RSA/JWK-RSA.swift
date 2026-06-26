@@ -269,7 +269,16 @@ public struct JSONWebRSAPrivateKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWe
         guard let keyType = self.keyType else {
             throw JSONWebKeyError.unknownKeyType
         }
-        try checkRequiredFields(keyType.requiredFields + ["d", "p", "q", "dp", "dq"])
+        let crtFields = ["p", "q", "dp", "dq", "qi"]
+#if canImport(CryptoExtras)
+        // `_RSA` can reconstruct the CRT parameters from (n, e, d).
+        try checkRequiredFields(keyType.requiredFields + ["d"])
+        if crtFields.contains(where: { storage.contains(key: $0) }) {
+            try checkRequiredFields(crtFields)
+        }
+#else
+        try checkRequiredFields(keyType.requiredFields + ["d"] + crtFields)
+#endif
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {

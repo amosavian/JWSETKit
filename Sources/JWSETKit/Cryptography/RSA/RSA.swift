@@ -93,10 +93,14 @@ extension _RSA.Signing.PrivateKey: JSONWebSigningKey, JSONWebKeyRSAType {
     
     public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
-        guard let modulus = key.modulus, let exponent = key.exponent, let privateExponent = key.privateExponent, let p = key.firstPrimeFactor, let q = key.secondPrimeFactor else {
+        guard let modulus = key.modulus, let exponent = key.exponent, let privateExponent = key.privateExponent else {
             throw CryptoKitError.incorrectParameterSize
         }
-        try self.init(n: modulus, e: exponent, d: privateExponent, p: p, q: q)
+        if let p = key.firstPrimeFactor, let q = key.secondPrimeFactor {
+            try self.init(n: modulus, e: exponent, d: privateExponent, p: p, q: q)
+        } else {
+            self = try Self._createFromNumbers(n: modulus, e: exponent, d: privateExponent)
+        }
     }
     
     public func signature<D>(_ data: D, using algorithm: JSONWebSignatureAlgorithm) throws -> Data where D: DataProtocol {
@@ -184,10 +188,14 @@ extension _RSA.Encryption.PrivateKey: JSONWebDecryptingKey, JSONWebKeyRSAType {
     
     public init(storage: JSONWebValueStorage) throws {
         let key = AnyJSONWebKey(storage: storage)
-        guard let modulus = key.modulus, let exponent = key.exponent, let privateExponent = key.privateExponent, let p = key.firstPrimeFactor, let q = key.secondPrimeFactor else {
+        guard let modulus = key.modulus, let exponent = key.exponent, let privateExponent = key.privateExponent else {
             throw CryptoKitError.incorrectParameterSize
         }
-        try self.init(n: modulus, e: exponent, d: privateExponent, p: p, q: q)
+        if let p = key.firstPrimeFactor, let q = key.secondPrimeFactor {
+            try self.init(n: modulus, e: exponent, d: privateExponent, p: p, q: q)
+        } else {
+            self = try Self._createFromNumbers(n: modulus, e: exponent, d: privateExponent)
+        }
     }
     
     public func decrypt<D, JWA>(_ data: D, using algorithm: JWA) throws -> Data where D: DataProtocol, JWA: JSONWebAlgorithm {
