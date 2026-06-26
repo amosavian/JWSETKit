@@ -13,7 +13,11 @@ cleanlinuxtest:
 #
 # Every Conventional-Commit line (subject *and* body lines like `feat:`, `fix:`,
 # `!fix:`, `chore:` ...) in <FROM>..<TO> becomes one `- **type**: subject` row,
-# verbatim and in order — no rephrasing, nothing dropped, nothing invented.
+# verbatim — no rephrasing, nothing dropped, nothing invented. Rows are grouped
+# by type in the order feat, fix, perf, refactor, tests, docs, build, ci, style,
+# chore (any other type comes after, in first-seen order); within a group the
+# original newest-first commit order is kept. `!`-breaking lines (e.g. `!fix:`)
+# group with their base type but keep the `!` in the printed label.
 # Notes go to stdout (redirect to a file as needed); status goes to stderr.
 #
 #   make changelog                       # range auto-detected: last tag..HEAD
@@ -27,13 +31,22 @@ changelog:
 	to="$(TO)"; [ -z "$$to" ] && to=HEAD; \
 	echo "Building notes from $$from..$$to" >&2; \
 	notes=$$(git log "$$from..$$to" --pretty=format:'%B' \
-		| awk '/^[[:space:]]*!?[a-z]+:[[:space:]]/ { \
+		| awk 'BEGIN { \
+			np = split("feat fix perf refactor tests test docs build ci style chore", prio, " "); \
+		} \
+		/^[[:space:]]*!?[a-z]+:[[:space:]]/ { \
 			sub(/^[[:space:]]+/, ""); \
 			i = index($$0, ":"); \
 			type = substr($$0, 1, i - 1); \
 			rest = substr($$0, i + 1); \
 			sub(/^[[:space:]]+/, "", rest); \
-			print "- **" type "**: " rest; \
+			base = type; sub(/^!/, "", base); \
+			if (!(base in seen)) { seen[base] = 1; order[++oc] = base; } \
+			bucket[base] = bucket[base] "- **" type "**: " rest "\n"; \
+		} \
+		END { \
+			for (i = 1; i <= np; i++) { t = prio[i]; if (t in bucket) { printf "%s", bucket[t]; done[t] = 1; } } \
+			for (j = 1; j <= oc; j++) { t = order[j]; if (!(t in done)) printf "%s", bucket[t]; } \
 		}'); \
 	if [ -z "$$notes" ]; then echo "error: no conventional-commit lines found in $$from..$$to" >&2; exit 1; fi; \
 	printf '%s\n' "$$notes"

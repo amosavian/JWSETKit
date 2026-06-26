@@ -1,8 +1,8 @@
 name: Benchmarks
 
 on:
-  push:
-    branches: [ "main" ]
+  # Run manually from the Actions tab (e.g. on main before a release).
+  workflow_dispatch:
   # On PRs the suite runs on demand: comment `/benchmark` on the PR (maintainers only).
   issue_comment:
     types: [ created ]
@@ -13,10 +13,10 @@ jobs:
     name: Run benchmarks (informational)
     runs-on: ubuntu-latest
     continue-on-error: true
-    # Run on a push to main, OR on a `/benchmark` comment made on a PR by someone with
+    # Run on a manual dispatch, OR on a `/benchmark` comment made on a PR by someone with
     # write access (OWNER / MEMBER / COLLABORATOR) — never on plain issues or from outsiders.
     if: >-
-      github.event_name == 'push' ||
+      github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'issue_comment' &&
        github.event.issue.pull_request &&
        startsWith(github.event.comment.body, '/benchmark') &&
@@ -26,7 +26,8 @@ jobs:
       pull-requests: write
     steps:
       # issue_comment events check out the default branch by default, so resolve the PR head
-      # ref explicitly. For a push this input is empty and checkout uses the pushed commit.
+      # ref explicitly. For a manual dispatch this input is empty and checkout uses the
+      # branch the workflow was dispatched from.
       - name: Resolve PR head ref
         id: pr
         if: github.event_name == 'issue_comment'
