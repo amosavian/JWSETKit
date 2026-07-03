@@ -3,9 +3,11 @@
 Reproducible performance benchmarks built on [package-benchmark](https://github.com/ordo-one/package-benchmark).
 
 **In short:** JWSETKit is the most capable Swift JOSE library *and* competitive on speed — at parity
-with the fastest (jwt-kit) on ES256/RS256 since they share the same crypto backends, and ahead on
-HS256, JWE, and SD-JWT. Run the suite yourself with the commands below; always re-measure on your own
-hardware before drawing conclusions.
+with the fastest (jwt-kit) on ES256/RS256 since they share the same crypto backends, and ahead of
+jose-swift on HS256, JWE, and SD-JWT. The Apple-only airsidemobile/JOSESwift wins HS256 and keeps pace
+on ES256 through lean `SecKey` paths, but supports far less — no Linux, SD-JWT, or post-quantum, a
+`SecKey` RS256 sign ~2× slower, and an ECDH-ES encrypt ~5× slower. Run the suite yourself with the
+commands below; always re-measure on your own hardware before drawing conclusions.
 
 The benchmarks are **two standalone SwiftPM packages**, separate from the library so competitor
 dependencies never enter JWSETKit's resolution graph:
@@ -61,14 +63,19 @@ framework is measured on the same machine in the same thermal state:
 Benchmarks/Comparison/run-comparison.sh
 ```
 
-Or run a single side (only compare columns captured in the **same** consecutive run):
+To run a single side the same way (only compare
+columns captured in the **same** consecutive run):
 
 ```bash
 swift package --package-path Benchmarks/Comparison/jwsetkit-side  benchmark
 swift package --package-path Benchmarks/Comparison/jwtkit-side    benchmark
-swift package --package-path Benchmarks/Comparison/joseswift-side benchmark
+swift package --package-path Benchmarks/Comparison/joseswift-side benchmark   # beatt83/jose-swift
+swift package --package-path Benchmarks/Comparison/airside-side   benchmark   # airsidemobile/JOSESwift
 swift package --package-path Benchmarks/Comparison/eudi-side      benchmark   # SD-JWT only
 ```
+
+The airsidemobile library is **Apple-only** — it runs every signature, verification and
+RSA operation through the Security framework (`SecKey`).
 
 ## How JWSETKit compares
 
@@ -97,53 +104,53 @@ rows). Re-run on your own hardware.
 All frameworks encode the **same realistic ~14-claim OIDC ID token**, and the `verify-*` rows resolve
 the verifying key once and reuse it (the real JWKS pattern), so the rows are size- and usage-matched.
 
-**Signatures** (every library supports these):
+**Signatures**:
 
-| Workload | JWSETKit | jwt-kit | jose-swift |
-|---|---|---|---|
-| sign-ES256 | 169 | **168** | 329 |
-| verify-ES256 | 154 | **149** | 399 |
-| sign-HS256 | **28** | 28 | 53 |
-| verify-HS256 | **40** | 48 | 271 |
-| sign-RS256 | **585** | 592 | 69000 |
-| verify-RS256 | 56 | **52** | 1853 |
-| sign-MLDSA65 | **694** | 738 | — |
-| verify-MLDSA65 | **145** | 147 | — |
+| Workload | JWSETKit | jwt-kit | jose-swift | JOSESwift |
+| --- | --- | --- | --- | --- |
+| sign-ES256 | 178 | **172** | 335 | 176 |
+| verify-ES256 | 162 | **156** | 410 | 157 |
+| sign-HS256 | 31 | 30 | 58 | **27** |
+| verify-HS256 | 44 | 53 | 280 | **39** |
+| sign-RS256 | 613 | **593** | 69000 | 1109 |
+| verify-RS256 | 62 | **56** | 1872 | 72 |
+| sign-MLDSA65 | 792 | **785** | — | — |
+| verify-MLDSA65 | **161** | **161** | — | — |
 
-ES256/RS256 sit at parity with jwt-kit because both use swift-crypto's BoringSSL backend. JWSETKit
-uses it whenever `CryptoExtras` is available: always on Linux, and on Darwin when the **`X509` trait**
-is enabled (which this comparison sets). Without `X509`, Darwin falls back to Apple `SecKey`
-(≈1110 µs RS256 sign) — enable `X509` for the faster RSA path on Apple platforms.
+Without `X509`, JWSETKit on Darwin falls back to Apple `SecKey` (≈1110 µs RS256 sign) — enable `X509`
+for the faster RSA path on Apple platforms.
 
-**JWE** (JWSETKit and jose-swift only):
+**JWE**:
 
-| Workload | JWSETKit | jose-swift |
-|---|---|---|
-| jwe-encrypt-ECDHES-A256GCM | **582** | 721 |
-| jwe-decrypt-ECDHES-A256GCM | **230** | 345 |
-| jwe-encrypt-RSAOAEP-A256GCM | **48** | 55 |
-| jwe-decrypt-RSAOAEP-A256GCM | **926** | 1389 |
+| Workload | JWSETKit | jose-swift | JOSESwift |
+| --- | --- | --- | --- |
+| jwe-encrypt-ECDHES-A256GCM | **596** | 748 | 3258 |
+| jwe-decrypt-ECDHES-A256GCM | 251 | 358 | **218** |
+| jwe-encrypt-RSAOAEP-A256GCM | 51 | 60 | **49** |
+| jwe-decrypt-RSAOAEP-A256GCM | 1144 | 1407 | **1121** |
 
-**SD-JWT** — JWSETKit vs the EUDI reference library. Both issue and verify a ~14-claim token with two
-selectively-disclosable claims and two decoy digests (ES256):
+**SD-JWT**:
+Issue and verify a ~14-claim token with two selectively-disclosable claims
+and two decoy digests (ES256):
 
 | Workload | JWSETKit | EUDI |
-|---|---|---|
-| sdjwt-issue | **213** | 655 |
-| sdjwt-verify | **209** | 506 |
+| --- | --- | --- |
+| sdjwt-issue | **203** | 558 |
+| sdjwt-verify | **198** | 509 |
 
-EUDI inherits jose-swift's signing cost, so JWSETKit issues ≈3× and verifies ≈2.4× faster.
+EUDI inherits jose-swift's signing cost, so JWSETKit issues and verifies ~2 to ~3 times faster.
 
 ## Reading the numbers
 
 - **Compare only within one run, on one machine.** Wall-clock varies with thermal state and load,
   often by more than the gap between adjacent rows. To refresh the comparison, re-run the whole
   `run-comparison.sh`.
-- **Times are comparable across libraries; allocation counts are not.** jwt-kit's API and
-  jose-swift's `verify` are `async`; the concurrency runtime's own allocations get counted alongside
-  the code under test (package-benchmark flags these as "false memory leaks"). The timed region still
-  brackets the `await` correctly, so the **time** figures are sound. Allocation metrics are only
-  meaningful for JWSETKit's synchronous `Regression` suite.
+- **Only time is measured; malloc metrics are off for every side.** The comparison runs
+  `BENCHMARK_DISABLE_JEMALLOC=true` throughout (see *Running*), so no allocation counting perturbs the
+  timed region and all frameworks share one allocator. Allocation figures live in JWSETKit's
+  `Regression` suite instead.
 - The comparison covers only the workloads every listed library supports — not the ❌ / ⚠️ cells.
 - ML-DSA (post-quantum, macOS 26+) is the noisiest row; `sign-MLDSA65` swings run-to-run for both
   sides. Re-measure before concluding.
+- **JOSESwift (airsidemobile) is Apple-only and `SecKey`-backed.** Every EC/RSA operation runs through
+  the Security framework, which is why its RS256 sign matches JWSETKit's non-`X509` `SecKey` figure.

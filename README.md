@@ -1,4 +1,4 @@
-# JWSETKit
+# JWSETKit — Swift JWT, JWS, JWE, SD-JWT & JOSE Library
 
 **A modern, type-safe Swift library for JSON Web Token (JWT), JSON Web Signature (JWS), and JSON Web Encryption (JWE) with first-class Apple CryptoKit support.**
 
