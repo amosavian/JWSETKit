@@ -82,6 +82,26 @@ struct ECTests {
         try roundTrip(P521.Signing.PrivateKey(), expected: .p521)
     }
     
+#if canImport(CommonCrypto)
+    @Test(.bug("https://github.com/amosavian/JWSETKit/issues/36"), arguments: [
+        (JSONWebSignatureAlgorithm.ecdsaSignatureP256SHA256, JSONWebKeyCurve.p256),
+        (.ecdsaSignatureP384SHA384, .p384),
+        (.ecdsaSignatureP521SHA512, .p521),
+    ])
+    func secKeyCurveComponents(algorithm: JSONWebSignatureAlgorithm, curve: JSONWebKeyCurve) throws {
+        let key = try SecKey(algorithm: algorithm)
+        let coordinateSize = try #require(curve.coordinateSize)
+        
+        for storage in [key.storage, key.publicKey.storage] {
+            let jwk = AnyJSONWebKey(storage: storage)
+            #expect(jwk.curve == curve)
+            #expect(jwk.xCoordinate?.count == coordinateSize)
+            #expect(jwk.yCoordinate?.count == coordinateSize)
+        }
+        #expect(AnyJSONWebKey(storage: key.storage).privateKey?.count == coordinateSize)
+    }
+#endif
+    
     @Test
     func eddsa() throws {
         let key = Curve25519.Signing.PrivateKey()

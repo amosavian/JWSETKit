@@ -445,6 +445,14 @@ public struct AnyJSONWebKey: MutableJSONWebKey, JSONWebKeyRSAType, JSONWebKeyCur
         self.storage = storage
     }
     
+    /// Initializes container with filled data.
+    ///
+    /// - Parameter initializer: Setter of fields.
+    public init(_ initializer: (_ container: inout Self) throws -> Void) rethrows {
+        self.init()
+        try initializer(&self)
+    }
+    
     /// A type-erased JWK value.
     ///
     /// - Parameter key: Key to wrap.

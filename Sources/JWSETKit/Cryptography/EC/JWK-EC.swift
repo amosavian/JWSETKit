@@ -429,16 +429,17 @@ extension JSONWebECPrivateKey: DiffieHellmanKeyAgreement {}
 enum ECHelper {
     static func ecComponents(_ data: Data, keyLength: Int) throws -> [Data] {
         var data = data
+        let coordinateSize = (keyLength + 7) / 8
         // Check if data is x.963 format, if so, remove the
         // first byte which is data compression type.
-        if data.count % (keyLength / 8) == 1 {
+        if data.count % coordinateSize == 1 {
             // Key data is uncompressed.
             guard data.removeFirst() == 0x04 else {
                 throw CryptoKitError.incorrectParameterSize
             }
         }
-        return stride(from: 0, to: data.count, by: keyLength / 8).map {
-            data.dropFirst($0).prefix(keyLength / 8)
+        return stride(from: 0, to: data.count, by: coordinateSize).map {
+            data.dropFirst($0).prefix(coordinateSize)
         }
     }
     
@@ -451,7 +452,7 @@ enum ECHelper {
         }
         
         key.keyType = .ellipticCurve
-        key.curve = .init(rawValue: "P-\(components[0].count * 8)")
+        key.curve = .init(rawValue: "P-\(keyLength)")
         
         switch (components.count, isPrivateKey) {
         case (2, false):

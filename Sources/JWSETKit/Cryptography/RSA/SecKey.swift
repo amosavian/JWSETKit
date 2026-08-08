@@ -21,12 +21,19 @@ extension SecKey: JSONWebKeyRSAType, JSONWebKeyCurveType {
     public var storage: JSONWebValueStorage {
         if let storage = try? jsonWebKey().storage {
             storage
-        } else {
+        } else if let storage = try? publicKey.jsonWebKey().storage {
             // Key is not accessible directly, e.g. stored in Secure Enclave.
             //
             // In order to get key type and other necessary information in signing
             // process, public key is returned which contains these values.
-            publicKey.storage
+            storage
+        } else {
+            AnyJSONWebKey {
+                $0.keyType = try? keyType
+                if $0.keyType == .ellipticCurve, let bits = try? keyLength {
+                    $0.curve = .init(rawValue: "P-\(bits)")
+                }
+            }.storage
         }
     }
     
