@@ -3,23 +3,23 @@ import Foundation
 import JOSESwift
 import Security
 
-/// airsidemobile/JOSESwift side of the comparison — a DIFFERENT library from the beatt83 "jose-swift"
-/// side (../joseswift-side/); the two share only the JOSE standards. JOSESwift is Apple-only: signing,
-/// verifying and RSA key management run through the Security framework on `SecKey`, so this side does
-/// NOT build on Linux and is absent from Linux comparison runs (../../README.md). Its whole API is
-/// synchronous, so every measured closure is a plain (non-async) benchmark — like the JWSETKit and
-/// jose-swift JWE rows, so the `time` figures are directly comparable.
-///
-/// JOSESwift has no JWT layer and no EdDSA / ML-DSA / SD-JWT, so those rows are JWSETKit-only. The
-/// "JWT" signed here is the same realistic ~14-claim OIDC ID token JSON the other sides encode,
-/// signed as a raw `Payload` so the sign/verify rows stay size-matched.
-///
-/// Key types differ by algorithm, and JOSESwift dictates which: its `Signer`/`Verifier` and RSA key
-/// management are typed to `SecKey`, but its ECDH-ES key management is typed to its own JWK structs
-/// `ECPublicKey`/`ECPrivateKey`. A `SecKey` is a toll-free-bridged CoreFoundation value, and
-/// JOSESwift dispatches on key type with `type(of:) is …`, which never matches a native Swift type
-/// for a CF value — so a `SecKey` is silently rejected there. Hence ECDH-ES is fed the JWK structs,
-/// built from the same P-256 coordinates as the `SecKey`.
+// airsidemobile/JOSESwift side of the comparison — a DIFFERENT library from the beatt83 "jose-swift"
+// side (../joseswift-side/); the two share only the JOSE standards. JOSESwift is Apple-only: signing,
+// verifying and RSA key management run through the Security framework on `SecKey`, so this side does
+// NOT build on Linux and is absent from Linux comparison runs (../../README.md). Its whole API is
+// synchronous, so every measured closure is a plain (non-async) benchmark — like the JWSETKit and
+// jose-swift JWE rows, so the `time` figures are directly comparable.
+//
+// JOSESwift has no JWT layer and no EdDSA / ML-DSA / SD-JWT, so those rows are JWSETKit-only. The
+// "JWT" signed here is the same realistic ~14-claim OIDC ID token JSON the other sides encode,
+// signed as a raw `Payload` so the sign/verify rows stay size-matched.
+//
+// Key types differ by algorithm, and JOSESwift dictates which: its `Signer`/`Verifier` and RSA key
+// management are typed to `SecKey`, but its ECDH-ES key management is typed to its own JWK structs
+// `ECPublicKey`/`ECPrivateKey`. A `SecKey` is a toll-free-bridged CoreFoundation value, and
+// JOSESwift dispatches on key type with `type(of:) is …`, which never matches a native Swift type
+// for a CF value — so a `SecKey` is silently rejected there. Hence ECDH-ES is fed the JWK structs,
+// built from the same P-256 coordinates as the `SecKey`.
 
 /// The ~14-claim OIDC ID token, matched with the JWSETKit / jwt-kit / jose-swift sides so all four
 /// encode the same payload bytes. JOSESwift signs arbitrary data, so the claims are encoded once to
@@ -87,6 +87,7 @@ let benchmarks: @Sendable () -> Void = {
     let rsaPublic = SecKeyCopyPublicKey(rsaPrivate)!
 
     // MARK: classical signatures — Signer/Verifier built once from the imported key (the real
+
     // key-reuse pattern), so only sign+serialize / parse+verify falls inside the measured loop.
 
     let esHeader = JWSHeader(algorithm: .ES256)
@@ -138,6 +139,7 @@ let benchmarks: @Sendable () -> Void = {
     }
 
     // MARK: JWE (synchronous on both encrypt and decrypt — no async bridge). Same two workloads and
+
     // static keys as the jose-swift side. RSA-OAEP-256 uses the RSA-2048 `SecKey`; ECDH-ES uses the
     // P-256 key as JOSESwift's `ECPublicKey`/`ECPrivateKey` JWK structs (see the note above). Both
     // wrap A256GCM content encryption.

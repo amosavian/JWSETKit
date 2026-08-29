@@ -49,7 +49,9 @@ public struct JSONWebSelectiveDisclosure: Hashable, ExpressibleByArrayLiteral, S
         if let key {
             let keyUTF8 = key.utf8
             if keyUTF8.contains(where: { $0 < 0x20 || $0 == 0x22 || $0 == 0x5C || $0 == 0x2F }) {
-                if let keyJSON = try? JSONEncoder().encode(key) { elements.append(keyJSON) }
+                if let keyJSON = try? JSONEncoder().encode(key) {
+                    elements.append(keyJSON)
+                }
             } else {
                 var quotedKey = Data([UInt8(ascii: "\"")])
                 quotedKey.append(contentsOf: keyUTF8)
@@ -198,11 +200,18 @@ public struct JSONWebSelectiveDisclosure: Hashable, ExpressibleByArrayLiteral, S
         while i < json.count {
             let b = json[json.startIndex.advanced(by: i)]
             if inStr {
-                if b == "\\" { i += 1 } else if b == "\"" { inStr = false }
-            } else if b == "\"" { inStr = true }
-            else if b == "[" || b == "{" { depth += 1 }
-            else if b == "]" || b == "}" { depth -= 1 }
-            else if b == ",", depth == 0 {
+                if b == "\\" {
+                    i += 1
+                } else if b == "\"" {
+                    inStr = false
+                }
+            } else if b == "\"" {
+                inStr = true
+            } else if b == "[" || b == "{" {
+                depth += 1
+            } else if b == "]" || b == "}" {
+                depth -= 1
+            } else if b == ",", depth == 0 {
                 elements.append(Data(json[json.startIndex.advanced(by: start) ..< json.startIndex.advanced(by: i)]))
                 start = i + 1
             }

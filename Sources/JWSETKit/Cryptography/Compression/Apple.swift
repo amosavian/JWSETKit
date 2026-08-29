@@ -49,8 +49,12 @@ struct AppleCompressor<Codec>: JSONWebCompressor, Sendable where Codec: Compress
         }
         
         // Decompress the data
+        let maxSize = JSONWebCompressionAlgorithm.maxDecompressedSize
         while let chunk = try filter.readData(ofLength: Codec.pageSize), !chunk.isEmpty {
             decompressedData.append(chunk)
+            guard decompressedData.count <= maxSize else {
+                throw FilterError.invalidData
+            }
         }
         
         return decompressedData

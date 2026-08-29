@@ -89,6 +89,7 @@ struct ZlibCompressor<Codec>: JSONWebCompressor, Sendable where Codec: Compressi
         defer { inflateEnd(&s) }
 
         var decompressed = Data()
+        let maxSize = JSONWebCompressionAlgorithm.maxDecompressedSize
         try data.withUnsafeBuffer { inBuf in
             s.next_in = .init(mutating: inBuf.baseAddress?.assumingMemoryBound(to: Bytef.self))
             s.avail_in = uInt(inBuf.count)
@@ -101,6 +102,9 @@ struct ZlibCompressor<Codec>: JSONWebCompressor, Sendable where Codec: Compressi
                     inflate(&s, Z_NO_FLUSH)
                 }
                 decompressed.append(outBuf.baseAddress!, count: outBuf.count - Int(s.avail_out))
+                guard decompressed.count <= maxSize else {
+                    throw POSIXError(zlibStatus: Z_DATA_ERROR)
+                }
             } while s.avail_out == 0
         }
         return decompressed
