@@ -62,6 +62,22 @@ extension JSONWebCompressionAlgorithm {
     private static let compressors: AtomicValue<[Self: any JSONWebCompressor.Type]> = [:]
 #endif
     
+    private static let maxDecompressedSizeStorage = AtomicValue<Int>(wrappedValue: 10 << 20)
+    
+    /// Maximum size of decompressed content, to mitigate decompression bombs.
+    ///
+    /// Decompression aborts as soon as the output grows past this limit, which bounds
+    /// memory usage when decrypting a JWE with an attacker-chosen `"zip"` header.
+    ///
+    /// Defaults to 10MiB. Set to `Int.max` to disable the check.
+    ///
+    /// - Note: Compressors registered using ``register(_:compressor:)`` must
+    ///     enforce this limit themselves.
+    public static var maxDecompressedSize: Int {
+        get { maxDecompressedSizeStorage.wrappedValue }
+        set { maxDecompressedSizeStorage.wrappedValue = newValue }
+    }
+    
     /// Returns provided compressor for this algorithm.
     public var compressor: (any JSONWebCompressor.Type)? {
         Self.compressors[self]
@@ -92,7 +108,7 @@ public enum DeflateCompressionCodec: CompressionCodec {
     public static var algorithm: JSONWebCompressionAlgorithm {
         .deflate
     }
-
+    
     public static var pageSize: Int {
         65536
     }

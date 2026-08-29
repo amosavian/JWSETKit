@@ -44,6 +44,17 @@ struct CompressionTests {
     }
     
     @Test
+    func decompressionBombRejected() throws {
+        // A few hundred KB of DEFLATE that expands to 64MiB, well past the 10MiB default.
+        let bomb = try #require(compressors.first).compress(Data(repeating: 0x41, count: 64 << 20))
+        for deflateCompressor in compressors {
+            #expect(throws: (any Error).self) {
+                try deflateCompressor.decompress(bomb)
+            }
+        }
+    }
+    
+    @Test
     func compressionDecompression() throws {
         let length = Int.random(in: (1 << 17) ... (1 << 20)) // 128KB to 1MB
         let random = Data.random(length: length)

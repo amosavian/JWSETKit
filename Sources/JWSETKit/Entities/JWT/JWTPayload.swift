@@ -44,10 +44,16 @@ public struct JSONWebTokenClaims: MutableJSONWebContainer, Sendable {
         forKey key: AnyCodingKey
     ) throws -> (any Sendable)? {
         if numericClaims.contains(key.stringValue) {
-            if let value = try? container.decode(Int.self, forKey: key) { return value }
-            if let value = try? container.decode(Double.self, forKey: key) { return value }
+            if let value = try? container.decode(Int.self, forKey: key) {
+                return value
+            }
+            if let value = try? container.decode(Double.self, forKey: key) {
+                return value
+            }
         } else if booleanClaims.contains(key.stringValue) {
-            if let value = try? container.decode(Bool.self, forKey: key) { return value }
+            if let value = try? container.decode(Bool.self, forKey: key) {
+                return value
+            }
         }
         return try container.decode(AnyCodable.self, forKey: key).value
     }
