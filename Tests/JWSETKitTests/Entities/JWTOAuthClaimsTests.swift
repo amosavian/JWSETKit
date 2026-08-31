@@ -39,4 +39,14 @@ struct JWTOAuthClaimsTests {
         
         #expect(claims == decodedClaims)
     }
+    
+    @Test
+    func emptyScopes() {
+        var claims = JSONWebTokenClaims(storage: .init())
+        claims.scopes = []
+        
+        #expect(claims.scopes.isEmpty)
+        #expect(claims.scope == nil)
+    }
 }
+
