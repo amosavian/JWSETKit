@@ -60,10 +60,17 @@ extension JSONWebTokenClaims {
     @_documentation(visibility: private)
     public subscript(dynamicMember keyPath: SendableKeyPath<JSONWebTokenClaimsOAuthParameters, [String]>) -> [String] {
         get {
-            (storage[stringKey(keyPath)] as String?)?.components(separatedBy: " ") ?? []
+            let key = stringKey(keyPath)
+            guard let string = storage[key] as String?, !string.isEmpty else { return [] }
+            return string.components(separatedBy: " ")
         }
         set {
-            storage[stringKey(keyPath)] = newValue.joined(separator: " ")
+            let key = stringKey(keyPath)
+            if newValue.isEmpty {
+                storage.remove(key: key)
+            } else {
+                storage[key] = newValue.joined(separator: " ")
+            }
         }
     }
 }
