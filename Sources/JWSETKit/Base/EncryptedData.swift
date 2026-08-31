@@ -49,7 +49,7 @@ public struct SealedData: DataProtocol, BidirectionalCollection, Hashable, Senda
         } else if position < nonce.count + ciphertext.count {
             ciphertext[position - nonce.count]
         } else {
-            tag[position]
+            tag[position - nonce.count - ciphertext.count]
         }
     }
     
