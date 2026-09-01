@@ -153,7 +153,7 @@ extension Locale {
                 return matchedCountry[0]
             }
         } else {
-            return matchedScript[0]
+            return matchedScript.first { $0.countryCode == nil } ?? matchedScript[0]
         }
     }
 }
