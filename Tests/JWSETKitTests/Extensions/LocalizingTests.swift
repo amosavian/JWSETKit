@@ -34,6 +34,13 @@ struct LocalizingTests {
 
         #expect(Locale(identifier: expected).bestMatch(in: candidateLocales)?.identifier == expected)
     }
+
+    @Test(arguments: ["en-IR", "en-US", "en", "fa-AF", "fa-IR", "fa"].permutations.map { ($0, "fa-IR") })
+    func testBestMatchExactIdentifierRegardlessOfOrder(candidates: [String], expected: String) {
+        let candidateLocales = candidates.map(Locale.init(identifier:))
+
+        #expect(Locale(identifier: expected).bestMatch(in: candidateLocales)?.identifier == expected)
+    }
 }
 
 private extension Collection {
