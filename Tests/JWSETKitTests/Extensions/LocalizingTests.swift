@@ -28,6 +28,11 @@ struct LocalizingTests {
 #endif
     }
 
+    @Test(arguments: [("en-US", "en_US"), ("fa-IR", "fa_IR")])
+    func bcp47InitializerConvertsBCP47ToLocaleIdentifier(bcp47: String, expected: String) {
+        #expect(Locale(bcp47: bcp47).identifier == expected)
+    }
+
     @Test(arguments: ["en-US", "en", "fa-IR", "fa"].permutations.map { ($0, "fa") })
     func testBestMatchExactNoCountryIdentifierRegardlessOfOrder(candidates: [String], expected: String) {
         let candidateLocales = candidates.map(Locale.init(identifier:))
