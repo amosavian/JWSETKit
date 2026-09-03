@@ -62,6 +62,16 @@ struct StorageTests {
         #expect(type(of: keys[1]) == JSONWebRSAPrivateKey.self)
     }
     
+    @Test
+    func dateCastValue() {
+        // Per OIDC Core 1.0 spec, date fields must carry full ISO 8601 date-time value ...
+        #expect(Date.castValue("2024-03-15T00:00:00Z") != nil)
+        // ... or numeric timestamp.
+        #expect(Date.castValue(1_710_460_800) == Date(timeIntervalSince1970: 1_710_460_800))
+        // Date-only strings are intentionally rejected in generic date casting (reserved for birthdate).
+        #expect(Date.castValue("2024-03-15") == nil)
+    }
+
     // MARK: Hashing Tests
     
     @Test
