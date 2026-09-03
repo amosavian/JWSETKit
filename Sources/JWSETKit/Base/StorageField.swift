@@ -94,6 +94,8 @@ extension Date: JSONWebFieldEncodable, JSONWebFieldDecodable {
             if let value = TimeInterval(value) {
                 Date(timeIntervalSince1970: value)
             } else {
+                // Per OIDC Core 1.0 spec, date fields must carry a full ISO 8601 date-time value.
+                // Date-only strings (e.g. YYYY-MM-DD) are only permitted for `birthdate`.
                 Date(iso8601: value)
             }
         default:
